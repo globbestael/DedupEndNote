@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+   <include resource="org/springframework/boot/logging/logback/base.xml" />
+   
+   	<contextListener class="ch.qos.logback.classic.jul.LevelChangePropagator">
+		<resetJUL>true</resetJUL>
+	</contextListener>
+
+	<!-- To enable JMX Management -->
+	<jmxConfigurator />
+	<appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+		<encoder>
+			<!-- pattern>%.-1level|%-40.40logger{0}|%msg%n</pattern -->
+			<pattern>%d{dd-MM-yyyy HH.mm.ss} %-5level %logger{30}:%line - %msg%n</pattern>
+		</encoder>
+		<filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+			<level>INFO</level>
+		</filter>
+	</appender>
+	<appender name="file" class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<encoder>
+<!-- 			<pattern>%d{dd-MM-yyyy HH.mm.ss} %-5level %logger{30}:%line - %msg%n</pattern> -->
+			<pattern>%msg%n</pattern>
+		</encoder>
+		<filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+			<level>INFO</level>
+		</filter>
+		<File>${user.home}/logs/dedupendnote.log</File>
+		<rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+			<maxIndex>100</maxIndex>
+			<FileNamePattern>${user.home}/logs/dedupendnote.log.%i</FileNamePattern>
+		</rollingPolicy>
+		<triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+			<MaxFileSize>5000KB</MaxFileSize>
+		</triggeringPolicy>
+	</appender>
+	<logger name="edu.dedupendnote"										level="info" />
+<!-- 	<logger name="edu.dedupendnote.services"								level="info" /> -->
+	<logger name="org.apache.commons" 							level="warn" />
+	<logger name="org.springframework" 							level="warn" />
+	<logger name="org.springframework.beans"					level="warn" />
+
+	<root level="warn">
+		<appender-ref ref="console" />
+		<appender-ref ref="file" />
+	</root>
+</configuration>

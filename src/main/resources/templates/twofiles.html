@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>DedupEndNote - Two files</title>
+	<script th:src="@{/webjars/jquery/jquery.min.js}"></script>
+	<script th:src="@{/webjars/jquery-ui/jquery-ui.min.js}"></script>
+	<script th:src="@{/webjars/blueimp-file-upload/js/jquery.fileupload.js}"></script>
+	<script th:src="@{/webjars/blueimp-file-upload/js/jquery.fileupload-process.js}"></script>
+	<link rel="stylesheet" th:href="@{/webjars/bootstrap/css/bootstrap.min.css}">
+    <style type="text/css">
+    	.bg-info {
+    		padding: 10px;
+    	}
+    	td {
+    		vertical-align: top;
+    	}
+    	.diff {
+    		color: red;
+    		font-weight: bold;
+    	}
+		.bar {
+		    height: 18px;
+		    background: green;
+		}
+    </style>
+<!--     
+    zie: https://blueimp.github.io/jQuery-File-Upload/js/main.js
+    zie: view-source:https://blueimp.github.io/jQuery-File-Upload/index.html
+    zie: https://blueimp.github.io/jQuery-File-Upload/index.html
+-->
+ 	<script th:inline="javascript">
+// 	    $(document).ready(function() {
+// 			document.getElementById('order_form').onchange = function () {
+// 				// als oplossing voor "fakepath" probleem: verwijder alles voor de eigenlijke bestandsnaam
+// 				var bestandsnaam = $("#fileUpload1").val();
+// 				var bestandsnaam2 = $("#fileUpload2").val();
+// // 				alert("bestandsnaam: " + bestandsnaam1 + ", " + bestandsnaam2
+// // 						+ ", savedFiles[0]: " + savedFiles[0].name  + ", savedFiles[1]: " + savedFiles[1].name);
+				
+// 				var files = $("#upload_form").files;
+// // 				var aantal = files.length;
+// // 				alert("aantal: " + aantal);
+// 				var myRegex = /^(.+\\)([^\\]+)$/;
+// 				var match = myRegex.exec(bestandsnaam1);
+// 				if (match != null) {
+// 					bestandsnaam = match[2];
+// 				}
+// 				// alert("Bestandsnaam: " + bestandsnaam);
+//  		    	$("#fileName").val(bestandsnaam1);
+// 			};
+//  		});
+
+	    /*
+	     * The order of the files seems to depend on the order of in the file selection window, NOT on the order in which they are selected.
+	     * Because it is counterintuitive and difficult to explain, we ask in a separate step which file contains the old records. 
+	     */
+	     /*
+	      * FIXME: Does limitMultiFileUploads actually work?
+	      */
+ 		$(function() {
+ 			$('#upload_form').fileupload({
+ 		        dataType: 'json',
+ 		        limitMultiFileUploads: 2,
+				singleFileUploads: false,
+				replaceFileInput: false,
+				autoUpload: true,
+ 		        start: function() {
+ 		        	$('#progress .progress-bar').css('width', '0%');
+	        		$('#resultaten').html("<span>In progress</span>");
+	        		//$('#reportLink').addClass("hidden");
+	        		$('#reportLink').html("<span></span>");
+	        		// $('#getResultFile_form').addClass("hidden");
+	        		$('#getResultFile_form').hide();
+ 		        },
+	           add: function(event, data) {
+	        	   if (data.files.length != 2) {
+	        		   alert("You have to select 2 files!");
+	        	   } else if ((data.files[0].size + data.files[1].size) > (150 * 1024 * 2014)) {
+						var MB = parseInt((data.files[0].size + data.files[1].size) / (1024 * 1024));
+						alert("The 2 files together are bigger than 150 MB! These files are " + MB + "MB");
+					} else {
+						//$("#order_form").removeClass('hidden');
+						// $("#order_form").addClass('show');
+						$("#order_form").show();
+						$("#fileName_1").html(data.files[0].name);						
+						$("#fileName_2").html(data.files[1].name);
+						$("#fileName_1_hidden").val(data.files[0].name);						
+						$("#fileName_2_hidden").val(data.files[1].name);
+						data.submit();
+					}
+	           },
+ 		        done: function (e, data) {
+ 		        	// console.log("done reached: %o", data);
+ 		        	if (data.textStatus == "success") {
+ 		        		// $('#resultaten').html("<span>Files " + data.files[0].name + " and " + data.files[1].name + " has been uploaded. Deduplication started ....</span>");
+ 		        		$('#resultaten').html("<span>" + data.result.result + "</span>");
+ 		        		$('#resultaten').removeClass('alert-danger');
+ 		        		$('#resultaten').addClass('alert-success');
+ 		        	}
+ 		        },
+ 		        error: function (jqXHR, data, thrownError) {
+ 		        	console.log("error arg1 reached: %o", jqXHR.responseText);
+ 		        	console.log("error arg2 reached: %o", data.textStatus);
+ 		        	console.log("error arg3 reached: %o", thrownError);
+ 		        	var resultaat = jQuery.parseJSON(jqXHR.responseText);
+	        		$('#resultaten').html("<span>" + resultaat.result + "</span>");
+		            $('#progress .progress-bar').css('width', '0%');
+ 	        		$('#resultaten').addClass('alert-danger');
+ 	        		$('#resultaten').removeClass('alert-success');
+ 		        },
+  				progressall: function (e, data) {
+ 		            var progress = parseInt(data.loaded / data.total * 100, 10);
+ 		            console.log("Progress: " + progress);
+ 		            $('#progress .progress-bar').css(
+ 		                'width',
+ 		                progress + '%'
+ 		            );
+ 		        }
+ 		    });
+ 			
+			document.getElementById('order_form').onsubmit = function () {
+        		//$('#reportLink').removeClass("hidden");
+        		// $('#reportLink').addClass('show');
+        		$('#reportLink').show();
+        		$('#reportLink').addClass('alert-danger');
+        		$('#reportLink').removeClass('alert-success');
+        		
+        		var nummer = $("input[name='fileNumber']:checked").val();
+        		var bestandsnaam;
+        		if (nummer == 0) {
+        			bestandsnaam = $("#fileName_2_hidden").val();
+        		} else {
+        			bestandsnaam = $("#fileName_1_hidden").val();
+        		}
+				// "fakepath" problem: remove everything before the real file name
+				var myRegex = /^(.+\\)([^\\]+)$/;
+				var match = myRegex.exec(bestandsnaam);
+				if (match != null) {
+					bestandsnaam = match[2];
+				}
+    			$("#fileName").val(bestandsnaam);
+    			$("#markModeResultFile").val($("input[name='markMode']").prop("checked"));
+	    
+        		$.ajax({
+        			url: '/startTwoFiles',
+        			method: 'POST',
+        			data: { fileName_1_hidden: $("#fileName_1_hidden").val()
+        				, fileName_2_hidden: $("#fileName_2_hidden").val()
+        				, fileNumber: $("input[name='fileNumber']:checked").val()
+						, markMode: $("input[name='markMode']:checked").val()}
+        			});
+	   	        var timer = setInterval(function() {  
+		            $.ajax({  
+		                  url: 'recordstatus.json',
+		                  dataType: 'json',
+		                  success: function(resultaat) {
+		                    if (resultaat.result.match("^DONE")) {  
+		 		        		$('#reportLink').removeClass('alert-danger');
+		 		        		$('#reportLink').addClass('alert-success');
+		                        $('#reportLink').html(resultaat.result);      
+		                        clearInterval(timer);
+		                        // $("#getResultFile_form").removeClass("hidden");
+		                        // $("#getResultFile_form").addClass("show");
+		                        $("#getResultFile_form").show();
+		                    } else if (resultaat.result.match("^ERROR")) {  
+		 		        		$('#reportLink').removeClass('alert-danger');
+		 		        		$('#reportLink').addClass('alert-danger');
+		                        $('#reportLink').html(resultaat.result);      
+		                        clearInterval(timer);
+		                    } else {
+			                  	// console.log("DATA: " + resultaat.result);
+		                    	$('#reportLink').html(resultaat.result);
+		                    }
+	                  	}
+		            });  
+		        }, 2000);
+	   	        return false;
+			};
+
+ 		});
+ 	</script>
+
+	<style type="text/css">
+		.bar {
+		    height: 18px;
+		    background: green;
+		}
+	</style>
+</head>
+<body data-spy="scroll" data-target="#menu" data-offset="1">
+	<div class="container-fluid">
+       <div class="row">
+			<div class="col-3">
+				<nav id="menu" class="navbar navbar-light bg-light" style="position: fixed;">
+					<nav class="nav nav-pills flex-column small">
+						<a class="list-group-item list-group-item-action" href="/">Home</a>
+						<a class="list-group-item list-group-item-action" href="#start">Top</a>
+						<a class="list-group-item list-group-item-action" href="#steps">Steps</a>
+						<a class="list-group-item list-group-item-action" href="#why">Why deduplicate 2 files?</a>
+						<a class="list-group-item list-group-item-action" href="#markModeText">Mark mode</a>
+						<a class="list-group-item list-group-item-action" href="#caveat">Caveat</a>
+						<a class="list-group-item list-group-item-action" href="/faq">FAQ</a>
+					</nav>
+				</nav>
+			</div>
+			<div class="col-9" style="height: 100vh; position: relative;" id="start">
+				<h1>DedupEndNote - deduplicate 2 files</h1>
+				<p class="alert alert-danger">Works only with Chrome and Firefox</p>
+				<div class="card bg-light mb-3">
+					<div class="card-body">
+						<form class="form-horizontal" id="upload_form" method="post" enctype="multipart/form-data" th:action="@{|/uploadTwoFiles|}">
+							<div class="form-group" style="margin-left: 20px;">
+								<label for="oldFile">Select the 2 EndNote RIS files (max. combined file size: 150MB). Select the 2 files while holding the SHIFT key.</label><br/>
+								<input type="file" id="fileUpload" name="files" multiple="multiple"/>
+							</div>
+						    <div id="progress" class="progress">
+						        <div class="progress-bar progress-bar-success"></div>
+						    </div>						
+		   					<p id="resultaten" class="alert-danger"></p>
+						</form>
+						
+						<form class="form-horizontal" style="display: none;" id="order_form" method="post" th:action="@{|/startTwoFiles|}">
+							<input type="hidden" id="fileName_1_hidden" name="fileName_1_hidden" value="" />
+							<input type="hidden" id="fileName_2_hidden" name="fileName_2_hidden" value="" />
+							<p><strong>Which file contains the OLD records?</strong></p>
+							<div class="form-check">
+								<input class="form-check-input" type="radio" name="fileNumber" id="fileNumber_1" value="0" checked="checked" />
+								<label class="form-check-label" for="fileNumber_1"> <span id="fileName_1"></span></label>
+							</div>
+							<div class="form-check">
+								<input class="form-check-input" type="radio" name="fileNumber" id="fileNumber_2" value="1" />
+								<label class="form-check-label" for="fileNumber_2"> <span id="fileName_2"></span></label>
+							</div>
+							<div class="form-check form-check-inline" style="margin-top: 20px;">
+								<input class="form-check-input" type="checkbox" id="markMode" name="markMode"/>
+								<label class="form-check-label" for="file"> Do NOT deduplicate the file with new records but mark the duplicate records (see <a href="#markModeText">Mark mode</a>)</label>
+							</div>
+							<div>
+								<button type="submit" class="btn btn-primary mb-2">Start deduplication</button>
+							</div>
+							<p id="reportLink" class="alert-danger"></p>
+						</form>
+						
+						<form class="form-horizontal" style="display: none;" id="getResultFile_form" method="post" th:action="@{|/getResultFile|}">
+							<input type="hidden" name="fileName" id="fileName" />
+							<input type="hidden" name="markModeResultFile" id="markModeResultFile" />
+	 						<!-- nodig om submit() voor IE te laten werken -->
+	<!--  						<input type="submit" name='submit' value="Submit" class='hidden'/> -->
+							<button type="submit" class="btn btn-primary mb-2" onclick="this.form.submit()">Get the result</button>
+						</form>
+					</div>
+				</div>
+
+	        	<h3 id="steps">Steps</h3>
+	   			<i>(The names of the EndNote databases and the RIS files are just examples)</i></p>
+	       		<ol>
+	       			<li>Export your existing EndNote database OLD as a RIS file OLD_RECORDS.txt</li>
+	       			<li>Import the results from the second query into a <strong>new</strong> EndNote database NEW</li>
+	       			<li>Export the NEW EndNote database as NEW_RECORDS.txt</li>
+	       			<li>Upload these 2 RIS files on this page (hold down the SHIFT key while selecting the files)</li>
+	       			<li>After uploading, tell which file contains the OLD records (the ones you don't want in your result file)</li>
+	       			<li>DedupEndNote will deduplicate both files, and save only the records from NEW_RECORDS.txt which are not present in OLD_RECORDS.txt.
+	       			If a record occurs multiple times in NEW_RECORDS.txt, it will be saved only once</li>
+	       			<li>Save the result file as a local file (NEW_RECORDS_deduplicated.txt)</li>
+	       			<li>Import NEW_RECORDS_deduplicated.txt in a new EndNote database if you want only to see the new records. Otherwise, import them into 
+	       			EndNote database OLD</li>
+	       		</ol>
+	       		 
+	        	<h3 id="why">Why deduplicate 2 files?</h3>
+	       		<ul>
+	       			<li>You have executed a query in a bibliographic database (e.g. PubMed) and imported the results in an EndNote database. Some time later
+	       			you execute that query again (maybe after changing the query) in the same bibliographic database or a another query in another bibliographic database.
+	       			You want to know which results from the second query are not present yet in the existing EndNote database.</li>
+	       			<li>You have assigned the records in the original EndNote database to several groups. If you add records from a new query to that EndNote database 
+		       			and deduplicate all records with DedupEndNote, you would lose that grouping information: EndNote export files do not retain grouping information!</li>
+		       			<li>You have results from several bibliographic databases (PubMed, Cochrane, EMBASE, ...) and no EndNote database yet. You prefer
+		       			PubMed records above Cochrane records above EMBASE records ... (when a duplicate set has PubMed, Cochrane and EMBASE records,
+		       			you want the PubMed record, when it has Cochrane and EMBASE records, you want the Cochrane record, ...).<br/>
+		       			Steps:<br>
+		       			<ol>
+		       				<li>import the results in EndNote databases PUBMED, COCHRANE and EMBASE</li>
+		       				<li>export these EndNote databases as PUBMED_RECORDS.txt, COCHRANE_RECORDS.txt, EMBASE_RECORDS.txt</li>
+		       				<li>deduplicate PUBMED_RECORDS.txt as 1 file, import PUBMED_RECORDS_deduplicated.txt into a new EndNote database ALL</li>
+		       				<li>export the EndNote database ALL as ALL_RECORDS.txt</li>
+		       				<li>deduplicate ALL_RECORDS.txt and COCHRANE_RECORDS.txt as 2 files, and import COCHRANE_RECORDS_deduplicated.txt into EndNote database ALL</li>
+		       				<li>repeat steps 4 and 5 for the other EndNote export files from step 2</li> 
+		       			</ol>
+		       			<p>See also the <a href="faq#preferredOrder">FAQ</a> for another way to achieve this.</p>
+		       		</li>
+	       		</ul>
+
+	       		<h3 id="markModeText">Mark Mode</h3>
+	       		<p>In Mark mode the duplicate records in the file with new records are marked with the IDs of the first record of a set of duplicate records.
+	       		If the duplicate record was found in the file with old records, the ID is preceded with "-".
+	       		When a record has no duplicates, no ID is used. The input file with new records is copied to the output file but the IDs of the duplicate records are written
+	       		to the Label field ("LB"). The original content of the Label field is overwritten! The DOI and Pages fields are not changed.</p>
+	       		
+	       		<p>After importing the result file ("..._mark.txt") into a new EndNote database, making the Label field visible, and sorting on the Label field:</p>
+	       		<ul>
+	       			<li>records without Label content were unique in both files</li>
+	       			<li>records with a negative Label were already present in the file with old records</li>
+	       			<li>records with a positive Label had duplicates in the file with new records</li>
+	       		</ul>
+	       		
+	       		<h3 id="caveat">Caveat</h3>
+	       		<ul>
+	       			<li>If you have deleted records in the original EndNote database, and the second set contains records which are duplicates of the deleted records,
+	       			these records from the second set will be present in the deduplication results. 
+	       			See the <a href="faq#groups">FAQ</a> for a solution with new projects.</li>
+	       			<li>DO NOT use the output file of a deduplication as an inputfile for another deduplication. The first output must first be imported in
+	       			an EndNote database (acquiring ID's) and exported again. This export file (with the ID's) can be used as inputfile for the another
+	       			deduplication.</li>
+	       			<li>Updates in the new file for ahead-of-print publications in the old file will NOT appear in the result file!</li>
+	       		</ul>
+	
+	        </div>
+	      </div>
+	</div>
+</body>
+</html>
