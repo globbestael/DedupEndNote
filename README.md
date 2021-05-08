@@ -1,11 +1,12 @@
 # DedupEndNote
 Deduplication of EndNote RIS files
 
-- deduplicates one file
-- deduplicates two files (NEW-RECORDS and OLD-RECORDS): which deduplicated records occur in NEW-RECORDS?
-- marks the duplicates in one file
+Possible actions:
+- deduplicate one file
+- deduplicate two files (NEW-RECORDS and OLD-RECORDS): which deduplicated records occur in NEW-RECORDS?
+- mark the duplicates of one file
 
-##Why DedupEndNote?
+## Why DedupEndNote?
 Deduplication in EndNote misses many duplicate records.
 Building and maintaining a Journals List within Endnote can partly solve this problem,
 but there remain lots of cases where EndNote is too unforgiving when comparing records.
