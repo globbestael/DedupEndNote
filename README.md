@@ -148,14 +148,15 @@ Data are from:
 
 
 <table border="1">
-	<colgroup>
-		<col></col>
-		<col></col>
-		<col span="7" style="text-align:right">
-	</colgroup>
+    <colgroup>
+        <col></col>
+        <col></col>
+        <col span="7" style="text-align:right">
+    </colgroup>
     <thead>
         <tr>
-            <th>Name</th>            <th>Tool</th>
+            <th>Name</th>
+            <th>Tool</th>
             <th>True pos</th>
             <th>False neg</th>
             <th>Sensitivity</th>
@@ -169,223 +170,223 @@ Data are from:
         <tr>
             <td rowspan="3">SRA: Cytology screening<br>1856 rec</td>
             <td>EndNote</td>
-            <td style="text-align: right;">885</td>
-            <td style="text-align: right;">518</td>
-            <td style="text-align: right;">61.3%</td>
-            <td style="text-align: right;">452</td>
-            <td style="text-align: right;">1</td>
-            <td style="text-align: right; color: red;">99.8%</td>
-            <td style="text-align: right;">72.0%</td>
+            <td align="right">885</td>
+            <td align="right">518</td>
+            <td align="right">61.3%</td>
+            <td align="right">452</td>
+            <td align="right">1</td>
+            <td align="right">!! 99.8%</td>
+            <td align="right">72.0%</td>
         </tr>
         <tr>
             <td>SRA-DM</td>
-            <td style="text-align: right;">1265</td>
-            <td style="text-align: right;">139</td>
-            <td style="text-align: right;">90.1%</td>
-            <td style="text-align: right;">452</td>
-            <td style="text-align: right;">0</td>
-            <td style="text-align: right;">100.0%</td>
-            <td style="text-align: right;">92.5%</td>
+            <td align="right">1265</td>
+            <td align="right">139</td>
+            <td align="right">90.1%</td>
+            <td align="right">452</td>
+            <td align="right">0</td>
+            <td align="right">100.0%</td>
+            <td align="right">92.5%</td>
         </tr>
         <tr>
             <td>DedupEndNote</td>
-            <td style="text-align: right;">1360</td>
-            <td style="text-align: right;">60</td>
-            <td style="text-align: right; font-weight: bold;">95.8%</td>
-            <td style="text-align: right;">436</td>
-            <td style="text-align: right;">0</td>
-            <td style="text-align: right;">100.0%</td>
-            <td xxstyle="text-align: right; font-weight: bold;" align="right"><strong>96.8%</strong></td>
+            <td align="right">1360</td>
+            <td align="right">60</td>
+            <td align="right"><strong>95.8%</strong></td>
+            <td align="right">436</td>
+            <td align="right">0</td>
+            <td align="right">100.0%</td>
+            <td align="right"><strong>96.8%</strong></td>
         </tr>
-		<tr>
-			<td cellspan="9" style="height: 15px;"></td>
-		</tr>
+        <tr>
+            <td cellspan="9" style="height: 15px;"></td>
+        </tr>
         <tr>
             <td rowspan="3">SRA: Haematology (1415 rec)</td>
             <td>EndNote</td>
-            <td style="text-align: right;">159</td>
-            <td style="text-align: right;">87</td>
-            <td style="text-align: right;">64.6%</td>
-            <td style="text-align: right;">1165</td>
-            <td style="text-align: right;">4</td>
-            <td style="text-align: right; color: red;">99.7%</td>
-            <td style="text-align: right;">93.6%</td>
+            <td align="right">159</td>
+            <td align="right">87</td>
+            <td align="right">64.6%</td>
+            <td align="right">1165</td>
+            <td align="right">4</td>
+            <td align="right">!! 99.7%</td>
+            <td align="right">93.6%</td>
         </tr>  
         <tr>
             <td>SRA-DM</td>
-            <td style="text-align: right;">208</td>
-            <td style="text-align: right;">38</td>
-            <td style="text-align: right;">84.6%</td>
-            <td style="text-align: right;">1169</td>
-            <td style="text-align: right;">0</td>
-            <td style="text-align: right;">100.0%</td>
-            <td style="text-align: right;">97.3%</td>
+            <td align="right">208</td>
+            <td align="right">38</td>
+            <td align="right">84.6%</td>
+            <td align="right">1169</td>
+            <td align="right">0</td>
+            <td align="right">100.0%</td>
+            <td align="right">97.3%</td>
         </tr>
         <tr>
             <td>DedupEndNote</td>
-            <td style="text-align: right;">222</td>
-            <td style="text-align: right;">14</td>
-            <td style="text-align: right; font-weight: bold;">94.1%</td>
-            <td style="text-align: right;">1179</td>
-            <td style="text-align: right;">0</td>
-            <td style="text-align: right;">100.0%</td>
-            <td style="text-align: right; font-weight: bold;">99.0%</td>
+            <td align="right">222</td>
+            <td align="right">14</td>
+            <td align="right"><strong>94.1%</strong></td>
+            <td align="right">1179</td>
+            <td align="right">0</td>
+            <td align="right">100.0%</td>
+            <td align="right"><strong>99.0%</strong></td>
         </tr>  
-		<tr>
-			<td cellspan="9" style="height: 15px;"></td>
-		</tr>
+        <tr>
+            <td cellspan="9" style="height: 15px;"></td>
+        </tr>
         <tr>
             <td rowspan="3">SRA: Respiratory<br>1988 rec</td>
             <td>EndNote</td>
-            <td style="text-align: right;">410</td>
-            <td style="text-align: right;">391</td>
-            <td style="text-align: right;">51.2%</td>
-            <td style="text-align: right;">1185</td>
-            <td style="text-align: right;">2</td>
-            <td style="text-align: right; color: red;">99.8%</td>
-            <td style="text-align: right;">80.2%</td>
+            <td align="right">410</td>
+            <td align="right">391</td>
+            <td align="right">51.2%</td>
+            <td align="right">1185</td>
+            <td align="right">2</td>
+            <td align="right">!! 99.8%</td>
+            <td align="right">80.2%</td>
         </tr>
         <tr>
             <td>SRA-DM</td>
-            <td style="text-align: right;">674</td>
-            <td style="text-align: right;">125</td>
-            <td style="text-align: right;">84.4%</td>
-            <td style="text-align: right;">1189</td>
-            <td style="text-align: right;">0</td>
-            <td style="text-align: right;">100.0%</td>
-            <td style="text-align: right;">93.7%</td>
+            <td align="right">674</td>
+            <td align="right">125</td>
+            <td align="right">84.4%</td>
+            <td align="right">1189</td>
+            <td align="right">0</td>
+            <td align="right">100.0%</td>
+            <td align="right">93.7%</td>
         </tr>  
         <tr>
             <td>DedupEndNote</td>
-            <td style="text-align: right;">758</td>
-            <td style="text-align: right;">42</td>
-            <td style="text-align: right; font-weight: bold;">94.8%</td>
-            <td style="text-align: right;">1188</td>
-            <td style="text-align: right;">0</td>
-            <td style="text-align: right;">100.0%</td>
-            <td style="text-align: right; font-weight: bold;">97.9%</td>
+            <td align="right">758</td>
+            <td align="right">42</td>
+            <td align="right"><strong>94.8%</strong></td>
+            <td align="right">1188</td>
+            <td align="right">0</td>
+            <td align="right">100.0%</td>
+            <td align="right"><strong>97.9%</strong></td>
         </tr>
-		<tr>
-			<td cellspan="9" style="height: 15px;"></td>
-		</tr>
+        <tr>
+            <td cellspan="9" style="height: 15px;"></td>
+        </tr>
         <tr>
             <td rowspan="3">SRA: Stroke<br>1292 rec</td>
             <td>EndNote</td>
-            <td style="text-align: right;">372</td>
-            <td style="text-align: right;">134</td>
-            <td style="text-align: right;">73.5%</td>
-            <td style="text-align: right;">784</td>
-            <td style="text-align: right;">2</td>
-            <td style="text-align: right; color: red;">99.7%</td>
-            <td style="text-align: right;">89.5%</td>
+            <td align="right">372</td>
+            <td align="right">134</td>
+            <td align="right">73.5%</td>
+            <td align="right">784</td>
+            <td align="right">2</td>
+            <td align="right">!! 99.7%</td>
+            <td align="right">89.5%</td>
         </tr>  
         <tr>
             <td>SRA-DM</td>
-            <td style="text-align: right;">426</td>
-            <td style="text-align: right;">81</td>
-            <td style="text-align: right;">84.0%</td>
-            <td style="text-align: right;">785</td>
-            <td style="text-align: right;">0</td>
-            <td style="text-align: right;">100.0%</td>
-            <td style="text-align: right;">93.7%</td>
+            <td align="right">426</td>
+            <td align="right">81</td>
+            <td align="right">84.0%</td>
+            <td align="right">785</td>
+            <td align="right">0</td>
+            <td align="right">100.0%</td>
+            <td align="right">93.7%</td>
         </tr>
         <tr>
             <td>DedupEndNote</td>
-            <td style="text-align: right;">504</td>
-            <td style="text-align: right;">6</td>
-            <td style="text-align: right; font-weight: bold;">98.8%</td>
-            <td style="text-align: right;">782</td>
-            <td style="text-align: right;">0</td>
-            <td style="text-align: right;">100.0%</td>
-            <td style="text-align: right; font-weight: bold;">99.5%</td>
+            <td align="right">504</td>
+            <td align="right">6</td>
+            <td align="right"><strong>98.8%</strong></td>
+            <td align="right">782</td>
+            <td align="right">0</td>
+            <td align="right">100.0%</td>
+            <td align="right"><strong>99.5%</strong></td>
         </tr> 
-		<tr>
-			<td cellspan="9" style="height: 15px;"></td>
-		</tr>
+        <tr>
+            <td cellspan="9" style="height: 15px;"></td>
+        </tr>
         <tr>
             <td rowspan="7">McKeown<br>3130 rec</td>
             <td>OVID</td>
-            <td style="text-align: right;">1982</td>
-            <td style="text-align: right;">90</td>
-            <td style="text-align: right;">95.7%</td>
-            <td style="text-align: right;">1058</td>
-            <td style="text-align: right;">0</td>
-            <td style="text-align: right;">100.0%</td>
-            <td style="text-align: right;">97.1%</td>
+            <td align="right">1982</td>
+            <td align="right">90</td>
+            <td align="right">95.7%</td>
+            <td align="right">1058</td>
+            <td align="right">0</td>
+            <td align="right">100.0%</td>
+            <td align="right">97.1%</td>
         </tr>
         <tr>
             <td>EndNote</td>
-            <td style="text-align: right;">1541</td>
-            <td style="text-align: right;">531</td>
-            <td style="text-align: right;">74.4%</td>
-            <td style="text-align: right;">850</td>
-            <td style="text-align: right;">208</td>
-            <td style="text-align: right; color: red;">80.3%</td>
-            <td style="text-align: right;">76.4%</td>
+            <td align="right">1541</td>
+            <td align="right">531</td>
+            <td align="right">74.4%</td>
+            <td align="right">850</td>
+            <td align="right">208</td>
+            <td align="right">!! 80.3%</td>
+            <td align="right">76.4%</td>
         </tr>
         <tr>
             <td>Mendeley</td>
-            <td style="text-align: right;">1877</td>
-            <td style="text-align: right;">195</td>
-            <td style="text-align: right;">90.6%</td>
-            <td style="text-align: right;">1041</td>
-            <td style="text-align: right;">17</td>
-            <td style="text-align: right; color: red;">98.4%</td>
-            <td style="text-align: right;">93.2%</td>
+            <td align="right">1877</td>
+            <td align="right">195</td>
+            <td align="right">90.6%</td>
+            <td align="right">1041</td>
+            <td align="right">17</td>
+            <td align="right">!! 98.4%</td>
+            <td align="right">93.2%</td>
         </tr>
         <tr>
             <td>Zotero</td>
-            <td style="text-align: right;">1473</td>
-            <td style="text-align: right;">599</td>
-            <td style="text-align: right;">71.1%</td>
-            <td style="text-align: right;">1038</td>
-            <td style="text-align: right;">20</td>
-            <td style="text-align: right; color: red;">98.1%</td>
-            <td style="text-align: right;">80.2%</td>
+            <td align="right">1473</td>
+            <td align="right">599</td>
+            <td align="right">71.1%</td>
+            <td align="right">1038</td>
+            <td align="right">20</td>
+            <td align="right">!! 98.1%</td>
+            <td align="right">80.2%</td>
         </tr>
         <tr>
             <td>Covidence</td>
-            <td style="text-align: right;">1952</td>
-            <td style="text-align: right;">120</td>
-            <td style="text-align: right;">94.2%</td>
-            <td style="text-align: right;">1056</td>
-            <td style="text-align: right;">2</td>
-            <td style="text-align: right; color: red;">99.8%</td>
-            <td style="text-align: right;">96.1%</td>
+            <td align="right">1952</td>
+            <td align="right">120</td>
+            <td align="right">94.2%</td>
+            <td align="right">1056</td>
+            <td align="right">2</td>
+            <td align="right">!! 99.8%</td>
+            <td align="right">96.1%</td>
         </tr>
         <tr>
             <td>Rayyan</td>
-            <td style="text-align: right;">2023</td>
-            <td style="text-align: right;">49</td>
-            <td style="text-align: right; font-weight: bold;">97.6%</td>
-            <td style="text-align: right;">1006</td>
-            <td style="text-align: right;">52</td>
-            <td style="text-align: right; color: red;">95.1%</td>
-            <td style="text-align: right;">96.8%</td>
+            <td align="right">2023</td>
+            <td align="right">49</td>
+            <td align="right"><strong>97.6%</strong></td>
+            <td align="right">1006</td>
+            <td align="right">52</td>
+            <td align="right">!! 95.1%</td>
+            <td align="right">96.8%</td>
         </tr>
         <tr>
             <td>DedupEndNote</td>
-            <td style="text-align: right;">2002</td>
-            <td style="text-align: right;">70</td>
-            <td style="text-align: right;">96.6%</td>
-            <td style="text-align: right;">1058</td>
-            <td style="text-align: right;">0</td>
-            <td style="text-align: right;">100.0%</td>
-            <td style="text-align: right; font-weight: bold;">97.8%</td>
+            <td align="right">2002</td>
+            <td align="right">70</td>
+            <td align="right">96.6%</td>
+            <td align="right">1058</td>
+            <td align="right">0</td>
+            <td align="right">100.0%</td>
+            <td align="right"><strong>97.8%</strong></td>
         </tr>
-		<tr>
-			<td cellspan="9" style="height: 15px;"></td>
-		</tr>
+        <tr>
+            <td cellspan="9" style="height: 15px;"></td>
+        </tr>
         <tr>
             <td>BIG_SET<br>3647 rec</td>
             <td>DedupEndNote</td>
-            <td style="text-align: right;">2779</td>
-            <td style="text-align: right;">148</td>
-            <td style="text-align: right;">94.9</td>
-            <td style="text-align: right;">720</td>
-            <td style="text-align: right;">0</td>
-            <td style="text-align: right;">100.0%</td>
-            <td style="text-align: right;">95.9%</td>
+            <td align="right">2779</td>
+            <td align="right">148</td>
+            <td align="right">94.9</td>
+            <td align="right">720</td>
+            <td align="right">0</td>
+            <td align="right">100.0%</td>
+            <td align="right">95.9%</td>
         </tr>
     </tbody>
 </table>
