@@ -195,7 +195,7 @@ Data are from:
             <td style="text-align: right;">436</td>
             <td style="text-align: right;">0</td>
             <td style="text-align: right;">100.0%</td>
-            <td style="text-align: right; font-weight: bold;">96.8%</td>
+            <td xxstyle="text-align: right; font-weight: bold;" align="right"><strong>96.8%</strong></td>
         </tr>
 		<tr>
 			<td cellspan="9" style="height: 15px;"></td>
