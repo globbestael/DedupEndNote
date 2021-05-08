@@ -155,7 +155,7 @@ Data are from:
 	</colgroup>
     <thead>
         <tr>
-            <th>Name</th><            <th>Tool</th>
+            <th>Name</th>            <th>Tool</th>
             <th>True pos</th>
             <th>False neg</th>
             <th>Sensitivity</th>
