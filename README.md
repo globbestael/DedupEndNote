@@ -1,10 +1,25 @@
 # DedupEndNote
-Deduplication of EndNote RIS files
+Deduplication of EndNote RIS files:
 
-Possible actions:
-- deduplicate one file
-- deduplicate two files (NEW-RECORDS and OLD-RECORDS): which deduplicated records occur in NEW-RECORDS?
-- mark the duplicates of one file
+- deduplicate one file: produces a new RIS file with the unique records
+- deduplicate two files (NEW-RECORDS and OLD-RECORDS): deduplicates both files and produces a RIS file with the unique records from NEW-RECORDS
+- mark the duplicates of one file: produces a RIS file with the Label field containing the ID of the duplicate record
+
+### Starting
+DedupEndNote is a Java web application (Java 11, Spring Boot, fat jar). It can be started locally with:
+```
+    java -jar DedupEndNote-[VERSION].jar
+```
+and the application will be available at 
+```
+    localhost:9777
+```
+### Actions
+* Export one or two EndNote databases as RIS file(s)
+* Upload the file(s)
+* Choose the action
+* Download the result file (RIS)
+* Import the result file into a new EndNote database
 
 ## Why DedupEndNote?
 Deduplication in EndNote misses many duplicate records.
@@ -16,7 +31,7 @@ Some bibliographic databases offer deduplication for their own databases
 DedupEndNote deduplicates an EndNote RIS file and writes a new RIS file with the unique records,
 which can be imported into a new EndNote database.
 It is more forgiving than EndNote itself when comparing records,
-but tests have shown that it identifies many more duplicates (see below under "Test results").
+but tests have shown that it identifies many more duplicates (see below under "Performance").
 
 The program has been tested on EndNote databases with records from:
 
@@ -29,7 +44,13 @@ The program has been tested on EndNote databases with records from:
 - Scopus
 - Web of Science
 
+The program has been tested with files with up to 50.000 records.
+
+
+
 ## What does DedupEndNote do?
+
+### Deduplicate
 Each pair of records is compared in 5 different ways. The general rule is:
 
 <table border="1">
@@ -103,7 +124,8 @@ If the ISSns are different or one or both records have no ISSN, the journals are
 If two records get 5 YES answers, they are considered duplicates.
 Only the first record of a set of duplicate records is copied to the output file.
 
-Moreover: When writing the output file, the following fields can be changed:
+### Enrich the records
+When writing the output file (except in Mark Mode), the following fields can be changed:
 
   * Author (AU):
     * if the (only) author is "Anonymous", the author is omitted
