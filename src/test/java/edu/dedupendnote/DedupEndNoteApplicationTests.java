@@ -20,12 +20,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.mock.web.MockHttpSession;
 
-import edu.dedupendnote.domain.Record;
-import edu.dedupendnote.services.DeduplicationService;
-import edu.dedupendnote.services.IOService;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
+import edu.dedupendnote.domain.Record;
+import edu.dedupendnote.services.DeduplicationService;
+import edu.dedupendnote.services.IOService;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -215,6 +215,6 @@ public class DedupEndNoteApplicationTests {
 		
 		titles.forEach(t -> assertThat(replyPattern.matcher(t.toLowerCase()).matches()).isTrue());
 	}
-	
+
 	// FIXME: tests for markMode = true;
 }

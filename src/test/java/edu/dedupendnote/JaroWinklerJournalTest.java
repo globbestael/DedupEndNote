@@ -305,6 +305,39 @@ public class JaroWinklerJournalTest {
 	    		arguments(
 	    				"Journal De Radiologie",
 	    				"J Radiol"), 				// unexpected capital
+	    		arguments(
+    					"Rofo",
+    					"Röfo"),
+	    		arguments(
+    					"Rofo",
+    					"RöFo : Fortschritte auf dem Gebiete der Röntgenstrahlen und der Nuklearmedizin"),
+	    		arguments(
+    					"Rofo",
+    					"RoFo Fortschritte auf dem Gebiet der Rontgenstrahlen und der Bildgebenden Verfahren"),
+	    		arguments(
+    					"RöFo : Fortschritte auf dem Gebiete der Röntgenstrahlen und der Nuklearmedizin",
+    					"RoFo Fortschritte auf dem Gebiet der Rontgenstrahlen und der Bildgebenden Verfahren"),
+	    		arguments(
+    					"Rofo",
+    					"Rofo-Fortschritte auf dem Gebiet der Rontgenstrahlen und der Bildgebenden Verfahren"),
+	    		arguments(
+    					"Fortschritte auf dem Gebiet der Rontgenstrahlen und der Bildgebenden Verfahren",
+    					"Rofo-Fortschritte auf dem Gebiet der Rontgenstrahlen und der Bildgebenden Verfahren"),
+	    		arguments(
+    					"Rofo",
+    					"Fortschritte auf dem Gebiet der Rontgenstrahlen"),
+	    		arguments(
+    					"Zentralbl Allg Pathol",
+    					"Zbl. Allg. Path. Path. Anat."),
+	    		arguments(
+    					"Zentralblatt für allgemeine Pathologie u. pathologische Anatomie",
+    					"Zbl. Allg. Path. Path. Anat."),
+	    		arguments(
+    					"Acta chirurgica Scandinavica. Supplementum",
+    					"Acta Chirurgica Scandinavica"),
+	    		arguments(
+    					"Acta Chir Scand Suppl",
+    					"Acta Chirurgica Scandinavica"),
 	    		// FIXME: Is this acceptable? Starts with "B" and has a "B" and "A" (all case insensitive)
 	    		arguments(
 	    				"BBA Clinical",

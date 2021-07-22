@@ -138,7 +138,7 @@ When writing the output file (except in Mark Mode), the following fields can be 
     * if the saved record has no value for its Publication year but one of the removed duplicate records has,
       the first not empty Publication year of the duplicates is copied to the saved record.
   * Starting page (SP) and Article Number (C7):
-    * the article number is put in the Pages field (SP) if the Pages field is empty or does not contain a "-", overwriting the Pages field content.
+    * the article number from field C7 is put in the Pages field (SP) if the Pages field is empty or does not contain a "-", overwriting the Pages field content.
     * the article number field (C7) is omitted
     * if the saved record has no value for its Pages field (e.g. PubMed ahead of print publications) but one of the removed duplicate records has,
       the first not empty pages of the duplicates are copied to the saved record.
@@ -167,7 +167,11 @@ Data are from:
   Considerations for conducting systematic reviews: evaluating the performance of different methods for de-duplicating references.
   Syst Rev 10, 38 (2021). [https://doi.org/10.1186/s13643-021-01583-y](https://doi.org/10.1186/s13643-021-01583-y)
 * [BIG_SET] Own test database for DedupEndNote on portal vein thrombosis (52,828 records, with 3647 records validated)
-
+* [ASySD] Kaitlyn Hair, Zsanett Bahor, Malcolm Macleod, Jing Liao, Emily S. Sena
+  The Automated Systematic Search Deduplicator (ASySD): a rapid, open-source, interoperable tool to remove duplicate citations in biomedical systematic reviews
+  bioRxiv 2021.05.04.442412; [https://doi.org/10.1101/2021.05.04.442412](https://doi.org/10.1101/2021.05.04.442412)
+  The data sets are available at [https://osf.io/2b8uq/](https://osf.io/2b8uq/)
+  (Incomplete: only Diabetes subset)
 
 <table border="1">
     <colgroup>
@@ -400,24 +404,115 @@ Data are from:
             <td cellspan="9" style="height: 15px;"></td>
         </tr>
         <tr>
-            <td>BIG_SET<br>3647 rec</td>
+            <td>BIG_SET<br>4046 rec</td>
             <td>DedupEndNote</td>
-            <td align="right">2779</td>
-            <td align="right">148</td>
-            <td align="right">94.9</td>
-            <td align="right">720</td>
+            <td align="right">3163</td>
+            <td align="right">125</td>
+            <td align="right">96.20</td>
+            <td align="right">755</td>
+            <td align="right">3</td>
+            <td align="right">!! 99.60%</td>
+            <td align="right">96.8%</td>
+        </tr>
+	</tbody>
+</table>
+
+For the ASySD files the results are reported in a different way:
+* true positives: citations which are duplicates which are correctly removed from the dataset
+* false positives: citations which are not duplicates which are wrongly removed from the dataset
+* true negatives: citations which are not duplicates which correctly remain in the dataset
+* false negatives: citations which are duplicates which remain in the dataset but which should have been removed
+
+* sensitivity: TP / (TP + FN)
+* specificity: TN / (TN + FP)
+* precision: TP / (TP + FP)
+* accuracy: (TP + TN) / (TP + FN + TN + FP)
+
+<table border="1">
+    <colgroup>
+        <col></col>
+        <col></col>
+        <col span="8" style="text-align:right">
+    </colgroup>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Tool</th>
+            <th>True pos</th>
+            <th>False neg</th>
+            <th>Sensitivity</th>
+            <th>True neg</th>
+            <th>False pos</th>
+            <th>Specificity</th>
+            <th>Precision</th>
+            <th>Accuracy</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td rowspan="5">ASySD Diabetes<br>1845 rec</td>
+            <td>Human</td>
+            <td align="right">893</td>
+            <td align="right">368</td>
+            <td align="right">70.8%</td>
+            <td align="right">581</td>
+            <td align="right">3</td>
+            <td align="right">!! 99.5%</td>
+            <td align="right">99.7%</td>
+            <td align="right">79.9%</td>
+        </tr>
+        <tr>
+            <td>EndNote</td>
+            <td align="right">1218</td>
+            <td align="right">43</td>
+            <td align="right">96.6%</td>
+            <td align="right">584</td>
             <td align="right">0</td>
             <td align="right">100.0%</td>
-            <td align="right">95.9%</td>
+            <td align="right">100.0%</td>
+            <td align="right">97.7%</td>
+        </tr>
+        <tr>
+            <td>SRA-DM</td>
+            <td align="right">1147</td>
+            <td align="right">114</td>
+            <td align="right">91.0%</td>
+            <td align="right">514</td>
+            <td align="right">70</td>
+            <td align="right">!! 88.0%</td>
+            <td align="right">94.2%</td>
+            <td align="right">90.0%</td>
+        </tr>
+        <tr>
+            <td>ASySD</td>
+            <td align="right">1259</td>
+            <td align="right">2</td>
+            <td align="right"><strong>99.8%</strong></td>
+            <td align="right">584</td>
+            <td align="right">0</td>
+            <td align="right">100.0%</td>
+            <td align="right">100.0%</td>
+            <td align="right"><strong>99.9%</strong></td>
+        </tr>
+        <tr>
+            <td>DedupEndNote</td>
+            <td align="right"><del>1248</del></td>
+            <td align="right"><del>24</del></td>
+            <td align="right"><del>98.1%</del></td>
+            <td align="right"><del>558</del></td>
+            <td align="right">4</td>
+            <td align="right"><del>!! 99.7%</del></td>
+            <td align="right"><del>99.7%</del></td>
+            <td align="right"><del>97.9%</del></td>
         </tr>
     </tbody>
 </table>
-
-## Limitations
+## Limitations
 * Input file size: The maximum size of the input file is limited to 150MB.
+* Input file format: only EndNote RIS file (at present)
 * Encoding: The program assumes that the input file is encoded as UTF-8.
 * If authors AND (all) titles AND (all) journal names for a record use a non-Latin script, results for this record may be inaccurate.
-* The input file must be an export from ONE EndNote database: the ID fields are used internally for identifying the records, so they have to be unique.
+* Each input file must be an export from ONE EndNote database: the ID fields are used internally for identifying the records, so they have to be unique. When comparing 2 files the ID fields may be common between the 2 files.
 * The program has been developed and tested for biomedical databases (PubMed, EMBASE, ...) and some general databases (Web of Science, Scopus). Deduplicating records from other databases is not garanteed to work.
 * Records for each publication year are compared to records from the same and the following year: a record from 2016 is compared to the records from 2015 (when treating the records from 2015) and from 2016 and 2017 (when treating the records from 2016). A PubMed ahead-of-print record from 2013 and a corresponding record from 2017 (when it was 'officially' published) will not be compared (and possibly deduplicated).
 * Bibliographic databases are not always very accurate in the starting page of a publication. Because starting page is part of the comparisons, DedupEndNote misses the duplicates when bibliographic databases don't agree on the starting page (and one or both records have no DOIs).

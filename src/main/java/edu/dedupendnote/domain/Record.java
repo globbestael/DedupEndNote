@@ -14,6 +14,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import org.apache.commons.text.StringEscapeUtils;
+
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
@@ -54,7 +56,7 @@ public class Record {
 	private Boolean keptRecord = true;
 
 	// see: http://blog.crossref.org/2015/08/doi-regular-expressions.html
-	private static Pattern doiPattern = Pattern.compile("\\b(10.\\d{4,9}/[-._;()/:a-z0-9]+)\\b");
+	private static Pattern doiPattern = Pattern.compile("\\b(10.\\d{4,9}/[-._;()<>/:a-z0-9]+)\\b");
 	private static Pattern issnPattern = Pattern.compile("\\b([-\\dxX]{8,17})\\b"); // ISSN or ISBN
 	static List<String> excludedJournalsParts = Arrays.asList("electronic resource", "et al.", "technical report");
 
@@ -110,8 +112,9 @@ public class Record {
 	private static Pattern natlPattern = Pattern.compile("Natl");
 	private static Pattern geneeskdPattern = Pattern.compile("Geneeskd");
 	private static Pattern kongressbdPattern = Pattern.compile("Kongressbd");
+	private static Pattern zentralblattPattern = Pattern.compile("^Zbl(\\.| )", Pattern.CASE_INSENSITIVE);
 	private static Pattern jbrPattern = Pattern.compile("Jbr-btr", Pattern.CASE_INSENSITIVE);
-	private static Pattern rofoPattern = Pattern.compile("^Rofo\\-", Pattern.CASE_INSENSITIVE);	// before the latin_o_pattern because this is an exception
+	private static Pattern rofoPattern = Pattern.compile("^(Rofo\\-|Fortschritte .* Gebiet .* R.ntgenstrahlen)", Pattern.CASE_INSENSITIVE);	// before the latin_o_pattern because this is an exception
 	private static Pattern latin_o_Pattern = Pattern.compile("o\\-(\\S)");	// before minusOrDotPattern! gastro-enterology --> gastroenterology 
 	private static Pattern minusOrDotPattern = Pattern.compile("(-|\\.)");
 	private static Pattern journalStartingArticlePattern = Pattern.compile("^(The|Le|La|Les|L'|Der|Die|Das|Il|Het) ");
@@ -121,6 +124,7 @@ public class Record {
 	private static Pattern journalOtherRoundBracketsPattern = Pattern.compile("(\\)|\\()");
 	private static Pattern journalAdditionPattern = Pattern.compile("(:|/).*$");
 	private static Pattern journalSlashPattern = Pattern.compile("^(.+\\S)/(\\S.+)");
+	private static Pattern supplementPattern = Pattern.compile("(\\b(Suppl|Supplement|Supplementum)\\b.*)$", Pattern.CASE_INSENSITIVE);
 
 	static public String normalizeJournalJava8(String s) {
 		String r = s;
@@ -136,6 +140,8 @@ public class Record {
 		r = natlPattern.matcher(r).replaceAll("National");
 		r = geneeskdPattern.matcher(r).replaceAll("Geneeskunde");
 		r = kongressbdPattern.matcher(r).replaceAll("Kongressband");
+		r = zentralblattPattern.matcher(r).replaceAll("Zentralblatt");
+		// Cheating
 		r = jbrPattern.matcher(r).replaceAll("JBR BTR");
 		r = rofoPattern.matcher(r).replaceAll("Rofo ");
 		// Java 8
@@ -352,6 +358,7 @@ public class Record {
 		}
 		try {
 			doi = URLDecoder.decode(doi, "UTF8");
+			doi = StringEscapeUtils.unescapeHtml4(doi);
 		} catch (UnsupportedEncodingException e) {
 			log.info(e.getMessage());
 			e.printStackTrace();
@@ -405,6 +412,12 @@ public class Record {
 				additional.add(j.replaceAll(":", " "));
 			}
 		}
+		matcher = supplementPattern.matcher(journal);
+		if (matcher.find()) {
+			System.err.println("SupplementMatcher fired for: " + journal);
+			additional.add(matcher.replaceAll(""));
+		}
+		
 		if (! additional.isEmpty()) {
 			list.addAll(additional);
 		}

@@ -62,6 +62,10 @@ public class IOService {
 				if (matcher.matches()) {
 					fieldName = matcher.group(1);
 					fieldContent = matcher.group(3);
+					// Added for the ASySD Depression set 
+					if ("NA".equals(fieldContent)) {
+						continue;
+					}
 					previousFieldName = "XYZ";
 					switch (fieldName) {
 						case "AU": // Authors

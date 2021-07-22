@@ -354,10 +354,13 @@ public class DeduplicationService {
 								r.setLabel(record.getLabel());
 							} else {
 								r.setLabel(record.getId());
+								record.setLabel(record.getId());
 							}
 						} else {
-							// FIXME: does this ever occur?
-							log.debug("==> LABEL ALREADY PRESENT: {} has label {} and should also get label {}", r.getId(), r.getLabel(), record.getId());
+							// log.debug("==> LABEL ALREADY PRESENT: {} has label {} and should also get label {}", r.getId(), r.getLabel(), record.getId());
+							if (! r.getLabel().equals(record.getLabel())) {
+								log.error("Records have different labels: {}, {}\n- {}\n- {}", record.getLabel(), r.getLabel(), record, r);
+							}
 						}
 						if (r.isReply()) {
 							record.setReply(true);
@@ -387,10 +390,12 @@ public class DeduplicationService {
 				// See test set: Author Bail, JP ...
 				// records.removeAll(doubles); // no need to compare the doubles later on in this list
 				// This could be set in the map (higher), but then would be set for each duplicate found
-				if (record.getLabel() == null) {
-					record.setLabel(record.getId());
-					log.debug("2. setting label {} to record {}", record.getLabel(), record.getId());
-				}
+				
+				// TODO: this is commented out because in map(...) the label for record is set if it was empty. Safe to remove? 
+//				if (record.getLabel() == null) {
+//					record.setLabel(record.getId());
+//					log.debug("2. setting label {} to record {}", record.getLabel(), record.getId());
+//				}
 				doubleSize += doubles.size();
 				updateSession(session, "Working on " + year + " for " + listSize + " records (marked " + doubleSize + " duplicates)");
 			}
