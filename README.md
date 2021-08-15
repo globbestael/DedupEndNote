@@ -78,16 +78,18 @@ Each pair of records is compared in 5 different ways. The general rule is:
 The following comparisons are used (in this order, chosen for performance reasons):
 
 1. __Publication year:__ Are they at most 1 year apart?
+  * Prepocessing: publication years before 1900 are removed (see insufficient data)
   * Insufficient data: Records without a publication year are compared to all records unless they have been identified as a duplicate.
 2. __Starting page or DOI:__ Are they the same?<br/>
 If the starting pages are different or one or both are absent, the DOIs are compared.
   * Preprocessing: Article number is treated as a starting page if starting page itself is empty or contains "-".
   * Preprocessing: Starting pages are compared only for number: "S123" and "123" are considered the same.
-  * Preprocessing: In DOIs 'http://dx.doi.org/', 'http://doi.org/', ... are left out.
+  * Preprocessing: In DOIs 'http://dx.doi.org/', 'http://doi.org/', ... are left out. URL- and HTML-encoded DOIs are decoded ('10.1002/(SICI)1098-1063(1998)8:6&amp;lt;627::AID-HIPO5&amp;gt;3.0.CO;2-X' becomes '10.1002/(SICI)1098-1063(1998)8:6<627::AID-HIPO5>3.0.CO;2-X'). DOIs are lowercased.
   * Insufficient data: If one or both DOIs are missing and one or both of the starting pages are missing, the answer is YES.
     This is important because of PubMed ahead of print publications.
 3. __Authors:__ Is the <a href="https://en.wikipedia.org/wiki/Jaro%E2%80%93Winkler_distance" target="_new">Jaro-Winkler similarity</a> of the authors > 0.67?<br/>
   * Preprocessing: The author "Anonymous," is treated as no author.
+  * Preprocessing: Group author names are removed. "Author" names which contain "consortium", "grp", "group", "nct" or "study" are considered group author names.
   * Preprocessing: First names are reduced to initials ("Moorthy, Ranjith K." to "Moorthy, R. K.").
   * Preprocessing: All authors from each record are joined by "; ".
   * Insufficient data: If one or both records have no authors, the answer is YES
@@ -166,12 +168,11 @@ Data are from:
 * [McKeown] McKeown, S., Mir, Z.M.
   Considerations for conducting systematic reviews: evaluating the performance of different methods for de-duplicating references.
   Syst Rev 10, 38 (2021). [https://doi.org/10.1186/s13643-021-01583-y](https://doi.org/10.1186/s13643-021-01583-y)
-* [BIG_SET] Own test database for DedupEndNote on portal vein thrombosis (52,828 records, with 3647 records validated)
+* [BIG_SET] Own test database for DedupEndNote on portal vein thrombosis (52,828 records, with 4046 records validated)
 * [ASySD] Kaitlyn Hair, Zsanett Bahor, Malcolm Macleod, Jing Liao, Emily S. Sena
   The Automated Systematic Search Deduplicator (ASySD): a rapid, open-source, interoperable tool to remove duplicate citations in biomedical systematic reviews
   bioRxiv 2021.05.04.442412; [https://doi.org/10.1101/2021.05.04.442412](https://doi.org/10.1101/2021.05.04.442412)
   The data sets are available at [https://osf.io/2b8uq/](https://osf.io/2b8uq/)
-  (Incomplete: only Diabetes subset)
 
 <table border="1">
     <colgroup>
@@ -201,7 +202,7 @@ Data are from:
             <td align="right">61.3%</td>
             <td align="right">452</td>
             <td align="right">1</td>
-            <td align="right">!! 99.8%</td>
+            <td align="right">99.8%</td>
             <td align="right">72.0%</td>
         </tr>
         <tr>
@@ -211,7 +212,7 @@ Data are from:
             <td align="right">90.1%</td>
             <td align="right">452</td>
             <td align="right">0</td>
-            <td align="right">100.0%</td>
+            <td align="right"><strong>100.0%<strong></td>
             <td align="right">92.5%</td>
         </tr>
         <tr>
@@ -221,7 +222,7 @@ Data are from:
             <td align="right"><strong>95.8%</strong></td>
             <td align="right">436</td>
             <td align="right">0</td>
-            <td align="right">100.0%</td>
+            <td align="right"><strong>100.0%</strong></td>
             <td align="right"><strong>96.8%</strong></td>
         </tr>
         <tr>
@@ -235,7 +236,7 @@ Data are from:
             <td align="right">64.6%</td>
             <td align="right">1165</td>
             <td align="right">4</td>
-            <td align="right">!! 99.7%</td>
+            <td align="right">99.7%</td>
             <td align="right">93.6%</td>
         </tr>  
         <tr>
@@ -245,7 +246,7 @@ Data are from:
             <td align="right">84.6%</td>
             <td align="right">1169</td>
             <td align="right">0</td>
-            <td align="right">100.0%</td>
+            <td align="right"><strong>100.0%</strong></td>
             <td align="right">97.3%</td>
         </tr>
         <tr>
@@ -255,7 +256,7 @@ Data are from:
             <td align="right"><strong>94.1%</strong></td>
             <td align="right">1179</td>
             <td align="right">0</td>
-            <td align="right">100.0%</td>
+            <td align="right"><strong>100.0%</strong></td>
             <td align="right"><strong>99.0%</strong></td>
         </tr>  
         <tr>
@@ -269,7 +270,7 @@ Data are from:
             <td align="right">51.2%</td>
             <td align="right">1185</td>
             <td align="right">2</td>
-            <td align="right">!! 99.8%</td>
+            <td align="right">99.8%</td>
             <td align="right">80.2%</td>
         </tr>
         <tr>
@@ -279,18 +280,18 @@ Data are from:
             <td align="right">84.4%</td>
             <td align="right">1189</td>
             <td align="right">0</td>
-            <td align="right">100.0%</td>
+            <td align="right"><strong>100.0%</strong></td>
             <td align="right">93.7%</td>
         </tr>  
         <tr>
             <td>DedupEndNote</td>
-            <td align="right">758</td>
-            <td align="right">42</td>
-            <td align="right"><strong>94.8%</strong></td>
+            <td align="right">765</td>
+            <td align="right">35</td>
+            <td align="right"><strong>95.6%</strong></td>
             <td align="right">1188</td>
             <td align="right">0</td>
-            <td align="right">100.0%</td>
-            <td align="right"><strong>97.9%</strong></td>
+            <td align="right"><strong>100.0%</strong></td>
+            <td align="right"><strong>98.2%</strong></td>
         </tr>
         <tr>
             <td cellspan="9" style="height: 15px;"></td>
@@ -303,7 +304,7 @@ Data are from:
             <td align="right">73.5%</td>
             <td align="right">784</td>
             <td align="right">2</td>
-            <td align="right">!! 99.7%</td>
+            <td align="right">99.7%</td>
             <td align="right">89.5%</td>
         </tr>  
         <tr>
@@ -313,7 +314,7 @@ Data are from:
             <td align="right">84.0%</td>
             <td align="right">785</td>
             <td align="right">0</td>
-            <td align="right">100.0%</td>
+            <td align="right"><strong>100.0%</strong></td>
             <td align="right">93.7%</td>
         </tr>
         <tr>
@@ -323,7 +324,7 @@ Data are from:
             <td align="right"><strong>98.8%</strong></td>
             <td align="right">782</td>
             <td align="right">0</td>
-            <td align="right">100.0%</td>
+            <td align="right"><strong>100.0%</strong></td>
             <td align="right"><strong>99.5%</strong></td>
         </tr> 
         <tr>
@@ -337,7 +338,7 @@ Data are from:
             <td align="right">95.7%</td>
             <td align="right">1058</td>
             <td align="right">0</td>
-            <td align="right">100.0%</td>
+            <td align="right"><strong>100.0%</strong></td>
             <td align="right">97.1%</td>
         </tr>
         <tr>
@@ -347,7 +348,7 @@ Data are from:
             <td align="right">74.4%</td>
             <td align="right">850</td>
             <td align="right">208</td>
-            <td align="right">!! 80.3%</td>
+            <td align="right">80.3%</td>
             <td align="right">76.4%</td>
         </tr>
         <tr>
@@ -357,7 +358,7 @@ Data are from:
             <td align="right">90.6%</td>
             <td align="right">1041</td>
             <td align="right">17</td>
-            <td align="right">!! 98.4%</td>
+            <td align="right">98.4%</td>
             <td align="right">93.2%</td>
         </tr>
         <tr>
@@ -367,7 +368,7 @@ Data are from:
             <td align="right">71.1%</td>
             <td align="right">1038</td>
             <td align="right">20</td>
-            <td align="right">!! 98.1%</td>
+            <td align="right">98.1%</td>
             <td align="right">80.2%</td>
         </tr>
         <tr>
@@ -377,7 +378,7 @@ Data are from:
             <td align="right">94.2%</td>
             <td align="right">1056</td>
             <td align="right">2</td>
-            <td align="right">!! 99.8%</td>
+            <td align="right">99.8%</td>
             <td align="right">96.1%</td>
         </tr>
         <tr>
@@ -387,18 +388,18 @@ Data are from:
             <td align="right"><strong>97.6%</strong></td>
             <td align="right">1006</td>
             <td align="right">52</td>
-            <td align="right">!! 95.1%</td>
+            <td align="right">95.1%</td>
             <td align="right">96.8%</td>
         </tr>
         <tr>
             <td>DedupEndNote</td>
-            <td align="right">2002</td>
-            <td align="right">70</td>
-            <td align="right">96.6%</td>
+            <td align="right">2014</td>
+            <td align="right">58</td>
+            <td align="right">97.2%</td>
             <td align="right">1058</td>
             <td align="right">0</td>
-            <td align="right">100.0%</td>
-            <td align="right"><strong>97.8%</strong></td>
+            <td align="right"><strong>100.0%</strong></td>
+            <td align="right"><strong>98.1%</strong></td>
         </tr>
         <tr>
             <td cellspan="9" style="height: 15px;"></td>
@@ -406,33 +407,38 @@ Data are from:
         <tr>
             <td>BIG_SET<br>4046 rec</td>
             <td>DedupEndNote</td>
-            <td align="right">3163</td>
-            <td align="right">125</td>
-            <td align="right">96.20</td>
+            <td align="right">3179</td>
+            <td align="right">103</td>
+            <td align="right">96.7</td>
             <td align="right">755</td>
-            <td align="right">3</td>
-            <td align="right">!! 99.60%</td>
-            <td align="right">96.8%</td>
+            <td align="right">9</td>
+            <td align="right">98.2%</td>
+            <td align="right">97.2%</td>
         </tr>
 	</tbody>
 </table>
 
-For the ASySD files the results are reported in a different way:
-* true positives: citations which are duplicates which are correctly removed from the dataset
-* false positives: citations which are not duplicates which are wrongly removed from the dataset
-* true negatives: citations which are not duplicates which correctly remain in the dataset
-* false negatives: citations which are duplicates which remain in the dataset but which should have been removed
+For the ASySD validation files the results are reported in a different way:
 
-* sensitivity: TP / (TP + FN)
-* specificity: TN / (TN + FP)
-* precision: TP / (TP + FP)
-* accuracy: (TP + TN) / (TP + FN + TN + FP)
+| Type | Description |
+| --- | --- |
+| **true positives** | citations which are duplicates which are correctly removed from the dataset |
+| **false positives** | citations which are not duplicates which are wrongly removed from the dataset |
+| **true negatives** | citations which are not duplicates which correctly remain in the dataset |
+| **false negatives** | citations which are duplicates which remain in the dataset but which should have been removed |
+| --- | --- |
+| **sensitivity (recall)** | TP / (TP + FN) |
+| **specificity** | TN / (TN + FP) |
+| **precision** | TP / (TP + FP) |
+| **accuracy** | (TP + TN) / (TP + FN + TN + FP) |
+| **F1** | 2 * (precision * recall) / (precision + recall) |
+
 
 <table border="1">
     <colgroup>
         <col></col>
         <col></col>
-        <col span="8" style="text-align:right">
+        <col span="9" style="text-align:right">
     </colgroup>
     <thead>
         <tr>
@@ -446,9 +452,138 @@ For the ASySD files the results are reported in a different way:
             <th>Specificity</th>
             <th>Precision</th>
             <th>Accuracy</th>
+			<th>F1 score</th>
         </tr>
     </thead>
     <tbody>
+        <tr>
+            <td rowspan="5">ASySD Cardiac Human<br>8948 rec</td>
+            <td>Human</td>
+            <td align="right">3136</td>
+            <td align="right">374</td>
+            <td align="right">89.3%</td>
+            <td align="right">5421</td>
+            <td align="right">17</td>
+            <td align="right">99.7%</td>
+            <td align="right">99.5%</td>
+            <td align="right">95.6%</td>
+            <td align="right">94.1%</td>
+        </tr>
+        <tr>
+            <td>EndNote</td>
+            <td align="right">2734</td>
+            <td align="right">776</td>
+            <td align="right">77.9%</td>
+            <td align="right">5435</td>
+            <td align="right">3</td>
+            <td align="right">99.9%</td>
+            <td align="right">99.9%</td>
+            <td align="right">91.3%</td>
+            <td align="right">94.1%</td>
+        </tr>
+        <tr>
+            <td>SRA-DM</td>
+            <td align="right">1149</td>
+            <td align="right">2361</td>
+            <td align="right">32.7%</td>
+            <td align="right">5163</td>
+            <td align="right">275</td>
+            <td align="right">94.9%</td>
+            <td align="right">80.7%</td>
+            <td align="right">70.4%</td>
+            <td align="right">46.6%</td>
+        </tr>
+        <tr>
+            <td>ASySD</td>
+            <td align="right">3503</td>
+            <td align="right">7</td>
+            <td align="right"><strong>99.8%</strong></td>
+            <td align="right">5434</td>
+            <td align="right">7</td>
+            <td align="right">99.9%</td>
+            <td align="right">99.9%</td>
+            <td align="right"><strong>99.9%</strong></td>
+            <td align="right"><strong>99.8%</strong></td>
+        </tr>
+        <tr>
+            <td>DedupEndNote</td>
+            <td align="right">3516</td>
+            <td align="right">21</td>
+            <td align="right">99.4%</td>
+            <td align="right">5421</td>
+            <td align="right">0</td>
+            <td align="right"><strong>100.0%</strong></td>
+            <td align="right"><strong>100.0%</strong></td>
+            <td align="right">99.8%</td>
+            <td align="right">99.7%</td>
+        </tr>
+        <tr>
+            <td cellspan="9" style="height: 15px;"></td>
+        </tr>
+        <tr>
+            <td rowspan="5">ASySD Depression<br>79880 rec</td>
+            <td>Human</td>
+            <td align="right">9380</td>
+            <td align="right">669</td>
+            <td align="right">93.3%</td>
+            <td align="right">69793</td>
+            <td align="right">28</td>
+            <td align="right"><strong>99.9%</strong></td>
+            <td align="right">99.7%</td>
+            <td align="right">99.1%</td>
+            <td align="right">96.4%</td>
+        </tr>
+        <tr>
+            <td>EndNote</td>
+            <td align="right">7531</td>
+            <td align="right">2528</td>
+            <td align="right">74.9%</td>
+            <td align="right">69816</td>
+            <td align="right">5</td>
+            <td align="right"><strong>99.9%</strong></td>
+            <td align="right"><strong>99.9%</strong></td>
+            <td align="right">96.8%</td>
+            <td align="right">85.6%</td>
+        </tr>
+        <tr>
+            <td>SRA-DM</td>
+            <td align="right">9448</td>
+            <td align="right">611</td>
+            <td align="right">93.9%</td>
+            <td align="right">68473</td>
+            <td align="right">1348</td>
+            <td align="right">98.0%</td>
+            <td align="right">87.5%</td>
+            <td align="right">97.6%</td>
+            <td align="right">90.6%</td>
+        </tr>
+        <tr>
+            <td>ASySD</td>
+            <td align="right">9624</td>
+            <td align="right">435</td>
+            <td align="right"><strong>95.7%</strong></td>
+            <td align="right">69747</td>
+            <td align="right">72</td>
+            <td align="right"><strong>99.9%</strong></td>
+            <td align="right">99.3%</td>
+            <td align="right"><strong>99.4%</strong></td>
+            <td align="right"><strong>97.4%</strong></td>
+        </tr>
+        <tr>
+            <td>DedupEndNote</td>
+            <td align="right">9689</td>
+            <td align="right">666</td>
+            <td align="right">93.6%</td>
+            <td align="right">69474</td>
+            <td align="right">51</td>
+            <td align="right">99.2%</td>
+            <td align="right">99.5%</td>
+            <td align="right">99.1%</td>
+            <td align="right">96.4%</td>
+        </tr>
+        <tr>
+            <td cellspan="9" style="height: 15px;"></td>
+        </tr>
         <tr>
             <td rowspan="5">ASySD Diabetes<br>1845 rec</td>
             <td>Human</td>
@@ -457,9 +592,10 @@ For the ASySD files the results are reported in a different way:
             <td align="right">70.8%</td>
             <td align="right">581</td>
             <td align="right">3</td>
-            <td align="right">!! 99.5%</td>
+            <td align="right">99.5%</td>
             <td align="right">99.7%</td>
             <td align="right">79.9%</td>
+            <td align="right">82.8%</td>
         </tr>
         <tr>
             <td>EndNote</td>
@@ -468,9 +604,10 @@ For the ASySD files the results are reported in a different way:
             <td align="right">96.6%</td>
             <td align="right">584</td>
             <td align="right">0</td>
-            <td align="right">100.0%</td>
-            <td align="right">100.0%</td>
+            <td align="right"><strong>100.0%</strong></td>
+            <td align="right"><strong>100.0%</strong></td>
             <td align="right">97.7%</td>
+            <td align="right">98.3%</td>
         </tr>
         <tr>
             <td>SRA-DM</td>
@@ -479,9 +616,10 @@ For the ASySD files the results are reported in a different way:
             <td align="right">91.0%</td>
             <td align="right">514</td>
             <td align="right">70</td>
-            <td align="right">!! 88.0%</td>
+            <td align="right">88.0%</td>
             <td align="right">94.2%</td>
             <td align="right">90.0%</td>
+            <td align="right">92.6%</td>
         </tr>
         <tr>
             <td>ASySD</td>
@@ -490,20 +628,153 @@ For the ASySD files the results are reported in a different way:
             <td align="right"><strong>99.8%</strong></td>
             <td align="right">584</td>
             <td align="right">0</td>
-            <td align="right">100.0%</td>
-            <td align="right">100.0%</td>
+            <td align="right"><strong>100.0%</strong></td>
+            <td align="right"><strong>100.0%</strong></td>
+            <td align="right"><strong>99.9%</strong></td>
             <td align="right"><strong>99.9%</strong></td>
         </tr>
         <tr>
             <td>DedupEndNote</td>
-            <td align="right"><del>1248</del></td>
-            <td align="right"><del>24</del></td>
-            <td align="right"><del>98.1%</del></td>
-            <td align="right"><del>558</del></td>
+            <td align="right">1248</td>
+            <td align="right">16</td>
+            <td align="right">98.7%</td>
+            <td align="right">577</td>
             <td align="right">4</td>
-            <td align="right"><del>!! 99.7%</del></td>
-            <td align="right"><del>99.7%</del></td>
-            <td align="right"><del>97.9%</del></td>
+            <td align="right">99.3%</td>
+            <td align="right">99.7%</td>
+            <td align="right">98.9%</td>
+            <td align="right">99.2%</td>
+        </tr>
+        <tr>
+            <td cellspan="9" style="height: 15px;"></td>
+        </tr>
+        <tr>
+            <td rowspan="5">ASySD Neuroimaging<br>3438 rec</td>
+            <td>Human</td>
+            <td align="right">1274</td>
+            <td align="right">19</td>
+            <td align="right">98.5%</td>
+            <td align="right">2139</td>
+            <td align="right">6</td>
+            <td align="right">99.7%</td>
+            <td align="right">99.6%</td>
+            <td align="right">99.3%</td>
+            <td align="right">99.0%</td>
+        </tr>
+        <tr>
+            <td>EndNote</td>
+            <td align="right">983</td>
+            <td align="right">310</td>
+            <td align="right">76.0%</td>
+            <td align="right">2142</td>
+            <td align="right">3</td>
+            <td align="right">99.0%</td>
+            <td align="right">99.7%</td>
+            <td align="right">90.9%</td>
+            <td align="right">86.3%</td>
+        </tr>
+        <tr>
+            <td>SRA-DM</td>
+            <td align="right">1050</td>
+            <td align="right">243</td>
+            <td align="right">81.2%</td>
+            <td align="right">2103</td>
+            <td align="right">42</td>
+            <td align="right">98.0%</td>
+            <td align="right">96.2%</td>
+            <td align="right">91.7%</td>
+            <td align="right">88.0%</td>
+        </tr>
+        <tr>
+            <td>ASySD</td>
+            <td align="right">1278</td>
+            <td align="right">15</td>
+            <td align="right"><strong>98.8%</strong></td>
+            <td align="right">2141</td>
+            <td align="right">4</td>
+            <td align="right"><strong>99.8%</strong></td>
+            <td align="right">99.7%</td>
+            <td align="right"><strong>99.4%</strong></td>
+            <td align="right"><strong>99.3%</strong></td>
+        </tr>
+        <tr>
+            <td>DedupEndNote</td>
+            <td align="right">1280</td>
+            <td align="right">31</td>
+            <td align="right">97.6%</td>
+            <td align="right">2126</td>
+            <td align="right">1</td>
+            <td align="right">99.6%</td>
+            <td align="right"><strong>99.9%</strong></td>
+            <td align="right">99.0%</td>
+            <td align="right">98.8%</td>
+        </tr>
+        <tr>
+            <td cellspan="9" style="height: 15px;"></td>
+        </tr>
+        <tr>
+            <td rowspan="5">ASySD SRSR Human<br>53001 rec</td>
+            <td>Human</td>
+            <td align="right">16668</td>
+            <td align="right">170</td>
+            <td align="right">99.0%</td>
+            <td align="right">36053</td>
+            <td align="right">110</td>
+            <td align="right">99.7%</td>
+            <td align="right">99.3%</td>
+            <td align="right">99.5%</td>
+            <td align="right">99.2%</td>
+        </tr>
+        <tr>
+            <td>EndNote</td>
+            <td align="right">12794</td>
+            <td align="right">4044</td>
+            <td align="right">76.0%</td>
+            <td align="right">36127</td>
+            <td align="right">36</td>
+            <td align="right"><strong>99.9%</strong></td>
+            <td align="right">99.7%</td>
+            <td align="right">92.3%</td>
+            <td align="right">86.2%</td>
+        </tr>
+        <tr>
+            <td>SRA-DM</td>
+            <td align="right">11946</td>
+            <td align="right">4892</td>
+            <td align="right">70.9%</td>
+            <td align="right">34295</td>
+            <td align="right">1868</td>
+            <td align="right">94.8%</td>
+            <td align="right">86.5%</td>
+            <td align="right">87.2%</td>
+            <td align="right">77.9%</td>
+        </tr>
+        <tr>
+            <td>ASySD</td>
+            <td align="right">16543</td>
+            <td align="right">295</td>
+            <td align="right">98.2%</td>
+            <td align="right">36142</td>
+            <td align="right">21</td>
+            <td align="right"><strong>99.9%</strong></td>
+            <td align="right"><strong>99.9%</strong></td>
+            <td align="right">99.4%</td>
+            <td align="right">99.1%</td>
+        </tr>
+        <tr>
+            <td>DedupEndNote</td>
+            <td align="right">16804</td>
+            <td align="right">111</td>
+            <td align="right"><strong>99.3%</strong></td>
+            <td align="right">36072</td>
+            <td align="right">14</td>
+            <td align="right"><strong>99.9%</strong></td>
+            <td align="right"><strong>99.9%</strong></td>
+            <td align="right"><strong>99.7%</strong></td>
+            <td align="right"><strong>99.6%</strong></td>
+        </tr>
+        <tr>
+            <td cellspan="9" style="height: 15px;"></td>
         </tr>
     </tbody>
 </table>
@@ -511,6 +782,7 @@ For the ASySD files the results are reported in a different way:
 * Input file size: The maximum size of the input file is limited to 150MB.
 * Input file format: only EndNote RIS file (at present)
 * Encoding: The program assumes that the input file is encoded as UTF-8.
+* The program uses a bibliographic point of view: an article or conference abstract that has been published in more than one (issue of a) journal is not considered a duplicate publication.
 * If authors AND (all) titles AND (all) journal names for a record use a non-Latin script, results for this record may be inaccurate.
 * Each input file must be an export from ONE EndNote database: the ID fields are used internally for identifying the records, so they have to be unique. When comparing 2 files the ID fields may be common between the 2 files.
 * The program has been developed and tested for biomedical databases (PubMed, EMBASE, ...) and some general databases (Web of Science, Scopus). Deduplicating records from other databases is not garanteed to work.
