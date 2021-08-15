@@ -41,6 +41,7 @@ import ch.qos.logback.classic.LoggerContext;
 import edu.dedupendnote.domain.Record;
 import edu.dedupendnote.domain.RecordDB;
 import edu.dedupendnote.domain.ValidationResult;
+import edu.dedupendnote.domain.ValidationResultASySD;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -73,19 +74,27 @@ public class ValidationTests {
 		rootLogger.setLevel(Level.INFO);
 	}
 	
+	/*
+	 * Executes the deduplication in Mark mode, compares te results with the truth files and with the previous results.
+	 * Prints the scores in the traditional way (TP = all records marked as duplicates, ...).
+	 * See printValdationResultsASySD() for scores where TP = all records marked as duplicates except for the duplicate kept (i.e. all duplicate rightly removed)  
+	 */
 	@Test 
 	void checkAllTruthFiles() throws IOException {
+		// previous results
 		Map<String, ValidationResult> validationResultsMap = List.of(
 				new ValidationResult("Cytology_screening", 1360, 60, 436, 0),
 				new ValidationResult("Haematology", 222, 14, 1179, 0),
-				new ValidationResult("Respiratory", 758, 42, 1188, 0),
+				new ValidationResult("Respiratory", 765, 35, 1188, 0),
 				new ValidationResult("Stroke", 504, 6, 782, 0),
-				new ValidationResult("BIG_SET", 3163, 125, 755, 3),
-				new ValidationResult("McKeown_2021", 2002, 70, 1058, 0),
+				new ValidationResult("BIG_SET", 3179, 103, 755, 9),
+				new ValidationResult("McKeown_2021", 2014, 58, 1058, 0),
 				new ValidationResult("ASySD_Cardiac_human", 6752, 21, 2175, 0),
-				new ValidationResult("ASySD_Depression", 17282, 740, 61856, 2),
-				new ValidationResult("ASySD_Diabetes", 1806, 24, 11, 4),
-				new ValidationResult("ASySD_Neuroimaging", 2170, 31, 1236, 1))
+				new ValidationResult("ASySD_Depression", 17320, 666, 61843, 51),
+				new ValidationResult("ASySD_Diabetes", 1814, 16, 11, 4), 
+				new ValidationResult("ASySD_Neuroimaging", 2170, 31, 1236, 1),
+				new ValidationResult("ASySD_SRSR_Human", 27920, 111, 24956, 14)
+				)
 			.stream()
 			.collect(Collectors.toMap(ValidationResult::getFileName, Function.identity(), (o1, o2) -> o1, TreeMap::new));
 
@@ -99,7 +108,9 @@ public class ValidationTests {
 				checkResults_ASySD_Cardiac_human(),
 				checkResults_ASySD_Depression(),
 				checkResults_ASySD_Diabetes(),
-				checkResults_ASySD_Neuroimaging())
+				checkResults_ASySD_Neuroimaging(),
+				checkResults_ASySD_SRSR_Human()
+				)
 			.stream()
 			.collect(Collectors.toMap(ValidationResult::getFileName, Function.identity()));
 		
@@ -135,18 +146,75 @@ public class ValidationTests {
 		}
 		System.out.println("FP can be found with regex: \\ttrue\\tfalse\\tfalse\\ttrue\\tfalse\\t");
 		System.out.println("FN can be found with regex: \\ttrue\\tfalse\\tfalse\\tfalse\\ttrue\\t");
+		System.out.println("TP which will be kept can be found with regex: ^(\\d+)\\t\\1\\t\\ttrue\\ttrue\\t");
 		
 		assertThat(changed).isFalse();
+	}
+	
+	/*
+	 * TODO: extend the function with real checkResults as in checkAllTruthFiles()?
+	 * TODO: extract validationResultsMap to avoid duplication.
+	 */
+	@Test
+	void printValidationResultsASySD() {
+		Map<String, ValidationResultASySD> validationResultsMap = List.of(
+//				new ValidationResult("Cytology_screening", 1360, 60, 436, 0),
+//				new ValidationResult("Haematology", 222, 14, 1179, 0),
+//				new ValidationResult("Respiratory", 765, 35, 1188, 0),
+//				new ValidationResult("Stroke", 504, 6, 782, 0),
+//				new ValidationResult("BIG_SET", 3179, 103, 755, 9),
+//				new ValidationResult("McKeown_2021", 2014, 58, 1058, 0),
+				
+				new ValidationResultASySD("ASySD_Cardiac_human", 6752, 21, 2175, 0, 3236),
+				new ValidationResultASySD("ASySD_Depression", 17320, 666, 61843, 51, 7631),
+				new ValidationResultASySD("ASySD_Diabetes", 1814, 16, 11, 4, 566), 
+				new ValidationResultASySD("ASySD_Neuroimaging", 2170, 31, 1236, 1, 890),
+				new ValidationResultASySD("ASySD_SRSR_Human", 27920, 111, 24956, 14, 11116)
+				)
+			.stream()
+			.collect(Collectors.toMap(ValidationResultASySD::getFileName, Function.identity(), (o1, o2) -> o1, TreeMap::new));
+		
+		for (String setName : validationResultsMap.keySet()) {
+			ValidationResultASySD v = validationResultsMap.get(setName);
+			int tp = v.getTp() - v.getUniqueDuplicates(), fn = v.getFn(), tn = v.getTn() + v.getUniqueDuplicates(), fp = v.getFp();
+			double precision = tp  * 100.0 / (tp + fp);
+			double sensitivity = tp * 100.0 / (tp + fn);
+			System.out.println("\nResults: " + setName);
+			System.out.println("---------------------------------------------------------------------------------------------------------------------------------------------");
+			System.out.println(String.format("| %7s | %12s | %7s | %7s | %12s | %7s | %7s | %12s | %12s | %12s | %12s |", "TOTAL", "% duplicates", "TP", "FN", "Sensitivity", "TN", "FP", "Specificity", "Precision", "Accuracy", "F1"));
+			System.out.println(String.format("| %7d | %11.2f%% | %7d | %7d | %11.2f%% | %7d | %7d | %11.3f%% | %11.3f%% | %11.3f%% | %11.3f%% |",
+								tp + tn + fp + fn, (tp + fn) * 100.0 / (tp + tn + fp + fn), tp, fn, sensitivity, tn, fp, tn * 100.0 / (tn + fp),
+								precision, (tp + tn) * 100.0 / (tp + fn + tn + fp), 2 * precision * sensitivity / (precision + sensitivity)));
+			System.out.println("---------------------------------------------------------------------------------------------------------------------------------------------");
+
+			// Printing out the traditional way
+//			tp = v.getTp(); fn = v.getFn(); tn = v.getTn(); fp = v.getFp();
+//			precision = tp  * 100.0 / (tp + fp);
+//			sensitivity = tp * 100.0 / (tp + fn);
+//			System.out.println("---------------------------------------------------------------------------------------------------------------------------------------------");
+//			System.out.println(String.format("| %7s | %12s | %7s | %7s | %12s | %7s | %7s | %12s | %12s | %12s | %12s |", "TOTAL", "% duplicates", "TP", "FN", "Sensitivity", "TN", "FP", "Specificity", "Precision", "Accuracy", "F1"));
+//			System.out.println(String.format("| %7d | %11.2f%% | %7d | %7d | %11.2f%% | %7d | %7d | %11.3f%% | %11.3f%% | %11.3f%% | %11.3f%% |",
+//								tp + tn + fp + fn, (tp + fn) * 100.0 / (tp + tn + fp + fn), tp, fn, sensitivity, tn, fp, tn * 100.0 / (tn + fp),
+//								precision, (tp + tn) * 100.0 / (tp + fn + tn + fp), 2 * precision * sensitivity / (precision + sensitivity)));
+//			System.out.println("---------------------------------------------------------------------------------------------------------------------------------------------");
+			System.out.flush();
+		}
 	}
 	
 	@Test
 	void readTruthFileTest() throws IOException {
 		String fileName = testdir + "/SRA2/Cytology_screening_TRUTH.txt";
-		List<RecordDB> records = readTruthFile(fileName);
+		List<RecordDB> truthRecords = readTruthFile(fileName);
 
-		assertThat(records).hasSizeGreaterThan(10);
+		assertThat(truthRecords).hasSizeGreaterThan(10);
 		
-		// records.stream().limit(10).forEach(l -> System.err.println(l));
+		Map<Integer, Set<Integer>> trueDuplicateSets = truthRecords.stream()
+				.filter(r -> r.getDedupid() != null)
+				// .map(RecordDB::getDedupid)
+				.collect(Collectors.groupingBy(RecordDB::getDedupid,
+												Collectors.mapping(RecordDB::getId, Collectors.toSet())));
+		assertThat(trueDuplicateSets).hasSizeGreaterThan(10);
+		trueDuplicateSets.entrySet().stream().limit(10).forEach(l -> System.err.println(l));
 	}
 	
 	// @formatter:off
@@ -156,10 +224,11 @@ public class ValidationTests {
 		List<RecordDB> recordDBs = getRecordDBs(inputFileName);
 		Map<Integer, RecordDB> validationMap = recordDBs.stream()
 				.collect(Collectors.toMap(RecordDB::getId, Function.identity(), (o1, o2) -> o1, TreeMap::new));
-		Set<Integer> trueDuplicateSets = truthRecords.stream()
+		Map<Integer, Set<Integer>> trueDuplicateSets = truthRecords.stream()
 				.filter(r -> r.getDedupid() != null)
-				.map(RecordDB::getDedupid)
-				.collect(Collectors.toSet());
+				// .map(RecordDB::getDedupid)
+				.collect(Collectors.groupingBy(RecordDB::getDedupid,
+												Collectors.mapping(RecordDB::getId, Collectors.toSet())));
 		int tns = 0, tps = 0, fps = 0, fns = 0;
 		List<String> errors = new ArrayList<>();
 		
@@ -180,25 +249,14 @@ public class ValidationTests {
 					v.setCorrection(tDedupId);
 				}
 			} else {
-				if (vDedupId.equals(tDedupId)) {
+				if (trueDuplicateSets.containsKey(tDedupId) && trueDuplicateSets.get(tDedupId).contains(vDedupId)) {
 					v.setTruePositive(true);
 					tps++;
 				} else {
-					/*
-					 *  If the truth file has a  dedupId for the current dedupId, then the current record was linked to the wrong set of duplicate records: False Positive
-					 *  If the truth file had NO dedupId for the current dedupId, then the current record belongs to a set of duplicate records which shoul have been merged with
-					 *  another set of duplicate records: False Negative 
-					 */
-					if (trueDuplicateSets.contains(vDedupId)) {
-						v.setFalsePositive(true);
-						fps++;
-						v.setCorrection(tDedupId);
-						errors.add("FALSE POSITIVES: \n- TRUTH " + t + "\n- CURRENT " + v + "\n");
-					} else {
-						v.setFalseNegative(true);
-						fns++;
-						v.setCorrection(tDedupId);
-					}
+					v.setFalsePositive(true);
+					fps++;
+					v.setCorrection(tDedupId);
+					errors.add("FALSE POSITIVES: \n- TRUTH " + t + "\n- CURRENT " + v + "\n");
 				}
 			}
 		}
@@ -208,6 +266,11 @@ public class ValidationTests {
 			System.err.println("File " + setName +  " has FALSE POSITIVES!");
 			errors.stream().forEach(System.err::println);
 		}
+		long uniqueDuplicates = recordDBs.stream()
+				.filter(r -> r.isTruePositive() == true && r.getDedupid().equals(r.getId()))
+				.count();
+
+		System.err.println("File " + setName +  " has unique duplicates: " + uniqueDuplicates);
 		return validationResult;
 	}
 	
@@ -294,6 +357,14 @@ public class ValidationTests {
 		return checkResults("ASySD_Neuroimaging", inputFileName, outputFileName, truthFileName);
 	}
 	
+	ValidationResult checkResults_ASySD_SRSR_Human() throws IOException {
+		String truthFileName = testdir + "/ASySD/dedupendnote_files/SRSR_Human_TRUTH.txt";
+		String inputFileName = testdir + "/ASySD/dedupendnote_files/SRSR_Human.txt";
+		String outputFileName = testdir + "/ASySD/dedupendnote_files/SRSR_Human_to_validate.txt";
+
+		return checkResults("ASySD_SRSR_Human", inputFileName, outputFileName, truthFileName);
+	}
+	
 	/*
 	 * Test files only needed to create an initial TRUTH file (unvalidated).
 	 * Result should be imported into a database and marked for validation there. 
@@ -369,6 +440,19 @@ public class ValidationTests {
 		String inputFileName = dir + "/Neuroimaging_sorted.txt";
 		String asysdInputfileName = dir + "/Neuroimaging_sorted_asysd_gold.txt";
 		String outputFileName = dir + "/Neuroimaging_for_truth.txt";
+		createInitialTruthFile(inputFileName, asysdInputfileName, outputFileName);
+	}
+	
+	/*
+	 * There is a gap in the ASySD record numbers between 38669 and 43002!
+	 */
+	@Disabled("Only needed for initialisation of TRUTH file")
+	@Test
+	void createInitialTruthFile_ASySD_SRSR_Human() {
+		String dir = testdir + "/ASySD/dedupendnote_files";
+		String inputFileName = dir + "/SRSR_Human.txt";
+		String asysdInputfileName = dir + "/SRSR_Human_asysd_gold.txt";
+		String outputFileName = dir + "/SRSR_Human_for_truth.txt";
 		createInitialTruthFile(inputFileName, asysdInputfileName, outputFileName);
 	}
 	

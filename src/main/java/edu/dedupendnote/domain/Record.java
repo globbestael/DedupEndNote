@@ -15,6 +15,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.apache.commons.text.StringEscapeUtils;
+import org.springframework.util.StringUtils;
 
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -79,7 +80,12 @@ public class Record {
 
 	static public String normalizeJava8(String s) {
 		s = quotesPattern.matcher(s).replaceAll("");
-
+		/*
+		 * FIXME: Do a thorough check of retractions (including "WITHDRAWN: ..." Cochrane reviews)
+		 */
+		/*
+		 * FIXME: Do a thorough check in the validation files to make sure that erratum records do not remove the original records (erratum as first record encountered)
+		 */
 		Matcher matcher = erratumPattern.matcher(s);
 		if (matcher.find()) {
 			log.debug("Title WAS: {}", s);
@@ -299,11 +305,18 @@ public class Record {
 			this.authors.add(author);
 			return;
 		}
+		String lastName = parts[0];
+		// Some databases (a.o. Web of Science) can have author names in capitals. EndNote X9 shows them capitalized ("Marchioli, R") but the export file has "MARCHIOLI, R"!
+		if (lastName.equals(lastName.toUpperCase())) {
+			String[] lastNameParts2 = lastName.toLowerCase().split(" ");
+			List<String> lastNameParts = new ArrayList<>(Arrays.asList(lastNameParts2));
+			lastName = lastNameParts.stream().map(p -> StringUtils.capitalize(p)).collect(Collectors.joining(" "));
+		}
 		
 		// Reducing the first names to their initials, stripping everything but the initials, and leaving out the comma
 		// makes JWS higher for similar names and lower for different names.
 		String initials = parts[1].replaceAll("[^A-Z]", "");
-		this.authors.add(parts[0] + " " + initials);
+		this.authors.add(lastName + " " + initials);
 
 		// @formatter:off
 		/*
@@ -328,10 +341,10 @@ public class Record {
 		 *    See AuthorPermutationsExperimentsTest
 		 */
 		// @formatter:on
-		if (parts[0].contains(" ")) {
+		if (lastName.contains(" ")) {
 			// log.error("Transposing author: {} for part: {}", author, parts[0]);
-			parts[0] = parts[0].substring(0,1).toUpperCase() + parts[0].substring(1);
-			String[] lastNameParts2 = parts[0].split(" ");
+			lastName = lastName.substring(0,1).toUpperCase() + lastName.substring(1);
+			String[] lastNameParts2 = lastName.split(" ");
 			List<String> lastNameParts = new ArrayList<>(Arrays.asList(lastNameParts2));
 			String lastPart = lastNameParts.remove(lastNameParts.size() - 1);
 			matcher = lastNameAdditionsPattern.matcher(lastPart);
@@ -346,7 +359,7 @@ public class Record {
 			log.debug( "Author {} is transposed as {} {}", author, lastPart, initials);
 			this.authorsTransposed.add(lastPart + " " + initials);
 		} else {
-			this.authorsTransposed.add(parts[0] + " " + initials);
+			this.authorsTransposed.add(lastName + " " + initials);
 		}
 		
 		return;
@@ -414,7 +427,7 @@ public class Record {
 		}
 		matcher = supplementPattern.matcher(journal);
 		if (matcher.find()) {
-			System.err.println("SupplementMatcher fired for: " + journal);
+			// log.debug("SupplementMatcher fired for: {}", journal);
 			additional.add(matcher.replaceAll(""));
 		}
 		
@@ -527,7 +540,10 @@ public class Record {
 	 * getters and setters
 	 */
 
-//	public void setPublicationYear(String publicationYear) {
-//		this.publicationYear = Integer.valueOf(publicationYear);
-//	}
+	public void setPublicationYear(Integer publicationYear) {
+		if (publicationYear < 1900) {
+			publicationYear = 0;
+		}
+		this.publicationYear = publicationYear;
+	}
 }

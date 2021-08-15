@@ -358,6 +358,9 @@ public class DeduplicationService {
 							}
 						} else {
 							// log.debug("==> LABEL ALREADY PRESENT: {} has label {} and should also get label {}", r.getId(), r.getLabel(), record.getId());
+							if (record.getLabel() == null) {
+								record.setLabel(r.getLabel());
+							}
 							if (! r.getLabel().equals(record.getLabel())) {
 								log.error("Records have different labels: {}, {}\n- {}\n- {}", record.getLabel(), r.getLabel(), record, r);
 							}
@@ -589,11 +592,14 @@ public class DeduplicationService {
 				if (compareJournals_FirstAsAbbreviation(s2, s1)) {
 					return true;
 				}
-				
-				if (s1.toUpperCase().equals(s1) && compareJournals_FirstAsInitialism(s1, s2)) {
+				/*
+				 * Journals with very long titles produce very long Patterns: limit these cases to short journal names 
+				 * ASySD SRS_Human has journal names in uppercase 
+				 */
+				if (s1.length() < 10 && s1.toUpperCase().equals(s1) && compareJournals_FirstAsInitialism(s1, s2)) {
 					return true;
 				}
-				if (s2.toUpperCase().equals(s2) && compareJournals_FirstAsInitialism(s2, s1)) {
+				if (s2.length() < 10 && s2.toUpperCase().equals(s2) && compareJournals_FirstAsInitialism(s2, s1)) {
 					return true;
 				}
 

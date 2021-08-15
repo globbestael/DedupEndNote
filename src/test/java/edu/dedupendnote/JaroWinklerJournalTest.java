@@ -86,6 +86,24 @@ public class JaroWinklerJournalTest {
     }
 
 	/*
+	 * Journals with very long titles produce very long Patterns, esp. in compareJournals_FirstAsInitialism()
+	 */
+	@Test
+    void JournalFullCapsTest() {
+		Record r1 = new Record();
+		Record r2 = new Record();
+//		r1.addJournals("ARTHROSCOPY-THE JOURNAL OF ARTHROSCOPIC AND RELATED SURGERY");
+//		r2.addJournals("Arthroscopy : the journal of arthroscopic & related surgery : official publication of the Arthroscopy Association of North America and the International Arthroscopy Association");
+		r1.addJournals("Ann Intern Med");
+		r2.addJournals("ANNALS OF INTERNAL MEDICINE");
+		
+		log.debug("Result: {}", deduplicationService.compareJournals(r1, r2));
+		assertThat(deduplicationService.compareJournals(r1, r2))
+										.as("Journals are similar: %s versus %s", r1.getJournals(), r2.getJournals())
+										.isTrue();
+    }
+
+	/*
 	 * journals which contain a slash
 	 */
 	@ParameterizedTest(name = "{index}: jaroWinkler({0}, {1})")

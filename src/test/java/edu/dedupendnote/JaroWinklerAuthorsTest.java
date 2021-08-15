@@ -181,6 +181,10 @@ public class JaroWinklerAuthorsTest {
 						"Lv, Y.; Qi, X.; He, C.; Wang, Z.; Yin, Z.; Niu, J.; Guo, W.; Bai, W.; Zhang, H.; Xie, H.; Yao, L.; Wang, J.; Li, T.; Wang, Q.; Chen, H.; Liu, H.; Wang, E.; Xia, D.; Luo, B.; Li, X.; Yuan, J.; Han, N.; Zhu, Y.; Xia, J.; Cai, H.; Yang, Z.; Wu, K.; Fan, D.",
 						0.87, 0.87), // not truncated and 1- vs 2-initials
 				arguments(
+						"DIMASCIO, R; MARCHIOLI, R; TOGNONI, G",
+						"Di Mascio, R; Marchioli, R; Tognoni, G",
+						0.86, 0.86), // ALL CAPITALS
+				arguments(
 						"Schwartzberg, L. S.; Blakely, L. J.; Schnell, F.; Christianson, D.; Andrews, M.; Johns, A.; Walker, M.",
 						"Schwartzberg, L. S.; Tauer, K. W.; Schnell, F. M.; Hermann, R.; Rubin, P.; Christianson, D.; Weinstein, P.; Epperson, A.; Walker, M.",
 						0.85, 0.85), // 0.85 // !!! despite big differences
