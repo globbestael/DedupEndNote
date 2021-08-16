@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -24,11 +23,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.beans.factory.config.SetFactoryBean;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.mock.web.MockHttpSession;
-import org.springframework.test.context.ActiveProfiles;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.MappingIterator;
@@ -56,16 +51,14 @@ import lombok.extern.slf4j.Slf4j;
  * See http://localhost:9777/developers for a description of the database. 
  */
 @Slf4j
-@SpringBootTest
-@ActiveProfiles("test")
 public class ValidationTests {
 
 	private DeduplicationService deduplicationService = new DeduplicationService();
 	private IOService ioService = new IOService();
 	private MockHttpSession session = new MockHttpSession();
 	private RecordDBService recordDBService = new RecordDBService();
-	@Value("${testdir}")
-	private String testdir;
+	String homeDir = System.getProperty("user.home");
+	String testdir = homeDir + "/dedupendnote_files";
 
 	@BeforeAll
 	static void beforeAll() {
