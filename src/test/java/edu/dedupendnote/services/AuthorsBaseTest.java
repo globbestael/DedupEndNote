@@ -18,6 +18,8 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class AuthorsBaseTest extends BaseTest {
+	String homeDir = System.getProperty("user.home");
+	String testdir = homeDir + "/dedupendnote_files";
 	List<Triple> localTriples = new ArrayList<>();
 	
 	@Data
@@ -41,10 +43,10 @@ public class AuthorsBaseTest extends BaseTest {
 	 * 
 	 * The whole file is created on the TRUTH files for BIG_SET, Cytology_screening, Haemtology and Respiratory
 	 * 
-	 * Because of MS Access limitations (authors is a Long Text / Memo field) he file contains duplicate records
+	 * Because of MS Access limitations (authors is a Long Text / Memo field) the file contains duplicate records
 	 */
 	protected List<Triple> getValidatedAuthorsPairs() throws IOException {
-		String fileName = "src/test/resources/validated_authors_pairs.txt";
+		String fileName = testdir + "/experiments/validated_authors_pairs.txt";
 		localTriples.clear();
 		Path path = Paths.get(fileName);
 		Stream<String> lines = Files.lines(path);

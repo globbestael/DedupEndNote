@@ -20,6 +20,8 @@ public class AuthorExperimentsTests {
 	DeduplicationService service = new DeduplicationService();
 	AuthorsComparator authorsComparator = new ExperimentalAuthorsComparator();
 	DeduplicationService expService = new DeduplicationService(authorsComparator);
+	String homeDir = System.getProperty("user.home");
+	String testdir = homeDir + "/dedupendnote_files";
 	
 	public static class ExperimentalAuthorsComparator implements AuthorsComparator {
 		public static final Double AUTHOR_SIMILARITY_NO_REPLY = 0.67 + 0.5;
@@ -73,9 +75,10 @@ public class AuthorExperimentsTests {
 	
 	@Test
 	void higherAuthorSimilarityFindsLessDuplicates() {
-		String inputFileName = "src/test/resources/t1.txt";
+		String subdir = testdir + "/experiments/";
+		String inputFileName = subdir + "t1.txt";
 		boolean markMode = false;
-		String outputFileName = "src/test/resources/t1_mark.txt";
+		String outputFileName = subdir + "t1_mark.txt";
 
 		String resultString = service.deduplicateOneFile(inputFileName, outputFileName, markMode, new MockHttpSession());
 

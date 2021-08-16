@@ -27,6 +27,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
+	
 	@BeforeAll
 	static void beforeAll() {
 		LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
