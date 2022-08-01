@@ -37,7 +37,7 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 	}
 	
 	@Test
-	void addAuthorsWithoutPreprocessingTest() throws IOException {
+	void compareAuthorsWithoutPreprocessingTest() throws IOException {
 		List<Triple> triples = getValidatedAuthorsPairs();
 		// triples.stream().limit(5).forEach(System.err::println);
 		
@@ -51,8 +51,16 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 			r2 = fillRecordAddAuthorsWithoutPreprocessing(triple.getAuthors2());
 			triple.setExpJws(getHighestSimilarity(r1.getAllAuthors(), r2.getAllAuthors()));
 		}
-		
-		// FIXME: why are there cases where the most simple treatment is better than the default complex one?
+		// @formatter:off
+		/*
+		 * There are cases where the most simple treatment (0.73) is better than the default complex one (0,65).
+		 * Input (= without preprocessing)								| Default
+		 * - Rodriguez, C. E.; Heriberto, B.; Leon, O.; Guthrie, T. B.	| Rodriguez CE; Heriberto B; Leon O; Guthrie TB
+		 * - Blanco, C. E. R.; Leon, H. O.; Guthrie, T. B.				| Blanco CER; Leon HO; Guthrie TB
+		 * Caused by the comma, space and dot characters in the unprocessed string?  
+		 */
+		// @formatter:on
+
 		showTripleComparisonDetails("AuthorsWithoutPreprocessing", triples, true);
 
 		fail("Not yet implemented");
@@ -66,7 +74,7 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 	 * Results however are very poor compared to the default implementation (with its transposition of names)
 	 */
 	@Test
-	void addAuthorsLimitedToFirstLettersTest() throws IOException {
+	void compareAuthorsLimitedToFirstLettersTest() throws IOException {
 		List<Triple> triples = getValidatedAuthorsPairs();
 		// triples.stream().limit(5).forEach(System.err::println);
 		
@@ -81,7 +89,6 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 			triple.setExpJws(getHighestSimilarity(r1.getAllAuthors(), r2.getAllAuthors()));
 		}
 		
-		// FIXME: why are there cases where the most simple treatment is better than the default complex one?
 		showTripleComparisonDetails("AuthorsLimitedToFirstLetters", triples, true);
 
 		fail("Not yet implemented");
@@ -224,7 +231,7 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 			triple.setExpJws(getHighestSimilarity(r1.getAllAuthors(), r2.getAllAuthors()));
 		}
 		
-		showTripleComparisonDetails("compareOnlyFirst5Authors", triples, true);
+		showTripleComparisonDetails("compareOnlyFirst5Authors", triples, false);
 
 		fail("Not yet implemented");
 	}

@@ -18,19 +18,23 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 
 import edu.dedupendnote.domain.Record;
+import edu.dedupendnote.domain.RecordDB;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
 public class IOService {
 	private UtilitiesService utilities = new UtilitiesService();
-	
 	/*
 	 * Patterns
 	 */
-	// Pattern to identify conferences in the T3 field
+	/**
+	 * Pattern to identify conferences in the T3 field
+	 */
 	private static Pattern conferencePattern = Pattern.compile(".*(^[0-9]|\\d{4,4}|Annual|Conference|Congress|Meeting|Society|Symposium).*");
-	// Pattern to identify clinical trials phase (1 ..4, i .. iv)
+	/**
+	 * Pattern to identify clinical trials phase (1 ..4, i .. iv)
+	 */
 	private static Pattern phasePattern = Pattern.compile(".*phase\\s(\\d|i).*", Pattern.CASE_INSENSITIVE);
 	// Don't use "Response" as last word, e.g: Endothelial cell injury in cardiovascular surgery: the procoagulant response
 	private static Pattern replyPattern = Pattern.compile("(.*\\breply\\b.*|.*author(.+)respon.*|^response$)");
@@ -38,7 +42,11 @@ public class IOService {
 	 * If field content starts with a comma (",") EndNote exports "[Fieldname]  -,", NOT "[Fieldname]  - ," (EndNote X9.3.3)
 	 * This pattern skips that initial comma, not the space which may come after that comma!
 	 */
-	public static Pattern risLinePattern = Pattern.compile("(^[A-Z][A-Z0-9])(  -[ ,\\xA0])(.*)$");
+	public static Pattern risLinePattern = Pattern.compile("(^[A-Z][A-Z0-9])(  -[ ,\\u00A0])(.*)$");
+	/**
+	 * Unusual white space characters within input fields (LINE SEPARATOR, NO-BREAK SPACE): will be replaced by SPACE 
+	 */
+	public static Pattern unusualWhiteSpacePattern = Pattern.compile("(\\u2028|\\u00A0)");
 
 	public List<Record> readRecords(String inputFileName) {
 		List<Record> records = new ArrayList<>();
@@ -56,8 +64,7 @@ public class IOService {
 			}
 			String line;
 			while ((line = br.readLine()) != null) {
-				line = line.replaceAll("(\\u2028|\\xA0)", " "); // LINE SEPARATOR and NO-BREAK SPACE
-				// log.error("line: {}", line);
+				line = unusualWhiteSpacePattern.matcher(line).replaceAll(" ");
 				Matcher matcher = risLinePattern.matcher(line);
 				if (matcher.matches()) {
 					fieldName = matcher.group(1);
@@ -220,8 +227,7 @@ public class IOService {
 			String line;
 			Record record = null;
 			while ((line = br.readLine()) != null) {
-				// FIXME: use Pattern! This patterns is used in 3 places
-				line = line.replaceAll("(\\u2028|\\xA0)", " "); // LINE SEPARATOR and NO-BREAK SPACE
+				line = unusualWhiteSpacePattern.matcher(line).replaceAll(" ");
 				Matcher matcher = risLinePattern.matcher(line);
 				if (matcher.matches()) {
 					fieldName = matcher.group(1);
@@ -264,7 +270,7 @@ public class IOService {
 	/*
 	 * Ordering of an EndNote export RIS file: the fields are ordered alphabetically, except for TY (first), and ID and ER (last fields)
 	 */
-	public void writeRecord(Map<String, String> map, Record record, BufferedWriter bw, Boolean enhance) throws IOException {
+	private void writeRecord(Map<String, String> map, Record record, BufferedWriter bw, Boolean enhance) throws IOException {
 		if (enhance) {
 			if (!record.getDois().isEmpty()) {
 				map.put("DO", "https://doi.org/" + record.getDois().keySet().stream().collect(Collectors.joining("\nhttps://doi.org/")));
@@ -325,8 +331,7 @@ public class IOService {
 			String line;
 			Record record = null;
 			while ((line = br.readLine()) != null) {
-				// FIXME: use Pattern! This patterns is used in 3 places
-				line = line.replaceAll("(\\u2028|\\xA0)", " "); // LINE SEPARATOR and NO-BREAK SPACE
+				line = unusualWhiteSpacePattern.matcher(line).replaceAll(" ");
 				Matcher matcher = risLinePattern.matcher(line);
 				if (matcher.matches()) {
 					fieldName = matcher.group(1);
@@ -369,6 +374,159 @@ public class IOService {
 		return numberWritten;
 	}
 
+	/**
+	 * writeRisWithTRUTH(...): writes a RIS file with Caption field ['Duplicate', 'Unknown', empty] and, in case of true duplicates, with Label field the ID if the record
+	 * which will be kept.
+	 * 
+	 * Caption field:
+	 * - Duplicate: validated and True Positive
+	 * - empty: validated and True Negative
+	 * - Unknown: not validated
+	 *  
+	 * All records which are duplicates have the same ID in Label field, so this ID could be considered as the ID of a duplicate group.
+	 * DedupEndNote in non-Mark mode would write only the record where the record ID is the same as Label.
+	 * 
+	 * @param inputFileName	filename of a RIS export file
+	 * @param truthRecords	List<RecordDB> of validated records (TAB delimited export file from validation DB)
+	 * @param outputFileName	filename of a RIS file
+	 */
+	public void writeRisWithTRUTH(List<RecordDB> truthRecords, String inputFileName, String outputFileName) {
+		int numberWritten = 0;
+		String fieldContent = null;
+		String fieldName = null;
+		String previousFieldName = "XYZ";
+		Map<String, String> map = new TreeMap<>();
+		
+		Map<Integer, RecordDB> truthMap = truthRecords.stream().collect(Collectors.toMap(RecordDB::getId, Function.identity()));
+
+		boolean hasBom = utilities.detectBom(inputFileName);
+		
+		try (BufferedWriter bw = new BufferedWriter(new FileWriter(outputFileName));
+			 BufferedReader br = new BufferedReader(new FileReader(inputFileName))) {
+			if (hasBom) {
+				br.skip(1);
+			}
+			String line;
+			Integer id = null;
+			while ((line = br.readLine()) != null) {
+				line = unusualWhiteSpacePattern.matcher(line).replaceAll(" ");
+				Matcher matcher = risLinePattern.matcher(line);
+				if (matcher.matches()) {
+					fieldName = matcher.group(1);
+					fieldContent = matcher.group(3);
+					previousFieldName = "XYZ";
+					switch (fieldName) {
+						case "ER":
+							if (id != null) {
+								log.error("Writing {}", id);
+								map.put(fieldName, fieldContent);
+								if (truthMap.containsKey(id)) {
+									if (truthMap.get(id).isTruePositive()) {
+										map.put("CA", "Duplicate");
+										map.put("LB", truthMap.get(id).getDedupid().toString());
+									} else {
+										map.remove("CA");
+										map.remove("LB");
+									}
+								} else {
+									map.put("CA", "Unknown");
+								}
+								writeRecord(map, null, bw, false);
+								numberWritten++;
+							}
+							map.clear();
+							break;
+						case "ID": // EndNote Record number
+							map.put(fieldName, fieldContent);
+							id = Integer.valueOf(fieldContent);
+							break;
+						default:
+							if (map.containsKey(fieldName)) {
+								map.put(fieldName, map.get(fieldName) + "\n" + line);
+							} else {
+								map.put(fieldName, fieldContent);
+							}
+							previousFieldName = fieldName;
+							break;
+					}
+				} else {	// continuation line
+					map.put(previousFieldName, map.get(previousFieldName) + "\n" + line);
+				}
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		log.debug("Finished writing to file. # records: {}", numberWritten);
+	}
+
+	public void writeRisWithTRUTH_forDS(List<RecordDB> truthRecords, String inputFileName, String outputFileName) {
+		int numberWritten = 0;
+		String fieldContent = null;
+		String fieldName = null;
+		String previousFieldName = "XYZ";
+		Map<String, String> map = new TreeMap<>();
+		
+		Map<Integer, RecordDB> truthMap = truthRecords.stream().collect(Collectors.toMap(RecordDB::getId, Function.identity()));
+
+		boolean hasBom = utilities.detectBom(inputFileName);
+		
+		try (BufferedWriter bw = new BufferedWriter(new FileWriter(outputFileName));
+			 BufferedReader br = new BufferedReader(new FileReader(inputFileName))) {
+			if (hasBom) {
+				br.skip(1);
+			}
+			String line;
+			Integer id = null;
+			while ((line = br.readLine()) != null) {
+				line = unusualWhiteSpacePattern.matcher(line).replaceAll(" ");
+				Matcher matcher = risLinePattern.matcher(line);
+				if (matcher.matches()) {
+					fieldName = matcher.group(1);
+					fieldContent = matcher.group(3);
+					previousFieldName = "XYZ";
+					switch (fieldName) {
+						case "ER":
+							if (id != null) {
+								log.error("Writing {}", id);
+								map.put(fieldName, fieldContent);
+								if (truthMap.containsKey(id)) {
+									map.put("CA", map.get("CA").toUpperCase());
+									if (truthMap.get(id).isTruePositive()) {
+										map.put("LB", truthMap.get(id).getDedupid().toString());
+									} else {
+										map.remove("LB");
+									}
+								} else {
+									map.put("CA", map.get("CA").toLowerCase());
+								}
+								writeRecord(map, null, bw, false);
+								numberWritten++;
+							}
+							map.clear();
+							break;
+						case "ID": // EndNote Record number
+							map.put(fieldName, fieldContent);
+							id = Integer.valueOf(fieldContent);
+							break;
+						default:
+							if (map.containsKey(fieldName)) {
+								map.put(fieldName, map.get(fieldName) + "\n" + line);
+							} else {
+								map.put(fieldName, fieldContent);
+							}
+							previousFieldName = fieldName;
+							break;
+					}
+				} else {	// continuation line
+					map.put(previousFieldName, map.get(previousFieldName) + "\n" + line);
+				}
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		log.debug("Finished writing to file. # records: {}", numberWritten);
+	}
+
 //	public int writeMarkedRecords_old(List<Record> records, String inputFileName, String outputFileName) {
 //		log.debug("Start writing to file {}", outputFileName);
 //
@@ -389,7 +547,7 @@ public class IOService {
 //			String line;
 //			Record record = null;
 //			while ((line = br.readLine()) != null) {
-//				line = line.replaceAll("(\\u2028|\\xA0)", " "); // LINE SEPARATOR and NO-BREAK SPACE
+//				line = unusualPunctuationPattern.matcher(line).replaceAll(" ");
 //				Matcher matcher = risLinePattern.matcher(line);
 //				if (matcher.matches()) {
 //					fieldName = matcher.group(1);

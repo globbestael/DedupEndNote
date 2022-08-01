@@ -113,6 +113,7 @@ public class JaroWinklerAuthorsTest {
 		return r;
 	}
 
+	// The 3rd argument is JWS score without transposed authors, the 4th argument with transposed authors 
     static Stream<Arguments> positiveAuthorsProvider() {
 		return Stream.of(
 				arguments(
@@ -136,6 +137,18 @@ public class JaroWinklerAuthorsTest {
 						"Chen, Wen-Jun; Yuan, Shao-Fei.; Yan, Qing-Yuan; Xiong, Jian-Ping.; Wang, Sen-Ming; Zheng, Wei-E.; Zhang, Wu; Sun, Hong-Yu; Chen, Hua; Wu, Li-Li",
 						1.0, 1.0), // initials versus full names
 				arguments(
+						"Li, W.; Wang, Y.; Gao, W.; Zheng, J.",
+						"Wei, Li; Yang, Wang; Wenfeng, Gao; Jiasheng, Zheng; Li, Wei; Wang, Yang; Gao, Wenfeng; Zheng, Jiasheng",
+						0.63, 1.0),
+				arguments(
+						"Li, W.; Wang, Y.; Gao, W.; Zheng, J.",
+						"Wei, Li; Yang, Wang; Wenfeng, Gao; Jiasheng, Zheng",
+						0.81, 1.0),
+				arguments(
+						"Harned, R., 2nd",
+						"Harned Ii, R.; Fuchs, J.; Warmann, S.; Kardoff, R.; Rosenthal, H.; Rodeck, B.; Ure, B.; Melter, M.",
+						0.82, 0.82),
+				arguments(
 						"Heller, C.; Schobess, R.; Kurnik, K.; Junker, R.; Gunther, G.; Kreuz, W.; Nowak-Gottl, U.; Childhood Thrombophila Study, Grp",
 						"Heller, C.; Schobess, R.; Kurnik, K.; Junker, R.; Gunther, G.; Kreuz, W.; Nowak-Gottl, U.",
 						1.0, 1.0),	// with and without "Grp"
@@ -146,7 +159,7 @@ public class JaroWinklerAuthorsTest {
 				arguments(
 						"Lynch Jr, T. J.; Kalish, L.; Mentzer, S. J.; Decamp, M.; Strauss, G.; Sugarbaker, D. J.",
 						"Lynch, T.; Kalish, L.; Mentzer, S.; Decamp, M.; Strauss, G.; Sugarbaker, D.",
-						0.89, 0.99), // different numbers of initials
+						0.99, 0.99), // different numbers of initials
 				arguments(
 						"Lv, Y; Qi, X; Xia, J; Fan, D; Han, G",
 						"Lv, Y; Qi, XS; Xia, JL; Fan, DM; Han, GH",
@@ -181,9 +194,17 @@ public class JaroWinklerAuthorsTest {
 						"Lv, Y.; Qi, X.; He, C.; Wang, Z.; Yin, Z.; Niu, J.; Guo, W.; Bai, W.; Zhang, H.; Xie, H.; Yao, L.; Wang, J.; Li, T.; Wang, Q.; Chen, H.; Liu, H.; Wang, E.; Xia, D.; Luo, B.; Li, X.; Yuan, J.; Han, N.; Zhu, Y.; Xia, J.; Cai, H.; Yang, Z.; Wu, K.; Fan, D.",
 						0.87, 0.87), // not truncated and 1- vs 2-initials
 				arguments(
+						"Heekeren K, Neukirch A. Daumann J. Stoll M. Obradovic M. Kovar K. A. Geyer M. A. Gouzoulis-Mayfrank E.",
+						"Heekeren, K.; Neukirch, A.; Daumann, J.; Stoll, M.; Obradovic, M.; Kovar, K. A.; Geyer, M. A.; Gouzoulis-Mayfrank, E.",
+						0.82, 0.82), // Excample from McKeown (Ovid DB cctr: First is compared as Heekeren K NADJSMOMKKAGMAGME
+				arguments(
 						"DIMASCIO, R; MARCHIOLI, R; TOGNONI, G",
 						"Di Mascio, R; Marchioli, R; Tognoni, G",
 						0.86, 0.86), // ALL CAPITALS
+				arguments(
+						"Tonni, G.; Grisolia, G.",
+						"Gabriele, Tonni; Gianpaolo, Grisolia",
+						0.64, 0.64), // Transposed names
 				arguments(
 						"Schwartzberg, L. S.; Blakely, L. J.; Schnell, F.; Christianson, D.; Andrews, M.; Johns, A.; Walker, M.",
 						"Schwartzberg, L. S.; Tauer, K. W.; Schnell, F. M.; Hermann, R.; Rubin, P.; Christianson, D.; Weinstein, P.; Epperson, A.; Walker, M.",
@@ -212,6 +233,10 @@ public class JaroWinklerAuthorsTest {
 						"Bitto, N.; Tosetti, G.; La Mura, V.; Primignani, M.",
 						"Scheiner, B.; Northup, P. G.; Lisman, T.; Mandorfer, M.",
 						0.68, 0.68), // 0.68 // !!! despite big differences: NO NAMES IN COMMON
+				arguments(
+						"Agata, Mulak",
+						"Mulak, A.",
+						0.52, 0.64),
 				arguments(
 						"Cruz-Ramon, V.; Chinchilla-Lopez, P.; Ramirez-Perez, O.; Aguilar-Olivos, N. E.; Alva-Lopez, L. F.; Fajardo-Ordonez, E.; Ponciano-Rodriguez, G.; Northup, P. G.; Intagliata, N.; Caldwell, S. H.; Qi, X. S.; Mendez-Sanchez, N.",
 						"Raoul, J. L.; Decaens, T.; Burak, K.; Koskinas, J.; Villadsen, G. E.; Heurgue-Berlot, A.; Bayh, I.; Cheng, A. L.; Kudo, M.; Lee, H. C.; Nakajima, K.; Peck-Radosavljevic, M.",

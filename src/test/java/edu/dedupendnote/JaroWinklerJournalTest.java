@@ -38,7 +38,7 @@ public class JaroWinklerJournalTest {
     void jwPositiveTest(String input1, String input2) {
 		Double distance = jws.apply(Record.normalizeJournalJava8(input1), Record.normalizeJournalJava8(input2));
 		// System.err.println(String.format("- 1: %s\n- 2: %s\n- 3: %s\n- 4: %s\n", input1, Record.normalizeJava8(input1), input2, Record.normalizeJava8(input2)));
-		assertThat(distance).isGreaterThan(0.9);
+		assertThat(distance).isGreaterThan(DeduplicationService.JOURNAL_SIMILARITY_REPLY);
     }
 
 	/*
@@ -49,7 +49,7 @@ public class JaroWinklerJournalTest {
     void jwNegativeTest(String input1, String input2) {
 		Double distance = jws.apply(Record.normalizeJournalJava8(input1), Record.normalizeJournalJava8(input2));
 		System.err.println(String.format("- 1: %s\n- 2: %s\n- 3: %s\n- 4: %s\n", input1, Record.normalizeJava8(input1), input2, Record.normalizeJava8(input2)));
-		assertThat(distance).isLessThanOrEqualTo(0.9);
+		assertThat(distance).isLessThanOrEqualTo(DeduplicationService.JOURNAL_SIMILARITY_REPLY);
     }
 	
 	/*
@@ -60,6 +60,8 @@ public class JaroWinklerJournalTest {
     void fullPositiveTest(String input1, String input2) {
 		Record r1 = new Record();
 		Record r2 = new Record();
+		log.debug("==================================================================");
+		
 		r1.addJournals(input1);
 		r2.addJournals(input2);
 		
@@ -356,17 +358,103 @@ public class JaroWinklerJournalTest {
 	    		arguments(
     					"Acta Chir Scand Suppl",
     					"Acta Chirurgica Scandinavica"),
-	    		// FIXME: Is this acceptable? Starts with "B" and has a "B" and "A" (all case insensitive)
 	    		arguments(
-	    				"BBA Clinical",
-	    				"Biochimica et biophysica peracta nonclinical")
+    					"Pleura Peritioneum",
+    					"PLEURA AND PERITIONEUM"),
+	    		// FIXME: Should the last part of the second one be stripped? See ASySD_Depression 3278 and 70894, 3557 and 70935 
+	    		arguments(
+    					"Clin.Neuropharmacol.",
+    					"Clinical neuropharmacology.12 Suppl 2 ()(pp v-xii; S1-105) 1989.Date of Publication: 1989."),
+	    		arguments(
+    					"J.Neurosci.",
+    					"Journal of Neuroscience.29 (37) ()(pp 11451-11460) 2009.Date of Publication: 16 Sep 2009."),
+	    		arguments(
+    					"Arzneimittel-Forschung/Drug Research.55 (3) ()(pp 153-159) 2005.Date of Publication: 2005.",
+    					"Arzneimittelforschung."),
+	    		arguments(
+    					"Zhen.Ci.Yan.Jiu.",
+    					"Zhen ci yan jiu = Acupuncture research / [Zhongguo yi xue ke xue yuan Yi xue qing bao yan jiu suo bian ji].39 (2) ()(pp 136-141) 2014.Date of Publication: Apr 2014."),
+	    		arguments(
+    					"RSC Adv",
+    					"RSC ADVANCES"),
+	    		arguments(
+    					"Pleura Peritoneum",
+    					"PLEURA AND PERITONEUM"),
+	    		arguments(
+    					"AJNR Am J Neuroradiol",
+    					"AMERICAN JOURNAL OF NEURORADIOLOGY"),
+	    		arguments(
+	    				"Samj South African Medical Journal",
+	    				"South African Medical Journal"),				// "Samj", not "SAMJ"
+	    		arguments(
+	    				"Adv Physiol Educ",
+	    				"American Journal of Physiology - Advances in Physiology Education"),
+	    		arguments(
+	    				"Altern Lab Anim",
+	    				"ATLA Alternatives to Laboratory Animals"),
+	    		arguments(
+	    				"Antiinflamm Antiallergy Agents Med Chem",
+	    				"Anti-Inflammatory and Anti-Allergy Agents in Medicinal Chemistry"),
+	    		arguments(
+					"Paediatr Drugs",
+					"Pediatric Drugs"),
+	    		arguments(
+					"Birth Defects Res C Embryo Today",
+					"Birth Defects Research Part C - Embryo Today: Reviews"),
+	    		arguments(
+					"Birth Defects Res C Embryo Today",
+					"BIRTH DEFECTS RESEARCH PART C-EMBRYO TODAY-REVIEWS"),
+	    		arguments(
+					"Clinical neuropharmacology.12 Suppl 2 ()(pp v-xii; S1-105) 1989.Date of Publication: 1989.",
+					"Clinical neuropharmacology"),
+	    		arguments(
+					"Ann Fr Anesth Reanim",
+					"ANNALES FRANCAISES D ANESTHESIE ET DE REANIMATION"),
+	    		arguments(
+	    				"Biol Aujourdhui",
+	    				"Biologie Aujourd'hui"),
+	    		arguments(
+	    				"Brain Res Brain Res Rev",
+	    				"BRAIN RESEARCH REVIEWS"),
+	    		arguments(
+	    				"Clinical Neurosurgery",
+	    				"NEUROSURGERY"),
+	    		arguments(
+	    				"Int Urogynecol J Pelvic Floor Dysfunct",
+	    				"INTERNATIONAL UROGYNECOLOGY JOURNAL"),
+	    		arguments(
+	    				"Klin Monbl Augenheilkd",
+	    				"KLINISCHE MONATSBLATTER FUR AUGENHEILKUNDE"),
+	    		arguments(
+	    				"Prz Menopauzalny",
+	    				"MENOPAUSE REVIEW-PRZEGLAD MENOPAUZALNY"),
+	    		arguments(
+	    				"Comp Biochem Physiol Part D Genomics Proteomics",
+	    				"COMPARATIVE BIOCHEMISTRY AND PHYSIOLOGY D-GENOMICS & PROTEOMICS"),
+	    		arguments(
+	    				"Philos Trans R Soc Lond B Biol Sci",
+	    				"Philosophical Transactions of the Royal Society B: Biological Sciences"),
+	    		arguments(
+	    				"Philos Trans R Soc Lond B Biol Sci",
+	    				"PHILOSOPHICAL TRANSACTIONS OF THE ROYAL SOCIETY B-BIOLOGICAL SCIENCES"),
+	    		arguments(
+	    				"European Respiratory Journal. Conference: European Respiratory Society Annual Congress",
+	    				"European Respiratory Journal"),
+	    		arguments( // JWS 0.90952380 !!
+	    				"Journal of Thoracic Oncology",
+	    				"Journal of Clinical Oncology")
 	    	);
     }
 
     static Stream<Arguments> fullNegativeArgumentProvider() {
 		return Stream.of(
+	    		// Fixed: Patterns for journals used ".*(\\b|)", but this was changed to ".*\\b".
+				// This made up example was positive: Starts with "B" and has a "B" and "A" (all case insensitive)
 	    		arguments(
-	    				"No Example yet",
+	    				"BBA Clinical",
+	    				"Biochimica et biophysica peracta nonclinical"),
+	    		arguments(
+	    				"No other examples yet",
 	    				"The same")
 		);
     }
@@ -468,7 +556,11 @@ public class JaroWinklerJournalTest {
 	    		// TODO: This would work if journals are also split on "/", possibly as an extra journal variant
 	    		arguments(
 	    				"Chung-Kuo Hsiu Fu Chung Chien Wai Ko Tsa Chih/Chinese Journal of Reparative & Reconstructive Surgery", 
-	    				"Zhongguo xiu fu chong jian wai ke za zhi = Zhongguo xiufu chongjian waike zazhi = Chinese journal of reparative and reconstructive surgery")
+	    				"Zhongguo xiu fu chong jian wai ke za zhi = Zhongguo xiufu chongjian waike zazhi = Chinese journal of reparative and reconstructive surgery"),
+	    		// Fixed: Starts with "B" and has a "B" and "A" (all case insensitive)
+	    		arguments(
+	    				"BBA Clinical",
+	    				"Biochimica et biophysica peracta nonclinical")
 	    	);
     }
     

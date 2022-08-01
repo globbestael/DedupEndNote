@@ -21,7 +21,7 @@ import lombok.extern.slf4j.Slf4j;
  * Results: the number of permutations are staggering. See testPermutations3: 2187 permutations for 7 authors
  */
 
-@Disabled("Experiment that will not be pursuited")
+@Disabled("Experiment shows that this should not be implemented")
 @Slf4j
 @TestConfiguration
 public class AuthorPermutationsExperimentsTest {
@@ -124,7 +124,7 @@ public class AuthorPermutationsExperimentsTest {
     	permutedAuthorLists.stream().forEach(System.err::println);
     	log.error("There are {} permutations", permutedAuthorLists.size());
     	
-    	// FIXME: does it make sense to first use contains() and then use JWS? or overlap of 2 authorlists?
+    	// Does it make sense to first use contains() and then use JWS? or overlap of 2 authorlists?
     	String other = "wu cy; yang cl; chuang ll; lin kc; chen hc; chen md; huang wc";
     	for (int i = 0; i < permutedAuthorLists.size() - 1; i++) {
     		if (permutedAuthorLists.get(i).equals(other)) {
@@ -145,7 +145,7 @@ public class AuthorPermutationsExperimentsTest {
     	permutedAuthorLists.stream().forEach(System.err::println);
     	log.error("There are {} permutations", permutedAuthorLists.size());
     	
-    	// FIXME: does it make sense to first use contains() and then use JWS? or overlap of 2 authorlists?
+    	// Does it make sense to first use contains() and then use JWS? or overlap of 2 authorlists?
     	String other = "bintintan a; mircea pa; chira r; nagy g; manzat sr; valean s";
     	for (int i = 0; i < permutedAuthorLists.size() - 1; i++) {
     		if (permutedAuthorLists.get(i).equals(other)) {

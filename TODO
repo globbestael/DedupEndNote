@@ -1,0 +1,52 @@
+EndNote 20
+----------
+https://support.alfasoft.com/hc/en-us/articles/360018135798-De-duplication-of-references-in-EndNote-20
+https://endnote.com/product-details/compare-previous-versions : Deduplication by DOI and/or PMCID
+
+Retractions
+-----------
+- Retracted publications: BIG_SET 7921 set and 42247
+- Article: Shi, Qianling et al., More Consideration is Needed for Retracted Non-Cochrane Systematic Reviews in Medicine: A Systematic Review,
+  in: Journal of Clinical Epidemiology, Volume 0, Issue 0
+  https://www.jclinepi.com/article/S0895-4356(21)00198-0/fulltext#relatedArticles
+
+BIG SET: subject was chosen after reading https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0071838?
+
+Compare with dedupe-sweep
+-------------------------
+Data files on https://github.com/IEBH/dedupe-sweep/tree/master/test
+
+Make a command line version
+---------------------------
+
+Depression
+----------
+- IF (but only then) there are other files where the PY has been put into the pages field: replace the pages field with null.
+  If this is done, then a the truth file should be adapted?
+  Check on BIG_SET and subset of other files: no cases found
+- "Brain research" with its sections can be solved: regex like "Brain Res.*Brain Res.*"?
+
+Cochrane reviews
+----------------
+What is preferred way?
+- user should not lose new updates (see also living reviews)
+- since it is is not possible to apply this rule only for the last versions, it applies always
+ 
+Prefer DOI above starting page because different versions of a review have different DOIs.
+==> there should be a boolean Cochrane attribute
+Question: are there other journals with similar versions of articles?
+Current practice of comparing starting page (Cd003229) above DOI (10.1002/14651858.cd003229.pub3) merges different versions of same or consecutive years
+
+The BIG_SET database has no examples of Cochrane reviews from Medline_OVID!
+The ASySD_SRSR_Human database has cases for database "Ovid Technologies":
+- issue: CD005488, starting page: empty, DOI: http://dx.doi.org/10.1002/14651858.CD005488.pub2
+- issue: empty, starting page: CD008237, DOI: empty   (is this EMBASE_OVID?)
+
+Using DOI before starting page won't help in all cases:
+- if Cochrane AND starting page empty AND issue LIKE 'CD.*' ==> use ISSUE to starting page (and keep all characters, don't limit to numbers)
+- add PY to starting page ==> with absent DOIs no more merges over consecutive years
+
+DOIs with unwanted additions
+----------------------------
+- eLife has DOI's for different sections: http://dx.doi.org/10.7554/eLife.06487.001 (in SRSR Human)
+- PLoS ONE has DOIs for figures: https://journals.plos.org/plosone/article/figure?id=10.1371/journal.pone.0094853.g001 (in SRSR Human)

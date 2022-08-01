@@ -7,185 +7,166 @@
 	<script th:src="@{/webjars/blueimp-file-upload/js/jquery.fileupload.js}"></script>
 	<script th:src="@{/webjars/blueimp-file-upload/js/jquery.fileupload-process.js}"></script>
 	<link rel="stylesheet" th:href="@{/webjars/bootstrap/css/bootstrap.min.css}">
-    <style type="text/css">
-    	.bg-info {
-    		padding: 10px;
-    	}
-    	td {
-    		vertical-align: top;
-    	}
-    	.diff {
-    		color: red;
-    		font-weight: bold;
-    	}
-		.bar {
-		    height: 18px;
-		    background: green;
-		}
-    </style>
-<!--     
-    zie: https://blueimp.github.io/jQuery-File-Upload/js/main.js
-    zie: view-source:https://blueimp.github.io/jQuery-File-Upload/index.html
-    zie: https://blueimp.github.io/jQuery-File-Upload/index.html
--->
- 	<script th:inline="javascript">
-// 	    $(document).ready(function() {
-// 			document.getElementById('order_form').onchange = function () {
-// 				// als oplossing voor "fakepath" probleem: verwijder alles voor de eigenlijke bestandsnaam
-// 				var bestandsnaam = $("#fileUpload1").val();
-// 				var bestandsnaam2 = $("#fileUpload2").val();
-// // 				alert("bestandsnaam: " + bestandsnaam1 + ", " + bestandsnaam2
-// // 						+ ", savedFiles[0]: " + savedFiles[0].name  + ", savedFiles[1]: " + savedFiles[1].name);
-				
-// 				var files = $("#upload_form").files;
-// // 				var aantal = files.length;
-// // 				alert("aantal: " + aantal);
-// 				var myRegex = /^(.+\\)([^\\]+)$/;
-// 				var match = myRegex.exec(bestandsnaam1);
-// 				if (match != null) {
-// 					bestandsnaam = match[2];
-// 				}
-// 				// alert("Bestandsnaam: " + bestandsnaam);
-//  		    	$("#fileName").val(bestandsnaam1);
-// 			};
-//  		});
+    <script th:src="@{/webjars/sockjs-client/sockjs.min.js}"></script>
+    <script th:src="@{/webjars/stomp-websocket/stomp.min.js}"></script>
 
-	    /*
-	     * The order of the files seems to depend on the order of in the file selection window, NOT on the order in which they are selected.
-	     * Because it is counterintuitive and difficult to explain, we ask in a separate step which file contains the old records. 
-	     */
-	     /*
-	      * FIXME: Does limitMultiFileUploads actually work?
-	      */
- 		$(function() {
+ 	<script th:inline="javascript">
+	 	var stompClient = null;
+		var sizeOldFile = 0;
+		var sizeNewFile = 0;
+	 	
+	 	/* Also adds data to the start form (step 3) */
+	 	function checkFileSize(evant, data) {
+     	   // console.log("ID? " + data.fileInput[0].id);
+    	   if (data.fileInput[0].id == 'fileUpload1') {
+    			sizeOldFile = data.files[0].size 
+				$("#oldFile").val(data.files[0].name);						
+    	   } else {
+    			sizeNewFile = data.files[0].size 
+				$("#newFile").val(data.files[0].name);
+ 		    	$("#fileName").val(data.files[0].name);	// in getResultFile_form
+    	   }
+    	   if ((sizeOldFile + sizeNewFile) > (150 * 1024 * 2014)) {
+				var MB = parseInt((sizeOldFile + sizeNewFile) / (1024 * 1024));
+				alert("The 2 files together are bigger than 150 MB! These files are " + MB + "MB");
+			} else {
+				data.submit();
+			}
+	 	}
+	 	function hideDiv(id) {
+	 		$(id).removeClass('d-block');
+	 		$(id).addClass('d-none');
+	 	}
+	 	function showDiv(id) {
+	 		$(id).removeClass('d-none');
+	 		$(id).addClass('d-block');
+	 	}
+	 	function showProgress(percentage) {
+	 		$("#progress").html(`<div class="progress-bar" role="progressbar" style="width: ${percentage}%;" aria-valuenow="${percentage}" aria-valuemin="0" aria-valuemax="100">${percentage}%</div>`);
+	 		// $('#progress-bar').css('width', percentage + '%').attr('aria-valuenow', percentage);
+	 	}
+	 	function disableButton(id) {
+	 		$(id).prop("disabled", true);
+	 	}
+	 	function enableButton(id) {
+	 		$(id).prop("disabled", false);
+	 	}
+	 	function markAsDone(id) {
+	 		$(id).removeClass('alert-warning');
+	 		$(id).addClass('alert-success');
+	 	}
+	
+	 	$(function() {
+
+ 		 	connect();
+ 		 	
+ 		 	function connect() {
+ 		 	    var socket = new SockJS('/gs-guide-websocket');
+ 		 	    stompClient = Stomp.over(socket);
+ 				//stompClient.debug = null;	// disable debug, shorthand for: "stompClient.debug = function(str) {};" see https://stomp-js.github.io/stomp-websocket/codo/class/Client.html 
+ 		 	    stompClient.connect({}, function (frame) {
+ 					wssessionId = /\/([^\/]+)\/websocket/.exec(socket._transport.url)[1];
+ 			        // console.log("connected, session id: " + wssessionId);
+ 			        $("#wssessionId").val(wssessionId);
+					// subscribe to a user specific URL (see the controller for more info)
+ 		 	        stompClient.subscribe('/topic/messages-' + wssessionId, function (stompMessage) {
+ 		 	        	message = JSON.parse(stompMessage.body).name
+ 	                    if (message.match("^DONE")) {  
+ 	                    	showProgress(0);
+ 	                        $('#results').html(message);      
+ 							enableButton('#buttonResultFile');
+ 							markAsDone('#step2');
+ 	                    } else if (message.match("^ERROR")) {  
+ 	 		        		$('#results').removeClass('alert-warning');
+ 	 		        		$('#results').addClass('alert-danger');
+ 	                        $('#results').html(message);      
+ 	                    } else if (message.match("^PROGRESS:")) {
+ 	                    	var found = message.match(/^PROGRESS: (.+)$/);
+ 	                    	var percentage = found[1]; 
+ 	                    	showProgress(percentage);
+ 	                    } else {
+ 		                  	// console.log("DATA: " + message);
+ 			 	       		$('#results').html("<span>" + message + "</span>");
+ 	                    }
+ 		 	        });
+ 		 	    });
+ 		 	};
+ 		 	
  			$('#upload_form').fileupload({
  		        dataType: 'json',
- 		        limitMultiFileUploads: 2,
-				singleFileUploads: false,
+ 		        limitMultiFileUploads: 1,
+				singleFileUploads: true,
 				replaceFileInput: false,
 				autoUpload: true,
  		        start: function() {
- 		        	$('#progress .progress-bar').css('width', '0%');
-	        		$('#resultaten').html("<span>In progress</span>");
-	        		//$('#reportLink').addClass("hidden");
-	        		$('#reportLink').html("<span></span>");
-	        		// $('#getResultFile_form').addClass("hidden");
-	        		$('#getResultFile_form').hide();
+					showProgress(0);
  		        },
 	           add: function(event, data) {
-	        	   if (data.files.length != 2) {
-	        		   alert("You have to select 2 files!");
-	        	   } else if ((data.files[0].size + data.files[1].size) > (150 * 1024 * 2014)) {
-						var MB = parseInt((data.files[0].size + data.files[1].size) / (1024 * 1024));
-						alert("The 2 files together are bigger than 150 MB! These files are " + MB + "MB");
-					} else {
-						//$("#order_form").removeClass('hidden');
-						// $("#order_form").addClass('show');
-						$("#order_form").show();
-						$("#fileName_1").html(data.files[0].name);						
-						$("#fileName_2").html(data.files[1].name);
-						$("#fileName_1_hidden").val(data.files[0].name);						
-						$("#fileName_2_hidden").val(data.files[1].name);
-						data.submit();
-					}
+	        	   checkFileSize(event, data);
 	           },
- 		        done: function (e, data) {
+				done: function (e, data) {
  		        	// console.log("done reached: %o", data);
  		        	if (data.textStatus == "success") {
- 		        		// $('#resultaten').html("<span>Files " + data.files[0].name + " and " + data.files[1].name + " has been uploaded. Deduplication started ....</span>");
- 		        		$('#resultaten').html("<span>" + data.result.result + "</span>");
- 		        		$('#resultaten').removeClass('alert-danger');
- 		        		$('#resultaten').addClass('alert-success');
+ 		        	   if (data.fileInput[0].id == 'fileUpload1') {
+ 	 		        		$('#results').html("<span>File " + data.files[0].name + " has been uploaded. Waiting for file with NEW records</span>");
+ 							disableButton('#fileUpload1');
+ 							enableButton('#fileUpload2');
+ 							enableButton('#buttonStartDeduplication');
+ 							markAsDone('#step1a');
+ 		        	   } else {
+	 		        		$('#results').html("<span>File " + data.files[0].name + " has been uploaded. Both files received</span>");
+ 							disableButton('#fileUpload2');
+ 							enableButton('#buttonStartDeduplication');
+ 							markAsDone('#step1b');
+ 		        	   }
  		        	}
  		        },
  		        error: function (jqXHR, data, thrownError) {
- 		        	console.log("error arg1 reached: %o", jqXHR.responseText);
- 		        	console.log("error arg2 reached: %o", data.textStatus);
- 		        	console.log("error arg3 reached: %o", thrownError);
- 		        	var resultaat = jQuery.parseJSON(jqXHR.responseText);
-	        		$('#resultaten').html("<span>" + resultaat.result + "</span>");
-		            $('#progress .progress-bar').css('width', '0%');
- 	        		$('#resultaten').addClass('alert-danger');
- 	        		$('#resultaten').removeClass('alert-success');
+ 		        	// console.log("error arg1 reached: %o", jqXHR.responseText);
+ 		        	// console.log("error arg2 reached: %o", data.textStatus);
+ 		        	// console.log("error arg3 reached: %o", thrownError);
+ 		        	var response = jQuery.parseJSON(jqXHR.responseText);
+	        		$('#results').html("<span>" + response.result + "</span>");
+ 	        		$('#results').addClass('alert-danger');
+ 	        		$('#results').removeClass('alert-warning');
  		        },
   				progressall: function (e, data) {
  		            var progress = parseInt(data.loaded / data.total * 100, 10);
- 		            console.log("Progress: " + progress);
- 		            $('#progress .progress-bar').css(
- 		                'width',
- 		                progress + '%'
- 		            );
+ 		            // console.log("Progress: " + progress);
+                 	$("#progress").html(`<div class="progress-bar" role="progressbar" style="width: ${percentage}%;" aria-valuenow="${percentage}" aria-valuemin="0" aria-valuemax="100">${percentage}%</div>`);
  		        }
  		    });
  			
-			document.getElementById('order_form').onsubmit = function () {
-        		//$('#reportLink').removeClass("hidden");
-        		// $('#reportLink').addClass('show');
-        		$('#reportLink').show();
-        		$('#reportLink').addClass('alert-danger');
-        		$('#reportLink').removeClass('alert-success');
-        		
-        		var nummer = $("input[name='fileNumber']:checked").val();
-        		var bestandsnaam;
-        		if (nummer == 0) {
-        			bestandsnaam = $("#fileName_2_hidden").val();
-        		} else {
-        			bestandsnaam = $("#fileName_1_hidden").val();
-        		}
-				// "fakepath" problem: remove everything before the real file name
-				var myRegex = /^(.+\\)([^\\]+)$/;
-				var match = myRegex.exec(bestandsnaam);
-				if (match != null) {
-					bestandsnaam = match[2];
-				}
-    			$("#fileName").val(bestandsnaam);
-    			$("#markModeResultFile").val($("input[name='markMode']").prop("checked"));
-	    
-        		$.ajax({
-        			url: '/startTwoFiles',
-        			method: 'POST',
-        			data: { fileName_1_hidden: $("#fileName_1_hidden").val()
-        				, fileName_2_hidden: $("#fileName_2_hidden").val()
-        				, fileNumber: $("input[name='fileNumber']:checked").val()
-						, markMode: $("input[name='markMode']:checked").val()}
-        			});
-	   	        var timer = setInterval(function() {  
-		            $.ajax({  
-		                  url: 'recordstatus.json',
-		                  dataType: 'json',
-		                  success: function(resultaat) {
-		                    if (resultaat.result.match("^DONE")) {  
-		 		        		$('#reportLink').removeClass('alert-danger');
-		 		        		$('#reportLink').addClass('alert-success');
-		                        $('#reportLink').html(resultaat.result);      
-		                        clearInterval(timer);
-		                        // $("#getResultFile_form").removeClass("hidden");
-		                        // $("#getResultFile_form").addClass("show");
-		                        $("#getResultFile_form").show();
-		                    } else if (resultaat.result.match("^ERROR")) {  
-		 		        		$('#reportLink').removeClass('alert-danger');
-		 		        		$('#reportLink').addClass('alert-danger');
-		                        $('#reportLink').html(resultaat.result);      
-		                        clearInterval(timer);
-		                    } else {
-			                  	// console.log("DATA: " + resultaat.result);
-		                    	$('#reportLink').html(resultaat.result);
-		                    }
-	                  	}
-		            });  
-		        }, 2000);
-	   	        return false;
-			};
+ 			$('#buttonStartDeduplication').on('click', function (event) {
+ 				event.preventDefault();
+ 				event.preventDefault();
+				disableButton('#buttonStartDeduplication');
+    			$("#fileNameResultFile").val($('#newFile').val());	// in getResultFile_form
+    			$("#markModeResultFile").val($('#markMode').prop("checked"));	// in getResultFile_form
 
+ 	    		$.ajax({
+ 	    			url: '/startTwoFiles',
+ 	    			type: 'POST',
+ 	    			data: new FormData(document.getElementById('start_form')),
+ 	    			dataType: 'json',
+ 	    			processData: false,
+ 	    			contentType: false,
+ 					success: function(response) {
+ 						console.log("RESPONSE: " + response);
+	                    if (response.result.match("^DONE")) {  
+	                        $('#results').html(response.result);      
+	                    } else if (response.result.match("^ERROR")) {  
+	 		        		$('#results').removeClass('alert-warning');
+	 		        		$('#results').addClass('alert-danger');
+	                        $('#results').html(response.result);      
+	                    } else {
+	                    	$('#results').html(response.result);
+	                    }
+ 	    			}
+ 	    		});
+ 			});
  		});
- 	</script>
-
-	<style type="text/css">
-		.bar {
-		    height: 18px;
-		    background: green;
-		}
-	</style>
+	 </script>
 </head>
 <body data-spy="scroll" data-target="#menu" data-offset="1">
 	<div class="container-fluid">
@@ -199,57 +180,95 @@
 						<a class="list-group-item list-group-item-action" href="#why">Why deduplicate 2 files?</a>
 						<a class="list-group-item list-group-item-action" href="#markModeText">Mark mode</a>
 						<a class="list-group-item list-group-item-action" href="#caveat">Caveat</a>
-						<a class="list-group-item list-group-item-action" href="/faq">FAQ</a>
+						<!-- these links to other pages open a new window in order to preserve the Web Socket sessionId on this page (possibly running a deduplication --> 
+						<a class="list-group-item list-group-item-action" href="/faq" target="window2">FAQ</a>
 					</nav>
 				</nav>
 			</div>
 			<div class="col-9" style="height: 100vh; position: relative;" id="start">
 				<h1>DedupEndNote - deduplicate 2 files</h1>
-				<p class="alert alert-danger">Works only with Chrome and Firefox</p>
-				<div class="card bg-light mb-3">
-					<div class="card-body">
-						<form class="form-horizontal" id="upload_form" method="post" enctype="multipart/form-data" th:action="@{|/uploadTwoFiles|}">
+				<form class="form-horizontal" id="upload_form" method="post" enctype="multipart/form-data" th:action="@{|/uploadFile|}">
+					<div class="row col-11">
+						<div class="col-5 border border-primary rounded alert alert-secondary" id="step1a">
+							<h3>1a. OLD records</h3>
+							<input type="hidden" name="fileType" value="old"/>
 							<div class="form-group" style="margin-left: 20px;">
-								<label for="oldFile">Select the 2 EndNote RIS files (max. combined file size: 150MB). Select the 2 files while holding the SHIFT key.</label><br/>
-								<input type="file" id="fileUpload" name="files" multiple="multiple"/>
+								<label for="oldFile">Select the EndNote RIS file with the OLD records</label><br/>
+								<input type="file" id="fileUpload1" name="file"/>
 							</div>
-						    <div id="progress" class="progress">
-						        <div class="progress-bar progress-bar-success"></div>
-						    </div>						
-		   					<p id="resultaten" class="alert-danger"></p>
-						</form>
-						
-						<form class="form-horizontal" style="display: none;" id="order_form" method="post" th:action="@{|/startTwoFiles|}">
-							<input type="hidden" id="fileName_1_hidden" name="fileName_1_hidden" value="" />
-							<input type="hidden" id="fileName_2_hidden" name="fileName_2_hidden" value="" />
-							<p><strong>Which file contains the OLD records?</strong></p>
-							<div class="form-check">
-								<input class="form-check-input" type="radio" name="fileNumber" id="fileNumber_1" value="0" checked="checked" />
-								<label class="form-check-label" for="fileNumber_1"> <span id="fileName_1"></span></label>
+						</div>
+						<div class="col-2"></div>
+						<div class="col-5 border border-primary rounded alert alert-secondary" id="step1b">
+							<h3>1b. NEW records</h3>
+							<input type="hidden" name="fileType" value="new"/>
+							<div class="form-group" style="margin-left: 20px;">
+								<label for="newFile">Select the EndNote RIS file with the NEW records</label><br/>
+								<input type="file" id="fileUpload2" disabled name="file"/>
 							</div>
-							<div class="form-check">
-								<input class="form-check-input" type="radio" name="fileNumber" id="fileNumber_2" value="1" />
-								<label class="form-check-label" for="fileNumber_2"> <span id="fileName_2"></span></label>
-							</div>
+						</div>
+					</div>
+				</form>
+				<div class="row col-11 border border-primary rounded alert alert-secondary" id="step2">
+<!-- 				<div class="row" style="margin-top: 10px;"> -->
+<!-- 					<div class="col-11 border border-primary"> -->
+					<div class="col-3">
+						<h3>2. START</h3>
+					</div>
+					<div class="col-9">
+						<form class="form-horizontal" id="start_form" method="post" action="" xxth:action="@{|/startTwoFiles|}">
+							<input type="hidden" id="oldFile" name="oldFile" value="" />
+							<input type="hidden" id="newFile" name="newFile" value="" />
+							<input type="hidden" id="wssessionId" name="wssessionId" value="" />
 							<div class="form-check form-check-inline" style="margin-top: 20px;">
 								<input class="form-check-input" type="checkbox" id="markMode" name="markMode"/>
 								<label class="form-check-label" for="file"> Do NOT deduplicate the file with new records but mark the duplicate records (see <a href="#markModeText">Mark mode</a>)</label>
 							</div>
 							<div>
-								<button type="submit" class="btn btn-primary mb-2">Start deduplication</button>
+								<button type="submit" id="buttonStartDeduplication" disabled class="btn btn-primary mb-2">Start deduplication</button>
 							</div>
-							<p id="reportLink" class="alert-danger"></p>
-						</form>
-						
-						<form class="form-horizontal" style="display: none;" id="getResultFile_form" method="post" th:action="@{|/getResultFile|}">
-							<input type="hidden" name="fileName" id="fileName" />
-							<input type="hidden" name="markModeResultFile" id="markModeResultFile" />
-	 						<!-- nodig om submit() voor IE te laten werken -->
-	<!--  						<input type="submit" name='submit' value="Submit" class='hidden'/> -->
-							<button type="submit" class="btn btn-primary mb-2" onclick="this.form.submit()">Get the result</button>
 						</form>
 					</div>
 				</div>
+
+				<div class="row col-11 border border-primary rounded alert alert-secondary" id="step3">
+					<div class="col-3">
+						<h3>3. RESULT</h3>
+					</div>
+					<div class="col-9">
+						<form class="form-horizontal" id="getResultFile_form" method="post" th:action="@{|/getResultFile|}">
+							<input type="hidden" name="fileNameResultFile" id="fileNameResultFile" />
+							<input type="hidden" name="markModeResultFile" id="markModeResultFile" />
+							<!-- nodig om submit() voor IE te laten werken -->
+							<button type="submit" id="buttonResultFile" disabled class="btn btn-primary mb-2" onclick="this.form.submit(); markAsDone('#step3');">Get the result</button>
+						</form>
+					</div>
+				</div>
+				<div class="row" style="margin-top: 10px;">
+					<div class="col-8 border border-primary rounded">
+						<h3>Progress</h3>
+					    <div id="progress" class="progress" style="height: 20px;">
+					        <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+					    </div>
+						<p id="results" class="alert alert-warning">Waiting for new input file ...</p>
+					</div>
+					<div class="col-1"></div>
+					<div class="col-2">
+						<a class="btn btn-primary" href="/twofiles" role="button">Restart</a>
+					</div>
+				</div>
+				
+<!-- 				<div class="card bg-light mb-3"> -->
+<!-- 					<div class="card-body"> -->
+<!-- 						<p id="reportLink" class="alert-danger"></p> -->
+						
+<!-- 						<form class="form-horizontal" style="display: none;" id="getResultFile_form" method="post" th:action="@{|/getResultFile|}"> -->
+<!-- 							<input type="hidden" name="fileName" id="fileName" /> -->
+<!-- 							<input type="hidden" name="markModeResultFile" id="markModeResultFile" /> -->
+<!-- 	 						nodig om submit() voor IE te laten werken -->
+<!-- 							<button type="submit" class="btn btn-primary mb-2" onclick="this.form.submit()">Get the result</button> -->
+<!-- 						</form> -->
+<!-- 					</div> -->
+<!-- 				</div> -->
 
 	        	<h3 id="steps">Steps</h3>
 	   			<i>(The names of the EndNote databases and the RIS files are just examples)</i></p>

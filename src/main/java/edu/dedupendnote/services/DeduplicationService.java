@@ -3,9 +3,12 @@ package edu.dedupendnote.services;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -13,6 +16,9 @@ import java.util.stream.Collectors;
 import javax.servlet.http.HttpSession;
 
 import org.apache.commons.text.similarity.JaroWinklerSimilarity;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.messaging.simp.annotation.SendToUser;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.AsyncResult;
 import org.springframework.stereotype.Service;
@@ -20,6 +26,7 @@ import org.springframework.util.concurrent.ListenableFuture;
 import org.springframework.web.context.annotation.SessionScope;
 
 import edu.dedupendnote.domain.Record;
+import edu.dedupendnote.domain.StompMessage;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -79,6 +86,8 @@ public class DeduplicationService {
 	 *  If the label starts with "-", it is a duplicate from a record from the OLD input file.
 	 */
 	// @formatter:on
+	@Autowired 
+	private SimpMessagingTemplate simpMessagingTemplate;
 
 	protected AuthorsComparator authorsComparator;
 	private JaroWinklerSimilarity jws = new JaroWinklerSimilarity();
@@ -112,44 +121,67 @@ public class DeduplicationService {
 
 	// split into deduplicateOneFileAsync(...) and duplicateOneFile(...) for testability
 	@Async
-	public ListenableFuture<String> deduplicateOneFileAsync(String inputFileName, String outputFileName, boolean markMode, HttpSession session) {
-		String s = deduplicateOneFile(inputFileName, outputFileName, markMode, session);
+	public ListenableFuture<String> deduplicateOneFileAsync(String inputFileName, String outputFileName, boolean markMode, String wssessionId) {
+		String s = deduplicateOneFile(inputFileName, outputFileName, markMode, wssessionId);
 		return new AsyncResult<>(s);
 	}
+
+//	@Async
+//	public void deduplicateOneFileAsync(String inputFileName, String outputFileName, boolean markMode, String wssessionId) {
+//		deduplicateOneFile(inputFileName, outputFileName, markMode, session);
+//	}
 
 	// split into deduplicateTwoFilesAsync(...) and duplicateTwoFiles(...) for testability
 	@Async
-	public ListenableFuture<String> deduplicateTwoFilesAsync(String newInputFileName, String oldInputFileName, String outputFileName, boolean markMode, HttpSession session) {
-		String s = deduplicateTwoFiles(newInputFileName, oldInputFileName, outputFileName, markMode, session);
+	public ListenableFuture<String> deduplicateTwoFilesAsync(String newInputFileName, String oldInputFileName, String outputFileName, boolean markMode, String wssessionId) {
+		String s = deduplicateTwoFiles(newInputFileName, oldInputFileName, outputFileName, markMode, wssessionId);
 		return new AsyncResult<>(s);
 	}
 
-	public String deduplicateOneFile(String inputFileName, String outputFileName, boolean markMode, HttpSession session) {
-		this.session = session;
+	public String deduplicateOneFile(String inputFileName, String outputFileName, boolean markMode, String wssessionId) {
+		// this.session = session;
+		wsMessage(wssessionId, "Reading file " + inputFileName);
 		List<Record> records = ioService.readRecords(inputFileName);
 
 		String s = doSanityChecks(records, inputFileName);
 		if (s != null) {
-			return updateSession(session, s);
+//			return updateSession(session, s);
+			wsMessage(wssessionId, s);
+			return s;
 		}
 
-		searchYearOneFile(records, session);
+		searchYearOneFile(records, wssessionId);
 		
 		if (markMode) { // no enrich(), and add / overwrite LB (label) field
 			int numberWritten = ioService.writeMarkedRecords(records, inputFileName, outputFileName);
 			long labeledRecords = records.stream().filter(r -> r.getLabel() != null).count();
-			return updateSession(session, "DONE: DedupEndNote has written " + numberWritten + " records with " + labeledRecords + " duplicates marked in the Label field.");
+			s = "DONE: DedupEndNote has written " + numberWritten + " records with " + labeledRecords + " duplicates marked in the Label field.";
+			wsMessage(wssessionId, s);
+			return s;
+//			return updateSession(session, "DONE: DedupEndNote has written " + numberWritten + " records with " + labeledRecords + " duplicates marked in the Label field.");
 		}
 
+		wsMessage(wssessionId, "Enriching the " + records.size() +  " deduplicated results");
 		enrich(records);
+		wsMessage(wssessionId, "Saving the " + records.size() +  " deduplicated results");
 		int numberWritten = ioService.writeDeduplicatedRecords(records, inputFileName, outputFileName);
 		s = formatResultString(records.size(), numberWritten);
-		updateSession(session, s);	// not return yet
-		
+		// updateSession(session, s);	// not return yet
+		wsMessage(wssessionId, s);
+//		simpMessagingTemplate.convertAndSend("/topic/messages", new StompMessage(s));
+
 		return s;
 	}
+	
+	private void wsMessage(String wssessionId, String message) {
+		if (simpMessagingTemplate != null) {
+//			System.err.println(wssessionId + ": " + message);
+//			simpMessagingTemplate.convertAndSendToUser(wssessionId, "/topic/messages", new StompMessage(message));
+			simpMessagingTemplate.convertAndSend("/topic/messages-" + wssessionId, new StompMessage(message));
+		}
+	}
 
-	public String deduplicateTwoFiles(String newInputFileName, String oldInputFileName, String outputFileName, boolean markMode, HttpSession session) {
+	public String deduplicateTwoFiles(String newInputFileName, String oldInputFileName, String outputFileName, boolean markMode, String wssessionId) {
 		this.session = session;
 		// read the old records and mark them as present, then add the new records
 		log.info("oldInputFileName: {}", oldInputFileName);
@@ -158,7 +190,9 @@ public class DeduplicationService {
 		
 		String s = doSanityChecks(records, oldInputFileName);
 		if (s != null) {
-			return updateSession(session, s);
+//			return updateSession(session, s);
+			wsMessage(wssessionId, s);
+			return s; 
 		}
 
 		records.forEach(r -> {
@@ -174,19 +208,24 @@ public class DeduplicationService {
 		List<Record> newRecords = ioService.readRecords(newInputFileName);
 		s = doSanityChecks(newRecords, newInputFileName);
 		if (s != null) {
-			return updateSession(session, s);
+//			return updateSession(session, s);
+			wsMessage(wssessionId, s);
+			return s; 
 		}
 		records.addAll(newRecords);
 		log.info("Records read from 2 files: {}", records.size());
 		
-		searchYearTwoFiles(records, session);
+		searchYearTwoFiles(records, wssessionId);
 		
 		if (markMode) { // no enrich(), and add / overwrite LB (label) field
 			int numberWritten = ioService.writeMarkedRecords(records, newInputFileName, outputFileName);
 			long labeledRecords = records.stream()
 										 .filter(r -> r.getLabel() != null && r.isPresentInOldFile() == false)
 										 .count();
-			return updateSession(session, "DONE: DedupEndNote has written " + numberWritten + " records with " + labeledRecords + " duplicates marked in the Label field.");
+//			return updateSession(session, "DONE: DedupEndNote has written " + numberWritten + " records with " + labeledRecords + " duplicates marked in the Label field.");
+			s = "DONE: DedupEndNote has written " + numberWritten + " records with " + labeledRecords + " duplicates marked in the Label field.";
+			wsMessage(wssessionId, s);
+			return s; 
 		}
 
 		enrich(records);
@@ -196,7 +235,10 @@ public class DeduplicationService {
 				.collect(Collectors.toList());
 		log.error("Records to write: {}", filteredRecords.size());
 		int numberWritten = ioService.writeDeduplicatedRecords(filteredRecords, newInputFileName, outputFileName);
-		return updateSession(session, "DONE: DedupEndNote removed " + (newRecords.size() - numberWritten) + " records from the new set, and has written " + numberWritten + " records.");
+//		return updateSession(session, "DONE: DedupEndNote removed " + (newRecords.size() - numberWritten) + " records from the new set, and has written " + numberWritten + " records.");
+		s = "DONE: DedupEndNote removed " + (newRecords.size() - numberWritten) + " records from the new set, and has written " + numberWritten + " records.";
+		wsMessage(wssessionId, s);
+		return s; 
 	}
 
 	private void enrich(List<Record> records) {
@@ -278,9 +320,22 @@ public class DeduplicationService {
 	 * Reason: we prefer the data (duplicate kept) which is most recent
 	 * (e.g. complete publication BEFORE ahead of print which is possibly from earlier year or without a year).  
 	 */
-	public void searchYearOneFile(List<Record> records, HttpSession session) {
+	public void searchYearOneFile(List<Record> records, String wssessionId) {
 		Map<Integer, List<Record>> yearSets = records.stream()
-				.collect(Collectors.groupingBy(Record::getPublicationYear));
+				.collect(Collectors.groupingBy(Record::getPublicationYear, TreeMap::new, Collectors.toList())).descendingMap();
+//		Map<Integer, Long> counts = records.stream()
+//				.map(Record::getPublicationYear)
+//				.collect(Collectors.groupingBy(Function.identity(), TreeMap::new, Collectors.counting())).descendingMap();
+//		log.error("COUNTS1: " + counts);
+		Map<Integer, Integer> counts = new LinkedHashMap<>();
+		Integer current = 0;
+		Integer total = records.size();
+		for (Integer year : yearSets.keySet()) {
+			Integer simple = yearSets.get(year).size();
+			counts.put(year, (100 * (simple + current)) / total);
+			current += simple;
+		};
+		log.error("COUNTS: " + counts);
 		
 		List<Record> emptyYearlist = yearSets.remove(0);
 		log.debug("YearSets: {}", yearSets.keySet().stream().sorted().collect(Collectors.toList()));
@@ -293,8 +348,10 @@ public class DeduplicationService {
 			if (previousYearSet != null) {
 				yearSet.addAll(previousYearSet);
 			}
-			updateSession(session, "Working on " + year + " for " + yearSet.size() + " records");
-			compareSet(yearSet, year, true, session);
+			// updateSession(session, "Working on " + year + " for " + yearSet.size() + " records");
+			wsMessage(wssessionId, "Working on " + year + " for " + yearSet.size() + " records");
+			compareSet(yearSet, year, true, wssessionId);
+			wsMessage(wssessionId, "PROGRESS: "+ counts.get(year));
 		});
 		return;
 	}
@@ -306,7 +363,7 @@ public class DeduplicationService {
 	 * Reason: we oldest data should set the label for a diplicate set  
 	 * (e.g. ahead of print (which is possibly from earlier year or without a year and more probably in the old file than the new file) BEFORE the complate data  
 	 */
-	public void searchYearTwoFiles(List<Record> records, HttpSession session) {
+	public void searchYearTwoFiles(List<Record> records, String wssessionId) {
 		Map<Integer, List<Record>> yearSets = records.stream()
 				.collect(Collectors.groupingBy(Record::getPublicationYear));
 		
@@ -322,13 +379,14 @@ public class DeduplicationService {
 			if (nextYearSet != null) {
 				yearSet.addAll(nextYearSet);
 			}
-			updateSession(session, "Working on " + year + " for " + yearSet.size() + " records");
-			compareSet(yearSet, year, false, session);
+//			updateSession(session, "Working on " + year + " for " + yearSet.size() + " records");
+			wsMessage(wssessionId, "Working on " + year + " for " + yearSet.size() + " records");
+			compareSet(yearSet, year, false, wssessionId);
 		});
 		return;
 	}
 
-	public void compareSet(List<Record> records, Integer year, boolean descending, HttpSession session) {
+	public void compareSet(List<Record> records, Integer year, boolean descending, String wssessionId) {
 		int listSize = records.size();
 		int doubleSize = 0;
 		while (records.size() > 1) {
@@ -400,7 +458,8 @@ public class DeduplicationService {
 //					log.debug("2. setting label {} to record {}", record.getLabel(), record.getId());
 //				}
 				doubleSize += doubles.size();
-				updateSession(session, "Working on " + year + " for " + listSize + " records (marked " + doubleSize + " duplicates)");
+				// updateSession(session, "Working on " + year + " for " + listSize + " records (marked " + doubleSize + " duplicates)");
+				wsMessage(wssessionId, "Working on " + year + " for " + listSize + " records (marked " + doubleSize + " duplicates)");
 			}
 		}
 	}
@@ -438,8 +497,8 @@ public class DeduplicationService {
 
 	/*
 	 *  Comparing starting page before DOI is maybe faster than the other way around. 
-	 *  But wouldn't more duplicates be found if DOIs are compared before starting pages?
-	 *  Mind the case where a complete set of conference abstracts has the same DOI.
+	 *  But: a complete set of conference abstracts has the same DOI.
+	 *  However: in case of Cochrane reviews, comparing DOIs before pages (the Cochrane ID) would recognize the different versions of the review! 
 	 */
 	public boolean compareStartPageOrDoi(Record r1, Record r2) {
 		log.debug("Comparing " + r1.getId() + ": " + r1.getPageStartForComparison() + " to " + r2.getId() + ": " + r2.getPageStartForComparison());
@@ -452,6 +511,41 @@ public class DeduplicationService {
 			log.debug("At least one starting page AND at least one DOI are missing");
 			return true; // no useful comparison possible
 		}
+		/*
+		 * TODO: Experiment: Cochrane reviews
+		 * - if (both journals startwith Cochrane) AND (both have DOI)
+		 *     return DOI1 == DOi2
+		 *   else
+		 *     drop into normal comparisons
+		 * 
+		 * TODO: Comparisons can be made faster if Record has a Boolean attribute "cochrane".
+		 * Or in case more comparable journals are found (biorxiv.org, arxiv.org, zenodo.org, ...) a boolean attribute preferDOI.
+		 * preferDOI = true iff journal belongs to the set AND the publication has a DOI?
+		 * 
+		 * See the PubMed pilot: https://www.ncbi.nlm.nih.gov/pmc/about/nihpreprints/
+		 * Takes publications from: medRxiv, bioRxiv, ChemRxiv, arXiv, Research Square, and SSRN
+		 * On 2021-10-18: query "preprint[filter]" (or "preprint[pt]") --> 2748 articles 
+		 * On 2022-03-26: query "preprint[filter]" (or "preprint[pt]") --> 3203 articles 
+		 * 
+		 * Examples:
+		 * - arxiv: has no regular DOI! https://arxiv.org/abs/2109.01097v1 AND https://arxiv.org/pdf/2109.01097v1. Starting page in RIS format: arXiv:2107.12817v1
+		 * - bioRxiv: 10.1101/2020.12.04.409144
+		 * - chemRxiv: 10.26434/chemrxiv.12931769
+		 * - medRxiv: 10.1101/2020.11.28.20240267 (same prefix as bioRXiv) 
+		 * - Research Square: 10.21203/rs.3.rs-513461/v1
+		 * - SSRN: 10.2139/ssrn.3628297
+		 */
+		// But the following very crude method doesn't lead to other results: WHY?
+		//		if (! r1.getJournals().isEmpty() && ! r2.getJournals().isEmpty()
+		//			&& r1.getJournals().stream().anyMatch(j-> j.toLowerCase().contains("cochrane"))
+		//			&& r2.getJournals().stream().anyMatch(j-> j.toLowerCase().contains("cochrane"))) {
+		//			for (String d : dois1.keySet()) {
+		//				if (dois2.containsKey(d)) {
+		//					log.error("BOTH Cochrane: One or more DOIs are the same: '{}' and '{}'", dois1, dois2);
+		//					return true;
+		//				}
+		//			}
+		//		}
 		if (sufficientStartPages && r1.getPageStartForComparison().equals(r2.getPageStartForComparison())) {
 			log.debug("Same starting pages");
 			return true;
@@ -615,52 +709,59 @@ public class DeduplicationService {
 		return false;
 	}
 
-	// Searching 'BMJ' as "^B.*(\b|-|)M.*(\b|-|)J.*"
+	// Searching 'BMJ' as "^B.*(\b|)M.*(\b|)J.*"
 	private boolean compareJournals_FirstAsInitialism(String s1, String s2) {
-//		String abbreviation = s1.chars()
-//				.mapToObj(c -> String.valueOf((char) c))
-//				.collect(Collectors.joining(" "));
-//		Pattern patternShort2 = Pattern.compile("^" + abbreviation.replaceAll(" ", ".*(\\\\b|-|)") + ".*", Pattern.CASE_INSENSITIVE);
 		String patternString = s1.chars()
 				.mapToObj(c -> String.valueOf((char) c))
-				.collect(Collectors.joining(".*(\\b|-|)", "^", ".*"));
+//				.collect(Collectors.joining(".*(\\b|)", "^", ".*"));
+				.collect(Collectors.joining(".*\\b", "\\b", ".*"));
 		Pattern patternShort2 = Pattern.compile(patternString, Pattern.CASE_INSENSITIVE);
 		log.debug("Pattern INITIALISM for '{}': {} for '{}'", s1, patternShort2.toString(), s2);
 		Matcher matcher = patternShort2.matcher(s2);
-		if (matcher.matches()) {
-			// log.debug("Pattern INITIALISM for '{}': {} for '{}'", s1, patternShort2.toString(), s2);
+		if (matcher.find()) {
+			log.debug("Pattern INITIALISM found for '{}': {} for '{}'", s1, patternShort2.toString(), s2);
 			return true;
 		}
 		return false;
 	}
 	
-	// Search 'Ann Fr Anesth Reanim' as "^Ann.*(\b|-|)Fr.*(\b|-|)Anesth.*(\b|-|)Reanim.*"
+	// Search 'Ann Fr Anesth Reanim' as "^Ann.*(\b|)Fr.*(\b|-|)Anesth.*(\b|)Reanim.*"
 	private boolean compareJournals_FirstAsAbbreviation(String j1, String j2) {
-		Pattern pattern = Pattern.compile("^" + j1.replaceAll(" ", ".*(\\\\b|-|)") + ".*", Pattern.CASE_INSENSITIVE);
-		log.debug("Pattern short 1 for '{}': {} for '{}'", j1, pattern.toString(), j2);
+//		Pattern pattern = Pattern.compile("^" + j1.replaceAll(" ", ".*(\\\\b|)") + ".*", Pattern.CASE_INSENSITIVE);
+		Pattern pattern = Pattern.compile("\\b" + j1.replaceAll(" ", ".*\\\\b") + ".*", Pattern.CASE_INSENSITIVE);
+		log.debug("Pattern ABBREVIATION for '{}': {} for '{}'", j1, pattern.toString(), j2);
 		Matcher matcher = pattern.matcher(j2);
-		if (matcher.matches()) {
-			log.debug("Pattern ABBREVIATION for '{}': {} for '{}'", j1, pattern.toString(), j2);
+		if (matcher.find()) {
+			log.debug("Pattern ABBREVIATION found for '{}': {} for '{}'", j1, pattern.toString(), j2);
 			return true;
 		}
 		return false;
 	}
 	
-	// Search 'AJR Am J Roentgenol' as "^A.*(\b|-|)J.*(\b|-|)R.*"
-	// Search 'JNCCN Journal of the National Comprehensive Cancer Network' as "..." comparing with 'Journal of the National Comprehensive Cancer Network'
-	// Search 'Rofo' as "^R.*(\b|-|)o.*(\b|-|)f.*(\b|-|)o.*"
+	// Search 'AJR Am J Roentgenol' as "^A.*(\b|)J.*(\b|)R.*"
+	// Search 'JNCCN Journal of the National Comprehensive Cancer Network' as "^J.*(\b|)N.*(\b|)C.*(\b|)C.*(\b|)N.*" comparing with 'Journal of the National Comprehensive Cancer Network'
+	// Search 'Bmj' as "^B.*(\b|)m.*(\b|)j.*"
+	// FIXME: Patterns with "-*(\b|)" make no sense, could as well be ".*". Not only for this pattern but also for other journal patterns 
 	private boolean compareJournals_FirstWithStartingInitialism(String s1, String s2) {
 		String[] words = s1.split("\\s");
+		if ("Samj".equals(words[0])) {
+			words[0] = "SAMJ";
+		}
 		if ((words[0].length() > 2 && words[0].equals(words[0].toUpperCase()))
 				|| (words.length == 1 && words[0].length() < 6)) {
+			// 20220502: Iff the pattern uses only word breaks "\b" and not alternation "(\b|)", we have to adjust for at least (AJNR <=> American journal of neuroradiology)
+			if ("AJNR".equals(words[0])) {	// AJNR = American Journal of Neuroradiology!
+				words[0] = "AJN";
+			}
 			String patternString = words[0].chars()
 					.mapToObj(c -> String.valueOf((char) c))
-					.collect(Collectors.joining(".*(\\b|-|)", "^", ".*"));
+//					.collect(Collectors.joining(".*(\\b|)", "^", ".*"));
+					.collect(Collectors.joining(".*\\b", "\\b", ".*"));
 			Pattern patternShort3 = Pattern.compile(patternString, Pattern.CASE_INSENSITIVE);
 			log.debug("Pattern STARTING_INITIALISM for '{}': {} for '{}'", s1, patternShort3.toString(), s2);
 			Matcher matcher = patternShort3.matcher(s2);
-			if (matcher.matches()) {
-				// log.debug("Pattern STARTING_INITIALISM for '{}': {} for '{}'", s1, patternShort3.toString(), s2);
+			if (matcher.find()) {
+				log.debug("Pattern STARTING_INITIALISM found for '{}': {} for '{}'", s1, patternShort3.toString(), s2);
 				return true;
 			}
 		}
@@ -698,11 +799,11 @@ public class DeduplicationService {
 		return "DONE: DedupEndNote has deduplicated " + total + " records, has removed " + (total - totalWritten) + " duplicates, and has written " + totalWritten + " records.";
 	}
 	
-	private String updateSession(HttpSession session, String message) {
-		log.debug(message);
-		session.setAttribute("result", message);
-		return message;
-	}
+//	private String updateSession(HttpSession session, String message) {
+//		log.debug(message);
+//		session.setAttribute("result", message);
+//		return message;
+//	}
 	
 	@Async
 	public ListenableFuture<String> generateReport(HttpSession session) {

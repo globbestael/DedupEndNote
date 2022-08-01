@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>DedupEndNote - Developers</title>
+	<link rel="stylesheet" href="/webjars/bootstrap/css/bootstrap.min.css">
+    
+	<script src="/webjars/bootstrap/js/bootstrap.bundle.min.js" type="text/javascript"></script>
+
+    <style type="text/css">
+    	td {
+    		vertical-align: top;
+    	}
+    </style>
+</head>
+<body>
+	<div class="container">
+       <div class="row">
+           <div class="col-12">
+				<h1>DedupEndNote: Developers</h1>
+				<a href="/">Home</a>
+	        	<ol>
+	        		<li><a href="#validation">Validation</a></li>
+	        	</ol>
+	
+	       		<h3 id="validation">1. Validation</h3>
+	       		<p>A relational database was used for validation.<br/>
+	       		The RDBM used was MS Access (MS Office 2016):</p>
+	       		<ul>
+	       			<li>Because MS Access uses 2 types of Text field (short text: max. 255 characters, searchable and sortable;
+	       		long text (formerly known as Memo field): unlimited, not sortable, not searchable) there are 2 fields for both title and authors</li>
+	       			<li>In MS Access the format for all boolean fields was changed to "True/False" (design view, General tab for these fields)</li>
+	       		</ul>
+	       		 
+	       		<p>The table for a validation set contains the fields:</p>
+	       		<table class="table tabled-bordered">
+	       			<thead>
+	       				<tr>
+	       					<th>Field</th>
+	       					<th>Type</th>
+	       					<th>Default</th>
+	       					<th>Content</th>
+	       				</tr>
+	       			</thead>
+	       			<tbody>
+	       				<tr>
+	       					<td>id</td>
+	       					<td>INTEGER</td>
+	       					<td></td>
+	       					<td>The original ID in the EndNote DB. PRIMARY KEY</td>
+	       				</tr>
+	       				<tr>
+	       					<td>dedupid</td>
+	       					<td>INTEGER</td>
+	       					<td>NULL</td>
+	       					<td>Content of the Label field in Mark mode, i.e. the ID of the first record in a duplicate set</td>
+	       				</tr>
+	       				<tr>
+	       					<td>correction</td>
+	       					<td>INTEGER</td>
+	       					<td>NULL</td>
+	       					<td>Manually set for the False Positive (FP) and False Negative (FN) results (see below)</td>
+	       				</tr>
+	       				<tr>
+	       					<td>validated</td>
+	       					<td>BOOLEAN</td>
+	       					<td>FALSE</td>
+	       					<td>Manually set to TRUE if the DedupEndNote result is validated</td>
+	       				</tr>
+	       				<tr>
+	       					<td>tp</td>
+	       					<td>BOOLEAN</td>
+	       					<td>FALSE</td>
+	       					<td>Manually set to TRUE if record is indeed a duplicate of the record with DedupID</td>
+	       				</tr>
+	       				<tr>
+	       					<td>tn</td>
+	       					<td>BOOLEAN</td>
+	       					<td>FALSE</td>
+	       					<td>Manually set to TRUE if record has no duplicates</td>
+	       				</tr>
+	       				<tr>
+	       					<td>fp</td>
+	       					<td>BOOLEAN</td>
+	       					<td>FALSE</td>
+	       					<td>Manually set to TRUE if DedupEndNote has wrongly identified the record as a duplicate of record with DedupID.<br/>
+	       						If the record has no duplicates, Correction contains the ID, otherwise the ID of the true duplicate.</td>
+	       				</tr>
+	       				<tr>
+	       					<td>fn</td>
+	       					<td>BOOLEAN</td>
+	       					<td>FALSE</td>
+	       					<td>Manually set to TRUE if DedupEndNote has not identified the record as a duplicate.<br/>
+	       						The ID of the missed duplicate is stored in Correction.<br/>
+	       						If the record is a False Positive but also has duplicates, it is only marked as False Positive: otherwise TP + TN + FP + FN would be greater
+	       						than the size of the validation set.   
+	       						</td>
+	       				</tr>
+	       				<tr>
+	       					<td>unsolvable</td>
+	       					<td>BOOLEAN</td>
+	       					<td>FALSE</td>
+	       					<td>???</td>
+	       				</tr>
+	       				<tr>
+	       					<td>authors_truncated</td>
+	       					<td>TEXT</td>
+	       					<td></td>
+	       					<td>
+	       						Authors joined with '; ', truncated at 254 characters<br/>
+	       						In an MS Access DB: SHORT TEXT (i.e. max. 255 characters), to make the field sortable and searchable. 
+	       					</td>
+	       				</tr>
+	       				<tr>
+	       					<td>authors</td>
+	       					<td>TEXT</td>
+	       					<td></td>
+	       					<td>
+	       						Authors joined with '; '<br/>
+								In an MS Access DB: LONG TEXT (a.k.a. MEMO), not sortable or searchable.
+							</td>
+	       				</tr>
+	       				<tr>
+	       					<td>publ_year</td>
+	       					<td>TEXT</td>
+	       					<td></td>
+	       					<td>Publication Year</td>
+	       				</tr>
+	       				<tr>
+	       					<td>title_truncated</td>
+	       					<td>TEXT</td>
+	       					<td></td>
+	       					<td>
+	       						Title, truncated at 254 characters<br/>
+	       						In an MS Access DB: SHORT TEXT (i.e. max. 255 characters), to make the field sortable and searchable. 
+	       					</td>
+	       				</tr>
+	       				<tr>
+	       					<td>title</td>
+	       					<td>TEXT</td>
+	       					<td></td>
+	       					<td>
+	       						Title<br/>
+								In an MS Access DB: LONG TEXT (a.k.a. MEMO), not sortable or searchable.
+							</td>
+	       				</tr>
+	       				<tr>
+	       					<td>title2</td>
+	       					<td>TEXT</td>
+	       					<td></td>
+	       					<td>Journal Title / Book Title</td>
+	       				</tr>
+	       				<tr>
+	       					<td>volume</td>
+	       					<td>TEXT</td>
+	       					<td></td>
+	       					<td>Volume</td>
+	       				</tr>
+	       				<tr>
+	       					<td>issue</td>
+	       					<td>TEXT</td>
+	       					<td></td>
+	       					<td>Issue</td>
+	       				</tr>
+	       				<tr>
+	       					<td>pages</td>
+	       					<td>TEXT</td>
+	       					<td></td>
+	       					<td>Starting Page</td>
+	       				</tr>
+	       				<tr>
+	       					<td>article_number</td>
+	       					<td>TEXT</td>
+	       					<td></td>
+	       					<td>Article Number</td>
+	       				</tr>
+	       				<tr>
+	       					<td>dois</td>
+	       					<td>TEXT</td>
+	       					<td></td>
+	       					<td>DOIs joined with '; '</td>
+	       				</tr>
+	       				<tr>
+	       					<td>publ_type</td>
+	       					<td>TEXT</td>
+	       					<td></td>
+	       					<td>Type of publication. 'type' is a SQL reserved word</td>
+	       				</tr>
+	       				<tr>
+	       					<td>database</td>
+	       					<td>TEXT</td>
+	       					<td></td>
+	       					<td>Database Provider</td>
+	       				</tr>
+	       				<tr>
+	       					<td>number_authors</td>
+	       					<td>INTEGER</td>
+	       					<td></td>
+	       					<td>Number of authors</td>
+	       				</tr>
+	       			</tbody>
+	       		</table>
+	       		
+	       		<div>"ValidationTests.java" can write a tab-delimited file of a DedupEndnote run in Mark mode.</div>
+	       		<ul>
+	       			<li>import the file into the RDBM<br/>
+	       			<div class="alert alert-danger">When importing this file into MS Access (tab delimited, no text delimiter) also open the advanced button
+	       			(and change the encoding to UTF-8). Without using the advanced button, the "Long text" get truncated, some fields are considered unparseable, ...
+	       			Is this the encoding or just the fact that the Advanced button is used?</div>
+	       			</li>
+	       			<li>validate a number of records</li>
+	       			<li>select the validated records and export them as a tab delimited file. (In MS Access: select the whole set of validated records, copy,
+	       			paste in a text editor, save)</li>
+	       		</ul> 
+	       		<div>"ValidationTests.java" has tests for comparing the results of a new version of DedupEndNote
+	       			with the validated set (exported as a tab delimited file).</div>
+	        </div>
+		</div>
+	</div>
+</body>
+</html>

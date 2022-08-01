@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.commons.text.similarity.JaroWinklerSimilarity;
 import org.junit.jupiter.api.Test;
-import org.springframework.mock.web.MockHttpSession;
 
 import edu.dedupendnote.domain.Record;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +21,7 @@ public class AuthorExperimentsTests {
 	DeduplicationService expService = new DeduplicationService(authorsComparator);
 	String homeDir = System.getProperty("user.home");
 	String testdir = homeDir + "/dedupendnote_files";
+	String wssessionId = "";
 	
 	public static class ExperimentalAuthorsComparator implements AuthorsComparator {
 		public static final Double AUTHOR_SIMILARITY_NO_REPLY = 0.67 + 0.5;
@@ -80,11 +80,11 @@ public class AuthorExperimentsTests {
 		boolean markMode = false;
 		String outputFileName = subdir + "t1_mark.txt";
 
-		String resultString = service.deduplicateOneFile(inputFileName, outputFileName, markMode, new MockHttpSession());
+		String resultString = service.deduplicateOneFile(inputFileName, outputFileName, markMode, wssessionId);
 
 		assertThat(service.formatResultString(4, 1)).isEqualTo(resultString);
 		
-		String expResultString = expService.deduplicateOneFile(inputFileName, outputFileName, markMode, new MockHttpSession());
+		String expResultString = expService.deduplicateOneFile(inputFileName, outputFileName, markMode, wssessionId);
 		
 		assertThat(resultString).isNotEqualTo(expResultString);
 		assertThat(service.formatResultString(4, 4)).isEqualTo(expResultString);

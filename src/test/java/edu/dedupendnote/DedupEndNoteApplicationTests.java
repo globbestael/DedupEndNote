@@ -18,11 +18,11 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.mock.web.MockHttpSession;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
+import edu.dedupendnote.controllers.DedupEndNoteController;
 import edu.dedupendnote.domain.Record;
 import edu.dedupendnote.services.DeduplicationService;
 import edu.dedupendnote.services.IOService;
@@ -32,6 +32,9 @@ import lombok.extern.slf4j.Slf4j;
 @TestConfiguration
 public class DedupEndNoteApplicationTests {
 	public DeduplicationService deduplicationService = new DeduplicationService();
+	String homeDir = System.getProperty("user.home");
+	String testdir = homeDir + "/dedupendnote_files/experiments/";
+	String wssessionId = "";
 
 	@BeforeAll
 	static void beforeAll() {
@@ -75,11 +78,11 @@ public class DedupEndNoteApplicationTests {
 
 	@Test
 	void deduplicate_OK() {
-		String inputFileName = "src/test/resources/t1.txt";
+		String inputFileName = testdir + "t1.txt";
 		boolean markMode = false;
-		String outputFileName = DedupEndNoteApplication.createOutputFileName(inputFileName, markMode);
+		String outputFileName = DedupEndNoteController.createOutputFileName(inputFileName, markMode);
 
-		String resultString = deduplicationService.deduplicateOneFile(inputFileName, outputFileName, markMode, new MockHttpSession());
+		String resultString = deduplicationService.deduplicateOneFile(inputFileName, outputFileName, markMode, wssessionId);
 
 		assertThat(resultString).isEqualTo(deduplicationService.formatResultString(4, 1));
 //		assertThat(resultString).startsWith("DONE: DedupEndNote removed 3 records, and has written 1 records.");
@@ -87,12 +90,12 @@ public class DedupEndNoteApplicationTests {
 
 	@Test
 	void deduplicate_OK_test805() {
-		String inputFileName = "src/test/resources/test805.txt";
+		String inputFileName = testdir + "test805.txt";
 		boolean markMode = false;
-		String outputFileName = DedupEndNoteApplication.createOutputFileName(inputFileName, markMode);
+		String outputFileName = DedupEndNoteController.createOutputFileName(inputFileName, markMode);
 		assertThat(new File(inputFileName)).exists();
 
-		String resultString = deduplicationService.deduplicateOneFile(inputFileName, outputFileName, markMode, new MockHttpSession());
+		String resultString = deduplicationService.deduplicateOneFile(inputFileName, outputFileName, markMode, wssessionId);
 		
 		assertThat(resultString).isEqualTo(deduplicationService.formatResultString(805, 644));
 	}
@@ -100,36 +103,36 @@ public class DedupEndNoteApplicationTests {
 	@Disabled("Very slow test")
 	@Test
 	void deduplicate_BIG_FILE() {
-		String inputFileName = "src/test/resources/DedupEndNote_portal_vein_thrombosis_37741.txt";
+		String inputFileName = testdir + "DedupEndNote_portal_vein_thrombosis_37741.txt";
 		boolean markMode = false;
-		String outputFileName = DedupEndNoteApplication.createOutputFileName(inputFileName, markMode);
+		String outputFileName = DedupEndNoteController.createOutputFileName(inputFileName, markMode);
 		assertThat(new File(inputFileName)).exists();
 
-		String resultString = deduplicationService.deduplicateOneFile(inputFileName, outputFileName, markMode, new MockHttpSession());
+		String resultString = deduplicationService.deduplicateOneFile(inputFileName, outputFileName, markMode, wssessionId);
 		
 		assertThat(resultString).isEqualTo(deduplicationService.formatResultString(37741, 24382));
 	}
 
 	@Test
 	void deduplicate_NonLatinInput() {
-		String inputFileName = "src/test/resources/Non_Latin_input.txt";
+		String inputFileName = testdir + "Non_Latin_input.txt";
 		boolean markMode = false;
-		String outputFileName = DedupEndNoteApplication.createOutputFileName(inputFileName, markMode);
+		String outputFileName = DedupEndNoteController.createOutputFileName(inputFileName, markMode);
 		assertThat(new File(inputFileName)).exists();
 
-		String resultString = deduplicationService.deduplicateOneFile(inputFileName, outputFileName, markMode, new MockHttpSession());
+		String resultString = deduplicationService.deduplicateOneFile(inputFileName, outputFileName, markMode, wssessionId);
 		
 		assertThat(resultString).isEqualTo(deduplicationService.formatResultString(2, 2));
 	}
 
 	@Test
 	void deduplicate_Possibly_missed() {
-		String inputFileName = "src/test/resources/Dedup_PATIJ2_Possibly_missed.txt";
+		String inputFileName = testdir + "Dedup_PATIJ2_Possibly_missed.txt";
 		boolean markMode = false;
-		String outputFileName = DedupEndNoteApplication.createOutputFileName(inputFileName, markMode);
+		String outputFileName = DedupEndNoteController.createOutputFileName(inputFileName, markMode);
 		assertThat(new File(inputFileName)).exists();
 
-		String resultString = deduplicationService.deduplicateOneFile(inputFileName, outputFileName, markMode, new MockHttpSession());
+		String resultString = deduplicationService.deduplicateOneFile(inputFileName, outputFileName, markMode, testdir + "");
 				
 		assertThat(resultString).isEqualTo(deduplicationService.formatResultString(18, 12));
 	}
@@ -137,21 +140,21 @@ public class DedupEndNoteApplicationTests {
 	@Disabled("File missing")
 	@Test
 	void file_without_IDs() {
-		String fileName = "src/test/resources/Recurrance_rate_EndNote_Library_original_deduplicated.txt";
+		String fileName = testdir + "Recurrance_rate_EndNote_Library_original_deduplicated.txt";
 		boolean markMode = false;
-		String outputFileName = DedupEndNoteApplication.createOutputFileName(fileName, markMode);
+		String outputFileName = DedupEndNoteController.createOutputFileName(fileName, markMode);
 
-		String resultString = deduplicationService.deduplicateOneFile(fileName, outputFileName, markMode, new MockHttpSession());
+		String resultString = deduplicationService.deduplicateOneFile(fileName, outputFileName, markMode, wssessionId);
 		assertThat(resultString).startsWith("ERROR: The input file contains records without IDs");
 	}
 
 	@Test
 	void deduplicate_withDuplicateIDs() {
-		String inputFileName = "src/test/resources/Bestand_met_duplicate_IDs.txt";
+		String inputFileName = testdir + "Bestand_met_duplicate_IDs.txt";
 		boolean markMode = false;
-		String outputFileName = DedupEndNoteApplication.createOutputFileName(inputFileName, markMode);
+		String outputFileName = DedupEndNoteController.createOutputFileName(inputFileName, markMode);
 
-		String resultString = deduplicationService.deduplicateOneFile(inputFileName, outputFileName, markMode, new MockHttpSession());
+		String resultString = deduplicationService.deduplicateOneFile(inputFileName, outputFileName, markMode, wssessionId);
 
 		assertThat(resultString).startsWith("ERROR: The IDs of the records of input file " + inputFileName +  " are not unique");
 	}
@@ -175,12 +178,25 @@ public class DedupEndNoteApplicationTests {
 	}
 
 	@Test
-	void addIssns() {
-		String issn = "0002-9343 (Print) 00029342 (Electronic) 0-12-34567890x (ISBN)";
+	void addIssns_valid() {
+		String issn = "0002-9343 (Print) 00029342 (Electronic) 0-9752298-0-X (ISBN) xxxxXXXX (all X-es)";
 		Record record = new Record();
 		List<String> issns = record.addIssns(issn);
 
-		assertThat(issns).containsAll(Arrays.asList("0002-9343", "0002-9342", "01234567890X"));
+		assertThat(issns)
+			.hasSize(4)
+			.containsAll(Arrays.asList("00029343", "00029342", "097522980X", "XXXXXXXX"));
+	}
+
+	@Test
+	void addIssns_nonvalid() {
+		String issn = "a002-9343 (with letter) 00029342X (11 characters) 0-12-34567890x (12 characters)";
+
+		Record record = new Record();
+		List<String> issns = record.addIssns(issn);
+
+		assertThat(issns)
+			.hasSize(0);
 	}
 
 	@Test

@@ -285,13 +285,13 @@ Data are from:
         </tr>  
         <tr>
             <td>DedupEndNote</td>
-            <td align="right">765</td>
-            <td align="right">35</td>
-            <td align="right"><strong>95.6%</strong></td>
+            <td align="right">769</td>
+            <td align="right">31</td>
+            <td align="right"><strong>96.1%</strong></td>
             <td align="right">1188</td>
             <td align="right">0</td>
             <td align="right"><strong>100.0%</strong></td>
-            <td align="right"><strong>98.2%</strong></td>
+            <td align="right"><strong>98.4%</strong></td>
         </tr>
         <tr>
             <td cellspan="9" style="height: 15px;"></td>
@@ -521,7 +521,7 @@ For the ASySD validation files the results are reported in a different way:
             <td cellspan="9" style="height: 15px;"></td>
         </tr>
         <tr>
-            <td rowspan="5">ASySD Depression<br>79880 rec</td>
+            <td rowspan="6">ASySD Depression<br>79880 rec</td>
             <td>Human</td>
             <td align="right">9380</td>
             <td align="right">669</td>
@@ -582,6 +582,18 @@ For the ASySD validation files the results are reported in a different way:
             <td align="right">96.4%</td>
         </tr>
         <tr>
+            <td>DedupEndNote (corrected GOLD)</td>
+            <td align="right">9513</td>
+            <td align="right">569</td>
+            <td align="right">94.4%</td>
+            <td align="right">69766</td>
+            <td align="right">32</td>
+            <td align="right"><strong>99.9%</strong></td>
+            <td align="right">99.7%</td>
+            <td align="right">99.2%</td>
+            <td align="right">96.9%</td>
+        </tr>
+        <tr>
             <td cellspan="9" style="height: 15px;"></td>
         </tr>
         <tr>
@@ -635,15 +647,15 @@ For the ASySD validation files the results are reported in a different way:
         </tr>
         <tr>
             <td>DedupEndNote</td>
-            <td align="right">1248</td>
+            <td align="right">1252</td>
             <td align="right">16</td>
             <td align="right">98.7%</td>
             <td align="right">577</td>
-            <td align="right">4</td>
-            <td align="right">99.3%</td>
-            <td align="right">99.7%</td>
-            <td align="right">98.9%</td>
-            <td align="right">99.2%</td>
+            <td align="right">0</td>
+            <td align="right"><strong>100.0%</strong></td>
+            <td align="right"><strong>100.0%</strong></td>
+            <td align="right">99.1%</td>
+            <td align="right">99.4%</td>
         </tr>
         <tr>
             <td cellspan="9" style="height: 15px;"></td>
@@ -692,7 +704,7 @@ For the ASySD validation files the results are reported in a different way:
             <td align="right"><strong>98.8%</strong></td>
             <td align="right">2141</td>
             <td align="right">4</td>
-            <td align="right"><strong>99.8%</strong></td>
+            <td align="right">99.8%</td>
             <td align="right">99.7%</td>
             <td align="right"><strong>99.4%</strong></td>
             <td align="right"><strong>99.3%</strong></td>
@@ -704,7 +716,7 @@ For the ASySD validation files the results are reported in a different way:
             <td align="right">97.6%</td>
             <td align="right">2126</td>
             <td align="right">1</td>
-            <td align="right">99.6%</td>
+            <td align="right"><strong>99.9%</strong></td>
             <td align="right"><strong>99.9%</strong></td>
             <td align="right">99.0%</td>
             <td align="right">98.8%</td>
