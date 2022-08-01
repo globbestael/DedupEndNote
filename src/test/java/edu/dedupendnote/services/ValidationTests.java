@@ -23,7 +23,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
-import org.springframework.mock.web.MockHttpSession;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.MappingIterator;
@@ -55,7 +54,6 @@ public class ValidationTests {
 
 	private DeduplicationService deduplicationService = new DeduplicationService();
 	private IOService ioService = new IOService();
-	private MockHttpSession session = new MockHttpSession();
 	private RecordDBService recordDBService = new RecordDBService();
 	String homeDir = System.getProperty("user.home");
 	String testdir = homeDir + "/dedupendnote_files";

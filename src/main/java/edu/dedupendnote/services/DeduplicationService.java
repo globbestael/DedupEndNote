@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -18,7 +17,6 @@ import javax.servlet.http.HttpSession;
 import org.apache.commons.text.similarity.JaroWinklerSimilarity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.messaging.simp.annotation.SendToUser;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.AsyncResult;
 import org.springframework.stereotype.Service;
@@ -91,7 +89,6 @@ public class DeduplicationService {
 
 	protected AuthorsComparator authorsComparator;
 	private JaroWinklerSimilarity jws = new JaroWinklerSimilarity();
-	private HttpSession session;
 	private IOService ioService;
 
 	/*
@@ -182,7 +179,7 @@ public class DeduplicationService {
 	}
 
 	public String deduplicateTwoFiles(String newInputFileName, String oldInputFileName, String outputFileName, boolean markMode, String wssessionId) {
-		this.session = session;
+//		this.session = session;
 		// read the old records and mark them as present, then add the new records
 		log.info("oldInputFileName: {}", oldInputFileName);
 		log.info("newInputFileName: {}", newInputFileName);

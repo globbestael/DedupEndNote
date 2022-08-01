@@ -2,8 +2,6 @@ package edu.dedupendnote;
 
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
-import java.text.Normalizer;
-import java.util.regex.Matcher;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;

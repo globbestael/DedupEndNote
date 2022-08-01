@@ -229,7 +229,7 @@ public class Record {
 	 */
 	private static Pattern journalAdditionPattern = Pattern.compile("(:|/).*$");
 	/**
-	 * "/" not preceded and followed by white space: will be relaced by a space. E.g. "Hematology/Oncology" --> "Hematology Oncology" 
+	 * "/" not preceded and followed by white space: will be replaced by a space. E.g. "Hematology/Oncology" --> "Hematology Oncology" 
 	 * This replacement before the treatment of " / ".
 	 * 
 	 * Imcomplete: "Chung-Kuo Hsiu Fu Chung Chien Wai Ko Tsa Chih/Chinese Journal of Reparative & Reconstructive Surgery" will NOT be split into 2 journals!
@@ -254,12 +254,6 @@ public class Record {
 	 * (Suppl|Supplement|Supplementum) and following characters: will be me removed
 	 */
 	private static Pattern journalSupplementPattern = Pattern.compile("(\\b(Suppl|Supplement|Supplementum)\\b.*)$", Pattern.CASE_INSENSITIVE);
-	/**
-	 * Journals with a ":" will get 2 variants. e.g "BJOG: An International Journal of Obstetrics and Gynaecology" or "Clinical Medicine Insights: Circulatory, Respiratory and Pulmonary Medicine"
-	 * - one with the ":" replaced with a SPACE	("BJOG: An International Journal of Obstetrics and Gynaecology" and "Clinical Medicine Insights Circulatory, Respiratory and Pulmonary Medicine")
-	 * - one with the colon and all following characters removed ("BJOG" and "Clinical Medicine Insights")
-	 */
-	private static Pattern journalColonPattern = Pattern.compile("(:.*)$");
 
 	static public String normalizeJournalJava8(String s) {
 		String r = s;
@@ -597,7 +591,7 @@ public class Record {
 		/*
 		 * Journals with a ":" will get 2 variants. e.g "BJOG: An International Journal of Obstetrics and Gynaecology" or "Clinical Medicine Insights: Circulatory, Respiratory and Pulmonary Medicine"
 		 * - one with the colon and all following characters removed ("BJOG" and "Clinical Medicine Insights").
-		 *   The removal of these characters does not happen here, but later within normalizeJournalJava8() 
+		 *   The removal of these characters does not happen here, but later within normalizeJournalJava8() (journalAdditionPattern)
 		 * - one with the ":" replaced with a SPACE	("BJOG: An International Journal of Obstetrics and Gynaecology" and "Clinical Medicine Insights Circulatory, Respiratory and Pulmonary Medicine")
 		 */
 		Set<String> additional = new HashSet<>();
