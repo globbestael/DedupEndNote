@@ -25,30 +25,18 @@ public class DedupEndNoteApplication {
 	@Autowired 
 	public DeduplicationService deduplicationService;
 	
-	public static final String ROOT = "upload-dir";
-
-	/*
-	 * DeferredResult a.o. based on - https://blog.krecan.net/2014/06/10/what-are-listenablefutures-good-for/ -
-	 * http://blog.inflinx.com/2012/09/09/spring-async-and-future-report-generation-example/
-	 *
-	 * Exchange data via sessionAttribute? - http://blog.inflinx.com/2012/09/09/spring-async-and-future-report-generation-example/
-	 */
+	public static final String UPLOAD_DIR = "upload-dir";
 
 	@Bean
 	CommandLineRunner init() {
 		return (args) -> {
-			FileSystemUtils.deleteRecursively(new File(ROOT));
-			Files.createDirectory(Paths.get(ROOT));
+			FileSystemUtils.deleteRecursively(new File(UPLOAD_DIR));
+			Files.createDirectory(Paths.get(UPLOAD_DIR));
 		};
 	}
 
 	public static void main(String[] args) {
 		SpringApplication.run(DedupEndNoteApplication.class, args);
-//		SpringApplication app = new SpringApplication(DedupEndNoteApplication.class);
-//        app.setBanner((environment, sourceClass, out) -> {
-//            out.println("DedupEndNote: the web server is reachable at http://localhost:9777");
-//        });
-//        app.run(args);
         log.info("DedupEndNote: the web server is reachable at http://localhost:9777");
 	}
 }
