@@ -67,7 +67,7 @@ public class ValidationTests {
 	}
 	
 	/*
-	 * Executes the deduplication in Mark mode, compares te results with the truth files and with the previous results.
+	 * Executes the deduplication in Mark mode, compares the results with the truth files and with the previous results.
 	 * Prints the scores in the traditional way (TP = all records marked as duplicates, ...).
 	 * See printValdationResultsASySD() for scores where TP = all records marked as duplicates except for the duplicate kept (i.e. all duplicate rightly removed)  
 	 */
@@ -75,35 +75,35 @@ public class ValidationTests {
 	void checkAllTruthFiles() throws IOException {
 		// previous results
 		Map<String, ValidationResult> validationResultsMap = List.of(
-				new ValidationResult("ASySD_Cardiac_human", 6752, 21, 2175, 0),
-				// old GOLD file: new ValidationResult("ASySD_Depression", 17320, 666, 61843, 51) //,
-				new ValidationResult("ASySD_Depression", 17399, 571, 61878, 32),
-				new ValidationResult("ASySD_Diabetes", 1818, 16, 11, 0), 
-				new ValidationResult("ASySD_Neuroimaging", 2170, 31, 1236, 1),
-				new ValidationResult("ASySD_SRSR_Human", 27891, 101, 24969, 40),
-				new ValidationResult("BIG_SET", 3489, 232, 861, 8),
-				new ValidationResult("McKeown_2021", 2013, 59, 1058, 0),
-				new ValidationResult("SRA2_Cytology_screening", 1362, 58, 436, 0),
-				new ValidationResult("SRA2_Haematology", 222, 14, 1179, 0),
-				new ValidationResult("SRA2_Respiratory", 769, 31, 1188, 0),
-				new ValidationResult("SRA2_Stroke", 504, 6, 782, 0)
-			).stream()
-			.collect(Collectors.toMap(ValidationResult::getFileName, Function.identity(), (o1, o2) -> o1, TreeMap::new));
+			new ValidationResult("ASySD_Cardiac_human", 6752, 21, 2175, 0),
+			// old GOLD file: new ValidationResult("ASySD_Depression", 17320, 666, 61843, 51) //,
+			new ValidationResult("ASySD_Depression", 17399, 571, 61878, 32),
+			new ValidationResult("ASySD_Diabetes", 1818, 16, 11, 0), 
+			new ValidationResult("ASySD_Neuroimaging", 2170, 31, 1234, 3),
+			new ValidationResult("ASySD_SRSR_Human", 27891, 101, 24967, 42),
+			new ValidationResult("BIG_SET", 3489, 232, 861, 8),
+			new ValidationResult("McKeown_2021", 2013, 59, 1058, 0),
+			new ValidationResult("SRA2_Cytology_screening", 1362, 58, 436, 0),
+			new ValidationResult("SRA2_Haematology", 222, 14, 1179, 0),
+			new ValidationResult("SRA2_Respiratory", 769, 31, 1188, 0),
+			new ValidationResult("SRA2_Stroke", 504, 6, 782, 0)
+		).stream()
+		.collect(Collectors.toMap(ValidationResult::getFileName, Function.identity(), (o1, o2) -> o1, TreeMap::new));
 
 		Map<String, ValidationResult> resultsMap = List.of(
-				checkResults_ASySD_Cardiac_human(),
-				checkResults_ASySD_Depression(),
-				checkResults_ASySD_Diabetes(),
-				checkResults_ASySD_Neuroimaging(),
-				checkResults_ASySD_SRSR_Human(),
-				checkResults_BIG_SET(),
-				checkResults_McKeown_2021(),
-				checkResults_SRA2_Cytology_screening(),
-				checkResults_SRA2_Haematology(),
-				checkResults_SRA2_Respiratory(),
-				checkResults_SRA2_Stroke()
-			).stream()
-			.collect(Collectors.toMap(ValidationResult::getFileName, Function.identity(), (o1, o2) -> o1, TreeMap::new));
+			checkResults_ASySD_Cardiac_human(),
+			checkResults_ASySD_Depression(),
+			checkResults_ASySD_Diabetes(),
+			checkResults_ASySD_Neuroimaging(),
+			checkResults_ASySD_SRSR_Human(),
+			checkResults_BIG_SET(),
+			checkResults_McKeown_2021(),
+			checkResults_SRA2_Cytology_screening(),
+			checkResults_SRA2_Haematology(),
+			checkResults_SRA2_Respiratory(),
+			checkResults_SRA2_Stroke()
+		).stream()
+		.collect(Collectors.toMap(ValidationResult::getFileName, Function.identity(), (o1, o2) -> o1, TreeMap::new));
 		
 		boolean changed = false;
 		for (String setName : resultsMap.keySet()) {
@@ -241,6 +241,7 @@ public class ValidationTests {
 												Collectors.mapping(RecordDB::getId, Collectors.toSet())));
 		int tns = 0, tps = 0, fps = 0, fns = 0;
 		List<String> errors = new ArrayList<>();
+		Map<Integer, Integer> fpErrors = new HashMap<>();
 		
 		for (RecordDB t : truthRecords) {
 			RecordDB v = validationMap.get(t.getId());
@@ -267,6 +268,7 @@ public class ValidationTests {
 					fps++;
 					v.setCorrection(tDedupId);
 					errors.add("FALSE POSITIVES: \n- TRUTH " + t + "\n- CURRENT " + v + "\n");
+					fpErrors.put(v.getId(), vDedupId);
 				}
 			}
 		}
@@ -275,6 +277,8 @@ public class ValidationTests {
 		if (! errors.isEmpty()) {
 			System.err.println("File " + setName +  " has FALSE POSITIVES!");
 			errors.stream().forEach(System.err::println);
+			System.err.println("These are the FP recordIDs for " + setName);
+			fpErrors.entrySet().forEach(System.err::println);
 		}
 		long uniqueDuplicates = recordDBs.stream()
 				.filter(r -> r.isTruePositive() == true && r.getDedupid().equals(r.getId()))
