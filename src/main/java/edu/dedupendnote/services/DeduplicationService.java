@@ -313,26 +313,23 @@ public class DeduplicationService {
 	/*
 	 * For 1 file:
 	 * - order year descending
-	 * - add empty years (year == 0 and not identified as duplicate yet) after each year1
+	 * - add empty years (year == 0 and not identified as duplicate yet) AFTER each year1
 	 * Reason: we prefer the data (duplicate kept) which is most recent
 	 * (e.g. complete publication BEFORE ahead of print which is possibly from earlier year or without a year).  
 	 */
 	public void searchYearOneFile(List<Record> records, String wssessionId) {
 		Map<Integer, List<Record>> yearSets = records.stream()
 				.collect(Collectors.groupingBy(Record::getPublicationYear, TreeMap::new, Collectors.toList())).descendingMap();
-//		Map<Integer, Long> counts = records.stream()
-//				.map(Record::getPublicationYear)
-//				.collect(Collectors.groupingBy(Function.identity(), TreeMap::new, Collectors.counting())).descendingMap();
-//		log.error("COUNTS1: " + counts);
-		Map<Integer, Integer> counts = new LinkedHashMap<>();
+		
+		Map<Integer, Integer> cumulativePercentages = new LinkedHashMap<>();
 		Integer current = 0;
 		Integer total = records.size();
 		for (Integer year : yearSets.keySet()) {
 			Integer simple = yearSets.get(year).size();
-			counts.put(year, (100 * (simple + current)) / total);
+			cumulativePercentages.put(year, (100 * (simple + current)) / total);
 			current += simple;
 		};
-		log.error("COUNTS: " + counts);
+		// log.error("cumulativePercentages: " + cumulativePercentages);
 		
 		List<Record> emptyYearlist = yearSets.remove(0);
 		log.debug("YearSets: {}", yearSets.keySet().stream().sorted().collect(Collectors.toList()));
@@ -348,7 +345,7 @@ public class DeduplicationService {
 			// updateSession(session, "Working on " + year + " for " + yearSet.size() + " records");
 			wsMessage(wssessionId, "Working on " + year + " for " + yearSet.size() + " records");
 			compareSet(yearSet, year, true, wssessionId);
-			wsMessage(wssessionId, "PROGRESS: "+ counts.get(year));
+			wsMessage(wssessionId, "PROGRESS: "+ cumulativePercentages.get(year));
 		});
 		return;
 	}
@@ -356,14 +353,14 @@ public class DeduplicationService {
 	/*
 	 * For 2 files:
 	 * - order year ascending
-	 * - add empty years (year == 0 and not identified as duplicate yet) before each year1
-	 * Reason: we oldest data should set the label for a diplicate set  
-	 * (e.g. ahead of print (which is possibly from earlier year or without a year and more probably in the old file than the new file) BEFORE the complate data  
+	 * - add empty years (year == 0 and not identified as duplicate yet) BEFORE each year1
+	 * Reason: the oldest data should set the label for a duplicate set  
+	 * (e.g. ahead of print (which is possibly from earlier year or without a year and more probably in the old file than in the new file) BEFORE the complete data  
 	 */
 	public void searchYearTwoFiles(List<Record> records, String wssessionId) {
 		Map<Integer, List<Record>> yearSets = records.stream()
 				.collect(Collectors.groupingBy(Record::getPublicationYear));
-		
+		// TODO: should there be a prohress message with cumulative percentage, as in searchYearOneFile()?
 		List<Record> emptyYearlist = yearSets.remove(0);
 		log.debug("YearSets: {}", yearSets.keySet().stream().sorted().collect(Collectors.toList()));
 		yearSets.keySet().stream().sorted().forEach(year -> {
@@ -388,9 +385,13 @@ public class DeduplicationService {
 		int doubleSize = 0;
 		while (records.size() > 1) {
 			Record record = records.remove(0);
+			/*
+			 *  FIXME: overly complex: shouldn't it be: if (record.getPublicationYear() != year) break;
+			 */
 			if (descending && record.getPublicationYear() < year) {
 				break; // only records of year1 should be compared to records of year1 and year2, The records of year2 will be compared in the next pair of years.
 			} else if (! descending && record.getPublicationYear() != 0 && record.getPublicationYear() > year) {
+				// FIXME: why "record.getPublicationYear() != 0" only in ascending case?
 				break;
 			}
 			log.debug("Comparing " + records.size() + " records to: " + record.getId() + " : " + record.getTitles().get(0));
