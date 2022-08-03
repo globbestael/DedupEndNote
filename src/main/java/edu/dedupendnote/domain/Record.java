@@ -704,6 +704,25 @@ public class Record {
 		// BUT: Cochrane "page numbers" (or really article number) in form "CD010546" can no longer be recognized as Cochrane identifiers
 		if (pageStart.matches(".*\\d+.*")) {
 			pageStart = pageStart.replaceAll("^([^\\d]*)([\\d]+)(.*)$", "$2");
+			/*
+			 * NOT IMPLEMENTED: wipe out page 1
+			 * 
+			 *  Don't trust "1-...":
+			 * - can be page numbers within an article number, i.e. all these articles start with page number 1
+			 * - can be the page range of a book / report. Leaving out the starting page number forces higher JWS thresholds which is good for
+			 *   reports (e.g. Natl.Toxicol.Program.Tech.Rep.Ser.). 
+			 *   In this case you would rather use the ending page / number of pages as a discriminating value (all books / reports start with page 1).
+			 * Adding the wiping of page 1 has mixed results:
+			 * - some test files have slightly lower False Negatives
+			 * - some test files have slightly higher False Positives, only ASySD_Depression has 50% less FPs (15 instead of 32).
+			 * Given the awkward format of the ASySD_Depression file, and the (slightly) higher FPs: NOT IMPLEMENTED
+			 * 
+			 * TODO: can the last page IFF it is a lot higher than the first page, be uses as pageStartForComparison?
+			 * If so, rename pageStartForComparison to pageForComparison 
+			 */
+			//			if ("1".equals(pageStart)) {
+			//				pageStart = null;
+			//			}
 			this.pageStartForComparison = pageStart;
 		}
 	}
@@ -736,7 +755,7 @@ public class Record {
 	}
 	
 	/*
-	 * getters and setters
+	 * Lombok overridden getters and setters
 	 */
 
 	public void setPublicationYear(Integer publicationYear) {
