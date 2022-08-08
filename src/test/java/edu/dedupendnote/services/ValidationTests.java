@@ -259,17 +259,15 @@ public class ValidationTests {
 					fns++;
 					v.setCorrection(tDedupId);
 				}
+			} else if (trueDuplicateSets.containsKey(tDedupId) && trueDuplicateSets.get(tDedupId).contains(vDedupId)) {
+				v.setTruePositive(true);
+				tps++;
 			} else {
-				if (trueDuplicateSets.containsKey(tDedupId) && trueDuplicateSets.get(tDedupId).contains(vDedupId)) {
-					v.setTruePositive(true);
-					tps++;
-				} else {
-					v.setFalsePositive(true);
-					fps++;
-					v.setCorrection(tDedupId);
-					errors.add("FALSE POSITIVES: \n- TRUTH " + t + "\n- CURRENT " + v + "\n");
-					fpErrors.put(v.getId(), vDedupId);
-				}
+				v.setFalsePositive(true);
+				fps++;
+				v.setCorrection(tDedupId);
+				errors.add("FALSE POSITIVES: \n- TRUTH " + t + "\n- CURRENT " + v + "\n");
+				fpErrors.put(v.getId(), vDedupId);
 			}
 		}
 		recordDBService.saveRecordDBs(recordDBs, outputFileName);
@@ -544,7 +542,7 @@ public class ValidationTests {
 	}
 	
 	/**
-	 * createInitialTruthFile: deduplicate an EndNote export file and saves a tab delimited file with the results which can be imported into
+	 * createInitialTruthFile: deduplicate an EndNote export file and save a tab delimited file with the results which can be imported into
 	 * a validation database as still unvalidated records. The results of the ASySD export file is used to prefill the TP, TN, FP and FN fields.
 	 *  
 	 * @param inputFileName: an EndNote export file
