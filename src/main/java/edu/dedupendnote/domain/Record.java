@@ -178,7 +178,11 @@ public class Record {
 	 */
 	private static Pattern kongressbdPattern = Pattern.compile("Kongressbd");
 	/**
-	 * Inital "Zbl(.?) " (case insensitive): will be replcaed by "Zentralblatt"
+	 *  "Monbl" (case insensitive): will be replaced by "Monatsbl"
+	 */
+	private static Pattern monatsblattPattern = Pattern.compile("Monbl\\b", Pattern.CASE_INSENSITIVE);
+	/**
+	 * Initial "Zbl(.?) " (case insensitive): will be replaced by "Zentralblatt"
 	 */
 	private static Pattern zentralblattPattern = Pattern.compile("^Zbl(\\.| )", Pattern.CASE_INSENSITIVE);
 	/**
@@ -238,9 +242,10 @@ public class Record {
 	/**
 	 * Section markers and possibly name of the sections: will be removed
 	 */
+	// TODO: Should "Part", "Section", ... at the end of $1 be left out? E.g. "Comp Biochem Physiol Part D Genomics Proteomics"
 	private static Pattern journalSectionMarkers = Pattern.compile("^(.+)\\b([A-I]\\b.*)$");
 	/**
-	 * a number of ". Conference" and all following characters: The number and all following characters will be removed.
+	 * a number or ". Conference" and all following characters: The number and all following characters will be removed.
 	 * E.g. "Clinical neuropharmacology.12 Suppl 2 ()(pp v-xii; S1-105) 1989.Date of Publication: 1989." --> "Clinical neuropharmacology"
 	 * E.g.: "European Respiratory Journal. Conference: European Respiratory Society Annual Congress" (Cochrane records) 
 	 */
@@ -265,6 +270,7 @@ public class Record {
 		r = geneeskdPattern.matcher(r).replaceAll("eneeskunde");
 		r = heilkdPattern.matcher(r).replaceAll("heilkunde");
 		r = kongressbdPattern.matcher(r).replaceAll("Kongressband");
+		r = monatsblattPattern.matcher(r).replaceAll("Monatsbl");
 		r = zentralblattPattern.matcher(r).replaceAll("Zentralbl");
 		// Cheating
 		r = jbrPattern.matcher(r).replaceAll("JBR BTR");
@@ -626,7 +632,7 @@ public class Record {
 			j = j.trim();
 			// FIXME: what happens when excludedJournalsParts.contains(j.toLowerCase())??
 			if (! j.isEmpty() && ! excludedJournalsParts.contains(j.toLowerCase())) {
-				if (j.equals (j.toUpperCase()) && j.contains(" ")) {
+				if (j.equals (j.toUpperCase()) && (j.contains(" ") || j.length() > 6)) {
 					List<String> words = Arrays.asList(j.toLowerCase().split(" "));
 					j = words.stream().map(p -> StringUtils.capitalize(p)).collect(Collectors.joining(" "));
 				}
