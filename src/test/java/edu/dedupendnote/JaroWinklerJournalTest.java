@@ -396,20 +396,58 @@ public class JaroWinklerJournalTest {
 	    				"Antiinflamm Antiallergy Agents Med Chem",
 	    				"Anti-Inflammatory and Anti-Allergy Agents in Medicinal Chemistry"),
 	    		arguments(
-					"Paediatr Drugs",
-					"Pediatric Drugs"),
+						"Paediatr Drugs",
+						"Pediatric Drugs"),
 	    		arguments(
-					"Birth Defects Res C Embryo Today",
-					"Birth Defects Research Part C - Embryo Today: Reviews"),
+						"Birth Defects Res C Embryo Today",
+						"Birth Defects Research Part C - Embryo Today: Reviews"),
 	    		arguments(
-					"Birth Defects Res C Embryo Today",
-					"BIRTH DEFECTS RESEARCH PART C-EMBRYO TODAY-REVIEWS"),
+						"Birth Defects Res C Embryo Today",
+						"BIRTH DEFECTS RESEARCH PART C-EMBRYO TODAY-REVIEWS"),
 	    		arguments(
-					"Clinical neuropharmacology.12 Suppl 2 ()(pp v-xii; S1-105) 1989.Date of Publication: 1989.",
-					"Clinical neuropharmacology"),
+						"Clinical neuropharmacology.12 Suppl 2 ()(pp v-xii; S1-105) 1989.Date of Publication: 1989.",
+						"Clinical neuropharmacology"),
 	    		arguments(
-					"Ann Fr Anesth Reanim",
-					"ANNALES FRANCAISES D ANESTHESIE ET DE REANIMATION"),
+						"Ann Fr Anesth Reanim",
+						"ANNALES FRANCAISES D ANESTHESIE ET DE REANIMATION"),
+	    		arguments(
+	    				"Klin Monbl Augenheilkd",
+	    				"KLINISCHE MONATSBLATTER FUR AUGENHEILKUNDE"),
+	    		arguments(
+	    				"European Respiratory Journal. Conference: European Respiratory Society Annual Congress",
+	    				"European Respiratory Journal"),
+	    		arguments( // JWS 0.90952380 !!
+	    				"Journal of Thoracic Oncology",
+	    				"Journal of Clinical Oncology"),
+	    		arguments( // see issue #1
+	    				"ADHD-ATTENTION DEFICIT AND HYPERACTIVITY DISORDERS",
+	    				"Atten Defic Hyperact Disord")
+	    	);
+    }
+
+    static Stream<Arguments> fullNegativeArgumentProvider() {
+		return Stream.of(
+	    		// Fixed: Patterns for journals used ".*(\\b|)", but this was changed to ".*\\b".
+				// This made up example was positive: Starts with "B" and has a "B" and "A" (all case insensitive)
+	    		arguments(
+	    				"BBA Clinical",
+	    				"Biochimica et biophysica peracta nonclinical"),
+	    		arguments( // see issue #1
+	    				"The Journal of the Kentucky Medical Association.95 (4) ()(pp 145-148) 1997.Date of Publication: Apr 1997.",
+	    				"J.Ky.Med.Assoc."
+	    				),
+	    		arguments( // "sports" in abbreviation, "sport" in full version
+	    				"Asia Pac J Sports Med Arthrosc Rehabil Technol",
+	    				"ASIA-PACIFIC JOURNAL OF SPORT MEDICINE ARTHROSCOPY REHABILITATION AND TECHNOLOGY"),
+	    		arguments( // different first letter --> compareJournals_...() not tried
+	    				"Macedonian Journal of Medical Sciences",
+	    				"Open Access Macedonian Journal of Medical Sciences"),
+	    		arguments( // different first letter --> compareJournals_...() not tried
+	    				"Rev Sci Tech",
+	    				"OIE Revue Scientifique et Technique"),
+	    		arguments( // different first letter --> compareJournals_...() not tried
+	    				"Prz Menopauzalny",
+	    				"MENOPAUSE REVIEW-PRZEGLAD MENOPAUZALNY"),
 	    		arguments(
 	    				"Biol Aujourdhui",
 	    				"Biologie Aujourd'hui"),
@@ -422,37 +460,12 @@ public class JaroWinklerJournalTest {
 	    		arguments(
 	    				"Int Urogynecol J Pelvic Floor Dysfunct",
 	    				"INTERNATIONAL UROGYNECOLOGY JOURNAL"),
-	    		arguments(
-	    				"Klin Monbl Augenheilkd",
-	    				"KLINISCHE MONATSBLATTER FUR AUGENHEILKUNDE"),
-	    		arguments(
-	    				"Prz Menopauzalny",
-	    				"MENOPAUSE REVIEW-PRZEGLAD MENOPAUZALNY"),
-	    		arguments(
+	    		arguments( // "Part D" vs "D"
 	    				"Comp Biochem Physiol Part D Genomics Proteomics",
 	    				"COMPARATIVE BIOCHEMISTRY AND PHYSIOLOGY D-GENOMICS & PROTEOMICS"),
-	    		arguments(
+	    		arguments( // with and without "London"
 	    				"Philos Trans R Soc Lond B Biol Sci",
 	    				"Philosophical Transactions of the Royal Society B: Biological Sciences"),
-	    		arguments(
-	    				"Philos Trans R Soc Lond B Biol Sci",
-	    				"PHILOSOPHICAL TRANSACTIONS OF THE ROYAL SOCIETY B-BIOLOGICAL SCIENCES"),
-	    		arguments(
-	    				"European Respiratory Journal. Conference: European Respiratory Society Annual Congress",
-	    				"European Respiratory Journal"),
-	    		arguments( // JWS 0.90952380 !!
-	    				"Journal of Thoracic Oncology",
-	    				"Journal of Clinical Oncology")
-	    	);
-    }
-
-    static Stream<Arguments> fullNegativeArgumentProvider() {
-		return Stream.of(
-	    		// Fixed: Patterns for journals used ".*(\\b|)", but this was changed to ".*\\b".
-				// This made up example was positive: Starts with "B" and has a "B" and "A" (all case insensitive)
-	    		arguments(
-	    				"BBA Clinical",
-	    				"Biochimica et biophysica peracta nonclinical"),
 	    		arguments(
 	    				"No other examples yet",
 	    				"The same")
