@@ -707,11 +707,10 @@ public class DeduplicationService {
 		return false;
 	}
 
-	// Searching 'BMJ' as "^B.*(\b|)M.*(\b|)J.*"
+	// Searching 'BMJ' as "\bB.*\bM.*\bJ.*"
 	private boolean compareJournals_FirstAsInitialism(String s1, String s2) {
 		String patternString = s1.chars()
 				.mapToObj(c -> String.valueOf((char) c))
-//				.collect(Collectors.joining(".*(\\b|)", "^", ".*"));
 				.collect(Collectors.joining(".*\\b", "\\b", ".*"));
 		Pattern patternShort2 = Pattern.compile(patternString, Pattern.CASE_INSENSITIVE);
 		log.debug("Pattern INITIALISM for '{}': {} for '{}'", s1, patternShort2.toString(), s2);
@@ -723,9 +722,8 @@ public class DeduplicationService {
 		return false;
 	}
 	
-	// Search 'Ann Fr Anesth Reanim' as "^Ann.*(\b|)Fr.*(\b|-|)Anesth.*(\b|)Reanim.*"
+	// Searching 'Ann Fr Anesth Reanim' as "\bAnn.*\bFr.*\bAnesth.*\bReanim.*"
 	private boolean compareJournals_FirstAsAbbreviation(String j1, String j2) {
-//		Pattern pattern = Pattern.compile("^" + j1.replaceAll(" ", ".*(\\\\b|)") + ".*", Pattern.CASE_INSENSITIVE);
 		Pattern pattern = Pattern.compile("\\b" + j1.replaceAll(" ", ".*\\\\b") + ".*", Pattern.CASE_INSENSITIVE);
 		log.debug("Pattern ABBREVIATION for '{}': {} for '{}'", j1, pattern.toString(), j2);
 		Matcher matcher = pattern.matcher(j2);
@@ -736,10 +734,9 @@ public class DeduplicationService {
 		return false;
 	}
 	
-	// Search 'AJR Am J Roentgenol' as "^A.*(\b|)J.*(\b|)R.*"
-	// Search 'JNCCN Journal of the National Comprehensive Cancer Network' as "^J.*(\b|)N.*(\b|)C.*(\b|)C.*(\b|)N.*" comparing with 'Journal of the National Comprehensive Cancer Network'
-	// Search 'Bmj' as "^B.*(\b|)m.*(\b|)j.*"
-	// FIXME: Patterns with "-*(\b|)" make no sense, could as well be ".*". Not only for this pattern but also for other journal patterns 
+	// Searching 'AJR Am J Roentgenol' as "\bA.*\bJ.*\bR.*"
+	// Searching 'JNCCN Journal of the National Comprehensive Cancer Network' as "\bJ.*\bN.*\bC.*\bC.*\bN.*"
+	// Searching 'Bmj' as "\bB.*\bm.*\bj.*"
 	private boolean compareJournals_FirstWithStartingInitialism(String s1, String s2) {
 		String[] words = s1.split("\\s");
 		if ("Samj".equals(words[0])) {
@@ -747,13 +744,12 @@ public class DeduplicationService {
 		}
 		if ((words[0].length() > 2 && words[0].equals(words[0].toUpperCase()))
 				|| (words.length == 1 && words[0].length() < 6)) {
-			// 20220502: Iff the pattern uses only word breaks "\b" and not alternation "(\b|)", we have to adjust for at least (AJNR <=> American journal of neuroradiology)
+			// 20220502: Because the pattern uses only word breaks "\b" and not alternation "(\b|)", we have to adjust for at least (AJNR <=> American journal of neuroradiology)
 			if ("AJNR".equals(words[0])) {	// AJNR = American Journal of Neuroradiology!
 				words[0] = "AJN";
 			}
 			String patternString = words[0].chars()
 					.mapToObj(c -> String.valueOf((char) c))
-//					.collect(Collectors.joining(".*(\\b|)", "^", ".*"));
 					.collect(Collectors.joining(".*\\b", "\\b", ".*"));
 			Pattern patternShort3 = Pattern.compile(patternString, Pattern.CASE_INSENSITIVE);
 			log.debug("Pattern STARTING_INITIALISM for '{}': {} for '{}'", s1, patternShort3.toString(), s2);
