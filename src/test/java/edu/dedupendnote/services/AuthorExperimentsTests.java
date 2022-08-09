@@ -35,7 +35,7 @@ public class AuthorExperimentsTests {
 		public boolean compare(Record r1, Record r2) {
 			log.error("Using the experimental AuthorComparator");
 			boolean isReply = (r1.isReply() || r2.isReply());
-			boolean sufficientStartPages = (r1.getPageStartForComparison() != null && r2.getPageStartForComparison() != null);
+			boolean sufficientStartPages = (r1.getPageForComparison() != null && r2.getPageForComparison() != null);
 			boolean sufficientDois = (! r1.getDois().isEmpty() && ! r2.getDois().isEmpty());
 
 			if (r1.getAllAuthors().isEmpty() || r2.getAllAuthors().isEmpty()) {

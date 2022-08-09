@@ -40,16 +40,27 @@ public class Record {
 	public String label;
 	public String pageEnd;
 	public String pageStart;
-	private String pageStartForComparison;
+	private String pageForComparison;
 	private boolean presentInOldFile = false;	// used when comparing 2 files
 	public Integer publicationYear = 0;
 	public String title;						// only set for Reply-titles
 	public List<String> titles = new ArrayList<>();
 
 	/*
-	 *  Titles which are replies need special treatment. See the Pattern in the Service.
+	 * Cochrane publications need a slightly different comparison. The starting page is the Cochrane number of the review which doesn't change for
+	 * different versions of the review. 
+	 * Each version of the review has a unique DOI (e.g. "10.1002/14651858.cd008759.pub2"), but the first version has no ".pub" part, AND bibliographic
+	 * databases sometimes use the common DOI / DOI of first version for all versions.
+	 * Therefore:
+	 * - with other publications starting pages are compared BEFORE the DOIs. For Cochrane publications if both have a DOIs,
+	 *   then only the DOIs are compared
+	 * - publication year must be the same
+	 */
+	private boolean isCochrane = false;
+	/*
+	 *  Publications which are replies need special treatment. See the Pattern in the IOService.replyPattern
 	 *  - record pairs where one of them is isReply == true, aren't compared for title (always true)
-	 *  - journals are compared stricter (JaroWinkler distance = 0.93 instead of 0.9)
+	 *  - journals are compared stricter (see DeduplcationService.JOURNAL_SIMILARITY_NO_REPLY < DeduplcationService.JOURNAL_SIMILARITY_NO_REPLY)
 	 *  - in enrich() the longest title of a duplicate set is used
 	 */
 	private boolean isReply = false;
@@ -566,6 +577,7 @@ public class Record {
 	public Set<String> addJournals(String journal) {
 		/*
 		 * General:
+		 * - mark Cochrane publication
 		 * - remove unwanted parts
 		 * - split combined journal names into in separate journal names
 		 * - create other variant journal names
@@ -573,6 +585,9 @@ public class Record {
 		 * 		- capitalize
 		 * 		- normalize
 		 */
+		if (journal.toLowerCase().contains("cochrane")) {
+			this.isCochrane = true;
+		}
 		journal = journalExtraPattern.matcher(journal).replaceAll("");					// Strip last part of "Clinical neuropharmacology.12 Suppl 2 ()(pp v-xii; S1-105) 1989.Date of Publication: 1989."
 
 		/*
@@ -655,6 +670,11 @@ public class Record {
 	
 	private static Pattern pagesDatePattern = Pattern.compile("\\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\\b");
 
+	/**
+	 * parsePages: parses the different input strings with page numbers / article numbers to the fields pageStart, pageEnd and pageStartForComparison.
+	 * 
+	 * See also issues https://github.com/globbestael/DedupEndnote/issues/2 and https://github.com/globbestael/DedupEndnote/issues/3
+	 */
 	public void parsePages(String pages) {
 		// "UNSP ..." should be cleaned from the C7 field (WoS)
 		pages = pages.replace("UNSP\\s*", "");
@@ -685,11 +705,10 @@ public class Record {
 		 * TODO: Should range of pages starting with "1-" be excluded? But type "1-234" occurs with books.
 		 */
 		// @formatter:on
-		if (pageStartForComparison != null && !pages.contains("-")) {
+		if (pageForComparison != null && !pages.contains("-")) {
 			return;
 		}
 		
-		 // FIXME: pageStart and pageEnd are not necessary, 1 field should be enough for output?
 		pages = pages.replaceAll("(\\u2010|\\u00ad)", "-");	// Cochrane uses hyphen characters instead of minus
 		// normalize starting page: W-22 --> 22
 		pages = pages.replaceAll("^([^\\d]+)\\-(\\d+)", "$1$2");
@@ -698,41 +717,27 @@ public class Record {
 			this.pageStart = pages.substring(0, indexOf);
 			pageStart = pageStart.replaceAll("^0+", "");
 			this.pageEnd = pages.substring(indexOf + 1);
-			pageEnd = pageEnd.replaceAll("^0+", "");
+//			pageEnd = pageEnd.replaceAll("^0+", "");
+			pageEnd = pageEnd.replaceAll("^([^1-9]*)([\\d]+)(.*)$", "$2");
 			if (this.pageStart.length() > this.pageEnd.length()) {
 				this.pageEnd = this.pageStart.substring(0, this.pageStart.length() - this.pageEnd.length()) + this.pageEnd;
 			}
 		} else {
 			this.pageStart = pages;
 		}
-		// FIXME: compile a pattern 
 		// normalize starting page: W22 --> 22, 22S --> 22
-		// BUT: Cochrane "page numbers" (or really article number) in form "CD010546" can no longer be recognized as Cochrane identifiers
+		// Cochrane "page numbers" (or really article number) in form "CD010546" can no longer be recognized as Cochrane identifiers: "10546"
+		// FIXME: arXiv page numbers ("arXiv:2107.12817v1") will be reduced to publication year and month ("2107"), which may result in False Positives
 		if (pageStart.matches(".*\\d+.*")) {
-			pageStart = pageStart.replaceAll("^([^\\d]*)([\\d]+)(.*)$", "$2");
-			/*
-			 * NOT IMPLEMENTED: wipe out page 1
-			 * 
-			 *  Don't trust "1-...":
-			 * - can be page numbers within an article number, i.e. all these articles start with page number 1
-			 * - can be the page range of a book / report. Leaving out the starting page number forces higher JWS thresholds which is good for
-			 *   reports (e.g. Natl.Toxicol.Program.Tech.Rep.Ser.). 
-			 *   In this case you would rather use the ending page / number of pages as a discriminating value (all books / reports start with page 1).
-			 * Adding the wiping of page 1 has mixed results:
-			 * - some test files have slightly lower False Negatives
-			 * - some test files have slightly higher False Positives, only ASySD_Depression has 50% less FPs (15 instead of 32).
-			 * Given the awkward format of the ASySD_Depression file, and the (slightly) higher FPs: NOT IMPLEMENTED
-			 * 
-			 * TODO: can the last page IFF it is a lot higher than the first page, be uses as pageStartForComparison?
-			 * If so, rename pageStartForComparison to pageForComparison 
-			 */
-			//			if ("1".equals(pageStart)) {
-			//				pageStart = null;
-			//			}
-			this.pageStartForComparison = pageStart;
+			pageStart = pageStart.replaceAll("^([^1-9]*)([\\d]+)(.*)$", "$2");
+			if ("1".equals(pageStart) && pageEnd != null && pageEnd.length() > 2) {
+				log.error("Long pageEnd used for pageStartForComparison {}", pageEnd);
+				this.pageForComparison = pageEnd;
+			} else {
+				this.pageForComparison = pageStart;
+			}
 		}
 	}
-
 
 	public void addReversedTitles() {
 		List<String> reversed = new ArrayList<>();

@@ -471,7 +471,7 @@ public class DeduplicationService {
 		Double similarity = 0.0;
 		List<String> titles1 = r1.getTitles();
 		List<String> titles2 = r2.getTitles();
-		boolean sufficientStartPages = (r1.getPageStartForComparison() != null && r2.getPageStartForComparison() != null);
+		boolean sufficientStartPages = (r1.getPageForComparison() != null && r2.getPageForComparison() != null);
 		boolean sufficientDois = (! r1.getDois().isEmpty() && ! r2.getDois().isEmpty());
 		boolean isPhase = r1.isPhase() || r2.isPhase();
 		
@@ -494,15 +494,17 @@ public class DeduplicationService {
 	}
 
 	/*
-	 *  Comparing starting page before DOI is maybe faster than the other way around. 
-	 *  But: a complete set of conference abstracts has the same DOI.
+	 *  Comparing starting page before DOI may be faster than the other way around. 
+	 *  But: a complete set of conference abstracts has the same DOI. So starting page MUST be compared before DOI.
+	 *  
 	 *  However: in case of Cochrane reviews, comparing DOIs before pages (the Cochrane ID) would recognize the different versions of the review! 
 	 */
 	public boolean compareStartPageOrDoi(Record r1, Record r2) {
-		log.debug("Comparing " + r1.getId() + ": " + r1.getPageStartForComparison() + " to " + r2.getId() + ": " + r2.getPageStartForComparison());
+		log.debug("Comparing " + r1.getId() + ": " + r1.getPageForComparison() + " to " + r2.getId() + ": " + r2.getPageForComparison());
 		Map<String, Integer> dois1 = r1.getDois();
 		Map<String, Integer> dois2 = r2.getDois();
-		boolean sufficientStartPages = (r1.getPageStartForComparison() != null && r2.getPageStartForComparison() != null);
+		boolean bothCochrane = r1.isCochrane() && r2.isCochrane();
+		boolean sufficientStartPages = (r1.getPageForComparison() != null && r2.getPageForComparison() != null);
 		boolean sufficientDois = (! dois1.isEmpty() && ! dois2.isEmpty());
 		
 		if (! sufficientStartPages && ! sufficientDois) {
@@ -532,27 +534,29 @@ public class DeduplicationService {
 		 * - medRxiv: 10.1101/2020.11.28.20240267 (same prefix as bioRXiv) 
 		 * - Research Square: 10.21203/rs.3.rs-513461/v1
 		 * - SSRN: 10.2139/ssrn.3628297
+		 * 
+		 * FIXME: Starting page for arXiv publications (arXiv:2107.12817v1) will reduce to publication year and month (c.q. "2107")? This reduction may cause more False Positives 
 		 */
-		// But the following very crude method doesn't lead to other results: WHY?
-		//		if (! r1.getJournals().isEmpty() && ! r2.getJournals().isEmpty()
-		//			&& r1.getJournals().stream().anyMatch(j-> j.toLowerCase().contains("cochrane"))
-		//			&& r2.getJournals().stream().anyMatch(j-> j.toLowerCase().contains("cochrane"))) {
-		//			for (String d : dois1.keySet()) {
-		//				if (dois2.containsKey(d)) {
-		//					log.error("BOTH Cochrane: One or more DOIs are the same: '{}' and '{}'", dois1, dois2);
-		//					return true;
-		//				}
-		//			}
-		//		}
-		if (sufficientStartPages && r1.getPageStartForComparison().equals(r2.getPageStartForComparison())) {
-			log.debug("Same starting pages");
-			return true;
-		}
-		if (sufficientDois) {
-			for (String d : dois1.keySet()) {
-				if (dois2.containsKey(d)) {
-					log.debug("One or more DOIs are the same: '{}' and '{}'", dois1, dois2);
-					return true;
+		if (bothCochrane && sufficientDois) {
+			if (r1.getPublicationYear().equals(r2.getPublicationYear())) {
+				for (String d : dois1.keySet()) {
+					if (dois2.containsKey(d)) {
+						log.error("BOTH Cochrane: One or more DOIs are the same: '{}' and '{}'", dois1, dois2);
+						return true;
+					}
+				}
+			}
+		} else {
+			if (sufficientStartPages && r1.getPageForComparison().equals(r2.getPageForComparison())) {
+				log.debug("Same starting pages");
+				return true;
+			}
+			if (sufficientDois) {
+				for (String d : dois1.keySet()) {
+					if (dois2.containsKey(d)) {
+						log.debug("One or more DOIs are the same: '{}' and '{}'", dois1, dois2);
+						return true;
+					}
 				}
 			}
 		}
@@ -575,7 +579,7 @@ public class DeduplicationService {
 			// log.error("Using the default AuthorComparator");
 			similarity = 0.0;
 			boolean isReply = (r1.isReply() || r2.isReply());
-			boolean sufficientStartPages = (r1.getPageStartForComparison() != null && r2.getPageStartForComparison() != null);
+			boolean sufficientStartPages = (r1.getPageForComparison() != null && r2.getPageForComparison() != null);
 			boolean sufficientDois = (! r1.getDois().isEmpty() && ! r2.getDois().isEmpty());
 
 			if (r1.getAllAuthors().isEmpty() || r2.getAllAuthors().isEmpty()) {

@@ -24,7 +24,7 @@ public class PagesTest {
 	    assertThat(end).isEqualTo(r.getPageEnd());
 	    assertThat(startForComparison)
 	    	.as("Input '%s' has wrong pageStartForComparison", pages)
-	    	.isEqualTo(r.getPageStartForComparison());
+	    	.isEqualTo(r.getPageForComparison());
     }
 
 	static Stream<Arguments> argumentProvider() {
