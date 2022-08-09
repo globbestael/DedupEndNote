@@ -511,32 +511,7 @@ public class DeduplicationService {
 			log.debug("At least one starting page AND at least one DOI are missing");
 			return true; // no useful comparison possible
 		}
-		/*
-		 * TODO: Experiment: Cochrane reviews
-		 * - if (both journals startwith Cochrane) AND (both have DOI)
-		 *     return DOI1 == DOi2
-		 *   else
-		 *     drop into normal comparisons
-		 * 
-		 * TODO: Comparisons can be made faster if Record has a Boolean attribute "cochrane".
-		 * Or in case more comparable journals are found (biorxiv.org, arxiv.org, zenodo.org, ...) a boolean attribute preferDOI.
-		 * preferDOI = true iff journal belongs to the set AND the publication has a DOI?
-		 * 
-		 * See the PubMed pilot: https://www.ncbi.nlm.nih.gov/pmc/about/nihpreprints/
-		 * Takes publications from: medRxiv, bioRxiv, ChemRxiv, arXiv, Research Square, and SSRN
-		 * On 2021-10-18: query "preprint[filter]" (or "preprint[pt]") --> 2748 articles 
-		 * On 2022-03-26: query "preprint[filter]" (or "preprint[pt]") --> 3203 articles 
-		 * 
-		 * Examples:
-		 * - arxiv: has no regular DOI! https://arxiv.org/abs/2109.01097v1 AND https://arxiv.org/pdf/2109.01097v1. Starting page in RIS format: arXiv:2107.12817v1
-		 * - bioRxiv: 10.1101/2020.12.04.409144
-		 * - chemRxiv: 10.26434/chemrxiv.12931769
-		 * - medRxiv: 10.1101/2020.11.28.20240267 (same prefix as bioRXiv) 
-		 * - Research Square: 10.21203/rs.3.rs-513461/v1
-		 * - SSRN: 10.2139/ssrn.3628297
-		 * 
-		 * FIXME: Starting page for arXiv publications (arXiv:2107.12817v1) will reduce to publication year and month (c.q. "2107")? This reduction may cause more False Positives 
-		 */
+		// See comment at Record.isCochrane
 		if (bothCochrane && sufficientDois) {
 			if (r1.getPublicationYear().equals(r2.getPublicationYear())) {
 				for (String d : dois1.keySet()) {
