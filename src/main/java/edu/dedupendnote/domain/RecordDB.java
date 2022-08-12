@@ -10,6 +10,10 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import lombok.Data;
 
+/*
+ * The @Json... annotations are necessary because ValidationTests::readTruthFile() uses jackson-dataformat-csv to read TAB delimited files.
+ * Several dataformats in Jackson are based on the JSON. See https://github.com/FasterXML/jackson-dataformats-text/wiki, and esp. https://cowtowncoder.medium.com/reading-csv-with-jackson-c4e74a15ddc1 
+ */
 @Data
 @JsonPropertyOrder({"id", "dedupid", "correction", "validated", "true_pos", "true_neg", "false_pos", "false_neg", "unsolvable", "authors_truncated", "authors", "publ_year", "title_truncated", "title", "title2", "volume", "issue", "pages", "article_number", "dois", "publ_type", "database", "number_authors"})
 public class RecordDB {
@@ -54,12 +58,6 @@ public class RecordDB {
 	
 	private static String TAB = "\t";
 	private static String NEWLINE = "\n";
-	// private static final Object NULL_OBJECT = null;
-
-	private static String quoted(String text) {
-//		return "\"" + text + "\"";
-		return text;
-	}
 	
 	public String toDBLine() {
 		StringBuilder sb = new StringBuilder();
@@ -72,19 +70,19 @@ public class RecordDB {
 			.append(falsePositive).append(TAB)
 			.append(falseNegative).append(TAB)
 			.append(unsolvable).append(TAB)
-			.append(quoted(Objects.toString(authorsTruncated, ""))).append(TAB)
-			.append(quoted(Objects.toString(authors, ""))).append(TAB)
+			.append(Objects.toString(authorsTruncated, "")).append(TAB)
+			.append(Objects.toString(authors, "")).append(TAB)
 			.append(publYear != null && publYear > 0 ? publYear : "").append(TAB)
-			.append(quoted(Objects.toString(titleTruncated, ""))).append(TAB)
-			.append(quoted(Objects.toString(title, ""))).append(TAB)
-			.append(quoted(Objects.toString(title2, ""))).append(TAB)
-			.append(quoted(Objects.toString(volume, ""))).append(TAB)
-			.append(quoted(Objects.toString(issue, ""))).append(TAB)
-			.append(quoted(Objects.toString(pages, ""))).append(TAB)
-			.append(quoted(Objects.toString(articleNumber, ""))).append(TAB)
-			.append(quoted(Objects.toString(dois, ""))).append(TAB)
-			.append(quoted(Objects.toString(publType, ""))).append(TAB)
-			.append(quoted(Objects.toString(database, ""))).append(TAB)
+			.append(Objects.toString(titleTruncated, "")).append(TAB)
+			.append(Objects.toString(title, "")).append(TAB)
+			.append(Objects.toString(title2, "")).append(TAB)
+			.append(Objects.toString(volume, "")).append(TAB)
+			.append(Objects.toString(issue, "")).append(TAB)
+			.append(Objects.toString(pages, "")).append(TAB)
+			.append(Objects.toString(articleNumber, "")).append(TAB)
+			.append(Objects.toString(dois, "")).append(TAB)
+			.append(Objects.toString(publType, "")).append(TAB)
+			.append(Objects.toString(database, "")).append(TAB)
 			.append(authorsList.size()).append(NEWLINE);
 		return sb.toString();
 	}

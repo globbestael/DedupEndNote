@@ -76,7 +76,6 @@ public class ValidationTests {
 		// previous results
 		Map<String, ValidationResult> validationResultsMap = List.of(
 			new ValidationResult("ASySD_Cardiac_human", 6752, 21, 2175, 0),
-			// old GOLD file: new ValidationResult("ASySD_Depression", 17320, 666, 61843, 51) //,
 			new ValidationResult("ASySD_Depression", 17399, 571, 61895, 15),
 			new ValidationResult("ASySD_Diabetes", 1818, 16, 11, 0), 
 			new ValidationResult("ASySD_Neuroimaging", 2170, 31, 1234, 3),

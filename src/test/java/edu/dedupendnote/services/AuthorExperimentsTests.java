@@ -57,8 +57,6 @@ public class AuthorExperimentsTests {
 						} else if (sufficientStartPages && similarity > AUTHOR_SIMILARITY_REPLY_SUFFICIENT_STARTPAGES_OR_DOIS) {
 							return true;
 						}
-					// FIXME: Why isReply?
-//					} else if (! isReply && similarity > AUTHOR_SIMILARITY_NO_REPLY) {
 					} else if (similarity > AUTHOR_SIMILARITY_NO_REPLY) {
 						return true;
 					};

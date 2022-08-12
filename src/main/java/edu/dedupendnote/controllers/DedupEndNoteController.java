@@ -11,6 +11,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -70,7 +71,8 @@ public class DedupEndNoteController {
 
 //	private Map<String, ListenableFuture<String>> runningFutures = new HashMap<>();
 
-	public static final String ROOT = "upload-dir";
+	@Value("upload-dir")
+	private String uploadDir;
 	
 //	@MessageMapping("/start")
 //	@SendToUser("/topic/messages")
@@ -123,7 +125,7 @@ public class DedupEndNoteController {
 	public void getResultFile(@RequestParam("fileNameResultFile") String fileName, @RequestParam("markModeResultFile") boolean markMode, HttpServletResponse response) {
 		String outputFileName = createOutputFileName(fileName, markMode);
 
-		Path path = Paths.get(ROOT, outputFileName);
+		Path path = Paths.get(uploadDir, outputFileName);
 		response.setContentType("text/plain");
 		response.addHeader("Content-Disposition", "attachment; filename=\"" + outputFileName + "\"");
 		try {
@@ -168,7 +170,7 @@ public class DedupEndNoteController {
 	public ResponseEntity<String> uploadFile(@RequestParam("file") MultipartFile file) throws Exception {
 		if (!file.isEmpty()) {
 			try {
-				Path path = Paths.get(ROOT, file.getOriginalFilename());
+				Path path = Paths.get(uploadDir, file.getOriginalFilename());
 				if (Files.exists(path, LinkOption.NOFOLLOW_LINKS)) {
 					Files.delete(path);
 				}
@@ -276,8 +278,8 @@ public class DedupEndNoteController {
 		DeferredResult<String> result = new DeferredResult<>(5000L);
 
 		// Let's call the backend
-		ListenableFuture<String> future = deduplicationService.deduplicateOneFileAsync(ROOT + File.separator + inputFileName,
-				ROOT + File.separator + outputFileName, markMode, wssessionId);
+		ListenableFuture<String> future = deduplicationService.deduplicateOneFileAsync(uploadDir + File.separator + inputFileName,
+				uploadDir + File.separator + outputFileName, markMode, wssessionId);
 //		runningFutures.put(wssessionId, future);
 
 		future.addCallback(
@@ -312,8 +314,8 @@ public class DedupEndNoteController {
 
 		// Let's call the backend
 		ListenableFuture<String> future =
-				deduplicationService.deduplicateTwoFilesAsync(ROOT + File.separator + newInputFileName, ROOT + File.separator + oldInputFileName,
-						ROOT + File.separator + outputFileName, markMode, wssessionId);
+				deduplicationService.deduplicateTwoFilesAsync(uploadDir + File.separator + newInputFileName, uploadDir + File.separator + oldInputFileName,
+						uploadDir + File.separator + outputFileName, markMode, wssessionId);
 //		runningFutures.put(wssessionId, future);
 		
 		future.addCallback(

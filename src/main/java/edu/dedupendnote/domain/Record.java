@@ -123,7 +123,8 @@ public class Record {
 	static public String normalizeJava8(String s) {
 		s = doubleQuotesPattern.matcher(s).replaceAll("");
 		/*
-		 * FIXME: Do a thorough check of retractions (including "WITHDRAWN: ..." Cochrane reviews)
+		 * FIXME: Do a thorough check of retractions (including "WITHDRAWN: ..." Cochrane reviews).
+		 * See also "Retraction note to: ..." (e.g. https://pubmed.ncbi.nlm.nih.gov/24577730/)
 		 */
 		/*
 		 * FIXME: Do a thorough check in the validation files to make sure that erratum records do not remove the original records (erratum as first record encountered).
@@ -254,13 +255,12 @@ public class Record {
 	 * Section markers and possibly name of the sections: will be removed
 	 */
 	// TODO: Should "Part", "Section", ... at the end of $1 be left out? E.g. "Comp Biochem Physiol Part D Genomics Proteomics"
-	private static Pattern journalSectionMarkers = Pattern.compile("^(.+)\\b([A-I]\\b.*)$");
+	private static Pattern journalSectionMarkers = Pattern.compile("^(.+)(\\b(Part|Section))?\\b([A-I]\\b.*)$");
 	/**
 	 * a number or ". Conference" and all following characters: The number and all following characters will be removed.
 	 * E.g. "Clinical neuropharmacology.12 Suppl 2 ()(pp v-xii; S1-105) 1989.Date of Publication: 1989." --> "Clinical neuropharmacology"
 	 * E.g.: "European Respiratory Journal. Conference: European Respiratory Society Annual Congress" (Cochrane records) 
 	 */
-	// FIXME: Should there be more than 1 number?
 	private static Pattern journalExtraPattern = Pattern.compile("((\\b\\d.*|\\. Conference.*))$");
 	/**
 	 * Some subtitles of journals ("Technical report", "Electronic resource", ...): will be removed
@@ -424,8 +424,7 @@ public class Record {
 	// @formatter:on
 
 	
-	// FIXME: make some tests. Isn't the "i+" combined with "(.*)$" too general?  
-	static private Pattern lastNameAdditionsPattern = Pattern.compile("^(.+)\\b(jr|sr|1st|2nd|3rd|(i+))\\b(.*)$", Pattern.CASE_INSENSITIVE);
+	static private Pattern lastNameAdditionsPattern = Pattern.compile("^(.+)\\b(jr|sr|1st|2nd|3rd|ii|iii)\\b(.*)$", Pattern.CASE_INSENSITIVE);
 	// public because used in tests
 	// FIXME: add "No authorship, indicated"?
 	static public Pattern anonymousOrGroupNamePattern = Pattern.compile("\\b(anonymous|consortium|et al|grp|group|nct|study)\\b", Pattern.CASE_INSENSITIVE);
@@ -464,7 +463,7 @@ public class Record {
 		}
 		matcher = lastNameAdditionsPattern.matcher(lastName);
 		if (matcher.find()) {
-			lastName = (matcher.group(1) + matcher.group(4)).strip();
+			lastName = (matcher.group(1) + matcher.group(3)).strip();
 			log.debug("new lastName: {}", lastName);
 		}
 		
@@ -717,7 +716,6 @@ public class Record {
 			this.pageStart = pages.substring(0, indexOf);
 			pageStart = pageStart.replaceAll("^0+", "");
 			this.pageEnd = pages.substring(indexOf + 1);
-//			pageEnd = pageEnd.replaceAll("^0+", "");
 			pageEnd = pageEnd.replaceAll("^([^1-9]*)([\\d]+)(.*)$", "$2");
 			if (this.pageStart.length() > this.pageEnd.length()) {
 				this.pageEnd = this.pageStart.substring(0, this.pageStart.length() - this.pageEnd.length()) + this.pageEnd;
@@ -725,13 +723,17 @@ public class Record {
 		} else {
 			this.pageStart = pages;
 		}
-		// normalize starting page: W22 --> 22, 22S --> 22
-		// Cochrane "page numbers" (or really article number) in form "CD010546" can no longer be recognized as Cochrane identifiers: "10546"
-		// FIXME: arXiv page numbers ("arXiv:2107.12817v1") will be reduced to publication year and month ("2107"), which may result in False Positives
 		if (pageStart.matches(".*\\d+.*")) {
+			/*
+			 * normalize starting page: W22 --> 22, 22S --> 22
+			 * - Cochrane "page numbers" (or really article number) in form "CD010546" can no longer be recognized as Cochrane identifiers: "10546"
+			 * - FIXME: arXiv page numbers ("arXiv:2107.12817v1") will be reduced to publication year and month ("2107"), which may result in False Positives.
+			 *   See https://github.com/globbestael/DedupEndnote/issues/4 for preprint publications.
+			 */
 			pageStart = pageStart.replaceAll("^([^1-9]*)([\\d]+)(.*)$", "$2");
+			// Books, reports, ... al start with page 1, therefore the ending page is used. Publication type is not available. Page range >= 100 used as a proxy. 
 			if ("1".equals(pageStart) && pageEnd != null && pageEnd.length() > 2) {
-				log.error("Long pageEnd used for pageStartForComparison {}", pageEnd);
+				// log.error("Long pageEnd used for pageForComparison {}", pageEnd);
 				this.pageForComparison = pageEnd;
 			} else {
 				this.pageForComparison = pageStart;

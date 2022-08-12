@@ -361,7 +361,6 @@ public class JaroWinklerJournalTest {
 	    		arguments(
     					"Pleura Peritioneum",
     					"PLEURA AND PERITIONEUM"),
-	    		// FIXME: Should the last part of the second one be stripped? See ASySD_Depression 3278 and 70894, 3557 and 70935 
 	    		arguments(
     					"Clin.Neuropharmacol.",
     					"Clinical neuropharmacology.12 Suppl 2 ()(pp v-xii; S1-105) 1989.Date of Publication: 1989."),

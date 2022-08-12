@@ -395,7 +395,6 @@ public class DeduplicationService {
 				break;
 			}
 			log.debug("Comparing " + records.size() + " records to: " + record.getId() + " : " + record.getTitles().get(0));
-			// FIXME: which is the most discriminating comparison? Short circuiting (and performance)
 			List<Record> doubles = records.stream()
 					.filter(r -> compareStartPageOrDoi(r, record) == true
 								// && compareAuthors(r, record) == true
@@ -497,7 +496,7 @@ public class DeduplicationService {
 	 *  Comparing starting page before DOI may be faster than the other way around. 
 	 *  But: a complete set of conference abstracts has the same DOI. So starting page MUST be compared before DOI.
 	 *  
-	 *  However: in case of Cochrane reviews, comparing DOIs before pages (the Cochrane ID) would recognize the different versions of the review! 
+	 *  Exception: Cochrane Reviews. See the comment at {@link edu.dedupendnote.domain.Record#isCochrane Record#isCochrane}
 	 */
 	public boolean compareStartPageOrDoi(Record r1, Record r2) {
 		log.debug("Comparing " + r1.getId() + ": " + r1.getPageForComparison() + " to " + r2.getId() + ": " + r2.getPageForComparison());
@@ -511,12 +510,11 @@ public class DeduplicationService {
 			log.debug("At least one starting page AND at least one DOI are missing");
 			return true; // no useful comparison possible
 		}
-		// See comment at Record.isCochrane
 		if (bothCochrane && sufficientDois) {
 			if (r1.getPublicationYear().equals(r2.getPublicationYear())) {
 				for (String d : dois1.keySet()) {
 					if (dois2.containsKey(d)) {
-						log.error("BOTH Cochrane: One or more DOIs are the same: '{}' and '{}'", dois1, dois2);
+						log.debug("BOTH Cochrane: One or more DOIs are the same: '{}' and '{}'", dois1, dois2);
 						return true;
 					}
 				}
@@ -576,8 +574,7 @@ public class DeduplicationService {
 						} else if ((sufficientStartPages || sufficientDois) && similarity > AUTHOR_SIMILARITY_REPLY_SUFFICIENT_STARTPAGES_OR_DOIS) {
 							return true;
 						}
-					// FIXME: Why isReply?
-					} else if (! isReply && similarity > AUTHOR_SIMILARITY_NO_REPLY) {
+					} else if (similarity > AUTHOR_SIMILARITY_NO_REPLY) {
 						return true;
 					};
 				}
