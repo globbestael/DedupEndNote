@@ -571,6 +571,18 @@ For the ASySD validation files the results are reported in a different way:
         </tr>
         <tr>
             <td>DedupEndNote</td>
+            <td align="right">9689</td>
+            <td align="right">666</td>
+            <td align="right">93.6%</td>
+            <td align="right">69474</td>
+            <td align="right">52</td>
+            <td align="right">99.2%</td>
+            <td align="right">99.5%</td>
+            <td align="right">99.1%</td>
+            <td align="right">96.4%</td>
+        </tr>
+        <tr>
+            <td>DedupEndNote (corrected GOLD)</td>
             <td align="right">9731</td>
             <td align="right">671</td>
             <td align="right">94.5%</td>
