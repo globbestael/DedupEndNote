@@ -309,6 +309,8 @@
 	        	
 		        <h3 id="what">What does DedupEndNote do?</h3>
 		        
+		        <h5>1. Deduplicate records in a RIS file</h5>
+		        
 		        <p>Each pair of records is compared in 5 different ways. The general rule is:</p>
 		        <table class="table table-bordered" style="width: 60%;">
 		        	<thead>
@@ -351,8 +353,8 @@
 	
 			        <li><strong>Authors:</strong> Is the <a href="https://en.wikipedia.org/wiki/Jaro%E2%80%93Winkler_distance" target="_blank">Jaro-Winkler similarity</a> of the authors &gt;
 			        	<span th:text="${T(edu.dedupendnote.services.DeduplicationService.DefaultAuthorsComparator).AUTHOR_SIMILARITY_NO_REPLY}">-0.67</span>?<br/>
-				        <i>Preprocessing: The author "Anonymous," is treated as no author.</i><br/>
-				        <i>Preprocessing: First names are reduced to initials ("Moorthy, Ranjith K." to "Moorthy, R. K.").</i><br/> 
+				        <i>Preprocessing: The author "Anonymous," and all Author Groups are skipped.</i><br/>
+				        <i>Preprocessing: First names are reduced to initials ("Moorthy, Ranjith K." to "Moorthy, RK").</i><br/> 
 				        <i>Preprocessing: All authors from each record are joined by "; ".</i><br/>
 				        <i>Insufficient data: If one or both records have no authors, the answer is YES (except if one of the records is a reply (see below)
 				        and one of the records has no starting page or DOI).</i>
@@ -370,9 +372,9 @@
 				    </li>
 	
 			        <li><strong>ISSN or Journal:</strong> Are they the same (ISSN) or similar (Journal)?<br/>
-				        The fields Journal / Book Title (T2), Alternate Journal (J2) and sometimes Book section (T3, see below) are treated as journals, ISBNs as ISSNs. All ISSns and journal titles (including abbreviations) in the records are used.<br/>
-				        Abbreviated and full journal titles are compared in a sensible way (see examples below).<br/>
+				        The fields Journal / Book Title (T2), Alternate Journal (J2) and sometimes Book section (T3, see below) are treated as journals, ISBNs are treated as ISSNs. All ISSns and journal titles (including abbreviations) in the records are used.<br/>
 				        If the ISSns are different or one or both records have no ISSN, the journals are compared.<br/>
+				        Abbreviated and full journal titles are compared in a sensible way (see examples below).<br/>
 				        <i>Preprocessing: ISSNs are normalized (dash between position 4 and 5 for ISSN, no dashes in ISBNs, both uppercased).</i><br/>
 				        <i>Preprocessing: Journal titles of the form "Zhonghua wai ke za zhi [Chinese journal of surgery]"
 				        or "Zhonghua wei chang wai ke za zhi = Chinese journal of gastrointestinal surgery"
@@ -381,10 +383,17 @@
 				        end part between round or square brackets is removed, initial article is removed, ...).</i>
 			        </li>
 		        </ol>
+   				<p><i>T3 field: Especially EMBASE (OVID) uses this field for (1) Conference title (majority of cases), (2) an alternative journal title, and (3) original (non English) title. Case 1 (identified as containing a
+				number or "Annual", "Conference", "Congress", "Meeting" or "Society") is skipped. All other T3 fields are treated as Journals and as titles.</i>
+   				
+   				<p><i>Reply: a publication is considered a reply if the title (field TI) contains "reply", or contains "author(...)respon(...)", or is nothing but "response" (all case insensitive).</i></p>
+   				
+
+		        <p>If two records get 5 YES answers, they are considered duplicates.<br/>
 		        
-		        <p>If two records get 5 YES answers, they are considered duplicates.<br/> 
+		        <h5>2. Enrich the deduplicated records</h5> 
 		        Only the first record of a set of duplicate records is copied to the output file.</p>
-		        <p>Moreover: When writing the output file, the following fields can be changed:</p>
+		        <p>When writing the output file, the following fields will be changed:</p>
 		        <ul>
 		        	<li>Author (AU):
 		        		<ul>
@@ -428,22 +437,21 @@
 		        EndNote can deduplicate a EndNote database of ca. 15,000 records in less dan 5 seconds. DedupEndNote needs around 20 seconds to deduplicate
 		        the export file in RIS format (115MB).</p>
 				
-				<p><i>T3 field: Especially EMBASE (OVID) uses this field for (1) Conference title (majority of cases), (2) an alternative journal title, and (3) original (non English) title. Case 1 (identified as containing a
-				number or "Annual", "Conference", "Congress", "Meeting" or "Society") is skipped. All other T3 fields are treated as Journals and as titles.</i>
-   				
-   				<p><i>Reply: a publication is considered a reply if the title (field TI) contains "reply", or contains "author(...)respon(...)", or is nothing but "response" (all case insensitive).</i></p>
-   				
 		        <p>DedupEndNote has borrowed several ideas from: Yu Jiang, Can Lin, Weiyi Meng, Clement Yu, Aaron M. Cohen and Neil R. Smalheiser:
 		        <a href="http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3893659/" target="_blank">Rule-based deduplication of article records from bibliographic databases</a>, in: Database 2014, ID bat086, doi:10.1093/database/bat086</p>
 		        
 		        <h3 id="markModeText">Mark mode</h3>
-		        
+
+				<p>If you want to manually merge the records which are duplicates according to DedupEndNote, you can use Mark mode.</p>  		        
 		        <p>In Mark mode the ID of the first record of a set of duplicate records is copied to the label field ("LB") of all duplicate records.
 		        The input file is copied to the output file with the addition of the Label field if it is not empty.
-		        The original content of the Label field is overwritten! All other fields are copied as is (so no prescribed form of DOI, ...).</p>
+		        The original content of the Label field is overwritten! All other fields are copied as is (so no enriching of the output: prescribed form of DOI, ...).</p>
 		        
-				<p>After importing the results file into a new EndNote database, make the Label field visible. To see the duplicates, search for "Label" "is greater than" 0, and sort on the label field.
-				The IDs in the Label field refer to the IDs of the original EndNote database.</p>
+				<p>After importing the results file into a new EndNote database, make the Label field visible. The IDs in the Label field refer to the IDs of the <u>original</u> EndNote database.</p>
+				<ul>
+					<li>To see the duplicates, search for "Label" "is greater than" 0, and sort on the label field.</li>
+					<li>To manually merge, change in Preferences / Deduplicate the fields to deduplicate on to the Label field, deduplicate (in EndNote) and merge at will</li>
+				</ul>
 				
 				<p>Comparing the results of deduplication by EndNote itself and DedupEndNote:</p>
 				<ul>
@@ -920,16 +928,22 @@
 				<h3 id="limitations">Limitations</h3>
 				<ul>
 					<li>Input file size: The maximum size of the input file is limited to 150MB.</li>
+					<li>Input file format: The program only handles files in RIS format, not in XML or CSV format.</li>
 					<li>Encoding: The program assumes that the input file is encoded as UTF-8.</li>
 					<li>If authors AND (all) titles AND (all) journal names for a record use a non-Latin script, results for this record may be inaccurate.</li>
-					<li>The input file must be an export from ONE EndNote database: the ID fields are used internally for identifying the records, so they have to be unique.</li>
+					<li>(when deduplicating one file:) The input file must be an export from ONE EndNote database: the ID fields are used internally for identifying the records, so they have to be unique.</li>
 					<li>The program has been developed and tested for biomedical databases (PubMed, EMBASE, ...) and some general databases (Web of Science, Scopus).
 					Deduplicating records from other databases is not garanteed to work.</li>
-					<li>Records for each publication year are compared to records from the same and the following year: a record from 2016 is compared to the records from 2015 (when treating the records from
-					2015) and from 2016 and 2017 (when treating the records from 2016). A PubMed ahead-of-print record from 2013 and a corresponding record from 2017 (when it was 'officially' 
-					published) will not be compared (and possibly deduplicated).</li>
-					<li>Bibliographic databases are not always very accurate in the starting page of a publication. Because starting page is part of the comparisons,
-					DedupEndNote misses the duplicates when bibliographic databases don't agree on the starting page (and one or both records have no DOIs).</li> 
+					<li>The program uses a bibliographic point of view:
+						<ul>
+							<li>an article or conference abstract that has been published in more than one (issue of a) journal	is not considered a duplicate publication.</li>
+							<li>Records for each publication year are compared to records from the same and the following year: a record from 2016 is compared to the records from 2015 (when treating the records from
+							2015) and from 2016 and 2017 (when treating the records from 2016). A PubMed ahead-of-print record from 2013 and a corresponding record from 2017 (when it was 'officially' 
+							published) will not be compared (and possibly deduplicated).</li>
+							<li>Bibliographic databases are not always very accurate in the starting page of a publication. Because starting page is part of the comparisons,
+							DedupEndNote misses the duplicates when bibliographic databases don't agree on the starting page (and one or both records have no DOIs).</li>
+						</ul>
+					</li> 
 				</ul>
 	        </div>
        </div>
