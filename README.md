@@ -195,11 +195,11 @@ Data are from:
     </thead>
     <tbody>
         <tr>
-            <td rowspan="3">SRA: Cytology screening<br>1856 rec</td>
-            <td>EndNote</td>
+            <td rowspan="3">SRA: Cytology screening<br>(1856 rec)</td>
+            <td>EndNote X9</td>
             <td align="right">885</td>
             <td align="right">518</td>
-            <td align="right">61.3%</td>
+            <td align="right">63.1%</td>
             <td align="right">452</td>
             <td align="right">1</td>
             <td align="right">99.8%</td>
@@ -217,9 +217,9 @@ Data are from:
         </tr>
         <tr>
             <td>DedupEndNote</td>
-            <td align="right">1360</td>
-            <td align="right">60</td>
-            <td align="right"><strong>95.8%</strong></td>
+            <td align="right">1359</td>
+            <td align="right">61</td>
+            <td align="right"><strong>95.7%</strong></td>
             <td align="right">436</td>
             <td align="right">0</td>
             <td align="right"><strong>100.0%</strong></td>
@@ -263,8 +263,8 @@ Data are from:
             <td cellspan="9" style="height: 15px;"></td>
         </tr>
         <tr>
-            <td rowspan="3">SRA: Respiratory<br>1988 rec</td>
-            <td>EndNote</td>
+            <td rowspan="3">SRA: Respiratory<br>(1988 rec)</td>
+            <td>EndNote X9</td>
             <td align="right">410</td>
             <td align="right">391</td>
             <td align="right">51.2%</td>
@@ -297,8 +297,8 @@ Data are from:
             <td cellspan="9" style="height: 15px;"></td>
         </tr>
         <tr>
-            <td rowspan="3">SRA: Stroke<br>1292 rec</td>
-            <td>EndNote</td>
+            <td rowspan="3">SRA: Stroke<br>(1292 rec)</td>
+            <td>EndNote X9</td>
             <td align="right">372</td>
             <td align="right">134</td>
             <td align="right">73.5%</td>
@@ -319,9 +319,9 @@ Data are from:
         </tr>
         <tr>
             <td>DedupEndNote</td>
-            <td align="right">504</td>
-            <td align="right">6</td>
-            <td align="right"><strong>98.8%</strong></td>
+            <td align="right">503</td>
+            <td align="right">7</td>
+            <td align="right"><strong>98.6%</strong></td>
             <td align="right">782</td>
             <td align="right">0</td>
             <td align="right"><strong>100.0%</strong></td>
@@ -393,8 +393,8 @@ Data are from:
         </tr>
         <tr>
             <td>DedupEndNote</td>
-            <td align="right">2014</td>
-            <td align="right">58</td>
+            <td align="right">2013</td>
+            <td align="right">59</td>
             <td align="right">97.2%</td>
             <td align="right">1058</td>
             <td align="right">0</td>
@@ -405,15 +405,15 @@ Data are from:
             <td cellspan="9" style="height: 15px;"></td>
         </tr>
         <tr>
-            <td>BIG_SET<br>4046 rec</td>
+            <td>BIG_SET<br>(4590 rec)</td>
             <td>DedupEndNote</td>
-            <td align="right">3179</td>
-            <td align="right">103</td>
-            <td align="right">96.7</td>
-            <td align="right">755</td>
-            <td align="right">9</td>
-            <td align="right">98.2%</td>
-            <td align="right">97.2%</td>
+            <td align="right">3489</td>
+            <td align="right">232</td>
+            <td align="right">93.8</td>
+            <td align="right">861</td>
+            <td align="right">8</td>
+            <td align="right">99.1%</td>
+            <td align="right">94.8%</td>
         </tr>
 	</tbody>
 </table>
@@ -457,7 +457,7 @@ For the ASySD validation files the results are reported in a different way:
     </thead>
     <tbody>
         <tr>
-            <td rowspan="5">ASySD Cardiac Human<br>8948 rec</td>
+            <td rowspan="5">ASySD Cardiac Human<br>(8948 rec)</td>
             <td>Human</td>
             <td align="right">3136</td>
             <td align="right">374</td>
@@ -521,7 +521,7 @@ For the ASySD validation files the results are reported in a different way:
             <td cellspan="9" style="height: 15px;"></td>
         </tr>
         <tr>
-            <td rowspan="6">ASySD Depression<br>79880 rec</td>
+            <td rowspan="6">ASySD Depression<br>(79880 rec)</td>
             <td>Human</td>
             <td align="right">9380</td>
             <td align="right">669</td>
@@ -571,33 +571,21 @@ For the ASySD validation files the results are reported in a different way:
         </tr>
         <tr>
             <td>DedupEndNote</td>
-            <td align="right">9689</td>
-            <td align="right">666</td>
-            <td align="right">93.6%</td>
-            <td align="right">69474</td>
-            <td align="right">51</td>
-            <td align="right">99.2%</td>
-            <td align="right">99.5%</td>
-            <td align="right">99.1%</td>
-            <td align="right">96.4%</td>
-        </tr>
-        <tr>
-            <td>DedupEndNote (corrected GOLD)</td>
-            <td align="right">9513</td>
-            <td align="right">569</td>
-            <td align="right">94.4%</td>
-            <td align="right">69766</td>
-            <td align="right">32</td>
-            <td align="right"><strong>99.9%</strong></td>
-            <td align="right">99.7%</td>
-            <td align="right">99.2%</td>
-            <td align="right">96.9%</td>
+            <td align="right">9731</td>
+            <td align="right">671</td>
+            <td align="right">94.5%</td>
+            <td align="right">69563</td>
+            <td align="right">15</td>
+            <td align="right"><strong>99.9%</string></td>
+            <td align="right">99.8%</td>
+            <td align="right">99.3%</td>
+            <td align="right">97.1%</td>
         </tr>
         <tr>
             <td cellspan="9" style="height: 15px;"></td>
         </tr>
         <tr>
-            <td rowspan="5">ASySD Diabetes<br>1845 rec</td>
+            <td rowspan="5">ASySD Diabetes<br>(1845 rec)</td>
             <td>Human</td>
             <td align="right">893</td>
             <td align="right">368</td>
@@ -661,7 +649,7 @@ For the ASySD validation files the results are reported in a different way:
             <td cellspan="9" style="height: 15px;"></td>
         </tr>
         <tr>
-            <td rowspan="5">ASySD Neuroimaging<br>3438 rec</td>
+            <td rowspan="5">ASySD Neuroimaging<br>(3438 rec)</td>
             <td>Human</td>
             <td align="right">1274</td>
             <td align="right">19</td>
@@ -714,12 +702,12 @@ For the ASySD validation files the results are reported in a different way:
             <td align="right">1280</td>
             <td align="right">31</td>
             <td align="right">97.6%</td>
-            <td align="right">2126</td>
-            <td align="right">1</td>
+            <td align="right">2124</td>
+            <td align="right">3</td>
             <td align="right"><strong>99.9%</strong></td>
-            <td align="right"><strong>99.9%</strong></td>
+            <td align="right">99.8%</td>
             <td align="right">99.0%</td>
-            <td align="right">98.8%</td>
+            <td align="right">98.7%</td>
         </tr>
         <tr>
             <td cellspan="9" style="height: 15px;"></td>
