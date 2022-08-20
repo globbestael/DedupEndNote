@@ -405,15 +405,15 @@ Data are from:
             <td cellspan="9" style="height: 15px;"></td>
         </tr>
         <tr>
-            <td>BIG_SET<br>(4590 rec)</td>
+            <td>BIG_SET<br>(4923 rec)</td>
             <td>DedupEndNote</td>
-            <td align="right">3489</td>
-            <td align="right">232</td>
-            <td align="right">93.8</td>
-            <td align="right">861</td>
-            <td align="right">8</td>
-            <td align="right">99.1%</td>
-            <td align="right">94.8%</td>
+            <td align="right">3697</td>
+            <td align="right">257</td>
+            <td align="right">93.5%</td>
+            <td align="right">964</td>
+            <td align="right">5</td>
+            <td align="right">99.5%</td>
+            <td align="right">94.7%</td>
         </tr>
 	</tbody>
 </table>
