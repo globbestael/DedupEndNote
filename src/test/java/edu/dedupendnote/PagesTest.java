@@ -16,14 +16,14 @@ import edu.dedupendnote.domain.Record;
 public class PagesTest {
 	@ParameterizedTest(name = "{index}: parsePages({0})=({1},{2},{3})")
 	@MethodSource("argumentProvider")
-    void parsePagesTest(String pages, String start, String end, String startForComparison) {
+    void parsePagesTest(String pages, String start, String end, String pageForComparison) {
     	Record r = new Record();
     	r.parsePages(pages);
     	
-	    assertThat(start).isEqualTo(r.getPageStart());
-	    assertThat(end).isEqualTo(r.getPageEnd());
-	    assertThat(startForComparison)
-	    	.as("Input '%s' has wrong pageStartForComparison", pages)
+	    assertThat(start).as("PageStart comparison").isEqualTo(r.getPageStart());
+	    assertThat(end).as("PageEnd comparison").isEqualTo(r.getPageEnd());
+	    assertThat(pageForComparison)
+	    	.as("Input '%s' has wrong pageForComparison", pages)
 	    	.isEqualTo(r.getPageForComparison());
     }
 
@@ -31,7 +31,6 @@ public class PagesTest {
 		return Stream.of(
 				arguments("1", "1", null, "1"),
 				arguments("1-2", "1", "2", "1"),
-				arguments(null, null, null, null),
 				arguments("12-4", "12", "14", "12"),
 				arguments("1251-4", "1251", "1254", "1251"),
 				arguments("12-14", "12", "14", "12"),
@@ -49,7 +48,13 @@ public class PagesTest {
 				arguments("11+136-7", "11+136", "11+137", "11"),	// !
 				arguments("ii22-ii33", "ii22", "ii33", "22"),
 				arguments("ii-ix", "ii", "ix", null),
-				arguments("UNSP e12345", "UNSP e12345", null, "12345")
+				arguments("UNSP e12345", "e12345", null, "12345"),
+				arguments("1-125", "1", "125", "125"),	// books / reports/ ... starting at page 1
+				arguments("1-99", "1", "99", "1"),
+				arguments("A1-A125", "A1", "A125", "125"),
+				arguments("A1-A99", "A1", "A99", "1"),
+				arguments("001-099", "1", "99", "1"),	// leading zeros
+				arguments("A1-A099", "A1", "A099", "1")
 			);
 	}
 }
