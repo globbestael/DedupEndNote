@@ -113,8 +113,8 @@
 				<p>DedupEndNote will miss some duplicate records, e.g.:</p>
 				<ol>
 					<li>Records have different starting pages and not 2 DOIs which are the same</li>
-					<li>The publication years of duplicate records can be more than 1 year apart. The validated subset of BIG_SET (3657 records)
-						has 60 examples of duplicate records with different publication years: differences are 1 (48), 2 (8) and 4 (4).</li> 
+					<li>The publication years of duplicate records can be more than 1 year apart. The validated subset of BIG_SET (4923 records)
+						has 60 examples of duplicate records with different publication years: differences are 1 year (48), 2 years (8) and 4 years (4).</li> 
 					<li>Journals titles are not identified as similar (e.g. "Jbr-btr" and "Journal Belge de Radiology" with different or no ISSNs,
 					or "Am J Dig Dis" and "Aaierj.Dio.Dis." (from EMBASE, definitely a typo), or "J Can Assoc Radiol" and "Canadian Association of Radiologists Journal")</li>
 					<li>Replies: Identifying replies by "response" as one of the title words is not accurate enough
@@ -125,7 +125,7 @@
 					"RETRACTED: Isolated central retinal artery occlusion as an initial presentation of paroxysmal nocturnal hemoglobinuria and successful long-term prevention of systemic thrombosis with eculizumab (Retracted article. See vol. 58, pg. 307, 2014)".
 					Other databases use "Isolated central retinal artery occlusion as an initial presentation of paroxysmal nocturnal hemoglobinuria and successful long-term prevention of systemic thrombosis with eculizumab"
 					and use another field to mark the retraction.<br/>
-					The Jaro-Winkler Similarity between these 2 titles is 0.77 (in straight as well as reversed order) which is too low to be considered a duplicate.</li>
+					The Jaro-Winkler Similarity of these 2 titles is 0.77 (in straight as well as reversed order) which is too low to be considered a duplicate.</li>
 				</ol>
 
 				<p><strong>After deduplication by DedupEndNote, deduplication with EndNote itself (default setting: Author, Year, Title) could be worthwhile.</strong>
@@ -164,7 +164,7 @@
 				
 				<p>Some cases of duplicate records are "unsolvable" for programs? Take e.g.the following publication
 				(<a href="https://www.nejm.org/doi/full/10.1056/NEJM199105303242207)" target="blank">https://www.nejm.org/doi/full/10.1056/NEJM199105303242207</a>):</p>
-				<ul>
+				<ol>
 					<li>Cabot RC, Scully RE, Mark EJ, McNeely WF, McNeely BU, Podolsky DK, Lewandrowski KB. Case 22-1991:
 					A 15-Year-Old Boy with Fever of Unknown Origin, Severe Anemia, and Portal-Vein Thrombosis.
 					New England Journal of Medicine. 1991;324(22):1575-84.</li>
@@ -176,7 +176,7 @@
 					<li>Case records of the Massachusetts General Hospital. Weekly clinicopathological exercises.
 					Case 22-1991. A 15-year-old boy with fever of unknown origin, severe anemia, and portal-vein thrombosis.
 					N Engl J Med. 1991;324(22):1575-84.</li>
-				</ul>
+				</ol>
 				<p>"Cabot RC, Scully RE, Mark EJ, McNeely WF, McNeely BU" in (1) were the (associate) editors of the NEJM in 1991,
 				"Podolsky DK, Lewandrowski KB" in (2) described the case, all authors in (3) discussed the case.</p>
 	        </div>
