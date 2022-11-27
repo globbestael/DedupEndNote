@@ -31,7 +31,8 @@ public class IOService {
 	/**
 	 * Pattern to identify conferences in the T3 field
 	 */
-	private static Pattern conferencePattern = Pattern.compile(".*(^[0-9]|\\d{4,4}|Annual|Conference|Congress|Meeting|Society|Symposium).*");
+	// private static Pattern conferencePattern = Pattern.compile(".*(^[0-9]|\\d{4,4}|Annual|Conference|Congress|Meeting|Society|Symposium).*");
+	private static Pattern conferencePattern = Pattern.compile("(^[0-9]|(.*(\\d{4,4}|Annual|Conference|Congress|Meeting|Society|Symposium))).*");
 	/**
 	 * Pattern to identify clinical trials phase (1 ..4, i .. iv)
 	 */
@@ -137,8 +138,9 @@ public class IOService {
 						 * 
 						 * Present solution:
 						 * - skip it if it contains a number or "Annual|Conference|Congress|Meeting|Society"
-						 *   ("Asian Pacific Digestive Week 2014. Bali Indonesia.", "12th World Congress of the International Hepato-Pancreato-Biliary Association. Sao Paulo Brazil.",
-						 *   "International Liver Transplantation Society 15th Annual International Congress. New York, NY United States.")
+						 *   ("Asian Pacific Digestive Week 2014. Bali Indonesia.",
+						 *    "12th World Congress of the International Hepato-Pancreato-Biliary Association. Sao Paulo Brazil.",
+						 *    "International Liver Transplantation Society 15th Annual International Congress. New York, NY United States.")
 						 * - add it as Title
 						 * - add it as Journal
 						 */
