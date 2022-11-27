@@ -1,3 +1,9 @@
+Migraine False Positives
+------------------------
+- limit EndNote DB Migraine_ALL_Mark to "Name of database = Cochrane" and "Label > 0"
+- find duplicates (with only field Label) 
+- there are false positives, a.o. Label 6288, 6368, 6460, 6616, 6810, ... Are they all conference proceedings?  
+
 EndNote 20
 ----------
 https://support.alfasoft.com/hc/en-us/articles/360018135798-De-duplication-of-references-in-EndNote-20
