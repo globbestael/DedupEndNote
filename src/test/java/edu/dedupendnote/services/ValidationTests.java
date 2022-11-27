@@ -173,7 +173,7 @@ public class ValidationTests {
 //				new ValidationResult("Stroke", 504, 6, 782, 0),
 //				new ValidationResult("BIG_SET", 3697, 257, 964, 5), // 1347 unique
 //				new ValidationResult("McKeown_2021", 2014, 58, 1058, 0),
-				
+
 				new ValidationResultASySD("ASySD_Cardiac_human", 6752, 21, 2175, 0, 3236),
 				new ValidationResultASySD("ASySD_Depression", 17399, 571, 61895, 15, 7668),
 				new ValidationResultASySD("ASySD_Diabetes", 1818, 16, 11, 0, 566), 
@@ -480,7 +480,7 @@ public class ValidationTests {
 	 * Tested dedup-sweep Duplicate <> DedupEndNote No label: 19-9-2021: up to 13465
 	 * Tested dedup-sweep Unique <> DedupEndNote With label: ???
 	 */
-//	@Disabled("Only needed for initialisation of TRUTH file")
+	@Disabled("Only needed for initialisation of TRUTH file")
 	@Test
 	void createRisWithTRUTH_BIG_SET_DS() throws IOException {
 		String truthFileName = testdir + "/own/BIG_SET_TRUTH.txt";
@@ -500,7 +500,7 @@ public class ValidationTests {
 	 * Limit the DB to validated records (NOT Caption unknown)
 	 * Export as XML file for testing with Dedupe-sweep
 	 */
-//	@Disabled("Only needed for initialisation of TRUTH file")
+	@Disabled("Only needed for initialisation of TRUTH file")
 	@Test
 	void createRisWithTRUTH_BIG_SET() throws IOException {
 		String truthFileName = testdir + "/own/BIG_SET_TRUTH.txt";
