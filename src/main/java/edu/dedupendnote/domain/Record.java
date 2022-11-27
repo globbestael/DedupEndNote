@@ -27,6 +27,7 @@ public class Record {
 	public List<String> authors = new ArrayList<>();
 	public List<String> authorsTransposed = new ArrayList<>();
 	public boolean authorsAreTransposed = false;
+	// FIXME: change to Set<String>()
 	public Map<String, Integer> dois = new HashMap<>();
 	public String id;
 	public List<String> issns = new ArrayList<>();
@@ -138,7 +139,11 @@ public class Record {
 			matcher = balancedBracespattern.matcher(s);
 			while (matcher.find()) {
 				if (matcher.end(0) == s.length()) {
-					s = s.substring(0, matcher.start() -1);
+					if (matcher.start() == 0) {
+						s = s.substring(1, s.length() - 1);
+					} else {
+						s = s.substring(0, matcher.start() -1);
+					}
 				}
 			}
 			log.debug("Title IS2: {}", s);
@@ -178,7 +183,7 @@ public class Record {
 	 */
 	private static Pattern natlPattern = Pattern.compile("Natl");
 	/**
-	 * "[(...)G]eneeskd": will be replcaed by "[(...)G]eneeskunde"
+	 * "[(...)G]eneeskd": will be replaced by "[(...)G]eneeskunde"
 	 */
 	private static Pattern geneeskdPattern = Pattern.compile("eneeskd");
 	/**
@@ -227,8 +232,8 @@ public class Record {
 	 */
 	private static Pattern genitiveApostrophePattern = Pattern.compile("'s\\b");
 	/**
-	 * All other apostophes (comapre genitiveApostrophePattern): will be replaced by SPACE. E.g. "Annales d'Urologie", "Journal of Xi'an Jiaotong University (Medical Sciences)".
-	 * Must called AFTER genitiveApostrophePattern
+	 * All other apostrophes (compare genitiveApostrophePattern): will be replaced by SPACE. E.g. "Annales d'Urologie", "Journal of Xi'an Jiaotong University (Medical Sciences)".
+	 * Must be called AFTER genitiveApostrophePattern
 	 */
 	private static Pattern nonGenitiveApostrophePattern = Pattern.compile("'");
 	/**
@@ -261,7 +266,7 @@ public class Record {
 	 * E.g. "Clinical neuropharmacology.12 Suppl 2 ()(pp v-xii; S1-105) 1989.Date of Publication: 1989." --> "Clinical neuropharmacology"
 	 * E.g.: "European Respiratory Journal. Conference: European Respiratory Society Annual Congress" (Cochrane records) 
 	 */
-	private static Pattern journalExtraPattern = Pattern.compile("((\\b\\d.*|\\. Conference.*))$");
+	private static Pattern journalExtraPattern = Pattern.compile("^(.+?)((\\d.*|\\. Conference.*))$");
 	/**
 	 * Some subtitles of journals ("Technical report", "Electronic resource", ...): will be removed
 	 */
@@ -587,14 +592,18 @@ public class Record {
 		if (journal.toLowerCase().contains("cochrane")) {
 			this.isCochrane = true;
 		}
-		journal = journalExtraPattern.matcher(journal).replaceAll("");					// Strip last part of "Clinical neuropharmacology.12 Suppl 2 ()(pp v-xii; S1-105) 1989.Date of Publication: 1989."
+//		journal = journalExtraPattern.matcher(journal).replaceAll("");					// Strip last part of "Clinical neuropharmacology.12 Suppl 2 ()(pp v-xii; S1-105) 1989.Date of Publication: 1989."
+		Matcher matcher = journalExtraPattern.matcher(journal);					// Strip last part of "Clinical neuropharmacology.12 Suppl 2 ()(pp v-xii; S1-105) 1989.Date of Publication: 1989."
+		while (matcher.find()) {
+			journal = matcher.group(1);
+		}
 
 		/*
 		 * replace "\S/\S" with space: "Hematology/Oncology" --> "Hematology Oncology"
 		 * BUT: "Chung-Kuo Hsiu Fu Chung Chien Wai Ko Tsa Chih/Chinese Journal of Reparative & Reconstructive Surgery" will NOT be split into 2 journals!
 		 * Same for: Arzneimittel-Forschung/Drug Research
 		 */
-		Matcher matcher = journalSlashPattern.matcher(journal);
+		matcher = journalSlashPattern.matcher(journal);
 		while (matcher.find()) {
 			journal = matcher.group(1) + " " + matcher.group(2);
 		}
@@ -676,7 +685,7 @@ public class Record {
 	 */
 	public void parsePages(String pages) {
 		// "UNSP ..." should be cleaned from the C7 field (WoS)
-		pages = pages.replace("UNSP\\s*", "");
+		pages = pages.replaceAll("UNSP\\s*", "");
 		Matcher matcher = pagesDatePattern.matcher(pages); // if Pages contains a date string, omit the pages
 		while (matcher.find()) {
 			pages = null;
@@ -716,7 +725,8 @@ public class Record {
 			this.pageStart = pages.substring(0, indexOf);
 			pageStart = pageStart.replaceAll("^0+", "");
 			this.pageEnd = pages.substring(indexOf + 1);
-			pageEnd = pageEnd.replaceAll("^([^1-9]*)([\\d]+)(.*)$", "$2");
+			// pageEnd = pageEnd.replaceAll("^([^1-9]*)([\\d]+)(.*)$", "$2");
+			pageEnd = pageEnd.replaceAll("^0+", "");
 			if (this.pageStart.length() > this.pageEnd.length()) {
 				this.pageEnd = this.pageStart.substring(0, this.pageStart.length() - this.pageEnd.length()) + this.pageEnd;
 			}
@@ -724,19 +734,24 @@ public class Record {
 			this.pageStart = pages;
 		}
 		if (pageStart.matches(".*\\d+.*")) {
+			/* 
+			 * Books, reports, ... all start with page 1, therefore the ending page is used if available.
+			 * BUT: Because Publication type is not available, pages range >= 100 is used as a criterion. 
+			 */
+			this.pageForComparison = pageStart;
 			/*
 			 * normalize starting page: W22 --> 22, 22S --> 22
 			 * - Cochrane "page numbers" (or really article number) in form "CD010546" can no longer be recognized as Cochrane identifiers: "10546"
 			 * - FIXME: arXiv page numbers ("arXiv:2107.12817v1") will be reduced to publication year and month ("2107"), which may result in False Positives.
 			 *   See https://github.com/globbestael/DedupEndnote/issues/4 for preprint publications.
 			 */
-			pageStart = pageStart.replaceAll("^([^1-9]*)([\\d]+)(.*)$", "$2");
-			// Books, reports, ... al start with page 1, therefore the ending page is used. Publication type is not available. Page range >= 100 used as a proxy. 
-			if ("1".equals(pageStart) && pageEnd != null && pageEnd.length() > 2) {
+			pageForComparison = pageForComparison.replaceAll("^([^0-9]*)([\\d]+)(.*)$", "$2");
+			if ("1".equals(pageForComparison) && pageEnd != null && pageEnd.length() > 2) {
 				// log.error("Long pageEnd used for pageForComparison {}", pageEnd);
-				this.pageForComparison = pageEnd;
-			} else {
-				this.pageForComparison = pageStart;
+				String pageEndForComparison = pageEnd.replaceAll("^([^1-9]*)([\\d]+)(.*)$", "$2");
+				if (pageEndForComparison.length() > 2) {
+					this.pageForComparison = pageEndForComparison;
+				}
 			}
 		}
 	}
