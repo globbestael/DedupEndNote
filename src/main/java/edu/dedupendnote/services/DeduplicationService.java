@@ -264,7 +264,7 @@ public class DeduplicationService {
 							})
 							.max(Comparator.comparingInt(String::length))
 							.orElse("");
-					// There are cases where not all titles have are recognized as replies -> record.title can be null  
+					// There are cases where not all titles are recognized as replies -> record.title can be null  
 					if (recordToKeep.getTitle() == null || recordToKeep.getTitle().length() < longestTitle.length()) {
 						log.debug("REPLY: changing title {}\nto {}", recordToKeep.getTitle(), longestTitle);
 						recordToKeep.setTitle(longestTitle);
@@ -273,12 +273,12 @@ public class DeduplicationService {
 				
 				// Gather all the DOIs
 				final Map<String, Integer> dois = recordToKeep.getDois();
+				// FIXME: impure (function changes external value). Change will be easier when record.dois is a Set
 				recordList.stream().forEach(r -> {
 					if (! r.getDois().isEmpty()) {
 						r.getDois().forEach((k,v) -> dois.putIfAbsent(k, v)); 
 					}
 				});
-				// FIXME: unnecessary?
 				if (!dois.isEmpty()) {
 					recordToKeep.setDois(dois);
 				}
@@ -360,7 +360,7 @@ public class DeduplicationService {
 	public void searchYearTwoFiles(List<Record> records, String wssessionId) {
 		Map<Integer, List<Record>> yearSets = records.stream()
 				.collect(Collectors.groupingBy(Record::getPublicationYear));
-		// TODO: should there be a prohress message with cumulative percentage, as in searchYearOneFile()?
+		// TODO: should there be a progress message with cumulative percentage, as in searchYearOneFile()?
 		List<Record> emptyYearlist = yearSets.remove(0);
 		log.debug("YearSets: {}", yearSets.keySet().stream().sorted().collect(Collectors.toList()));
 		yearSets.keySet().stream().sorted().forEach(year -> {
@@ -395,6 +395,7 @@ public class DeduplicationService {
 				break;
 			}
 			log.debug("Comparing " + records.size() + " records to: " + record.getId() + " : " + record.getTitles().get(0));
+			// FIXME? Shouldn't use functional style because it is impure
 			List<Record> doubles = records.stream()
 					.filter(r -> compareStartPageOrDoi(r, record) == true
 								// && compareAuthors(r, record) == true
