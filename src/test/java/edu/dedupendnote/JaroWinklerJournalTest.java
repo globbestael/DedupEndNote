@@ -415,6 +415,22 @@ public class JaroWinklerJournalTest {
 	    		arguments(
 	    				"European Respiratory Journal. Conference: European Respiratory Society Annual Congress",
 	    				"European Respiratory Journal"),
+	    		arguments(
+	    				"Asian Pacific Digestive Week 2014. Bali Indonesia.",
+	    				"Asian Pacific Digestive Week"),
+				arguments(
+						"12th World Congress of the International Hepato-Pancreato-Biliary Association. Sao Paulo Brazil.",
+						"12th World Congress of the International Hepato-Pancreato-Biliary Association. Sao Paulo Brazil."),
+				arguments( // this one matches because of Record.journalExtraPattern
+						"International Liver Transplantation Society 15th Annual International Congress. New York, NY United States.",
+						"International Liver Transplantation Society"),
+				arguments( // this one matches because IOService.conferencePattern adds a second journal 
+						"International Liver Transplantation Society. Annual International Congress. New York, NY United States.",
+						"International Liver Transplantation Society"),
+				arguments(
+						"Neuroendocrinology Letters.35 (2) ()(pp 129-136)",
+						"Neuroendocrinology Letters"
+						),
 	    		arguments( // JWS 0.90952380 !!
 	    				"Journal of Thoracic Oncology",
 	    				"Journal of Clinical Oncology"),
