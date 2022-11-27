@@ -6,13 +6,13 @@ Deduplication of EndNote RIS files:
 - mark the duplicates of one file: produces a RIS file with the Label field containing the ID of the duplicate record
 
 ### Starting
-DedupEndNote is a Java web application (Java 11, Spring Boot, fat jar). It can be started locally with:
+DedupEndNote is a Java web application (Java 8, Spring Boot, fat jar). It can be started locally with:
 ```
     java -jar DedupEndNote-[VERSION].jar
 ```
 and the application will be available at 
 ```
-    localhost:9777
+    http://localhost:9777
 ```
 ### Actions
 * Export one or two EndNote databases as RIS file(s)
@@ -50,7 +50,7 @@ The program has been tested with files with up to 50.000 records.
 
 ## What does DedupEndNote do?
 
-### Deduplicate
+### 1. Deduplicate
 Each pair of records is compared in 5 different ways. The general rule is:
 
 <table border="1">
@@ -126,7 +126,7 @@ If the ISSns are different or one or both records have no ISSN, the journals are
 If two records get 5 YES answers, they are considered duplicates.
 Only the first record of a set of duplicate records is copied to the output file.
 
-### Enrich the records
+### 2. Enrich the records
 When writing the output file (except in Mark Mode), the following fields can be changed:
 
   * Author (AU):
@@ -168,7 +168,7 @@ Data are from:
 * [McKeown] McKeown, S., Mir, Z.M.
   Considerations for conducting systematic reviews: evaluating the performance of different methods for de-duplicating references.
   Syst Rev 10, 38 (2021). [https://doi.org/10.1186/s13643-021-01583-y](https://doi.org/10.1186/s13643-021-01583-y)
-* [BIG_SET] Own test database for DedupEndNote on portal vein thrombosis (52,828 records, with 4046 records validated)
+* [BIG_SET] Own test database for DedupEndNote on portal vein thrombosis (52,828 records, with 4923 records validated)
 * [ASySD] Kaitlyn Hair, Zsanett Bahor, Malcolm Macleod, Jing Liao, Emily S. Sena
   The Automated Systematic Search Deduplicator (ASySD): a rapid, open-source, interoperable tool to remove duplicate citations in biomedical systematic reviews
   bioRxiv 2021.05.04.442412; [https://doi.org/10.1101/2021.05.04.442412](https://doi.org/10.1101/2021.05.04.442412)
