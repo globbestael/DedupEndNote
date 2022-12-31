@@ -401,7 +401,9 @@ public class DeduplicationService {
 								// && compareAuthors(r, record) == true
 								&& authorsComparator.compare(r, record) == true
 								&& compareTitles(r, record) == true
-								&& (compareIssns(r, record) == true || compareJournals(r, record) == true))
+								&& (compareIssns(r, record) == true || compareJournals(r, record) == true)
+								// && compareAbstracttexts(r, record) == true
+								)
 					.map(r -> {	// Label is used later in enrich() to recreate the duplicate lists, and is used / exported if markMode is set
 						// If the record was already a duplicate, use its label the new duplicates found, otherwise its ID
 						if (r.getLabel() == null) {
@@ -461,6 +463,14 @@ public class DeduplicationService {
 			}
 		}
 	}
+
+//	public boolean compareAbstracttexts(Record r1, Record r2) {
+//		if (r1.getAbstracttext() != null && r2.getAbstracttext() != null) {
+//			Double similarity = jws.apply(r1.getAbstracttext(), r2.getAbstracttext());
+//			return  (similarity > 0.96);
+//		}
+//		return true;
+//	}
 
 	// All unique titles and their reverse are compared
 	public boolean compareTitles(Record r1, Record r2) {
