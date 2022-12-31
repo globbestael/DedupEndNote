@@ -23,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Data
 public class Record {
+	// private String abstracttext;
 	private List<String> allAuthors = new ArrayList<>();
 	public List<String> authors = new ArrayList<>();
 	public List<String> authorsTransposed = new ArrayList<>();
@@ -121,6 +122,9 @@ public class Record {
    	// https://stackoverflow.com/questions/47162098/is-it-possible-to-match-nested-brackets-with-a-regex-without-using-recursion-or/47162099#47162099
 	private static Pattern balancedBracespattern = Pattern.compile("(?=\\()(?:(?=.*?\\((?!.*?\\1)(.*\\)(?!.*\\2).*))(?=.*?\\)(?!.*?\\2)(.*)).)+?.*?(?=\\1)[^(]*(?=\\2$)");
 
+	/*
+	 * FIXME: Why is normalizeToBasicLatin not used?
+	 */
 	static public String normalizeJava8(String s) {
 		s = doubleQuotesPattern.matcher(s).replaceAll("");
 		/*
@@ -323,8 +327,8 @@ public class Record {
 	}
 
 	/**
-	 * normalizeToBasicLatin: removes accents and diacritics when the base character belongs to the BasicLatin Unicode block (U+0000–U+007F),
-	 * and removes all other characters.  
+	 * normalizeToBasicLatin: removes accents and diacritics when the base character belongs to the BasicLatin Unicode block (U+0000–U+007F)
+	 * and removes all other characters.
 	 */
 	public static String normalizeToBasicLatin(String r) {
 		Matcher matcher = nonBasicLatinPattern.matcher(r);
@@ -336,13 +340,31 @@ public class Record {
 		return r;
 	}
 
+//	public void addAbstracttext(String text) {
+//		text = text.toLowerCase();
+//		text = text.replaceAll("\\<[^>]*>","");
+//		// FIXME: replace with pattern
+//		// remove first one or two words + ": "
+//		// This replacement is more important with JaroWinkler distance metric than with others because JW favors differences at the start of strings?
+//		// TODO: try with other metrics
+//		text = text.replaceAll("^(aim(s?)|background(s?)|context|importance|introduction|objective(s?)|purpose|question|study objective|synopsis|(\\w+(\\s\\w+)?:\\s?))", "");
+//		// FIXME: replace with pattern
+//		// remove all characters which are not letters or numbers. Some databases use "\u2009" (THIN SPACE) within "30 mg", other no character
+//		text = text.replaceAll("[^\\p{L}\\p{N}]+", "");	// use "\\p{Nd}" if you want "¼" treated as a number
+//		text = normalizeToBasicLatin(text);
+//		if (text.length() > 200) {
+//			text = text.substring(0, 199);
+//		}
+//		this.abstracttext = text;
+//	}
+	
 	/*
 	 * TODO: From Java 9 onwards performance of String::replaceAll is much better 
 	 * 
 	 * But please check first:
 	 * - if the performance is better than the Java 8 Pattern approach chosen
 	 * - if naming the patterns isn't useful (names, testability)
-	 * - align the Java9Plus versions with the Java8 versions!!! he Java9Plus versions are old.
+	 * - align the Java9Plus versions with the Java8 versions!!! the Java9Plus versions are old.
 	 */
 	//	static public String normalizeJava9Plus(String s) {
 	//		String r = s.replaceAll(".\\[[^\\\\]+\\]$", "")		// remove non initial "[...]"
@@ -468,7 +490,10 @@ public class Record {
 		}
 		matcher = lastNameAdditionsPattern.matcher(lastName);
 		if (matcher.find()) {
-			lastName = (matcher.group(1) + matcher.group(3)).strip();
+			// FIXME Java 8: NOT in Java 8, but in Java 11: String.strip()
+			// See https://stackoverflow.com/questions/51266582/difference-between-string-trim-and-strip-methods-in-java-11 
+			// lastName = (matcher.group(1) + matcher.group(3)).strip();
+			lastName = (matcher.group(1).trim() + " " + matcher.group(3).trim()).trim();
 			log.debug("new lastName: {}", lastName);
 		}
 		
