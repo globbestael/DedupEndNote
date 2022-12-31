@@ -76,6 +76,9 @@ public class IOService {
 					}
 					previousFieldName = "XYZ";
 					switch (fieldName) {
+//						case "AB": // Abstract
+//							record.addAbstracttext(fieldContent);
+//							break;
 						case "AU": // Authors
 							// XML files can put all authors on 1 line separated by "; "
 							if (fieldContent.contains("; ")) {
