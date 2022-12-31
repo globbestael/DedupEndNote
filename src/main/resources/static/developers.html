@@ -20,6 +20,7 @@
 				<a href="/">Home</a>
 	        	<ol>
 	        		<li><a href="#validation">Validation</a></li>
+	        		<li><a href="#logging">Logging and log levels</a></li>
 	        	</ol>
 	
 	       		<h3 id="validation">1. Validation</h3>
@@ -213,6 +214,28 @@
 	       		</ul> 
 	       		<div>"ValidationTests.java" has tests for comparing the results of a new version of DedupEndNote
 	       			with the validated set (exported as a tab delimited file).</div>
+	       		
+	       		<h3 if="logging">2. Logging and log levels</h3>
+	       		<ul>
+	       			<li>Reading the records
+		       			
+						<div>
+							<pre>java -Dlogging.level.edu.dedupendnote.services.IOService=DEBUG -jar DedupEndNote-0.9.5-SNAPSHOT.jar</pre>
+							If everythings works, the log should end with ""Records read: ". If not,log will show what the last record successfully read in was
+						</div>
+					</li>
+					<li>Converting the records
+					
+						<div>
+							<pre>java -Dlogging.level.edu.dedupendnote.services.IOService=DEBUG -Dlogging.level.edu.dedupendnote.domain.Record=DEBUG -jar DedupEndNote-0.9.5-SNAPSHOT.jar</pre>
+						</div>
+					</li>
+					<li>Deduplicating the records
+						<div>
+							<pre>java -Dlogging.level.edu.dedupendnote.services=DEBUG -jar DedupEndNote-0.9.5-SNAPSHOT.jar</pre>
+						</div>
+					</li>
+				</ul>
 	        </div>
 		</div>
 	</div>
