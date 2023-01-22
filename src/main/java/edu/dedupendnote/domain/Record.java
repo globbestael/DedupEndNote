@@ -715,8 +715,8 @@ public class Record {
 		while (matcher.find()) {
 			pages = null;
 		}
-		
-		if (pages == null || pages.isEmpty()) {
+		// Ovid Medline in RIS format puts author address in M2 field, which is exported as SP 
+		if (pages == null || pages.isEmpty() || pages.length() > 20) {
 			return;
 		}
 		

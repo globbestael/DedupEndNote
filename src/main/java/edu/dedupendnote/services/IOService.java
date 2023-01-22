@@ -120,7 +120,10 @@ public class IOService {
 							record.addIssns(fieldContent);
 							previousFieldName = fieldName;
 							break;
-						case "SE": // pages (which database?)
+						// Ovid Medline in RIS export has author address in repeatable M2 field,
+						// EndNote 20 shows the content in field with label "Start Page",
+						// but export file of such a record has this content in SE field! 
+						case "SE": // pages (Embase (which provider), Ovid PsycINFO: examples in some SRA datasets)
 						case "SP": // pages
 							record.parsePages(fieldContent);
 							break;
