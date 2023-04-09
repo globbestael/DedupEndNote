@@ -75,16 +75,16 @@ public class ValidationTests {
 	void checkAllTruthFiles() throws IOException {
 		// previous results
 		Map<String, ValidationResult> validationResultsMap = List.of(
-			new ValidationResult("ASySD_Cardiac_human", 6752, 21, 2175, 0),
-			new ValidationResult("ASySD_Depression", 17399, 571, 61895, 15),
-			new ValidationResult("ASySD_Diabetes", 1818, 16, 11, 0), 
-			new ValidationResult("ASySD_Neuroimaging", 2170, 31, 1234, 3),
-			new ValidationResult("ASySD_SRSR_Human", 27896, 101, 24986, 18),
-			new ValidationResult("BIG_SET", 3697, 257, 964, 5),
-			new ValidationResult("McKeown_2021", 2013, 59, 1058, 0),
+			new ValidationResult("ASySD_Cardiac_human", 6745, 28, 2175, 0),
+			new ValidationResult("ASySD_Depression", 17398, 572, 61895, 15),
+			new ValidationResult("ASySD_Diabetes", 1816, 18, 11, 0), 
+			new ValidationResult("ASySD_Neuroimaging", 2158, 43, 1235, 2),
+			new ValidationResult("ASySD_SRSR_Human", 27802, 197, 24988, 14),
+			new ValidationResult("BIG_SET", 3681, 275, 966, 1),
+			new ValidationResult("McKeown_2021", 2010, 62, 1058, 0),
 			new ValidationResult("SRA2_Cytology_screening", 1359, 61, 436, 0),
 			new ValidationResult("SRA2_Haematology", 222, 14, 1179, 0),
-			new ValidationResult("SRA2_Respiratory", 769, 31, 1188, 0),
+			new ValidationResult("SRA2_Respiratory", 766, 34, 1188, 0),
 			new ValidationResult("SRA2_Stroke", 503, 7, 782, 0)
 		).stream()
 		.collect(Collectors.toMap(ValidationResult::getFileName, Function.identity(), (o1, o2) -> o1, TreeMap::new));

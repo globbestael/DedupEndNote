@@ -91,6 +91,9 @@ public class DeduplicationService {
 	private JaroWinklerSimilarity jws = new JaroWinklerSimilarity();
 	private IOService ioService;
 
+	// the DOIs have been lowercased
+	private Pattern cochraneIdentifierPattern = Pattern.compile("^.*10.1002/14651858.([a-z][a-z][0-9]+).*", Pattern.CASE_INSENSITIVE);
+
 	/*
 	 * Thresholds for Jaro-Winkler Similarity
 	 * The thresholds for AUTHOR are part of the AuthorComparator implementations
@@ -240,6 +243,7 @@ public class DeduplicationService {
 
 	private void enrich(List<Record> records) {
 		log.error("Start enrich");
+		// First the records with duplicates
 		Map<String, List<Record>> labelMap = records.stream()
 				.filter(r -> r.getLabel() != null && ! r.getLabel().startsWith("-")) // when comparing 2 files, duplicates from the old file start with "-"
 				.collect(Collectors.groupingBy(Record::getLabel));
@@ -292,6 +296,42 @@ public class DeduplicationService {
 						.ifPresent(r -> recordToKeep.setPublicationYear(r.getPublicationYear()));
 				}
 				
+				// Cochrane records with duplicates
+				if (recordToKeep.isCochrane()) {
+					String pageStart = recordToKeep.getPageStart();
+					if (pageStart != null) {
+						pageStart = pageStart.toUpperCase();
+					}
+					if (pageStart != null && ! (pageStart.startsWith("C") || pageStart.startsWith("E") || pageStart.startsWith("M"))) {
+						pageStart = null;
+					} 
+					
+					if (pageStart == null) {
+						log.debug("Reached Cochrane record without pageStart: {}", recordToKeep.getAuthors());
+						for (Record r : recordList) {
+							if (r.getPageStart() != null && r.getPageStart().toUpperCase().startsWith("C")) {
+								pageStart = r.getPageStart();
+								break;
+							}
+						}
+					}
+					
+					if (pageStart == null) {
+						log.debug("Reached Cochrane record without pageStart, getting it from the DOIs: {}", recordToKeep.getAuthors());
+						if (! recordToKeep.getDois().isEmpty()) {
+							String doi = recordToKeep.getDois().keySet().stream().collect(Collectors.toList()).get(0);
+							Matcher matcher = cochraneIdentifierPattern.matcher(doi);
+							if (matcher.matches()) {
+								pageStart = matcher.group(1);
+							}
+						}
+					}
+
+					if (pageStart != null) {
+						recordToKeep.setPageStart(pageStart.toUpperCase());
+					}
+				}
+					
 				// Add missing startpages (and endpages)
 				if (recordToKeep.getPageStart() == null) {
 					log.debug("Reached record without pageStart: {}", recordToKeep.getAuthors());
@@ -307,6 +347,36 @@ public class DeduplicationService {
 				 */
 			}
 		}
+		
+		// Then the records without duplicates
+		List<Record> cochraneRecords = records.stream()
+				.filter(r -> r.getLabel() == null && r.isCochrane())
+				.collect(Collectors.toList());
+		for (Record r : cochraneRecords) {
+			String pageStart = r.getPageStart();
+			if (pageStart != null) {
+				pageStart = pageStart.toUpperCase();
+			}
+			if (pageStart != null && ! (pageStart.startsWith("C") || pageStart.startsWith("E") || pageStart.startsWith("M"))) {
+				pageStart = null;
+			} 
+			
+			if (pageStart == null) {
+				log.debug("Reached unique Cochrane record without pageStart, getting it from the DOIs: {}", r.getAuthors());
+				if (! r.getDois().isEmpty()) {
+					String doi = r.getDois().keySet().stream().collect(Collectors.toList()).get(0);
+					Matcher matcher = cochraneIdentifierPattern.matcher(doi);
+					if (matcher.matches()) {
+						pageStart = matcher.group(1);
+					}
+				}
+			}
+
+			if (pageStart != null) {
+				r.setPageStart(pageStart.toUpperCase());
+			}
+		}
+		
 		log.info("Finished enrich");
 	}
 
@@ -521,21 +591,33 @@ public class DeduplicationService {
 			log.debug("At least one starting page AND at least one DOI are missing");
 			return true; // no useful comparison possible
 		}
-		if (bothCochrane && sufficientDois) {
+
+		if (bothCochrane) {
 			if (r1.getPublicationYear().equals(r2.getPublicationYear())) {
-				for (String d : dois1.keySet()) {
-					if (dois2.containsKey(d)) {
-						log.debug("BOTH Cochrane: One or more DOIs are the same: '{}' and '{}'", dois1, dois2);
-						return true;
+				if (sufficientDois) {
+					for (String d : dois1.keySet()) {
+						if (dois2.containsKey(d)) {
+							log.debug("BOTH Cochrane: One or more DOIs are the same: '{}' and '{}'", dois1, dois2);
+							return true;
+						}
 					}
+				} else if (sufficientStartPages && r1.getPageForComparison().equals(r2.getPageForComparison())) {
+					log.debug("Same starting pages");
+					return true;
 				}
 			}
 		} else {
+			/*
+			 * 20230220: Changed from 2 independent IFs to "IF(...) ELSE IF (!... AND ...)
+			 * FROM: Records with different starting pages were also compared for DOIs
+			 * TO: only 1 of (compare pages, compare DOIs)
+			 * 
+			 * Results are higher FN (1169 --> 1311: +142 / 112%) , but (more importantly) lower FP (41 --> 34: -7 / 83%) 
+			 */
 			if (sufficientStartPages && r1.getPageForComparison().equals(r2.getPageForComparison())) {
 				log.debug("Same starting pages");
 				return true;
-			}
-			if (sufficientDois) {
+			} else if (! sufficientStartPages && sufficientDois) {
 				for (String d : dois1.keySet()) {
 					if (dois2.containsKey(d)) {
 						log.debug("One or more DOIs are the same: '{}' and '{}'", dois1, dois2);

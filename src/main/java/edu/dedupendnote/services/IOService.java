@@ -76,9 +76,6 @@ public class IOService {
 					}
 					previousFieldName = "XYZ";
 					switch (fieldName) {
-//						case "AB": // Abstract
-//							record.addAbstracttext(fieldContent);
-//							break;
 						case "AU": // Authors
 							// XML files can put all authors on 1 line separated by "; "
 							if (fieldContent.contains("; ")) {
@@ -301,11 +298,12 @@ public class IOService {
 				map.put("PY", record.getPublicationYear().toString());
 			}
 		}
-		
+		// in enhanced mode C7 (Article number) is skipped, in Mark mode C7 is NOT skipped 
+		String skipFields = enhance ? "(C7|ER|ID|TY|XYZ)" : "(ER|ID|TY|XYZ)";
 		StringBuffer sb = new StringBuffer();
 		sb.append("TY  - ").append(map.get("TY")).append("\n");
 		map.forEach((k,v) -> {
-			if (! k.matches("(C7|ER|ID|TY|XYZ)")) {
+			if (! k.matches(skipFields)) {
 				sb.append(k).append("  - ").append(v).append("\n");
 			}
 		});

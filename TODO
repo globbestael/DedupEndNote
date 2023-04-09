@@ -56,3 +56,7 @@ DOIs with unwanted additions
 ----------------------------
 - eLife has DOI's for different sections: http://dx.doi.org/10.7554/eLife.06487.001 (in SRSR Human)
 - PLoS ONE has DOIs for figures: https://journals.plos.org/plosone/article/figure?id=10.1371/journal.pone.0094853.g001 (in SRSR Human)
+
+jpackage
+--------
+see https://vocabhunter.github.io/2021/07/10/installable-java-apps-with-jpackage.html

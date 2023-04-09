@@ -214,7 +214,7 @@
 				</nav>
 			</div>
 			<div class="col-9" style="height: 100vh; position: relative;">
-				<h1 id="start">DedupEndNote (version 0.9.5 20220611)</h1>
+				<h1 id="start">DedupEndNote (version 0.9.7b 20230326)</h1>
 				<div class="row col-11 border border-primary rounded alert alert-secondary" id="step1">
 					<div class="col-3">
 						<h3>1. INPUT FILE</h3>
@@ -341,14 +341,17 @@
 		        	<li><strong>Publication year:</strong> Are they at most 1 year apart?<br/>
 <!-- 		        	We use a sliding window technique: records are put into sets of publication years, the records of each set are compared with the record from the same set -->
 <!-- 		        	and the set of the following publication year.<br/> -->
-		        	<i>Insufficient data: Records without a publication year are compared to all records unless they have been identified as a duplicate.</i></li>
+		        	<i>Insufficient data: Records without a publication year are compared to all records unless they have been identified as a duplicate.</i><br/>
+		        	<i>Special cases: Cochrane Reviews are compared for the same publication year</i>
+		        	</li>
 		        	
 	 				<li><strong>Starting page or DOI:</strong> Are they the same?<br/>
 		 				If the starting pages are different or one or both are absent, the DOIs are compared.<br/>
 				        <i>Preprocessing: Article number is treated as a starting page if starting page itself is empty or contains "-".</i><br/>
 				        <i>Preprocessing: Starting pages are compared only for number: "S123" and "123" are considered the same.</i><br/> 
 				        <i>Preprocessing: In DOIs 'http://dx.doi.org/', 'http://doi.org/', ... are left out.</i><br/>
-				        <i>Insufficient data: If one or both DOIs are missing and one or both of the starting pages are missing, the answer is YES. This is important because of PubMed ahead of print publications.</i>
+				        <i>Insufficient data: If one or both DOIs are missing and one or both of the starting pages are missing, the answer is YES. This is important because of PubMed ahead of print publications.</i><br/>
+			        	<i>Special cases: For Cochrane Reviews DOIs are compared before starting pages.</i>
 			        </li>
 	
 			        <li><strong>Authors:</strong> Is the <a href="https://en.wikipedia.org/wiki/Jaro%E2%80%93Winkler_distance" target="_blank">Jaro-Winkler similarity</a> of the authors &gt;
@@ -421,6 +424,7 @@
 		        				the first not empty pages of the duplicates are copied to the saved record.</li>
 		        			<li>the Pages field gets an unabbreviated form: e.g. "482-91" is rewritten as "482-491".</li>
 		        			<li>if the ending page is the same as the starting page, only the starting page is written ("192" instead of "192-192").</li>
+		        			<li>for Cochrane Reviews a missing review number ("CD...") is extracted from the DOI.</li> 
 		        		</ul>
 		        	</li>
 		        	<li>Title (TI):

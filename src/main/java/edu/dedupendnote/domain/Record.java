@@ -23,7 +23,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Data
 public class Record {
-	// private String abstracttext;
 	private List<String> allAuthors = new ArrayList<>();
 	public List<String> authors = new ArrayList<>();
 	public List<String> authorsTransposed = new ArrayList<>();
@@ -54,7 +53,7 @@ public class Record {
 	 * Each version of the review has a unique DOI (e.g. "10.1002/14651858.cd008759.pub2"), but the first version has no ".pub" part, AND bibliographic
 	 * databases sometimes use the common DOI / DOI of first version for all versions.
 	 * Therefore:
-	 * - with other publications starting pages are compared BEFORE the DOIs. For Cochrane publications if both have a DOIs,
+	 * - with other publications starting pages are compared BEFORE the DOIs. For Cochrane publications if both have a DOI,
 	 *   then only the DOIs are compared
 	 * - publication year must be the same
 	 */
@@ -129,6 +128,7 @@ public class Record {
 		s = doubleQuotesPattern.matcher(s).replaceAll("");
 		/*
 		 * FIXME: Do a thorough check of retractions (including "WITHDRAWN: ..." Cochrane reviews).
+		 * Cochrane: PubMed, Medline and EMBASE use format "WITHDRAWN: ...", Web of Science the format "... (Withdrawn Paper, 2011, Art. No. CD001727)"
 		 * See also "Retraction note to: ..." (e.g. https://pubmed.ncbi.nlm.nih.gov/24577730/)
 		 */
 		/*
@@ -340,24 +340,6 @@ public class Record {
 		return r;
 	}
 
-//	public void addAbstracttext(String text) {
-//		text = text.toLowerCase();
-//		text = text.replaceAll("\\<[^>]*>","");
-//		// FIXME: replace with pattern
-//		// remove first one or two words + ": "
-//		// This replacement is more important with JaroWinkler distance metric than with others because JW favors differences at the start of strings?
-//		// TODO: try with other metrics
-//		text = text.replaceAll("^(aim(s?)|background(s?)|context|importance|introduction|objective(s?)|purpose|question|study objective|synopsis|(\\w+(\\s\\w+)?:\\s?))", "");
-//		// FIXME: replace with pattern
-//		// remove all characters which are not letters or numbers. Some databases use "\u2009" (THIN SPACE) within "30 mg", other no character
-//		text = text.replaceAll("[^\\p{L}\\p{N}]+", "");	// use "\\p{Nd}" if you want "¼" treated as a number
-//		text = normalizeToBasicLatin(text);
-//		if (text.length() > 200) {
-//			text = text.substring(0, 199);
-//		}
-//		this.abstracttext = text;
-//	}
-	
 	/*
 	 * TODO: From Java 9 onwards performance of String::replaceAll is much better 
 	 * 
@@ -709,8 +691,8 @@ public class Record {
 	 * See also issues https://github.com/globbestael/DedupEndnote/issues/2 and https://github.com/globbestael/DedupEndnote/issues/3
 	 */
 	public void parsePages(String pages) {
-		// "UNSP ..." should be cleaned from the C7 field (WoS)
-		pages = pages.replaceAll("UNSP\\s*", "");
+		// "UNSP ..." should be cleaned from the C7 field (WoS). Import may have changed "UNSP" Into "Unsp"
+		pages = pages.replaceAll("(UNSP|Unsp)\\s*", "");
 		Matcher matcher = pagesDatePattern.matcher(pages); // if Pages contains a date string, omit the pages
 		while (matcher.find()) {
 			pages = null;
