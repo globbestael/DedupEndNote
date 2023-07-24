@@ -16,8 +16,8 @@ import lombok.extern.slf4j.Slf4j;
 
 /*
  * Preliminary tests for producing ALL permutations of complex names.
- * The current implementation (Record::addAuthors(...)) uses only the first permutation: "De Brouwer de Boer, A." --> "Brouwer de Boer, A. D."
- * 
+ * The current implementation (Publication::addAuthors(...)) uses only the first permutation: "De Brouwer de Boer, A." --> "Brouwer de Boer, A. D."
+ *
  * Results: the number of permutations are staggering. See testPermutations3: 2187 permutations for 7 authors
  */
 
@@ -26,20 +26,22 @@ import lombok.extern.slf4j.Slf4j;
 @TestConfiguration
 public class AuthorPermutationsExperimentsTest {
 
-	// from: https://stackoverflow.com/questions/17192796/generate-all-combinations-from-multiple-lists 
-    void generatePermutations(List<List<String>> lists, List<String> result, int depth, String current) {
-        if (depth == lists.size()) {
-            result.add(current);
-            return;
-        }
+	// from:
+	// https://stackoverflow.com/questions/17192796/generate-all-combinations-from-multiple-lists
+	void generatePermutations(List<List<String>> lists, List<String> result, int depth, String current) {
+		if (depth == lists.size()) {
+			result.add(current);
+			return;
+		}
 
-        for (int i = 0; i < lists.get(depth).size(); i++) {
-            generatePermutations(lists, result, depth + 1, current + ("".equals(current) ? "" : "; ") + lists.get(depth).get(i));
-        }
-    }
-    
-    private List<String> generatePermutedAuthorLists(List<String> authors) {
-    	List<List<String>> authorsList = new ArrayList<List<String>>();
+		for (int i = 0; i < lists.get(depth).size(); i++) {
+			generatePermutations(lists, result, depth + 1,
+					current + ("".equals(current) ? "" : "; ") + lists.get(depth).get(i));
+		}
+	}
+
+	private List<String> generatePermutedAuthorLists(List<String> authors) {
+		List<List<String>> authorsList = new ArrayList<List<String>>();
 
 		for (String author : authors) {
 			log.error("Author {}", author);
@@ -67,94 +69,96 @@ public class AuthorPermutationsExperimentsTest {
 			}
 			log.error("Authors are: " + a);
 		}
-    	List<String> result = new ArrayList<>();
-    	generatePermutations(authorsList, result, 0, "");
-    	
-    	List<String> sorted = result.stream()
-                .sorted(Comparator.comparingInt(String::length))
-                .collect(Collectors.toList());
-    	return sorted;
-    }
-    
-    @Test
-    void testPermutations0() {
-    	List<String> authors = new ArrayList<>();
-    	authors.add("De Brouwer de Boer, A.");
-    	
-    	List<String> permutedAuthorLists = generatePermutedAuthorLists(authors);
-    	permutedAuthorLists.stream().forEach(System.err::println);
-    	log.error("There are {} permutations", permutedAuthorLists.size());
-    	assertThat(permutedAuthorLists).hasSize(4);
-    }
-    
-    @Test
-    void testPermutations1() {
-    	List<String> authors = new ArrayList<>();
-    	authors.add("De Joode, E. A.");
-    	authors.add("Van Heugten, C. M.");
-    	authors.add("Verheij, F. R. J.");
-    	authors.add("van Boxtel, M. P. J.");
-    	authors.add("Adriana, Bintintan");
-    	
-    	List<String> permutedAuthorLists = generatePermutedAuthorLists(authors);
-    	permutedAuthorLists.stream().forEach(System.err::println);
-    	log.error("There are {} permutations", permutedAuthorLists.size());
-    	assertThat(permutedAuthorLists).hasSize(2 * 2 * 2 * 2);
-    }
-    
-    @Test
-    void testPermutations2() {
-    	List<String> authors = new ArrayList<>();
-    	authors.add("Adriana, Bintintan C.");
-    	authors.add("Adriana, C. Bintintan");
-    	authors.add("Van Zwieten sive Zwieten, Pieter Alexander");
-    	
-    	List<String> permutedAuthorLists = generatePermutedAuthorLists(authors);
-    	permutedAuthorLists.stream().forEach(System.err::println);
-    	log.error("There are {} permutations", permutedAuthorLists.size());
-    	assertThat(permutedAuthorLists).hasSize(2 * 2 * 6);
-    }
-    
-    @Test
-    void testPermutations3() {
-    	String authors1 = "Ching-yi, Wu; Chieh-ling, Yang; Li-ling, Chuang; Keh-chung, Lin; Hsieh-ching, Chen; Ming-de, Chen; Wan-chien, Huang";
-    	List<String> authorList1 = new ArrayList<>();
-    	authorList1.addAll(Arrays.asList(authors1.split("; ")));
-    	List<String> permutedAuthorLists = generatePermutedAuthorLists(authorList1);
-    	permutedAuthorLists.stream().forEach(System.err::println);
-    	log.error("There are {} permutations", permutedAuthorLists.size());
-    	
-    	// Does it make sense to first use contains() and then use JWS? or overlap of 2 authorlists?
-    	String other = "wu cy; yang cl; chuang ll; lin kc; chen hc; chen md; huang wc";
-    	for (int i = 0; i < permutedAuthorLists.size() - 1; i++) {
-    		if (permutedAuthorLists.get(i).equals(other)) {
-    			System.err.println("Found at " + i);
-    		}
-    	}
-    	assertThat(permutedAuthorLists).contains(other);
-    	assertThat(permutedAuthorLists).hasSize(2187);
-    	assertThat(3 * 3 * 3 * 3 * 3 * 3 * 3).isEqualTo(2187);
-    }
+		List<String> result = new ArrayList<>();
+		generatePermutations(authorsList, result, 0, "");
 
-    @Test
-    void testPermutations4() {
-    	String authors1 = "Adriana, Bintintan; Petru Adrian, Mircea; Romeo, Chira; Georgiana, Nagy; Roberta Manzat, Saplacan; Simona, Valean";
-    	List<String> authorList1 = new ArrayList<>();
-    	authorList1.addAll(Arrays.asList(authors1.split("; ")));
-    	List<String> permutedAuthorLists = generatePermutedAuthorLists(authorList1);
-    	permutedAuthorLists.stream().forEach(System.err::println);
-    	log.error("There are {} permutations", permutedAuthorLists.size());
-    	
-    	// Does it make sense to first use contains() and then use JWS? or overlap of 2 authorlists?
-    	String other = "bintintan a; mircea pa; chira r; nagy g; manzat sr; valean s";
-    	for (int i = 0; i < permutedAuthorLists.size() - 1; i++) {
-    		if (permutedAuthorLists.get(i).equals(other)) {
-    			System.err.println("Found at " + i);
-    		}
-    	}
-    	assertThat(permutedAuthorLists).contains(other);
-    	assertThat(permutedAuthorLists).hasSize(144);
-    	assertThat(permutedAuthorLists).hasSize(2 * 3 * 2 * 2 * 3 * 2);
-    }
+		List<String> sorted = result.stream()
+			.sorted(Comparator.comparingInt(String::length))
+			.collect(Collectors.toList());
+		return sorted;
+	}
+
+	@Test
+	void testPermutations0() {
+		List<String> authors = new ArrayList<>();
+		authors.add("De Brouwer de Boer, A.");
+
+		List<String> permutedAuthorLists = generatePermutedAuthorLists(authors);
+		permutedAuthorLists.stream().forEach(System.err::println);
+		log.error("There are {} permutations", permutedAuthorLists.size());
+		assertThat(permutedAuthorLists).hasSize(4);
+	}
+
+	@Test
+	void testPermutations1() {
+		List<String> authors = new ArrayList<>();
+		authors.add("De Joode, E. A.");
+		authors.add("Van Heugten, C. M.");
+		authors.add("Verheij, F. R. J.");
+		authors.add("van Boxtel, M. P. J.");
+		authors.add("Adriana, Bintintan");
+
+		List<String> permutedAuthorLists = generatePermutedAuthorLists(authors);
+		permutedAuthorLists.stream().forEach(System.err::println);
+		log.error("There are {} permutations", permutedAuthorLists.size());
+		assertThat(permutedAuthorLists).hasSize(2 * 2 * 2 * 2);
+	}
+
+	@Test
+	void testPermutations2() {
+		List<String> authors = new ArrayList<>();
+		authors.add("Adriana, Bintintan C.");
+		authors.add("Adriana, C. Bintintan");
+		authors.add("Van Zwieten sive Zwieten, Pieter Alexander");
+
+		List<String> permutedAuthorLists = generatePermutedAuthorLists(authors);
+		permutedAuthorLists.stream().forEach(System.err::println);
+		log.error("There are {} permutations", permutedAuthorLists.size());
+		assertThat(permutedAuthorLists).hasSize(2 * 2 * 6);
+	}
+
+	@Test
+	void testPermutations3() {
+		String authors1 = "Ching-yi, Wu; Chieh-ling, Yang; Li-ling, Chuang; Keh-chung, Lin; Hsieh-ching, Chen; Ming-de, Chen; Wan-chien, Huang";
+		List<String> authorList1 = new ArrayList<>();
+		authorList1.addAll(Arrays.asList(authors1.split("; ")));
+		List<String> permutedAuthorLists = generatePermutedAuthorLists(authorList1);
+		permutedAuthorLists.stream().forEach(System.err::println);
+		log.error("There are {} permutations", permutedAuthorLists.size());
+
+		// Does it make sense to first use contains() and then use JWS? or overlap of 2
+		// authorlists?
+		String other = "wu cy; yang cl; chuang ll; lin kc; chen hc; chen md; huang wc";
+		for (int i = 0; i < permutedAuthorLists.size() - 1; i++) {
+			if (permutedAuthorLists.get(i).equals(other)) {
+				System.err.println("Found at " + i);
+			}
+		}
+		assertThat(permutedAuthorLists).contains(other);
+		assertThat(permutedAuthorLists).hasSize(2187);
+		assertThat(3 * 3 * 3 * 3 * 3 * 3 * 3).isEqualTo(2187);
+	}
+
+	@Test
+	void testPermutations4() {
+		String authors1 = "Adriana, Bintintan; Petru Adrian, Mircea; Romeo, Chira; Georgiana, Nagy; Roberta Manzat, Saplacan; Simona, Valean";
+		List<String> authorList1 = new ArrayList<>();
+		authorList1.addAll(Arrays.asList(authors1.split("; ")));
+		List<String> permutedAuthorLists = generatePermutedAuthorLists(authorList1);
+		permutedAuthorLists.stream().forEach(System.err::println);
+		log.error("There are {} permutations", permutedAuthorLists.size());
+
+		// Does it make sense to first use contains() and then use JWS? or overlap of 2
+		// authorlists?
+		String other = "bintintan a; mircea pa; chira r; nagy g; manzat sr; valean s";
+		for (int i = 0; i < permutedAuthorLists.size() - 1; i++) {
+			if (permutedAuthorLists.get(i).equals(other)) {
+				System.err.println("Found at " + i);
+			}
+		}
+		assertThat(permutedAuthorLists).contains(other);
+		assertThat(permutedAuthorLists).hasSize(144);
+		assertThat(permutedAuthorLists).hasSize(2 * 3 * 2 * 2 * 3 * 2);
+	}
 
 }

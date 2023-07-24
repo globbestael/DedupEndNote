@@ -11,9 +11,13 @@ import edu.dedupendnote.services.DeduplicationService;
 
 @TestConfiguration
 public class TwoFilesTest {
+
 	public DeduplicationService deduplicationService = new DeduplicationService();
+
 	String homeDir = System.getProperty("user.home");
+
 	String testdir = homeDir + "/dedupendnote_files/experiments/";
+
 	String wssessionId = "";
 
 	@Test
@@ -23,9 +27,11 @@ public class TwoFilesTest {
 		boolean markMode = false;
 		String outputFileName = DedupEndNoteController.createOutputFileName(newFileName, markMode);
 
-		String resultString = deduplicationService.deduplicateTwoFiles(newFileName, oldFileName, outputFileName, markMode, wssessionId);
+		String resultString = deduplicationService.deduplicateTwoFiles(newFileName, oldFileName, outputFileName,
+				markMode, wssessionId);
 		System.err.println(resultString);
-		assertThat(resultString).startsWith("DONE: DedupEndNote removed 552 records from the new set, and has written 113 records.");
+		assertThat(resultString)
+			.startsWith("DONE: DedupEndNote removed 552 records from the new set, and has written 113 records.");
 	}
 
 	@Disabled
@@ -36,10 +42,12 @@ public class TwoFilesTest {
 		boolean markMode = false;
 		String outputFileName = DedupEndNoteController.createOutputFileName(newFileName, markMode);
 
-		String resultString = deduplicationService.deduplicateTwoFiles(newFileName, oldFileName, outputFileName, markMode, wssessionId);
+		String resultString = deduplicationService.deduplicateTwoFiles(newFileName, oldFileName, outputFileName,
+				markMode, wssessionId);
 		System.err.println(resultString);
 		assertThat(resultString).startsWith("ERROR: The second input file contains records without IDs");
 	}
 
-	// FIXME: write tests for markMode = true 
+	// FIXME: write tests for markMode = true
+
 }

@@ -20,9 +20,13 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @TestConfiguration
 public class MissedDuplicatesTests {
+
 	public DeduplicationService deduplicationService = new DeduplicationService();
+
 	String homeDir = System.getProperty("user.home");
+
 	String testdir = homeDir + "/dedupendnote_files/";
+
 	String wssessionId = "";
 
 	@BeforeAll
@@ -32,7 +36,7 @@ public class MissedDuplicatesTests {
 		rootLogger.setLevel(Level.DEBUG);
 		log.debug("Logging level set to DEBUG");
 	}
-	
+
 	@Test
 	void deduplicate_missed_BIG_SET() {
 		LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
@@ -45,8 +49,9 @@ public class MissedDuplicatesTests {
 		String outputFileName = DedupEndNoteController.createOutputFileName(inputFileName, markMode);
 		assertThat(new File(inputFileName)).exists();
 
-		String resultString = deduplicationService.deduplicateOneFile(inputFileName, outputFileName, markMode, wssessionId);
-		
+		String resultString = deduplicationService.deduplicateOneFile(inputFileName, outputFileName, markMode,
+				wssessionId);
+
 		assertThat(resultString).isEqualTo(deduplicationService.formatResultString(2, 2));
 	}
 
@@ -62,12 +67,12 @@ public class MissedDuplicatesTests {
 		String outputFileName = DedupEndNoteController.createOutputFileName(inputFileName, markMode);
 		assertThat(new File(inputFileName)).exists();
 
-		String resultString = deduplicationService.deduplicateOneFile(inputFileName, outputFileName, markMode, wssessionId);
-		
+		String resultString = deduplicationService.deduplicateOneFile(inputFileName, outputFileName, markMode,
+				wssessionId);
+
 		assertThat(resultString).isEqualTo(deduplicationService.formatResultString(3, 1));
 	}
 
-	
 	@Disabled("Solved: authors in ALL CAPS are treated better")
 	@Test
 	void deduplicate_missed_SRSR_Human() {
@@ -81,11 +86,12 @@ public class MissedDuplicatesTests {
 		String outputFileName = DedupEndNoteController.createOutputFileName(inputFileName, markMode);
 		assertThat(new File(inputFileName)).exists();
 
-		String resultString = deduplicationService.deduplicateOneFile(inputFileName, outputFileName, markMode, wssessionId);
-		
+		String resultString = deduplicationService.deduplicateOneFile(inputFileName, outputFileName, markMode,
+				wssessionId);
+
 		assertThat(resultString).isEqualTo(deduplicationService.formatResultString(2, 2));
 	}
 
-
 	// FIXME: tests for markMode = true;
+
 }

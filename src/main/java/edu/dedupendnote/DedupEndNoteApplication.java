@@ -34,6 +34,7 @@ public class DedupEndNoteApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(DedupEndNoteApplication.class, args);
-        log.info("DedupEndNote: the web server is reachable at http://localhost:9777");
+		log.info("DedupEndNote: the web server is reachable at http://localhost:9777");
 	}
+
 }

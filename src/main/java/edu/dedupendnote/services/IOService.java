@@ -17,48 +17,65 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
-import edu.dedupendnote.domain.Record;
-import edu.dedupendnote.domain.RecordDB;
+import edu.dedupendnote.domain.Publication;
+import edu.dedupendnote.domain.PublicationDB;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
 public class IOService {
+
 	private UtilitiesService utilities = new UtilitiesService();
+
+	/*
+	 * FIXME Java 11ff: Switch to NIO2. See
+	 * https://horstmann.com/unblog/2023-04-09/index.html
+	 */
+
 	/*
 	 * Patterns
 	 */
 	/**
 	 * Pattern to identify conferences in the T3 field
 	 */
-	// private static Pattern conferencePattern = Pattern.compile(".*(^[0-9]|\\d{4,4}|Annual|Conference|Congress|Meeting|Society|Symposium).*");
-	private static Pattern conferencePattern = Pattern.compile("(^[0-9]|(.*(\\d{4,4}|Annual|Conference|Congress|Meeting|Society|Symposium))).*");
+	// private static Pattern conferencePattern =
+	// Pattern.compile(".*(^[0-9]|\\d{4,4}|Annual|Conference|Congress|Meeting|Society|Symposium).*");
+	private static Pattern conferencePattern = Pattern
+		.compile("(^[0-9]|(.*(\\d{4,4}|Annual|Conference|Congress|Meeting|Society|Symposium))).*");
+
 	/**
 	 * Pattern to identify clinical trials phase (1 ..4, i .. iv)
 	 */
 	private static Pattern phasePattern = Pattern.compile(".*phase\\s(\\d|i).*", Pattern.CASE_INSENSITIVE);
-	// Don't use "Response" as last word, e.g: Endothelial cell injury in cardiovascular surgery: the procoagulant response
+
+	// Don't use "Response" as last word, e.g: Endothelial cell injury in cardiovascular
+	// surgery: the procoagulant response
 	private static Pattern replyPattern = Pattern.compile("(.*\\breply\\b.*|.*author(.+)respon.*|^response$)");
+
 	/*
-	 * If field content starts with a comma (",") EndNote exports "[Fieldname]  -,", NOT "[Fieldname]  - ," (EndNote X9.3.3)
-	 * This pattern skips that initial comma, not the space which may come after that comma!
+	 * If field content starts with a comma (",") EndNote exports "[Fieldname]  -,", NOT
+	 * "[Fieldname]  - ," (EndNote X9.3.3) This pattern skips that initial comma, not the
+	 * space which may come after that comma!
 	 */
 	public static Pattern risLinePattern = Pattern.compile("(^[A-Z][A-Z0-9])(  -[ ,\\u00A0])(.*)$");
+
 	/**
-	 * Unusual white space characters within input fields (LINE SEPARATOR, NO-BREAK SPACE): will be replaced by SPACE 
+	 * Unusual white space characters within input fields (LINE SEPARATOR, NO-BREAK
+	 * SPACE): will be replaced by SPACE
 	 */
 	public static Pattern unusualWhiteSpacePattern = Pattern.compile("(\\u2028|\\u00A0)");
 
-	public List<Record> readRecords(String inputFileName) {
-		List<Record> records = new ArrayList<>();
+	public List<Publication> readPublications(String inputFileName) {
+		List<Publication> publications = new ArrayList<>();
 		String fieldContent = null;
 		String fieldName = null;
 		String previousFieldName = "XYZ";
-		Record record = new Record();
-		
+		Publication publication = new Publication();
+
 		boolean hasBom = utilities.detectBom(inputFileName);
-		
-		// Line starting with "TY  - " triggers creation of record, line containing "ER  - " signals end of record
+
+		// Line starting with "TY - " triggers creation of record, line containing "ER - "
+		// signals end of record
 		try (BufferedReader br = new BufferedReader(new FileReader(inputFileName))) {
 			if (hasBom) {
 				br.skip(1);
@@ -70,7 +87,7 @@ public class IOService {
 				if (matcher.matches()) {
 					fieldName = matcher.group(1);
 					fieldContent = matcher.group(3);
-					// Added for the ASySD Depression set 
+					// Added for the ASySD Depression set
 					if ("NA".equals(fieldContent)) {
 						continue;
 					}
@@ -81,140 +98,152 @@ public class IOService {
 							if (fieldContent.contains("; ")) {
 								List<String> authors = Arrays.asList(fieldContent.split("; "));
 								for (String author : authors) {
-									record.addAuthors(author);
+									publication.addAuthors(author);
 								}
-							} else {
-								record.addAuthors(fieldContent);
+							}
+							else {
+								publication.addAuthors(fieldContent);
 							}
 							break;
-						case "C7": // article number (Scopus and WoS when imported as RIS format)
-							record.parsePages(fieldContent);
+						case "C7": // article number (Scopus and WoS when imported as RIS
+									// format)
+							publication.parsePages(fieldContent);
 							break;
 						case "DO": // DOI
-							record.addDois(fieldContent);
+							publication.addDois(fieldContent);
 							previousFieldName = fieldName;
 							break;
 						case "ER":
-							record.addReversedTitles();
-							record.fillAllAuthors();
-							records.add(record);
-							log.debug("Record read with id {} and title: {}", record.getId(), record.getTitles().get(0));
+							publication.addReversedTitles();
+							publication.fillAllAuthors();
+							publications.add(publication);
+							log.debug("Publication read with id {} and title: {}", publication.getId(),
+									publication.getTitles().get(0));
 							break;
-						case "ID": // EndNote Record number
-							record.setId(fieldContent);
-							log.debug("Read ID {}",  fieldContent);
+						case "ID": // EndNote Publication number
+							publication.setId(fieldContent);
+							log.debug("Read ID {}", fieldContent);
 							break;
 						case "J2": // Alternate journal
-							record.addJournals(fieldContent);
+							publication.addJournals(fieldContent);
 							break;
 						case "OP": // original title (PubMed)
-							record.addTitles(fieldContent);
+							publication.addTitles(fieldContent);
 							break;
 						case "PY": // Publication year
-							record.setPublicationYear(Integer.valueOf(fieldContent.trim()));
+							publication.setPublicationYear(Integer.valueOf(fieldContent.trim()));
 							break;
 						case "SN": // ISSN / ISBN
-							record.addIssns(fieldContent);
+							publication.addIssns(fieldContent);
 							previousFieldName = fieldName;
 							break;
-						// Ovid Medline in RIS export has author address in repeatable M2 field,
+						// Ovid Medline in RIS export has author address in repeatable M2
+						// field,
 						// EndNote 20 shows the content in field with label "Start Page",
-						// but export file of such a record has this content in SE field! 
-						case "SE": // pages (Embase (which provider), Ovid PsycINFO: examples in some SRA datasets)
+						// but export file of such a record has this content in SE field!
+						case "SE": // pages (Embase (which provider), Ovid PsycINFO:
+									// examples in some SRA datasets)
 						case "SP": // pages
-							record.parsePages(fieldContent);
+							publication.parsePages(fieldContent);
 							break;
 						/*
-						 * original non-English titles: - PubMed: OP - Embase: continuation line of title - Scopus: ST and TT?
+						 * original non-English titles: - PubMed: OP - Embase:
+						 * continuation line of title - Scopus: ST and TT?
 						 */
-						case "ST":	// Original Title in Scopus
-							record.addTitles(fieldContent);
+						case "ST": // Original Title in Scopus
+							publication.addTitles(fieldContent);
 							break;
 						case "T2": // Journal title / Book title
-							record.addJournals(fieldContent);
+							publication.addJournals(fieldContent);
 							break;
 						/*
-						 * T3 (especially used in EMBASE (OVID)) has 3 types of content:
-						 * - conference name (majority of cases)
-						 * - original title
-						 * - alternative journal name
-						 * 
-						 * Present solution:
-						 * - skip it if it contains a number or "Annual|Conference|Congress|Meeting|Society"
-						 *   ("Asian Pacific Digestive Week 2014. Bali Indonesia.",
-						 *    "12th World Congress of the International Hepato-Pancreato-Biliary Association. Sao Paulo Brazil.",
-						 *    "International Liver Transplantation Society 15th Annual International Congress. New York, NY United States.")
-						 * - add it as Title
-						 * - add it as Journal
+						 * T3 (especially used in EMBASE (OVID)) has 3 types of content: -
+						 * conference name (majority of cases) - original title -
+						 * alternative journal name
+						 *
+						 * Present solution: - skip it if it contains a number or
+						 * "Annual|Conference|Congress|Meeting|Society"
+						 * ("Asian Pacific Digestive Week 2014. Bali Indonesia.",
+						 * "12th World Congress of the International Hepato-Pancreato-Biliary Association. Sao Paulo Brazil."
+						 * ,
+						 * "International Liver Transplantation Society 15th Annual International Congress. New York, NY United States."
+						 * ) - add it as Title - add it as Journal
 						 */
 						case "T3": // Book section
-							if (! conferencePattern.matcher(fieldContent).matches()) {
-								record.addJournals(fieldContent);
-								record.addTitles(fieldContent);
+							if (!conferencePattern.matcher(fieldContent).matches()) {
+								publication.addJournals(fieldContent);
+								publication.addTitles(fieldContent);
 							}
 							break;
-						// ??? in Embase the original title is on the continuation line: "Een 45-jarige patiente met chronische koliekachtige abdominale pijn". Not found in test set!
+						// ??? in Embase the original title is on the continuation line:
+						// "Een 45-jarige patiente met chronische koliekachtige abdominale
+						// pijn". Not found in test set!
 						case "TI": // Title
-							record.addTitles(fieldContent);
-							// Don't do this in IOService::readRecords because these 2 patterns are only applied to TI field,
-							// not to the other fields which are added to List<String> titles
+							publication.addTitles(fieldContent);
+							// Don't do this in IOService::readRecords because these 2
+							// patterns are only applied to TI field,
+							// not to the other fields which are added to List<String>
+							// titles
 							if (replyPattern.matcher(fieldContent.toLowerCase()).matches()) {
-								record.setReply(true);
-								record.setTitle(fieldContent);
+								publication.setReply(true);
+								publication.setTitle(fieldContent);
 							}
 							if (phasePattern.matcher(fieldContent.toLowerCase()).matches()) {
-								record.setPhase(true);
+								publication.setPhase(true);
 							}
 							previousFieldName = fieldName;
 							break;
 						// TODO: When does TT occur? is translated (i.e. original?) title
 						case "TY": // Type
-							record = new Record();
+							publication = new Publication();
 							break;
 						default:
 							previousFieldName = fieldName;
 							break;
 					}
-				} else {	// continuation line 
+				}
+				else { // continuation line
 					switch (previousFieldName) {
 						case "DO":
-							record.addDois(line);
+							publication.addDois(line);
 							break;
 						case "SN":
-							record.addIssns(line);
+							publication.addIssns(line);
 							break;
 						case "TI": // EMBASE original title
-							record.addTitles(line);
+							publication.addTitles(line);
 							break;
 					}
 				}
 			}
-		} catch (IOException e) {
+		}
+		catch (IOException e) {
 			e.printStackTrace();
 		}
-		log.debug("Records read: {}", records.size());
-		return records;
+		log.debug("Records read: {}", publications.size());
+		return publications;
 	}
 
 	/*
-	 *  PageStart (PG) and DOIs (DO) are replaced or inserted, but written at the same place as in the input file
-	 *  to make comparisons between input file and output file easier.
-	 *  Absent Publication year (PY) is replaced if there is one found in a duplicate record.
-	 *  Author (AU) Anonymous is skipped.
-	 *  Title (TI) is replaced with the longest duplicate title when it contains "Reply".
-	 *  Article Number (C7) is skipped.
-	 *  
-	 *  Records are read into a TreeMap, with continuation lines added.
-	 *  writeRecords(...) does the replacements, and writes to the output file.
+	 * PageStart (PG) and DOIs (DO) are replaced or inserted, but written at the same
+	 * place as in the input file to make comparisons between input file and output file
+	 * easier. Absent Publication year (PY) is replaced if there is one found in a
+	 * duplicate record. Author (AU) Anonymous is skipped. Title (TI) is replaced with the
+	 * longest duplicate title when it contains "Reply". Article Number (C7) is skipped.
+	 *
+	 * Records are read into a TreeMap, with continuation lines added. writeRecords(...)
+	 * does the replacements, and writes to the output file.
 	 */
-	public int writeDeduplicatedRecords(List<Record> records, String inputFileName, String outputFileName) {
+	public int writeDeduplicatedRecords(List<Publication> publications, String inputFileName, String outputFileName) {
 		log.debug("Start writing to file {}", outputFileName);
-		List<Record> recordsToKeep = records.stream().filter(Record::getKeptRecord).collect(Collectors.toList());
+		List<Publication> recordsToKeep = publications.stream()
+			.filter(Publication::getKeptRecord)
+			.collect(Collectors.toList());
 		log.debug("Records to be kept: {}", recordsToKeep.size());
 
-		Map<String, Record> recordIdMap = records.stream()
-				.filter(r -> ! r.getId().startsWith("-"))
-				.collect(Collectors.toMap(Record::getId, Function.identity()));
+		Map<String, Publication> recordIdMap = publications.stream()
+			.filter(r -> !r.getId().startsWith("-"))
+			.collect(Collectors.toMap(Publication::getId, Function.identity()));
 
 		int numberWritten = 0;
 		String fieldContent = null;
@@ -223,14 +252,14 @@ public class IOService {
 		Map<String, String> map = new TreeMap<>();
 
 		boolean hasBom = utilities.detectBom(inputFileName);
-		
+
 		try (BufferedWriter bw = new BufferedWriter(new FileWriter(outputFileName));
-			 BufferedReader br = new BufferedReader(new FileReader(inputFileName))) {
+				BufferedReader br = new BufferedReader(new FileReader(inputFileName))) {
 			if (hasBom) {
 				br.skip(1);
 			}
 			String line;
-			Record record = null;
+			Publication publication = null;
 			while ((line = br.readLine()) != null) {
 				line = unusualWhiteSpacePattern.matcher(line).replaceAll(" ");
 				Matcher matcher = risLinePattern.matcher(line);
@@ -241,31 +270,34 @@ public class IOService {
 					switch (fieldName) {
 						case "ER":
 							map.put(fieldName, fieldContent);
-							if (record != null && record.getKeptRecord() == true) {
-								writeRecord(map, record, bw, true);
+							if (publication != null && publication.getKeptRecord() == true) {
+								writeRecord(map, publication, bw, true);
 								numberWritten++;
 							}
 							map.clear();
 							break;
-						case "ID": // EndNote Record number
+						case "ID": // EndNote Publication number
 							map.put(fieldName, fieldContent);
 							String id = line.substring(6);
-							record = recordIdMap.get(id);
+							publication = recordIdMap.get(id);
 							break;
 						default:
 							if (map.containsKey(fieldName)) {
 								map.put(fieldName, map.get(fieldName) + "\n" + line);
-							} else {
+							}
+							else {
 								map.put(fieldName, fieldContent);
 							}
 							previousFieldName = fieldName;
 							break;
 					}
-				} else {	// continuation line
+				}
+				else { // continuation line
 					map.put(previousFieldName, map.get(previousFieldName) + "\n" + line);
 				}
 			}
-		} catch (IOException e) {
+		}
+		catch (IOException e) {
 			e.printStackTrace();
 		}
 		log.debug("Finished writing to file. # records: {}", numberWritten);
@@ -273,37 +305,41 @@ public class IOService {
 	}
 
 	/*
-	 * Ordering of an EndNote export RIS file: the fields are ordered alphabetically, except for TY (first), and ID and ER (last fields)
+	 * Ordering of an EndNote export RIS file: the fields are ordered alphabetically,
+	 * except for TY (first), and ID and ER (last fields)
 	 */
-	private void writeRecord(Map<String, String> map, Record record, BufferedWriter bw, Boolean enhance) throws IOException {
+	private void writeRecord(Map<String, String> map, Publication publication, BufferedWriter bw, Boolean enhance)
+			throws IOException {
 		if (enhance) {
-			if (!record.getDois().isEmpty()) {
-				map.put("DO", "https://doi.org/" + record.getDois().keySet().stream().collect(Collectors.joining("\nhttps://doi.org/")));
+			if (!publication.getDois().isEmpty()) {
+				map.put("DO", "https://doi.org/"
+						+ publication.getDois().keySet().stream().collect(Collectors.joining("\nhttps://doi.org/")));
 			}
-			if (record.getPageStart() != null) {
-				if (record.getPageEnd() != null && ! record.getPageEnd().equals(record.getPageStart())) {
-					map.put("SP", record.getPageStart() + "-" + record.getPageEnd());
-				} else {
-					map.put("SP", record.getPageStart());
+			if (publication.getPageStart() != null) {
+				if (publication.getPageEnd() != null && !publication.getPageEnd().equals(publication.getPageStart())) {
+					map.put("SP", publication.getPageStart() + "-" + publication.getPageEnd());
+				}
+				else {
+					map.put("SP", publication.getPageStart());
 				}
 			}
-			if (record.isReply()) {
-				map.put("TI", record.getTitle());
+			if (publication.isReply()) {
+				map.put("TI", publication.getTitle());
 			}
 			// An author as "Nct," should be kept
-			if (record.getAuthors().isEmpty() && "Anonymous".equals(map.get("AU"))) {
+			if (publication.getAuthors().isEmpty() && "Anonymous".equals(map.get("AU"))) {
 				map.remove("AU");
 			}
-			if (! map.containsKey("PY") && record.getPublicationYear() != 0) {
-				map.put("PY", record.getPublicationYear().toString());
+			if (!map.containsKey("PY") && publication.getPublicationYear() != 0) {
+				map.put("PY", publication.getPublicationYear().toString());
 			}
 		}
-		// in enhanced mode C7 (Article number) is skipped, in Mark mode C7 is NOT skipped 
+		// in enhanced mode C7 (Article number) is skipped, in Mark mode C7 is NOT skipped
 		String skipFields = enhance ? "(C7|ER|ID|TY|XYZ)" : "(ER|ID|TY|XYZ)";
 		StringBuffer sb = new StringBuffer();
 		sb.append("TY  - ").append(map.get("TY")).append("\n");
-		map.forEach((k,v) -> {
-			if (! k.matches(skipFields)) {
+		map.forEach((k, v) -> {
+			if (!k.matches(skipFields)) {
 				sb.append(k).append("  - ").append(v).append("\n");
 			}
 		});
@@ -312,14 +348,16 @@ public class IOService {
 		bw.write(sb.toString());
 	}
 
-	public int writeMarkedRecords(List<Record> records, String inputFileName, String outputFileName) {
+	public int writeMarkedRecords(List<Publication> publications, String inputFileName, String outputFileName) {
 		log.debug("Start writing to file {}", outputFileName);
-		List<Record> recordsToKeep = records.stream().filter(Record::getKeptRecord).collect(Collectors.toList());
+		List<Publication> recordsToKeep = publications.stream()
+			.filter(Publication::getKeptRecord)
+			.collect(Collectors.toList());
 		log.debug("Records to be kept: {}", recordsToKeep.size());
 
-		Map<String, Record> recordIdMap = records.stream()
-				.filter(r -> ! r.getId().startsWith("-"))
-				.collect(Collectors.toMap(Record::getId, Function.identity()));
+		Map<String, Publication> recordIdMap = publications.stream()
+			.filter(r -> !r.getId().startsWith("-"))
+			.collect(Collectors.toMap(Publication::getId, Function.identity()));
 
 		int numberWritten = 0;
 		String fieldContent = null;
@@ -328,14 +366,14 @@ public class IOService {
 		Map<String, String> map = new TreeMap<>();
 
 		boolean hasBom = utilities.detectBom(inputFileName);
-		
+
 		try (BufferedWriter bw = new BufferedWriter(new FileWriter(outputFileName));
-			 BufferedReader br = new BufferedReader(new FileReader(inputFileName))) {
+				BufferedReader br = new BufferedReader(new FileReader(inputFileName))) {
 			if (hasBom) {
 				br.skip(1);
 			}
 			String line;
-			Record record = null;
+			Publication publication = null;
 			while ((line = br.readLine()) != null) {
 				line = unusualWhiteSpacePattern.matcher(line).replaceAll(" ");
 				Matcher matcher = risLinePattern.matcher(line);
@@ -345,35 +383,38 @@ public class IOService {
 					previousFieldName = "XYZ";
 					switch (fieldName) {
 						case "ER":
-							if (record != null && record.getKeptRecord() == true) {
+							if (publication != null && publication.getKeptRecord() == true) {
 								map.put(fieldName, fieldContent);
-								if (record.getLabel() != null) {
-									map.put("LB", record.getLabel());
+								if (publication.getLabel() != null) {
+									map.put("LB", publication.getLabel());
 								}
-								writeRecord(map, record, bw, false);
+								writeRecord(map, publication, bw, false);
 								numberWritten++;
 							}
 							map.clear();
 							break;
-						case "ID": // EndNote Record number
+						case "ID": // EndNote Publication number
 							map.put(fieldName, fieldContent);
 							String id = fieldContent;
-							record = recordIdMap.get(id);
+							publication = recordIdMap.get(id);
 							break;
 						default:
 							if (map.containsKey(fieldName)) {
 								map.put(fieldName, map.get(fieldName) + "\n" + line);
-							} else {
+							}
+							else {
 								map.put(fieldName, fieldContent);
 							}
 							previousFieldName = fieldName;
 							break;
 					}
-				} else {	// continuation line
+				}
+				else { // continuation line
 					map.put(previousFieldName, map.get(previousFieldName) + "\n" + line);
 				}
 			}
-		} catch (IOException e) {
+		}
+		catch (IOException e) {
 			e.printStackTrace();
 		}
 		log.debug("Finished writing to file. # records: {}", numberWritten);
@@ -381,34 +422,35 @@ public class IOService {
 	}
 
 	/**
-	 * writeRisWithTRUTH(...): writes a RIS file with Caption field ['Duplicate', 'Unknown', empty] and, in case of true duplicates, with Label field the ID if the record
-	 * which will be kept.
-	 * 
-	 * Caption field:
-	 * - Duplicate: validated and True Positive
-	 * - empty: validated and True Negative
-	 * - Unknown: not validated
-	 *  
-	 * All records which are duplicates have the same ID in Label field, so this ID could be considered as the ID of a duplicate group.
-	 * DedupEndNote in non-Mark mode would write only the record where the record ID is the same as Label.
-	 * 
-	 * @param inputFileName	filename of a RIS export file
-	 * @param truthRecords	List<RecordDB> of validated records (TAB delimited export file from validation DB)
-	 * @param outputFileName	filename of a RIS file
+	 * writeRisWithTRUTH(...): writes a RIS file with Caption field ['Duplicate',
+	 * 'Unknown', empty] and, in case of true duplicates, with Label field the ID if the
+	 * record which will be kept.
+	 *
+	 * Caption field: - Duplicate: validated and True Positive - empty: validated and True
+	 * Negative - Unknown: not validated
+	 *
+	 * All records which are duplicates have the same ID in Label field, so this ID could
+	 * be considered as the ID of a duplicate group. DedupEndNote in non-Mark mode would
+	 * write only the record where the record ID is the same as Label.
+	 * @param inputFileName filename of a RIS export file
+	 * @param truthRecords List<PublicationDB> of validated records (TAB delimited export
+	 * file from validation DB)
+	 * @param outputFileName filename of a RIS file
 	 */
-	public void writeRisWithTRUTH(List<RecordDB> truthRecords, String inputFileName, String outputFileName) {
+	public void writeRisWithTRUTH(List<PublicationDB> truthRecords, String inputFileName, String outputFileName) {
 		int numberWritten = 0;
 		String fieldContent = null;
 		String fieldName = null;
 		String previousFieldName = "XYZ";
 		Map<String, String> map = new TreeMap<>();
-		
-		Map<Integer, RecordDB> truthMap = truthRecords.stream().collect(Collectors.toMap(RecordDB::getId, Function.identity()));
+
+		Map<Integer, PublicationDB> truthMap = truthRecords.stream()
+			.collect(Collectors.toMap(PublicationDB::getId, Function.identity()));
 
 		boolean hasBom = utilities.detectBom(inputFileName);
-		
+
 		try (BufferedWriter bw = new BufferedWriter(new FileWriter(outputFileName));
-			 BufferedReader br = new BufferedReader(new FileReader(inputFileName))) {
+				BufferedReader br = new BufferedReader(new FileReader(inputFileName))) {
 			if (hasBom) {
 				br.skip(1);
 			}
@@ -430,11 +472,13 @@ public class IOService {
 									if (truthMap.get(id).isTruePositive()) {
 										map.put("CA", "Duplicate");
 										map.put("LB", truthMap.get(id).getDedupid().toString());
-									} else {
+									}
+									else {
 										map.remove("CA");
 										map.remove("LB");
 									}
-								} else {
+								}
+								else {
 									map.put("CA", "Unknown");
 								}
 								writeRecord(map, null, bw, false);
@@ -442,42 +486,46 @@ public class IOService {
 							}
 							map.clear();
 							break;
-						case "ID": // EndNote Record number
+						case "ID": // EndNote Publication number
 							map.put(fieldName, fieldContent);
 							id = Integer.valueOf(fieldContent);
 							break;
 						default:
 							if (map.containsKey(fieldName)) {
 								map.put(fieldName, map.get(fieldName) + "\n" + line);
-							} else {
+							}
+							else {
 								map.put(fieldName, fieldContent);
 							}
 							previousFieldName = fieldName;
 							break;
 					}
-				} else {	// continuation line
+				}
+				else { // continuation line
 					map.put(previousFieldName, map.get(previousFieldName) + "\n" + line);
 				}
 			}
-		} catch (IOException e) {
+		}
+		catch (IOException e) {
 			e.printStackTrace();
 		}
 		log.debug("Finished writing to file. # records: {}", numberWritten);
 	}
 
-	public void writeRisWithTRUTH_forDS(List<RecordDB> truthRecords, String inputFileName, String outputFileName) {
+	public void writeRisWithTRUTH_forDS(List<PublicationDB> truthRecords, String inputFileName, String outputFileName) {
 		int numberWritten = 0;
 		String fieldContent = null;
 		String fieldName = null;
 		String previousFieldName = "XYZ";
 		Map<String, String> map = new TreeMap<>();
-		
-		Map<Integer, RecordDB> truthMap = truthRecords.stream().collect(Collectors.toMap(RecordDB::getId, Function.identity()));
+
+		Map<Integer, PublicationDB> truthMap = truthRecords.stream()
+			.collect(Collectors.toMap(PublicationDB::getId, Function.identity()));
 
 		boolean hasBom = utilities.detectBom(inputFileName);
-		
+
 		try (BufferedWriter bw = new BufferedWriter(new FileWriter(outputFileName));
-			 BufferedReader br = new BufferedReader(new FileReader(inputFileName))) {
+				BufferedReader br = new BufferedReader(new FileReader(inputFileName))) {
 			if (hasBom) {
 				br.skip(1);
 			}
@@ -499,10 +547,12 @@ public class IOService {
 									map.put("CA", map.get("CA").toUpperCase());
 									if (truthMap.get(id).isTruePositive()) {
 										map.put("LB", truthMap.get(id).getDedupid().toString());
-									} else {
+									}
+									else {
 										map.remove("LB");
 									}
-								} else {
+								}
+								else {
 									map.put("CA", map.get("CA").toLowerCase());
 								}
 								writeRecord(map, null, bw, false);
@@ -510,87 +560,91 @@ public class IOService {
 							}
 							map.clear();
 							break;
-						case "ID": // EndNote Record number
+						case "ID": // EndNote Publication number
 							map.put(fieldName, fieldContent);
 							id = Integer.valueOf(fieldContent);
 							break;
 						default:
 							if (map.containsKey(fieldName)) {
 								map.put(fieldName, map.get(fieldName) + "\n" + line);
-							} else {
+							}
+							else {
 								map.put(fieldName, fieldContent);
 							}
 							previousFieldName = fieldName;
 							break;
 					}
-				} else {	// continuation line
+				}
+				else { // continuation line
 					map.put(previousFieldName, map.get(previousFieldName) + "\n" + line);
 				}
 			}
-		} catch (IOException e) {
+		}
+		catch (IOException e) {
 			e.printStackTrace();
 		}
 		log.debug("Finished writing to file. # records: {}", numberWritten);
 	}
 
-//	public int writeMarkedRecords_old(List<Record> records, String inputFileName, String outputFileName) {
-//		log.debug("Start writing to file {}", outputFileName);
-//
-//		Map<String, Record> recordIdMap = records.stream()
-//				.filter(r -> ! r.getId().startsWith("-"))
-//				.collect(Collectors.toMap(Record::getId, Function.identity()));
-//		StringBuffer sb = new StringBuffer();
-//		int numberWritten = 0;
-//		String fieldContent = null;
-//		String fieldName = null;
-//		boolean hasBom = utilities.detectBom(inputFileName);
-//				
-//		try (BufferedWriter bw = new BufferedWriter(new FileWriter(outputFileName));
-//			 BufferedReader br = new BufferedReader(new FileReader(inputFileName))) {
-//			if (hasBom) {
-//				br.skip(1);
-//			}
-//			String line;
-//			Record record = null;
-//			while ((line = br.readLine()) != null) {
-//				line = unusualPunctuationPattern.matcher(line).replaceAll(" ");
-//				Matcher matcher = risLinePattern.matcher(line);
-//				if (matcher.matches()) {
-//					fieldName = matcher.group(1);
-//					fieldContent = matcher.group(3);
-//					switch(fieldName) {
-//					case "ER":
-//						if (record != null) {
-//							if (record.getLabel() != null) {
-//								sb.append("LB  - ").append(record.getLabel()).append("\n");
-//							}
-//							sb.append("C8  - ").append(record.getId()).append("\n");
-//							sb.append(line).append("\n\n");
-//							bw.write(sb.toString());
-//							numberWritten++;
-//						}
-//						sb.setLength(0);
-//						break;
-//					case "ID":
-//						String id = fieldContent;
-//						record = recordIdMap.get(id);
-//						// log.debug("Writing record with ID {}: {}", id, record);
-//						break;
-//					case "LB":
-//						; // these fields will use content from the Record (see above at ER-line)
-//						break;
-//					default:
-//						sb.append(line).append("\n");
-//					}
-//				} else {
-//					sb.append(line).append("\n");
-//				}
-//			}
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//		}
-//		log.debug("Finished writing to file. # records: {}", numberWritten);
-//		return numberWritten;
-//	}
+	// public int writeMarkedRecords_old(List<Publication> records, String inputFileName,
+	// String outputFileName) {
+	// log.debug("Start writing to file {}", outputFileName);
+	//
+	// Map<String, Publication> recordIdMap = records.stream()
+	// .filter(r -> ! r.getId().startsWith("-"))
+	// .collect(Collectors.toMap(Publication::getId, Function.identity()));
+	// StringBuffer sb = new StringBuffer();
+	// int numberWritten = 0;
+	// String fieldContent = null;
+	// String fieldName = null;
+	// boolean hasBom = utilities.detectBom(inputFileName);
+	//
+	// try (BufferedWriter bw = new BufferedWriter(new FileWriter(outputFileName));
+	// BufferedReader br = new BufferedReader(new FileReader(inputFileName))) {
+	// if (hasBom) {
+	// br.skip(1);
+	// }
+	// String line;
+	// Publication record = null;
+	// while ((line = br.readLine()) != null) {
+	// line = unusualPunctuationPattern.matcher(line).replaceAll(" ");
+	// Matcher matcher = risLinePattern.matcher(line);
+	// if (matcher.matches()) {
+	// fieldName = matcher.group(1);
+	// fieldContent = matcher.group(3);
+	// switch(fieldName) {
+	// case "ER":
+	// if (record != null) {
+	// if (record.getLabel() != null) {
+	// sb.append("LB - ").append(record.getLabel()).append("\n");
+	// }
+	// sb.append("C8 - ").append(record.getId()).append("\n");
+	// sb.append(line).append("\n\n");
+	// bw.write(sb.toString());
+	// numberWritten++;
+	// }
+	// sb.setLength(0);
+	// break;
+	// case "ID":
+	// String id = fieldContent;
+	// record = recordIdMap.get(id);
+	// // log.debug("Writing record with ID {}: {}", id, record);
+	// break;
+	// case "LB":
+	// ; // these fields will use content from the Publication (see above at ER-line)
+	// break;
+	// default:
+	// sb.append(line).append("\n");
+	// }
+	// } else {
+	// sb.append(line).append("\n");
+	// }
+	// }
+	// } catch (IOException e) {
+	// e.printStackTrace();
+	// }
+	// log.debug("Finished writing to file. # records: {}", numberWritten);
+	// return numberWritten;
+	// }
 
 }
