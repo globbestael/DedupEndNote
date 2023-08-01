@@ -5,15 +5,8 @@ Deduplication of EndNote RIS files:
 - deduplicate two files (NEW-RECORDS and OLD-RECORDS): deduplicates both files and produces a RIS file with the unique records from NEW-RECORDS
 - mark the duplicates of one file: produces a RIS file with the Label field containing the ID of the duplicate record
 
-### Starting
-DedupEndNote is a Java web application (Java 8, Spring Boot, fat jar). It can be started locally with:
-```
-    java -jar DedupEndNote-[VERSION].jar
-```
-and the application will be available at 
-```
-    http://localhost:9777
-```
+DedupEndNote is available at http://dedupendnote.nl
+
 ### Actions
 * Export one or two EndNote databases as RIS file(s)
 * Upload the file(s)
@@ -21,6 +14,15 @@ and the application will be available at
 * Download the result file (RIS)
 * Import the result file into a new EndNote database
 
+### Building your own version
+DedupEndNote is a Java web application (Java 17, Spring Boot 2.7, fat jar). It can be started locally with:
+```
+    java -jar DedupEndNote-[VERSION].jar
+```
+and the application will be available at 
+```
+    http://localhost:9777
+```
 ## Why DedupEndNote?
 Deduplication in EndNote misses many duplicate records.
 Building and maintaining a Journals List within Endnote can partly solve this problem,
@@ -790,7 +792,8 @@ For the ASySD validation files the results are reported in a different way:
         </tr>
     </tbody>
 </table>
-## Limitations
+
+## Limitations
 * Input file size: The maximum size of the input file is limited to 150MB.
 * Input file format: only EndNote RIS file (at present)
 * Encoding: The program assumes that the input file is encoded as UTF-8.
