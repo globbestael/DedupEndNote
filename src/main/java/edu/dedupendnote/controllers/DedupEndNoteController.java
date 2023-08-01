@@ -192,7 +192,7 @@ public class DedupEndNoteController {
 				return ResponseEntity.status(HttpStatus.BAD_REQUEST)
 					.body("{ \"result\": \"Failed to upload " + file.getOriginalFilename() + " => " + e.getClass()
 							+ "\"}");
-			}
+			} 
 		}
 		else {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST)

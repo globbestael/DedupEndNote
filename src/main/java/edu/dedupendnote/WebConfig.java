@@ -14,15 +14,8 @@ public class WebConfig implements WebMvcConfigurer {
 		registry.addResourceHandler("/resources/**").addResourceLocations("/public", "classpath:/static/");
 	}
 
-	// @Override
-	// public void addResourceHandlers(ResourceHandlerRegistry registry) {
-	// registry.addResourceHandler("/resources/**")
-	// .addResourceLocations("/public", "classpath:/static/")
-	// .setCacheControl(CacheControl.maxAge(Duration.ofDays(365)));
-	// }
 	@Override
 	public void configureAsyncSupport(AsyncSupportConfigurer configurer) {
 		configurer.setDefaultTimeout(25 * 1000L);
 	}
-
 }

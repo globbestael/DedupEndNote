@@ -32,6 +32,94 @@ import lombok.extern.slf4j.Slf4j;
 @SessionScope
 public class DeduplicationService {
 
+	public static class DefaultAuthorsComparator implements AuthorsComparator {
+
+		public static final Double AUTHOR_SIMILARITY_NO_REPLY = 0.67;
+
+		public static final Double AUTHOR_SIMILARITY_REPLY_INSUFFICIENT_STARTPAGES_AND_DOIS = 0.80;
+
+		public static final Double AUTHOR_SIMILARITY_REPLY_SUFFICIENT_STARTPAGES_OR_DOIS = 0.75;
+
+		private JaroWinklerSimilarity jws = new JaroWinklerSimilarity();
+
+		public Double similarity = 0.0;
+
+		/*
+		 * See AuthorVariantsExperimentsTest for possible enhancements.
+		 */
+		@Override
+		public boolean compare(Publication r1, Publication r2) {
+			// log.error("Using the default AuthorComparator");
+			similarity = 0.0;
+			boolean isReply = r1.isReply() || r2.isReply();
+			boolean sufficientStartPages = r1.getPageForComparison() != null && r2.getPageForComparison() != null;
+			boolean sufficientDois = !r1.getDois().isEmpty() && !r2.getDois().isEmpty();
+
+			if (r1.getAllAuthors().isEmpty() || r2.getAllAuthors().isEmpty()) {
+				// Because Anonymous AND Reply would only compare on journals (and maybe
+				// SP/DOIs) (see "MedGenMed Medscape General Medicine" articles in
+				// Cannabis test set)
+				// Because Anonymous AND no SP or DOI would only compare on title and
+				// journals (see "Abstracts of 16th National Congress of SIGENP" articles
+				// in Joost problem set)
+				if (isReply || !sufficientStartPages && !sufficientDois) {
+					return false;
+				}
+				return true;
+			}
+
+			for (String authors1 : r1.getAllAuthors()) {
+				for (String authors2 : r2.getAllAuthors()) {
+					similarity = jws.apply(authors1, authors2);
+					if (isReply) {
+						// TODO: do we have examples of this case?
+						if (!(sufficientStartPages || sufficientDois)
+								&& similarity > AUTHOR_SIMILARITY_REPLY_INSUFFICIENT_STARTPAGES_AND_DOIS) {
+							return true;
+						}
+						if ((sufficientStartPages || sufficientDois)
+								&& similarity > AUTHOR_SIMILARITY_REPLY_SUFFICIENT_STARTPAGES_OR_DOIS) {
+							return true;
+						}
+					} else if (similarity > AUTHOR_SIMILARITY_NO_REPLY) {
+						return true;
+					}
+				}
+			}
+			return false;
+		}
+
+		@Override
+		public Double getSimilarity() {
+			return similarity;
+		}
+
+	}
+
+	/*
+	 * Thresholds for Jaro-Winkler Similarity The thresholds for AUTHOR are part of
+	 * the AuthorComparator implementations
+	 */
+	public static final Double JOURNAL_SIMILARITY_NO_REPLY = 0.90;
+
+	public static final Double JOURNAL_SIMILARITY_REPLY = 0.93;
+
+	public static final Double TITLE_SIMILARITY_INSUFFICIENT_STARTPAGES_AND_DOIS = 0.94;
+
+	public static final Double TITLE_SIMILARITY_PHASE = 0.96;
+
+	public static final Double TITLE_SIMILARITY_SUFFICIENT_STARTPAGES_OR_DOIS = 0.90;
+
+	protected AuthorsComparator authorsComparator;
+
+	// the DOIs have been lowercased
+	private Pattern cochraneIdentifierPattern = Pattern.compile("^.*10.1002/14651858.([a-z][a-z][0-9]+).*",
+			Pattern.CASE_INSENSITIVE);
+
+	private IOService ioService;
+
+	private JaroWinklerSimilarity jws = new JaroWinklerSimilarity();
+
 	// @formatter:off
 	/*
 	 * Procedure for 1 file:
@@ -87,30 +175,6 @@ public class DeduplicationService {
 	@Autowired
 	private SimpMessagingTemplate simpMessagingTemplate;
 
-	protected AuthorsComparator authorsComparator;
-
-	private JaroWinklerSimilarity jws = new JaroWinklerSimilarity();
-
-	private IOService ioService;
-
-	// the DOIs have been lowercased
-	private Pattern cochraneIdentifierPattern = Pattern.compile("^.*10.1002/14651858.([a-z][a-z][0-9]+).*",
-			Pattern.CASE_INSENSITIVE);
-
-	/*
-	 * Thresholds for Jaro-Winkler Similarity The thresholds for AUTHOR are part of the
-	 * AuthorComparator implementations
-	 */
-	public static final Double JOURNAL_SIMILARITY_NO_REPLY = 0.90;
-
-	public static final Double JOURNAL_SIMILARITY_REPLY = 0.93;
-
-	public static final Double TITLE_SIMILARITY_PHASE = 0.96;
-
-	public static final Double TITLE_SIMILARITY_INSUFFICIENT_STARTPAGES_AND_DOIS = 0.94;
-
-	public static final Double TITLE_SIMILARITY_SUFFICIENT_STARTPAGES_OR_DOIS = 0.90;
-
 	public DeduplicationService() {
 		this.authorsComparator = new DefaultAuthorsComparator();
 		this.ioService = new IOService();
@@ -121,30 +185,374 @@ public class DeduplicationService {
 		this.ioService = new IOService();
 	}
 
-	public AuthorsComparator getAuthorsComparator() {
-		return authorsComparator;
-	}
-
-	// split into deduplicateOneFileAsync(...) and duplicateOneFile(...) for testability
-	@Async
-	public ListenableFuture<String> deduplicateOneFileAsync(String inputFileName, String outputFileName,
-			boolean markMode, String wssessionId) {
-		String s = deduplicateOneFile(inputFileName, outputFileName, markMode, wssessionId);
-		return new AsyncResult<>(s);
+	public boolean compareIssns(Publication r1, Publication r2) {
+		// log.debug("Comparing for ISSN " + r1.getId() + ": " + r1.getTitles().get(0) +
+		// "\nto " + r2.getId() + ": " + r2.getTitles().get(0));
+		if (listsContainSameString(r1.getIssns(), r2.getIssns())) {
+			return true;
+		}
+		return false;
 	}
 
 	// @Async
-	// public void deduplicateOneFileAsync(String inputFileName, String outputFileName,
+	// public void deduplicateOneFileAsync(String inputFileName, String
+	// outputFileName,
 	// boolean markMode, String wssessionId) {
 	// deduplicateOneFile(inputFileName, outputFileName, markMode, session);
 	// }
 
-	// split into deduplicateTwoFilesAsync(...) and duplicateTwoFiles(...) for testability
-	@Async
-	public ListenableFuture<String> deduplicateTwoFilesAsync(String newInputFileName, String oldInputFileName,
-			String outputFileName, boolean markMode, String wssessionId) {
-		String s = deduplicateTwoFiles(newInputFileName, oldInputFileName, outputFileName, markMode, wssessionId);
-		return new AsyncResult<>(s);
+	/*
+	 * compareJournals
+	 *
+	 * Paths not chosen: - Creation of sets of journalPatterns for the whole set of
+	 * records. This might be overkill, since the comparison by journal is the last
+	 * of all comparisons between any two records -
+	 * "AJR American Journal of Radiology": split into "AJR" and
+	 * "American Journal of Radiology"
+	 * compareJournals_FirstWithStartingInitialism(...) will create a pattern on A,
+	 * J en R which will find the second title.
+	 */
+	public boolean compareJournals(Publication r1, Publication r2) {
+		Set<String> set1 = r1.getJournals();
+		Set<String> set2 = r2.getJournals();
+		boolean isReply = r1.isReply() || r2.isReply();
+
+		if (set1.isEmpty() || set2.isEmpty()) {
+			log.debug("One of the records had no journal for '{}' and '{}'", set1, set2);
+			return false;
+		}
+
+		Set<String> commonJournals = new HashSet<>(set1);
+		commonJournals.retainAll(set2);
+		if (!commonJournals.isEmpty()) {
+			log.debug("Some journals are common: '{}' and '{}'", set1, set2);
+			return true;
+		}
+
+		for (String s1 : set1) {
+			for (String s2 : set2) {
+				if ((s1.startsWith("http") && s2.startsWith("http")) && !s1.equals(s2)) { // JaroWinkler
+																							// 0.9670930232558139 for
+					// 'Https://clinicaltrials.gov/show/nct00830466'
+					// and
+					// 'Https://clinicaltrials.gov/show/nct00667472'
+					continue;
+				}
+				Double similarity = jws.apply(s1.toLowerCase(), s2.toLowerCase());
+				log.debug("Similarity: {} for '{}' and '{}'", similarity, s1, s2);
+				// Make comparison stricter for Reply-titles because titles haven't been
+				// compared ("Annals of Hepatology" - "Annals of Oncology": 0.916)
+				if (isReply && similarity > JOURNAL_SIMILARITY_REPLY) {
+					return true;
+				}
+				if (!isReply && similarity > JOURNAL_SIMILARITY_NO_REPLY) {
+					return true;
+				}
+
+				if (s1.toLowerCase().charAt(0) != s2.toLowerCase().charAt(0)) {
+					continue;
+				}
+				/*
+				 * "Hepatology" and "Hepatology International" are considered the same
+				 */
+				if (compareJournals_FirstAsAbbreviation(s1, s2)) {
+					return true;
+				}
+				if (compareJournals_FirstAsAbbreviation(s2, s1)) {
+					return true;
+				}
+				/*
+				 * Journals with very long titles produce very long Patterns: limit these cases
+				 * to short journal names ASySD SRS_Human has journal names in uppercase
+				 */
+				if (s1.length() < 10 && s1.toUpperCase().equals(s1) && compareJournals_FirstAsInitialism(s1, s2)) {
+					return true;
+				}
+				if (s2.length() < 10 && s2.toUpperCase().equals(s2) && compareJournals_FirstAsInitialism(s2, s1)) {
+					return true;
+				}
+
+				if (compareJournals_FirstWithStartingInitialism(s1, s2)) {
+					return true;
+				}
+				if (compareJournals_FirstWithStartingInitialism(s2, s1)) {
+					return true;
+				}
+			}
+		}
+		log.debug("No Success 5 for '{}' and '{}'", set1, set2);
+		return false;
+	}
+
+	// Searching 'Ann Fr Anesth Reanim' as "\bAnn.*\bFr.*\bAnesth.*\bReanim.*"
+	private boolean compareJournals_FirstAsAbbreviation(String j1, String j2) {
+		Pattern pattern = Pattern.compile("\\b" + j1.replaceAll(" ", ".*\\\\b") + ".*", Pattern.CASE_INSENSITIVE);
+		log.debug("Pattern ABBREVIATION for '{}': {} for '{}'", j1, pattern.toString(), j2);
+		Matcher matcher = pattern.matcher(j2);
+		if (matcher.find()) {
+			log.debug("Pattern ABBREVIATION found for '{}': {} for '{}'", j1, pattern.toString(), j2);
+			return true;
+		}
+		return false;
+	}
+
+	// Searching 'BMJ' as "\bB.*\bM.*\bJ.*"
+	private boolean compareJournals_FirstAsInitialism(String s1, String s2) {
+		String patternString = s1.chars().mapToObj(c -> String.valueOf((char) c))
+				.collect(Collectors.joining(".*\\b", "\\b", ".*"));
+		Pattern patternShort2 = Pattern.compile(patternString, Pattern.CASE_INSENSITIVE);
+		log.debug("Pattern INITIALISM for '{}': {} for '{}'", s1, patternShort2.toString(), s2);
+		Matcher matcher = patternShort2.matcher(s2);
+		if (matcher.find()) {
+			log.debug("Pattern INITIALISM found for '{}': {} for '{}'", s1, patternShort2.toString(), s2);
+			return true;
+		}
+		return false;
+	}
+
+	// Searching 'AJR Am J Roentgenol' as "\bA.*\bJ.*\bR.*"
+	// Searching 'JNCCN Journal of the National Comprehensive Cancer Network' as
+	// "\bJ.*\bN.*\bC.*\bC.*\bN.*"
+	// Searching 'Bmj' as "\bB.*\bm.*\bj.*"
+	private boolean compareJournals_FirstWithStartingInitialism(String s1, String s2) {
+		String[] words = s1.split("\\s");
+		if ("Samj".equals(words[0])) {
+			words[0] = "SAMJ";
+		}
+		if (words[0].length() > 2 && words[0].equals(words[0].toUpperCase())
+				|| words.length == 1 && words[0].length() < 6) {
+			// 20220502: Because the pattern uses only word breaks "\b" and not
+			// alternation "(\b|)", we have to adjust for at least (AJNR <=> American
+			// journal of neuroradiology)
+			if ("AJNR".equals(words[0])) { // AJNR = American Journal of Neuroradiology!
+				words[0] = "AJN";
+			}
+			String patternString = words[0].chars().mapToObj(c -> String.valueOf((char) c))
+					.collect(Collectors.joining(".*\\b", "\\b", ".*"));
+			Pattern patternShort3 = Pattern.compile(patternString, Pattern.CASE_INSENSITIVE);
+			log.debug("Pattern STARTING_INITIALISM for '{}': {} for '{}'", s1, patternShort3.toString(), s2);
+			Matcher matcher = patternShort3.matcher(s2);
+			if (matcher.find()) {
+				log.debug("Pattern STARTING_INITIALISM found for '{}': {} for '{}'", s1, patternShort3.toString(), s2);
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public void compareSet(List<Publication> publications, Integer year, boolean descending, String wssessionId) {
+		int listSize = publications.size();
+		int doubleSize = 0;
+		while (publications.size() > 1) {
+			Publication publication = publications.remove(0);
+			/*
+			 * FIXME: overly complex: shouldn't it be: if (record.getPublicationYear() !=
+			 * year) break;
+			 */
+			if (descending && publication.getPublicationYear() < year) {
+				break; // only records of year1 should be compared to records of year1 and
+						// year2, The records of year2 will be compared in the next pair
+						// of years.
+			}
+			if (!descending && publication.getPublicationYear() != 0 && publication.getPublicationYear() > year) {
+				// FIXME: why "record.getPublicationYear() != 0" only in ascending case?
+				break;
+			}
+			log.debug("Comparing " + publications.size() + " records to: " + publication.getId() + " : "
+					+ publication.getTitles().get(0));
+			// FIXME? Shouldn't use functional style because it is impure
+			List<Publication> doubles = publications.stream().filter(r -> compareStartPageOrDoi(r, publication)
+					// && compareAuthors(r, record) == true
+					&& authorsComparator.compare(r, publication) && compareTitles(r, publication)
+					&& (compareIssns(r, publication) || compareJournals(r, publication))
+			// && compareAbstracttexts(r, record) == true
+			).map(r -> { // Label is used later in enrich() to recreate the duplicate
+							// lists, and is used / exported if markMode is set
+				// If the record was already a duplicate, use its label the new
+				// duplicates found, otherwise its ID
+				if (r.getLabel() == null) {
+					if (publication.getLabel() != null) {
+						log.debug(
+								"==> SETTING LABEL ALREADY PRESENT: {} has label {} and now sets label of duplicate to {}",
+								publication.getId(), publication.getLabel(), r.getId());
+						r.setLabel(publication.getLabel());
+					} else {
+						r.setLabel(publication.getId());
+						publication.setLabel(publication.getId());
+					}
+				} else {
+					// log.debug("==> LABEL ALREADY PRESENT: {} has label {} and
+					// should also get label {}", r.getId(), r.getLabel(),
+					// record.getId());
+					if (publication.getLabel() == null) {
+						publication.setLabel(r.getLabel());
+					}
+					if (!r.getLabel().equals(publication.getLabel())) {
+						log.error("Records have different labels: {}, {}\n- {}\n- {}", publication.getLabel(),
+								r.getLabel(), publication, r);
+					}
+				}
+				if (r.isReply()) {
+					publication.setReply(true);
+				}
+				log.debug("1. setting label {} to record {}", r.getLabel(), r.getId());
+				return r;
+			}).collect(Collectors.toList());
+			if (!doubles.isEmpty()) {
+				// @formatter:off
+				/*
+				 * The duplicates (doubles) are removed from the current set. Some duplicates may be missed by this action!!!
+				 * e.g.:
+				 * - record 1: page 63  + doi 10.4081/hr.2015.5927
+				 * - record 2: page 519 + doi 10.4081/hr.2015.5927	==> duplicate because of doi
+				 * - record 3: page 519 + doi (empty)				==> not a duplicate because 63 != 519
+				 * Not removing the duplicates would have serious performance problems, AND would make adding the labels more complex.
+				 *
+				 * TODO: Wouldn't this be solved if, whenever a duplicate is found,
+				 * - DOIs from the duplicate found were added to the first record
+				 * - the same for journal titles?
+				 * - the same for titles???
+				 */
+				// @formatter:on
+				// FIXME: removing the doubles makes the program faster (and less
+				// complicated)
+				// but misses duplicates when the not first duplicate is sufficiently
+				// close to the following records, but the first one is not?
+				// See test set: Author Bail, JP ...
+				// records.removeAll(doubles); // no need to compare the doubles later on
+				// in this list
+				// This could be set in the map (higher), but then would be set for each
+				// duplicate found
+
+				// TODO: this is commented out because in map(...) the label for record is
+				// set if it was empty. Safe to remove?
+				// if (record.getLabel() == null) {
+				// record.setLabel(record.getId());
+				// log.debug("2. setting label {} to record {}", record.getLabel(),
+				// record.getId());
+				// }
+				doubleSize += doubles.size();
+				// updateSession(session, "Working on " + year + " for " + listSize + "
+				// records (marked " + doubleSize + " duplicates)");
+				wsMessage(wssessionId,
+						"Working on " + year + " for " + listSize + " records (marked " + doubleSize + " duplicates)");
+			}
+		}
+	}
+
+	/*
+	 * Comparing starting page before DOI may be faster than the other way around.
+	 * But: a complete set of conference abstracts has the same DOI. So starting
+	 * page MUST be compared before DOI.
+	 *
+	 * Exception: Cochrane Reviews. See the comment at {@link
+	 * edu.dedupendnote.domain.Publication#isCochrane Publication#isCochrane}
+	 */
+	public boolean compareStartPageOrDoi(Publication r1, Publication r2) {
+		log.debug("Comparing " + r1.getId() + ": " + r1.getPageForComparison() + " to " + r2.getId() + ": "
+				+ r2.getPageForComparison());
+		Map<String, Integer> dois1 = r1.getDois();
+		Map<String, Integer> dois2 = r2.getDois();
+		boolean bothCochrane = r1.isCochrane() && r2.isCochrane();
+		boolean sufficientStartPages = r1.getPageForComparison() != null && r2.getPageForComparison() != null;
+		boolean sufficientDois = !dois1.isEmpty() && !dois2.isEmpty();
+
+		if (!sufficientStartPages && !sufficientDois) {
+			log.debug("At least one starting page AND at least one DOI are missing");
+			return true; // no useful comparison possible
+		}
+
+		if (bothCochrane) {
+			if (r1.getPublicationYear().equals(r2.getPublicationYear())) {
+				if (sufficientDois) {
+					for (String d : dois1.keySet()) {
+						if (dois2.containsKey(d)) {
+							log.debug("BOTH Cochrane: One or more DOIs are the same: '{}' and '{}'", dois1, dois2);
+							return true;
+						}
+					}
+				} else if (sufficientStartPages && r1.getPageForComparison().equals(r2.getPageForComparison())) {
+					log.debug("Same starting pages");
+					return true;
+				}
+			}
+		} else /*
+				 * 20230220: Changed from 2 independent IFs to "IF(...) ELSE IF (!... AND ...)
+				 * FROM: Records with different starting pages were also compared for DOIs TO:
+				 * only 1 of (compare pages, compare DOIs)
+				 *
+				 * Results are higher FN (1169 --> 1311: +142 / 112%) , but (more importantly)
+				 * lower FP (41 --> 34: -7 / 83%)
+				 */
+		if (sufficientStartPages && r1.getPageForComparison().equals(r2.getPageForComparison())) {
+			log.debug("Same starting pages");
+			return true;
+		} else if (!sufficientStartPages && sufficientDois) {
+			for (String d : dois1.keySet()) {
+				if (dois2.containsKey(d)) {
+					log.debug("One or more DOIs are the same: '{}' and '{}'", dois1, dois2);
+					return true;
+				}
+			}
+		}
+		log.debug("Starting pages and DOIs are different");
+		return false;
+	}
+
+	// All unique titles and their reverse are compared
+	public boolean compareTitles(Publication r1, Publication r2) {
+		log.debug("Comparing " + r1.getId() + ": " + r1.getTitles().get(0) + "\nto " + r2.getId() + ": "
+				+ r2.getTitles().get(0));
+		if (r1.isReply() || r2.isReply()) {
+			return true;
+		}
+		Double similarity = 0.0;
+		List<String> titles1 = r1.getTitles();
+		List<String> titles2 = r2.getTitles();
+		boolean sufficientStartPages = r1.getPageForComparison() != null && r2.getPageForComparison() != null;
+		boolean sufficientDois = !r1.getDois().isEmpty() && !r2.getDois().isEmpty();
+		boolean isPhase = r1.isPhase() || r2.isPhase();
+
+		for (String title1 : titles1) {
+			for (String title2 : titles2) {
+				similarity = jws.apply(title1, title2);
+				if (isPhase) { // return result of comparison of only the first title
+								// variant
+					log.debug("{} and {}:\n- {}\n- {}", r1.getId(), r2.getId(), title1, title2);
+					return similarity > TITLE_SIMILARITY_PHASE;
+				}
+				if ((sufficientStartPages || sufficientDois)
+						&& similarity > TITLE_SIMILARITY_SUFFICIENT_STARTPAGES_OR_DOIS) {
+					log.debug("Found comparable title (with pages or DOI) " + r1.getTitles().get(0) + " == "
+							+ r2.getTitles().get(0));
+					return true;
+				}
+				if (!(sufficientStartPages || sufficientDois)) {
+					return similarity > TITLE_SIMILARITY_INSUFFICIENT_STARTPAGES_AND_DOIS;
+				}
+			}
+		}
+		return false;
+	}
+
+	private boolean containsDuplicateIds(List<Publication> publications) {
+		return !publications.stream().map(Publication::getId).allMatch(new HashSet<>()::add);
+	}
+
+	// public boolean compareAbstracttexts(Publication r1, Publication r2) {
+	// if (r1.getAbstracttext() != null && r2.getAbstracttext() != null) {
+	// Double similarity = jws.apply(r1.getAbstracttext(), r2.getAbstracttext());
+	// return (similarity > 0.96);
+	// }
+	// return true;
+	// }
+
+	private boolean containsOnlyRecordsWithoutPublicationYear(List<Publication> publications) {
+		return publications.stream().filter(r -> r.getPublicationYear() == 0).count() == publications.size();
+	}
+
+	private boolean containsRecordsWithoutId(List<Publication> publications) {
+		return publications.stream().filter(r -> r.getId() == null).count() > 0L;
 	}
 
 	public String deduplicateOneFile(String inputFileName, String outputFileName, boolean markMode,
@@ -186,13 +594,13 @@ public class DeduplicationService {
 		return s;
 	}
 
-	private void wsMessage(String wssessionId, String message) {
-		if (simpMessagingTemplate != null) {
-			// System.err.println(wssessionId + ": " + message);
-			// simpMessagingTemplate.convertAndSendToUser(wssessionId, "/topic/messages",
-			// new StompMessage(message));
-			simpMessagingTemplate.convertAndSend("/topic/messages-" + wssessionId, new StompMessage(message));
-		}
+	// split into deduplicateOneFileAsync(...) and duplicateOneFile(...) for
+	// testability
+	@Async
+	public ListenableFuture<String> deduplicateOneFileAsync(String inputFileName, String outputFileName,
+			boolean markMode, String wssessionId) {
+		String s = deduplicateOneFile(inputFileName, outputFileName, markMode, wssessionId);
+		return new AsyncResult<>(s);
 	}
 
 	public String deduplicateTwoFiles(String newInputFileName, String oldInputFileName, String outputFileName,
@@ -239,8 +647,7 @@ public class DeduplicationService {
 		if (markMode) { // no enrich(), and add / overwrite LB (label) field
 			int numberWritten = ioService.writeMarkedRecords(publications, newInputFileName, outputFileName);
 			long labeledRecords = publications.stream()
-				.filter(r -> r.getLabel() != null && r.isPresentInOldFile() == false)
-				.count();
+					.filter(r -> r.getLabel() != null && !r.isPresentInOldFile()).count();
 			// return updateSession(session, "DONE: DedupEndNote has written " +
 			// numberWritten + " records with " + labeledRecords + " duplicates marked in
 			// the Label field.");
@@ -251,11 +658,12 @@ public class DeduplicationService {
 		}
 
 		enrich(publications);
-		// Get the records from the new file that are not duplicates or not duplicates of
+		// Get the records from the new file that are not duplicates or not duplicates
+		// of
 		// records of the old file
 		List<Publication> filteredRecords = publications.stream()
-			.filter(r -> r.isPresentInOldFile() == false && (r.getLabel() == null || !r.getLabel().startsWith("-")))
-			.collect(Collectors.toList());
+				.filter(r -> !r.isPresentInOldFile() && (r.getLabel() == null || !r.getLabel().startsWith("-")))
+				.collect(Collectors.toList());
 		log.error("Records to write: {}", filteredRecords.size());
 		int numberWritten = ioService.writeDeduplicatedRecords(filteredRecords, newInputFileName, outputFileName);
 		// return updateSession(session, "DONE: DedupEndNote removed " +
@@ -267,27 +675,52 @@ public class DeduplicationService {
 		return s;
 	}
 
+	// split into deduplicateTwoFilesAsync(...) and duplicateTwoFiles(...) for
+	// testability
+	@Async
+	public ListenableFuture<String> deduplicateTwoFilesAsync(String newInputFileName, String oldInputFileName,
+			String outputFileName, boolean markMode, String wssessionId) {
+		String s = deduplicateTwoFiles(newInputFileName, oldInputFileName, outputFileName, markMode, wssessionId);
+		return new AsyncResult<>(s);
+	}
+
+	public String doSanityChecks(List<Publication> publications, String fileName) {
+		if (containsRecordsWithoutId(publications)) {
+			return "ERROR: The input file " + fileName
+					+ " contains records without IDs. The input file is not a dump from an EndNote library!";
+		}
+		if (containsOnlyRecordsWithoutPublicationYear(publications)) {
+			return "ERROR: All records of the input file " + fileName
+					+ " have no Publication Year. The input file is not a dump from an EndNote library!";
+		}
+		if (containsDuplicateIds(publications)) {
+			return "ERROR: The IDs of the records of input file " + fileName
+					+ " are not unique. The input file is not a dump from 1 EndNote library!";
+		}
+		return null;
+	}
+
 	private void enrich(List<Publication> publications) {
-		log.error("Start enrich");
+		log.debug("Start enrich");
 		// First the records with duplicates
 		Map<String, List<Publication>> labelMap = publications.stream()
-			.filter(r -> r.getLabel() != null && !r.getLabel().startsWith("-")) // when
-																				// comparing
-																				// 2
-																				// files,
-																				// duplicates
-																				// from
-																				// the
-																				// old
-																				// file
-																				// start
-																				// with
-																				// "-"
-			.collect(Collectors.groupingBy(Publication::getLabel));
-		log.debug("Number of duplicate lists {}, en IDs of kept records: {}", labelMap.keySet().size(),
+				.filter(r -> r.getLabel() != null && !r.getLabel().startsWith("-")) // when
+																					// comparing
+																					// 2
+																					// files,
+																					// duplicates
+																					// from
+																					// the
+																					// old
+																					// file
+																					// start
+																					// with
+																					// "-"
+				.collect(Collectors.groupingBy(Publication::getLabel));
+		log.debug("Number of duplicate lists {}, en IDs of kept records: {}", labelMap.size(),
 				labelMap.keySet());
 		List<Publication> recordList;
-		if (labelMap.keySet().size() > 0) {
+		if (labelMap.size() > 0) {
 			for (String l : labelMap.keySet()) {
 				recordList = labelMap.get(l);
 				Publication recordToKeep = recordList.remove(0);
@@ -300,13 +733,11 @@ public class DeduplicationService {
 				if (recordToKeep.isReply()) {
 					log.debug("Publication {} is a reply: ", recordToKeep.getId());
 					String longestTitle = recordList.stream()
-						// .filter(Publication::isReply)
-						.map(r -> {
-							log.debug("Reply {} has title: {}.", r.getId(), r.getTitle());
-							return r.getTitle() != null ? r.getTitle() : r.getTitles().get(0);
-						})
-						.max(Comparator.comparingInt(String::length))
-						.orElse("");
+							// .filter(Publication::isReply)
+							.map(r -> {
+								log.debug("Reply {} has title: {}.", r.getId(), r.getTitle());
+								return r.getTitle() != null ? r.getTitle() : r.getTitles().get(0);
+							}).max(Comparator.comparingInt(String::length)).orElse("");
 					// There are cases where not all titles are recognized as replies ->
 					// record.title can be null
 					if (recordToKeep.getTitle() == null || recordToKeep.getTitle().length() < longestTitle.length()) {
@@ -331,10 +762,8 @@ public class DeduplicationService {
 				// Add missing publication year
 				if (recordToKeep.getPublicationYear() == 0) {
 					log.debug("Reached record without publicationYear");
-					recordList.stream()
-						.filter(r -> r.getPublicationYear() != 0)
-						.findFirst()
-						.ifPresent(r -> recordToKeep.setPublicationYear(r.getPublicationYear()));
+					recordList.stream().filter(r -> r.getPublicationYear() != 0).findFirst()
+							.ifPresent(r -> recordToKeep.setPublicationYear(r.getPublicationYear()));
 				}
 
 				// Cochrane records with duplicates
@@ -385,18 +814,16 @@ public class DeduplicationService {
 				}
 
 				/*
-				 * FIXME: Should empty authors be filled in from the duplicate set? See
-				 * DOI 10.2298/sarh0902077c in test database, but the 2 duplicates have
-				 * not the same author forms: "Culafic, D." (WoS) and "Dorde, Ć" (Scopus,
-				 * error)
+				 * FIXME: Should empty authors be filled in from the duplicate set? See DOI
+				 * 10.2298/sarh0902077c in test database, but the 2 duplicates have not the same
+				 * author forms: "Culafic, D." (WoS) and "Dorde, Ć" (Scopus, error)
 				 */
 			}
 		}
 
 		// Then the records without duplicates
-		List<Publication> cochraneRecords = publications.stream()
-			.filter(r -> r.getLabel() == null && r.isCochrane())
-			.collect(Collectors.toList());
+		List<Publication> cochraneRecords = publications.stream().filter(r -> r.getLabel() == null && r.isCochrane())
+				.collect(Collectors.toList());
 		for (Publication r : cochraneRecords) {
 			String pageStart = r.getPageStart();
 			if (pageStart != null) {
@@ -424,29 +851,63 @@ public class DeduplicationService {
 			}
 		}
 
-		log.info("Finished enrich");
+		log.debug("Finished enrich");
+	}
+
+	public String formatResultString(int total, int totalWritten) {
+		return "DONE: DedupEndNote has deduplicated " + total + " records, has removed " + (total - totalWritten)
+				+ " duplicates, and has written " + totalWritten + " records.";
+	}
+
+	@Async
+	public ListenableFuture<String> generateReport(HttpSession session) {
+		try {
+			for (int i = 0; i < 10; i++) {
+				Thread.sleep(2000);
+				log.debug("in generateReport: {}", i);
+				session.setAttribute("result", "Working on " + i);
+			}
+			session.setAttribute("result", "COMPLETE");
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		String s = "COMPLETE";
+		return new AsyncResult<>(s);
+	}
+
+	public AuthorsComparator getAuthorsComparator() {
+		return authorsComparator;
+	}
+
+	// FIXME: is Apache Commons CollectionUtils better?
+	private boolean listsContainSameString(List<String> list1, List<String> list2) {
+		if (list1.isEmpty() || list2.isEmpty()) {
+			return false;
+		}
+		List<String> common = new ArrayList<>(list1);
+		common.retainAll(list2);
+		return !common.isEmpty();
 	}
 
 	/*
-	 * For 1 file: - order year descending - add empty years (year == 0 and not identified
-	 * as duplicate yet) AFTER each year1 Reason: we prefer the data (duplicate kept)
-	 * which is most recent (e.g. complete publication BEFORE ahead of print which is
-	 * possibly from earlier year or without a year).
+	 * For 1 file: - order year descending - add empty years (year == 0 and not
+	 * identified as duplicate yet) AFTER each year1 Reason: we prefer the data
+	 * (duplicate kept) which is most recent (e.g. complete publication BEFORE ahead
+	 * of print which is possibly from earlier year or without a year).
 	 */
 	public void searchYearOneFile(List<Publication> publications, String wssessionId) {
 		Map<Integer, List<Publication>> yearSets = publications.stream()
-			.collect(Collectors.groupingBy(Publication::getPublicationYear, TreeMap::new, Collectors.toList()))
-			.descendingMap();
+				.collect(Collectors.groupingBy(Publication::getPublicationYear, TreeMap::new, Collectors.toList()))
+				.descendingMap();
 
 		Map<Integer, Integer> cumulativePercentages = new LinkedHashMap<>();
-		Integer current = 0;
+		int current = 0;
 		Integer total = publications.size();
 		for (Integer year : yearSets.keySet()) {
 			Integer simple = yearSets.get(year).size();
-			cumulativePercentages.put(year, (100 * (simple + current)) / total);
+			cumulativePercentages.put(year, 100 * (simple + current) / total);
 			current += simple;
 		}
-		;
 		// log.error("cumulativePercentages: " + cumulativePercentages);
 
 		List<Publication> emptyYearlist = yearSets.remove(0);
@@ -470,15 +931,15 @@ public class DeduplicationService {
 	}
 
 	/*
-	 * For 2 files: - order year ascending - add empty years (year == 0 and not identified
-	 * as duplicate yet) BEFORE each year1 Reason: the oldest data should set the label
-	 * for a duplicate set (e.g. ahead of print (which is possibly from earlier year or
-	 * without a year and more probably in the old file than in the new file) BEFORE the
-	 * complete data
+	 * For 2 files: - order year ascending - add empty years (year == 0 and not
+	 * identified as duplicate yet) BEFORE each year1 Reason: the oldest data should
+	 * set the label for a duplicate set (e.g. ahead of print (which is possibly
+	 * from earlier year or without a year and more probably in the old file than in
+	 * the new file) BEFORE the complete data
 	 */
 	public void searchYearTwoFiles(List<Publication> publications, String wssessionId) {
 		Map<Integer, List<Publication>> yearSets = publications.stream()
-			.collect(Collectors.groupingBy(Publication::getPublicationYear));
+				.collect(Collectors.groupingBy(Publication::getPublicationYear));
 		// TODO: should there be a progress message with cumulative percentage, as in
 		// searchYearOneFile()?
 		List<Publication> emptyYearlist = yearSets.remove(0);
@@ -501,501 +962,19 @@ public class DeduplicationService {
 		return;
 	}
 
-	public void compareSet(List<Publication> publications, Integer year, boolean descending, String wssessionId) {
-		int listSize = publications.size();
-		int doubleSize = 0;
-		while (publications.size() > 1) {
-			Publication publication = publications.remove(0);
-			/*
-			 * FIXME: overly complex: shouldn't it be: if (record.getPublicationYear() !=
-			 * year) break;
-			 */
-			if (descending && publication.getPublicationYear() < year) {
-				break; // only records of year1 should be compared to records of year1 and
-						// year2, The records of year2 will be compared in the next pair
-						// of years.
-			}
-			else if (!descending && publication.getPublicationYear() != 0 && publication.getPublicationYear() > year) {
-				// FIXME: why "record.getPublicationYear() != 0" only in ascending case?
-				break;
-			}
-			log.debug("Comparing " + publications.size() + " records to: " + publication.getId() + " : "
-					+ publication.getTitles().get(0));
-			// FIXME? Shouldn't use functional style because it is impure
-			List<Publication> doubles = publications.stream()
-				.filter(r -> compareStartPageOrDoi(r, publication) == true
-						// && compareAuthors(r, record) == true
-						&& authorsComparator.compare(r, publication) == true && compareTitles(r, publication) == true
-						&& (compareIssns(r, publication) == true || compareJournals(r, publication) == true)
-				// && compareAbstracttexts(r, record) == true
-				)
-				.map(r -> { // Label is used later in enrich() to recreate the duplicate
-							// lists, and is used / exported if markMode is set
-					// If the record was already a duplicate, use its label the new
-					// duplicates found, otherwise its ID
-					if (r.getLabel() == null) {
-						if (publication.getLabel() != null) {
-							log.debug(
-									"==> SETTING LABEL ALREADY PRESENT: {} has label {} and now sets label of duplicate to {}",
-									publication.getId(), publication.getLabel(), r.getId());
-							r.setLabel(publication.getLabel());
-						}
-						else {
-							r.setLabel(publication.getId());
-							publication.setLabel(publication.getId());
-						}
-					}
-					else {
-						// log.debug("==> LABEL ALREADY PRESENT: {} has label {} and
-						// should also get label {}", r.getId(), r.getLabel(),
-						// record.getId());
-						if (publication.getLabel() == null) {
-							publication.setLabel(r.getLabel());
-						}
-						if (!r.getLabel().equals(publication.getLabel())) {
-							log.error("Records have different labels: {}, {}\n- {}\n- {}", publication.getLabel(),
-									r.getLabel(), publication, r);
-						}
-					}
-					if (r.isReply()) {
-						publication.setReply(true);
-					}
-					log.debug("1. setting label {} to record {}", r.getLabel(), r.getId());
-					return r;
-				})
-				.collect(Collectors.toList());
-			if (!doubles.isEmpty()) {
-				// @formatter:off
-				/*
-				 * The duplicates (doubles) are removed from the current set. Some duplicates may be missed by this action!!!
-				 * e.g.:
-				 * - record 1: page 63  + doi 10.4081/hr.2015.5927
-				 * - record 2: page 519 + doi 10.4081/hr.2015.5927	==> duplicate because of doi
-				 * - record 3: page 519 + doi (empty)				==> not a duplicate because 63 != 519
-				 * Not removing the duplicates would have serious performance problems, AND would make adding the labels more complex.
-				 *
-				 * TODO: Wouldn't this be solved if, whenever a duplicate is found,
-				 * - DOIs from the duplicate found were added to the first record
-				 * - the same for journal titles?
-				 * - the same for titles???
-				 */
-				// @formatter:on
-				// FIXME: removing the doubles makes the program faster (and less
-				// complicated)
-				// but misses duplicates when the not first duplicate is sufficiently
-				// close to the following records, but the first one is not?
-				// See test set: Author Bail, JP ...
-				// records.removeAll(doubles); // no need to compare the doubles later on
-				// in this list
-				// This could be set in the map (higher), but then would be set for each
-				// duplicate found
-
-				// TODO: this is commented out because in map(...) the label for record is
-				// set if it was empty. Safe to remove?
-				// if (record.getLabel() == null) {
-				// record.setLabel(record.getId());
-				// log.debug("2. setting label {} to record {}", record.getLabel(),
-				// record.getId());
-				// }
-				doubleSize += doubles.size();
-				// updateSession(session, "Working on " + year + " for " + listSize + "
-				// records (marked " + doubleSize + " duplicates)");
-				wsMessage(wssessionId,
-						"Working on " + year + " for " + listSize + " records (marked " + doubleSize + " duplicates)");
-			}
-		}
-	}
-
-	// public boolean compareAbstracttexts(Publication r1, Publication r2) {
-	// if (r1.getAbstracttext() != null && r2.getAbstracttext() != null) {
-	// Double similarity = jws.apply(r1.getAbstracttext(), r2.getAbstracttext());
-	// return (similarity > 0.96);
-	// }
-	// return true;
-	// }
-
-	// All unique titles and their reverse are compared
-	public boolean compareTitles(Publication r1, Publication r2) {
-		log.debug("Comparing " + r1.getId() + ": " + r1.getTitles().get(0) + "\nto " + r2.getId() + ": "
-				+ r2.getTitles().get(0));
-		if (r1.isReply() || r2.isReply()) {
-			return true;
-		}
-		Double similarity = 0.0;
-		List<String> titles1 = r1.getTitles();
-		List<String> titles2 = r2.getTitles();
-		boolean sufficientStartPages = (r1.getPageForComparison() != null && r2.getPageForComparison() != null);
-		boolean sufficientDois = (!r1.getDois().isEmpty() && !r2.getDois().isEmpty());
-		boolean isPhase = r1.isPhase() || r2.isPhase();
-
-		for (String title1 : titles1) {
-			for (String title2 : titles2) {
-				similarity = jws.apply(title1, title2);
-				if (isPhase) { // return result of comparison of only the first title
-								// variant
-					log.debug("{} and {}:\n- {}\n- {}", r1.getId(), r2.getId(), title1, title2);
-					return similarity > TITLE_SIMILARITY_PHASE;
-				}
-				if ((sufficientStartPages || sufficientDois)
-						&& similarity > TITLE_SIMILARITY_SUFFICIENT_STARTPAGES_OR_DOIS) {
-					log.debug("Found comparable title (with pages or DOI) " + r1.getTitles().get(0) + " == "
-							+ r2.getTitles().get(0));
-					return true;
-				}
-				else if (!(sufficientStartPages || sufficientDois)) {
-					return similarity > TITLE_SIMILARITY_INSUFFICIENT_STARTPAGES_AND_DOIS;
-				}
-			}
-		}
-		return false;
-	}
-
-	/*
-	 * Comparing starting page before DOI may be faster than the other way around. But: a
-	 * complete set of conference abstracts has the same DOI. So starting page MUST be
-	 * compared before DOI.
-	 *
-	 * Exception: Cochrane Reviews. See the comment at {@link
-	 * edu.dedupendnote.domain.Publication#isCochrane Publication#isCochrane}
-	 */
-	public boolean compareStartPageOrDoi(Publication r1, Publication r2) {
-		log.debug("Comparing " + r1.getId() + ": " + r1.getPageForComparison() + " to " + r2.getId() + ": "
-				+ r2.getPageForComparison());
-		Map<String, Integer> dois1 = r1.getDois();
-		Map<String, Integer> dois2 = r2.getDois();
-		boolean bothCochrane = r1.isCochrane() && r2.isCochrane();
-		boolean sufficientStartPages = (r1.getPageForComparison() != null && r2.getPageForComparison() != null);
-		boolean sufficientDois = (!dois1.isEmpty() && !dois2.isEmpty());
-
-		if (!sufficientStartPages && !sufficientDois) {
-			log.debug("At least one starting page AND at least one DOI are missing");
-			return true; // no useful comparison possible
-		}
-
-		if (bothCochrane) {
-			if (r1.getPublicationYear().equals(r2.getPublicationYear())) {
-				if (sufficientDois) {
-					for (String d : dois1.keySet()) {
-						if (dois2.containsKey(d)) {
-							log.debug("BOTH Cochrane: One or more DOIs are the same: '{}' and '{}'", dois1, dois2);
-							return true;
-						}
-					}
-				}
-				else if (sufficientStartPages && r1.getPageForComparison().equals(r2.getPageForComparison())) {
-					log.debug("Same starting pages");
-					return true;
-				}
-			}
-		}
-		else {
-			/*
-			 * 20230220: Changed from 2 independent IFs to "IF(...) ELSE IF (!... AND ...)
-			 * FROM: Records with different starting pages were also compared for DOIs TO:
-			 * only 1 of (compare pages, compare DOIs)
-			 *
-			 * Results are higher FN (1169 --> 1311: +142 / 112%) , but (more importantly)
-			 * lower FP (41 --> 34: -7 / 83%)
-			 */
-			if (sufficientStartPages && r1.getPageForComparison().equals(r2.getPageForComparison())) {
-				log.debug("Same starting pages");
-				return true;
-			}
-			else if (!sufficientStartPages && sufficientDois) {
-				for (String d : dois1.keySet()) {
-					if (dois2.containsKey(d)) {
-						log.debug("One or more DOIs are the same: '{}' and '{}'", dois1, dois2);
-						return true;
-					}
-				}
-			}
-		}
-		log.debug("Starting pages and DOIs are different");
-		return false;
-	}
-
-	public static class DefaultAuthorsComparator implements AuthorsComparator {
-
-		private JaroWinklerSimilarity jws = new JaroWinklerSimilarity();
-
-		public Double similarity = 0.0;
-
-		public static final Double AUTHOR_SIMILARITY_NO_REPLY = 0.67;
-
-		public static final Double AUTHOR_SIMILARITY_REPLY_SUFFICIENT_STARTPAGES_OR_DOIS = 0.75;
-
-		public static final Double AUTHOR_SIMILARITY_REPLY_INSUFFICIENT_STARTPAGES_AND_DOIS = 0.80;
-
-		/*
-		 * See AuthorVariantsExperimentsTest for possible enhancements.
-		 */
-		@Override
-		public boolean compare(Publication r1, Publication r2) {
-			// log.error("Using the default AuthorComparator");
-			similarity = 0.0;
-			boolean isReply = (r1.isReply() || r2.isReply());
-			boolean sufficientStartPages = (r1.getPageForComparison() != null && r2.getPageForComparison() != null);
-			boolean sufficientDois = (!r1.getDois().isEmpty() && !r2.getDois().isEmpty());
-
-			if (r1.getAllAuthors().isEmpty() || r2.getAllAuthors().isEmpty()) {
-				// Because Anonymous AND Reply would only compare on journals (and maybe
-				// SP/DOIs) (see "MedGenMed Medscape General Medicine" articles in
-				// Cannabis test set)
-				// Because Anonymous AND no SP or DOI would only compare on title and
-				// journals (see "Abstracts of 16th National Congress of SIGENP" articles
-				// in Joost problem set)
-				if (isReply || (!sufficientStartPages && !sufficientDois)) {
-					return false;
-				}
-				return true;
-			}
-
-			for (String authors1 : r1.getAllAuthors()) {
-				for (String authors2 : r2.getAllAuthors()) {
-					similarity = jws.apply(authors1, authors2);
-					if (isReply) {
-						// TODO: do we have examples of this case?
-						if (!(sufficientStartPages || sufficientDois)
-								&& similarity > AUTHOR_SIMILARITY_REPLY_INSUFFICIENT_STARTPAGES_AND_DOIS) {
-							return true;
-						}
-						else if ((sufficientStartPages || sufficientDois)
-								&& similarity > AUTHOR_SIMILARITY_REPLY_SUFFICIENT_STARTPAGES_OR_DOIS) {
-							return true;
-						}
-					}
-					else if (similarity > AUTHOR_SIMILARITY_NO_REPLY) {
-						return true;
-					}
-					;
-				}
-			}
-			return false;
-		}
-
-		@Override
-		public Double getSimilarity() {
-			return similarity;
-		}
-
-	}
-
-	public boolean compareIssns(Publication r1, Publication r2) {
-		// log.debug("Comparing for ISSN " + r1.getId() + ": " + r1.getTitles().get(0) +
-		// "\nto " + r2.getId() + ": " + r2.getTitles().get(0));
-		if (listsContainSameString(r1.getIssns(), r2.getIssns())) {
-			return true;
-		}
-		;
-		return false;
-	}
-
-	// FIXME: is Apache Commons CollectionUtils better?
-	private boolean listsContainSameString(List<String> list1, List<String> list2) {
-		if (list1.isEmpty() || list2.isEmpty()) {
-			return false;
-		}
-		List<String> common = new ArrayList<>(list1);
-		common.retainAll(list2);
-		return !common.isEmpty();
-	}
-
-	/*
-	 * compareJournals
-	 *
-	 * Paths not chosen: - Creation of sets of journalPatterns for the whole set of
-	 * records. This might be overkill, since the comparison by journal is the last of all
-	 * comparisons between any two records - "AJR American Journal of Radiology": split
-	 * into "AJR" and "American Journal of Radiology"
-	 * compareJournals_FirstWithStartingInitialism(...) will create a pattern on A, J en R
-	 * which will find the second title.
-	 */
-	public boolean compareJournals(Publication r1, Publication r2) {
-		Set<String> set1 = r1.getJournals();
-		Set<String> set2 = r2.getJournals();
-		boolean isReply = (r1.isReply() || r2.isReply());
-
-		if (set1.isEmpty() || set2.isEmpty()) {
-			log.debug("One of the records had no journal for '{}' and '{}'", set1, set2);
-			return false;
-		}
-
-		Set<String> commonJournals = new HashSet<>(set1);
-		commonJournals.retainAll(set2);
-		if (!commonJournals.isEmpty()) {
-			log.debug("Some journals are common: '{}' and '{}'", set1, set2);
-			return true;
-		}
-
-		for (String s1 : set1) {
-			for (String s2 : set2) {
-				if (s1.startsWith("http") && s2.startsWith("http")) {
-					if (!s1.equals(s2)) { // JaroWinkler 0.9670930232558139 for
-											// 'Https://clinicaltrials.gov/show/nct00830466'
-											// and
-											// 'Https://clinicaltrials.gov/show/nct00667472'
-						continue;
-					}
-				}
-				Double similarity = jws.apply(s1.toLowerCase(), s2.toLowerCase());
-				log.debug("Similarity: {} for '{}' and '{}'", similarity, s1, s2);
-				// Make comparison stricter for Reply-titles because titles haven't been
-				// compared ("Annals of Hepatology" - "Annals of Oncology": 0.916)
-				if (isReply && similarity > JOURNAL_SIMILARITY_REPLY) {
-					return true;
-				}
-				else if (!isReply && similarity > JOURNAL_SIMILARITY_NO_REPLY) {
-					return true;
-				}
-
-				if (s1.toLowerCase().charAt(0) != s2.toLowerCase().charAt(0)) {
-					continue;
-				}
-				/*
-				 * "Hepatology" and "Hepatology International" are considered the same
-				 */
-				if (compareJournals_FirstAsAbbreviation(s1, s2)) {
-					return true;
-				}
-				if (compareJournals_FirstAsAbbreviation(s2, s1)) {
-					return true;
-				}
-				/*
-				 * Journals with very long titles produce very long Patterns: limit these
-				 * cases to short journal names ASySD SRS_Human has journal names in
-				 * uppercase
-				 */
-				if (s1.length() < 10 && s1.toUpperCase().equals(s1) && compareJournals_FirstAsInitialism(s1, s2)) {
-					return true;
-				}
-				if (s2.length() < 10 && s2.toUpperCase().equals(s2) && compareJournals_FirstAsInitialism(s2, s1)) {
-					return true;
-				}
-
-				if (compareJournals_FirstWithStartingInitialism(s1, s2)) {
-					return true;
-				}
-				if (compareJournals_FirstWithStartingInitialism(s2, s1)) {
-					return true;
-				}
-			}
-		}
-		log.debug("No Success 5 for '{}' and '{}'", set1, set2);
-		return false;
-	}
-
-	// Searching 'BMJ' as "\bB.*\bM.*\bJ.*"
-	private boolean compareJournals_FirstAsInitialism(String s1, String s2) {
-		String patternString = s1.chars()
-			.mapToObj(c -> String.valueOf((char) c))
-			.collect(Collectors.joining(".*\\b", "\\b", ".*"));
-		Pattern patternShort2 = Pattern.compile(patternString, Pattern.CASE_INSENSITIVE);
-		log.debug("Pattern INITIALISM for '{}': {} for '{}'", s1, patternShort2.toString(), s2);
-		Matcher matcher = patternShort2.matcher(s2);
-		if (matcher.find()) {
-			log.debug("Pattern INITIALISM found for '{}': {} for '{}'", s1, patternShort2.toString(), s2);
-			return true;
-		}
-		return false;
-	}
-
-	// Searching 'Ann Fr Anesth Reanim' as "\bAnn.*\bFr.*\bAnesth.*\bReanim.*"
-	private boolean compareJournals_FirstAsAbbreviation(String j1, String j2) {
-		Pattern pattern = Pattern.compile("\\b" + j1.replaceAll(" ", ".*\\\\b") + ".*", Pattern.CASE_INSENSITIVE);
-		log.debug("Pattern ABBREVIATION for '{}': {} for '{}'", j1, pattern.toString(), j2);
-		Matcher matcher = pattern.matcher(j2);
-		if (matcher.find()) {
-			log.debug("Pattern ABBREVIATION found for '{}': {} for '{}'", j1, pattern.toString(), j2);
-			return true;
-		}
-		return false;
-	}
-
-	// Searching 'AJR Am J Roentgenol' as "\bA.*\bJ.*\bR.*"
-	// Searching 'JNCCN Journal of the National Comprehensive Cancer Network' as
-	// "\bJ.*\bN.*\bC.*\bC.*\bN.*"
-	// Searching 'Bmj' as "\bB.*\bm.*\bj.*"
-	private boolean compareJournals_FirstWithStartingInitialism(String s1, String s2) {
-		String[] words = s1.split("\\s");
-		if ("Samj".equals(words[0])) {
-			words[0] = "SAMJ";
-		}
-		if ((words[0].length() > 2 && words[0].equals(words[0].toUpperCase()))
-				|| (words.length == 1 && words[0].length() < 6)) {
-			// 20220502: Because the pattern uses only word breaks "\b" and not
-			// alternation "(\b|)", we have to adjust for at least (AJNR <=> American
-			// journal of neuroradiology)
-			if ("AJNR".equals(words[0])) { // AJNR = American Journal of Neuroradiology!
-				words[0] = "AJN";
-			}
-			String patternString = words[0].chars()
-				.mapToObj(c -> String.valueOf((char) c))
-				.collect(Collectors.joining(".*\\b", "\\b", ".*"));
-			Pattern patternShort3 = Pattern.compile(patternString, Pattern.CASE_INSENSITIVE);
-			log.debug("Pattern STARTING_INITIALISM for '{}': {} for '{}'", s1, patternShort3.toString(), s2);
-			Matcher matcher = patternShort3.matcher(s2);
-			if (matcher.find()) {
-				log.debug("Pattern STARTING_INITIALISM found for '{}': {} for '{}'", s1, patternShort3.toString(), s2);
-				return true;
-			}
-		}
-		return false;
-	}
-
-	private boolean containsDuplicateIds(List<Publication> publications) {
-		return !publications.stream().map(Publication::getId).allMatch(new HashSet<>()::add);
-	}
-
-	private boolean containsOnlyRecordsWithoutPublicationYear(List<Publication> publications) {
-		return publications.stream().filter(r -> r.getPublicationYear() == 0).count() == publications.size();
-	}
-
-	private boolean containsRecordsWithoutId(List<Publication> publications) {
-		return publications.stream().filter(r -> r.getId() == null).count() > 0L;
-	}
-
-	public String doSanityChecks(List<Publication> publications, String fileName) {
-		if (containsRecordsWithoutId(publications)) {
-			return "ERROR: The input file " + fileName
-					+ " contains records without IDs. The input file is not a dump from an EndNote library!";
-		}
-		if (containsOnlyRecordsWithoutPublicationYear(publications)) {
-			return "ERROR: All records of the input file " + fileName
-					+ " have no Publication Year. The input file is not a dump from an EndNote library!";
-		}
-		if (containsDuplicateIds(publications)) {
-			return "ERROR: The IDs of the records of input file " + fileName
-					+ " are not unique. The input file is not a dump from 1 EndNote library!";
-		}
-		return null;
-	}
-
-	public String formatResultString(int total, int totalWritten) {
-		return "DONE: DedupEndNote has deduplicated " + total + " records, has removed " + (total - totalWritten)
-				+ " duplicates, and has written " + totalWritten + " records.";
-	}
-
 	// private String updateSession(HttpSession session, String message) {
 	// log.debug(message);
 	// session.setAttribute("result", message);
 	// return message;
 	// }
 
-	@Async
-	public ListenableFuture<String> generateReport(HttpSession session) {
-		try {
-			for (int i = 0; i < 10; i++) {
-				Thread.sleep(2000);
-				log.debug("in generateReport: {}", i);
-				session.setAttribute("result", "Working on " + i);
-			}
-			session.setAttribute("result", "COMPLETE");
+	private void wsMessage(String wssessionId, String message) {
+		if (simpMessagingTemplate != null) {
+			// System.err.println(wssessionId + ": " + message);
+			// simpMessagingTemplate.convertAndSendToUser(wssessionId, "/topic/messages",
+			// new StompMessage(message));
+			simpMessagingTemplate.convertAndSend("/topic/messages-" + wssessionId, new StompMessage(message));
 		}
-		catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-		String s = "COMPLETE";
-		return new AsyncResult<>(s);
 	}
 
 }

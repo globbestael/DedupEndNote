@@ -29,7 +29,7 @@
 	 	
 	 	/* Also adds data to the start form (step 2) */
 	 	function checkFileSize(evant, data) {
-			if (data.files[0].size > (150 * 1024 * 2014)) {
+			if (data.files[0].size > (150 * 1024 * 1024)) {
 				var MB = parseInt(data.files[0].size / (1024 * 1024));
 				alert("File is bigger than 150 MB! This file: " + MB + "MB");
 			} else {
