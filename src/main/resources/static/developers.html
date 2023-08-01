@@ -1,29 +1,15 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html>
 <head>
     <title>DedupEndNote - Developers</title>
-	<script th:src="@{/webjars/jquery/jquery.min.js}"></script>
-	<script th:src="@{/webjars/jquery-ui/jquery-ui.min.js}"></script>
-	<script th:src="@{/webjars/blueimp-file-upload/js/jquery.fileupload.js}"></script>
-	<script th:src="@{/webjars/blueimp-file-upload/js/jquery.fileupload-process.js}"></script>
-	<link rel="stylesheet" th:href="@{/webjars/bootstrap/css/bootstrap.min.css}">
+	<link rel="stylesheet" href="/webjars/bootstrap/css/bootstrap.min.css">
     
-	<script th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}" type="text/javascript"></script>
+	<script src="/webjars/bootstrap/js/bootstrap.bundle.min.js" type="text/javascript"></script>
+
     <style type="text/css">
-    	.bg-info {
-    		padding: 10px;
-    	}
     	td {
     		vertical-align: top;
     	}
-    	.diff {
-    		color: red;
-    		font-weight: bold;
-    	}
-		.bar {
-		    height: 18px;
-		    background: green;
-		}
     </style>
 </head>
 <body>
@@ -34,6 +20,7 @@
 				<a href="/">Home</a>
 	        	<ol>
 	        		<li><a href="#validation">Validation</a></li>
+	        		<li><a href="#logging">Logging and log levels</a></li>
 	        	</ol>
 	
 	       		<h3 id="validation">1. Validation</h3>
@@ -45,7 +32,7 @@
 	       			<li>In MS Access the format for all boolean fields was changed to "True/False" (design view, General tab for these fields)</li>
 	       		</ul>
 	       		 
-	       		<p>The table for a validition set contains the fields:</p>
+	       		<p>The table for a validation set contains the fields:</p>
 	       		<table class="table tabled-bordered">
 	       			<thead>
 	       				<tr>
@@ -227,6 +214,28 @@
 	       		</ul> 
 	       		<div>"ValidationTests.java" has tests for comparing the results of a new version of DedupEndNote
 	       			with the validated set (exported as a tab delimited file).</div>
+	       		
+	       		<h3 if="logging">2. Logging and log levels</h3>
+	       		<ul>
+	       			<li>Reading the records
+		       			
+						<div>
+							<pre>java -Dlogging.level.edu.dedupendnote.services.IOService=DEBUG -jar DedupEndNote-0.9.5-SNAPSHOT.jar</pre>
+							If everythings works, the log should end with ""Records read: ". If not,log will show what the last record successfully read in was
+						</div>
+					</li>
+					<li>Converting the records
+					
+						<div>
+							<pre>java -Dlogging.level.edu.dedupendnote.services.IOService=DEBUG -Dlogging.level.edu.dedupendnote.domain.Record=DEBUG -jar DedupEndNote-0.9.5-SNAPSHOT.jar</pre>
+						</div>
+					</li>
+					<li>Deduplicating the records
+						<div>
+							<pre>java -Dlogging.level.edu.dedupendnote.services=DEBUG -jar DedupEndNote-0.9.5-SNAPSHOT.jar</pre>
+						</div>
+					</li>
+				</ul>
 	        </div>
 		</div>
 	</div>

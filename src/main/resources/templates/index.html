@@ -1,12 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-<!--     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/> -->
-<!--     <meta name="viewport" content="width=device-width, initial-scale=1.0"/> -->
-<!--     <meta name="description" content=""/> -->
-<!--     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/> -->
     <title>DedupEndNote</title>
-
 
 	<script th:src="@{/webjars/jquery/jquery.min.js}"></script>
 	<script th:src="@{/webjars/jquery-ui/jquery-ui.min.js}"></script>
@@ -15,6 +10,9 @@
 	<link rel="stylesheet" th:href="@{/webjars/bootstrap/css/bootstrap.min.css}">
     
 	<script th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}" type="text/javascript"></script>
+    <script th:src="@{/webjars/sockjs-client/sockjs.min.js}"></script>
+    <script th:src="@{/webjars/stomp-websocket/stomp.min.js}"></script>
+
     <style type="text/css">
     	td {
     		vertical-align: top;
@@ -23,13 +21,97 @@
     		color: red;
     		font-weight: bold;
     	}
-		.bar {
-		    height: 18px;
-		    background: light-green;
-		}
     </style>
+
  	<script th:inline="javascript">
+	 	var stompClient = null;
+	 	var wssessionId = null;
+	 	
+	 	/* Also adds data to the start form (step 2) */
+	 	function checkFileSize(evant, data) {
+			if (data.files[0].size > (150 * 1024 * 1024)) {
+				var MB = parseInt(data.files[0].size / (1024 * 1024));
+				alert("File is bigger than 150 MB! This file: " + MB + "MB");
+			} else {
+				// connect();
+				$("#fileName_1").val(data.files[0].name);						
+				data.submit();
+			}
+	 	}
+	 	
+	 	function hideDiv(id) {
+	 		$(id).removeClass('d-block');
+	 		$(id).addClass('d-none');
+	 	}
+	 	function showDiv(id) {
+	 		$(id).removeClass('d-none');
+	 		$(id).addClass('d-block');
+	 	}
+	 	function showProgress(percentage) {
+	 		$("#progress").html(`<div class="progress-bar" role="progressbar" style="width: ${percentage}%;" aria-valuenow="${percentage}" aria-valuemin="0" aria-valuemax="100">${percentage}%</div>`);
+	 		// $('#progress-bar').css('width', percentage + '%').attr('aria-valuenow', percentage);
+	 	}
+	 	function disableButton(id) {
+	 		$(id).prop("disabled", true);
+	 	}
+	 	function enableButton(id) {
+	 		$(id).prop("disabled", false);
+	 	}
+	 	function markAsDone(id) {
+	 		$(id).removeClass('alert-warning');
+	 		$(id).addClass('alert-success');
+	 	}
+	 	/*
+	 	 * Calling disconnect() will invalidate the wssessionId?
+	 	 * Would it be better to restart with a reload?
+	 	 * - new wssessionId
+	 	 * - if there is a old running deduplication, then its messages will be send to the subscription which is no longer valid,
+	 	 *   and not interfere with the current subscription 
+	 	 */
+	 	function disconnect() {
+	 	    if (stompClient !== null) {
+	 	    }
+	 	    console.log("Disconnected");
+	 	}
+
  		$(function() {
+
+			connect();
+
+			function connect() {
+ 		 	    var socket = new SockJS('/gs-guide-websocket');
+ 		 	    stompClient = Stomp.over(socket);
+ 				stompClient.debug = null;	// disable debug, shorthand for: "stompClient.debug = function(str) {};" see https://stomp-js.github.io/stomp-websocket/codo/class/Client.html 
+ 		 	    stompClient.connect({}, function (frame) {
+					// subscribe to a user specific URL (see the controller for more info)
+ 					var wssessionId = /\/([^\/]+)\/websocket/.exec(socket._transport.url)[1];
+ 			        // console.log("connected, session id: " + wssessionId);
+ 			        $("#wssessionId").val(wssessionId);
+ 		 	        stompClient.subscribe('/topic/messages-' + wssessionId, function (stompMessage) {
+ 		 	        	message = JSON.parse(stompMessage.body).name
+ 	                    if (message.match("^DONE")) {
+ 	                    	showProgress(0);
+ 	                        $('#results').html(message);      
+ 							enableButton('#buttonResultFile');
+ 							markAsDone('#step2');
+ 		   					// disconnect();
+ 	                    } else if (message.match("^ERROR")) {  
+ 	 		        		$('#results').removeClass('alert-warning');
+ 	 		        		$('#results').addClass('alert-danger');
+ 	                        $('#results').html(message);      
+		   					// disconnect();
+ 	                    } else if (message.match("^PROGRESS:")) {
+ 	                    	var found = message.match(/^PROGRESS: (.+)$/);
+ 	                    	var percentage = found[1]; 
+ 	                    	showProgress(percentage);
+ 	                    } else {
+ 		                  	// console.log("DATA: " + message);
+ 			 	       		$('#results').html("<span>" + message + "</span>");
+ 	                    }
+ 		 	        });
+ 		 	    });
+ 		 	}
+
 			$('#file').change(function () {
 				// solution for "fakepath" problem: remove everything before the fileName
 				var fileName = $("#file").val();
@@ -39,86 +121,74 @@
 					fileName = match[2];
 				}
 				// alert("fileName: " + fileName);
- 		    	$("#fileName").val(fileName);
+ 		    	$("#fileName_1").val(fileName);
 			});
- 			
- 			$('#file').fileupload({
+			
+			$('#upload_form').fileupload({
 				dataType: 'json',
 				limitMultiFileUploads: 1,
 				replaceFileInput: false,
 				start: function() {
-					$('#progress .progress-bar').css('width', '0%');
-					$('#results').html("<span>In progress</span>");
-					$('#reportLink').addClass("hidden");
-					$('#reportLink').html("<span></span>");
-					// $('#getResultFile_form').addClass("hidden");
-					$('#getResultFile_form').hide();
+					showProgress(0);
 				},
 				add: function(event, data) {
-					if (data.files[0].size > (150 * 1024 * 2014)) {
-						var MB = parseInt(data.files[0].size / (1024 * 1024));
-						alert("File is bigger than 150 MB! This file: " + MB + "MB");
-					} else {
-						data.submit();
-					}
+	        	   checkFileSize(event, data);
 				},
 		 		done: function (e, data) {
  		        	// console.log("done reached: %o", data);
 	    			$("#markModeResultFile").val($("input[name='markMode']").prop("checked"));
  		        	if (data.textStatus == "success") {
- 		        		$('#results').html("<span>File " + data.files[0].name + " has been uploaded. Deduplication started ....</span>");
- 		        		$('#results').removeClass('alert-danger');
- 		        		$('#results').addClass('alert-success');
- 		        		$('#reportLink').removeClass("hidden");
- 		        		$('#reportLink').addClass('show');
- 		        		$('#reportLink').addClass('alert-danger');
- 		        		$('#reportLink').removeClass('alert-success');
-	 		   	        var timer = setInterval(function() {  
-	 			            $.ajax({  
-	 			                  url: 'recordstatus.json',
-	 			                  dataType: 'json',
-	 			                  success: function(response) {
-	 			                    if (response.result.match("^DONE")) {  
-	 			 		        		$('#reportLink').removeClass('alert-danger');
-	 			 		        		$('#reportLink').addClass('alert-success');
-	 			                        $('#reportLink').html(response.result);      
-	 			                        clearInterval(timer);
-// 	 			                        $("#getResultFile_form").removeClass("hidden");
-// 	 			                        $("#getResultFile_form").addClass("show");
-		 			   					$('#getResultFile_form').show();
-	 			                    } else if (response.result.match("^ERROR")) {  
-		 			 		        		$('#reportLink').removeClass('alert-danger');
-		 			 		        		$('#reportLink').addClass('alert-danger');
-		 			                        $('#reportLink').html(response.result);      
-		 			                        clearInterval(timer);
-	 			                    } else {
-	 				                  	// console.log("DATA: " + response.result);
-	 			                    	$('#reportLink').html(response.result);
-	 			                    }
-	 		                  	}
-	 			            });  
-	 			        }, 2000);  
+						showProgress(0);
+ 		        		$('#results').html("<span>File " + data.files[0].name + " has been uploaded</span>");
+						disableButton('#fileUpload1');
+						enableButton('#buttonStartDeduplication');
+						markAsDone('#step1');
  		        	}
  		        },
  		        error: function (jqXHR, data, thrownError) {
- 		        	console.log("error arg1 reached: %o", jqXHR.responseText);
- 		        	console.log("error arg2 reached: %o", data.textStatus);
- 		        	console.log("error arg3 reached: %o", thrownError);
+ 		        	// console.log("error arg1 reached: %o", jqXHR.responseText);
+ 		        	// console.log("error arg2 reached: %o", data.textStatus);
+ 		        	// console.log("error arg3 reached: %o", thrownError);
  		        	var response = jQuery.parseJSON(jqXHR.responseText);
 	        		$('#results').html("<span>" + response.result + "</span>");
-		            $('#progress .progress-bar').css('width', '0%');
  	        		$('#results').addClass('alert-danger');
- 	        		$('#results').removeClass('alert-success');
+ 	        		$('#results').removeClass('alert-warning');
  		        },
   				progressall: function (e, data) {
- 		            var progress = parseInt(data.loaded / data.total * 100, 10);
- 		            console.log("Progress: " + progress);
- 		            $('#progress .progress-bar').css(
- 		                'width',
- 		                progress + '%'
- 		            );
+ 		            var percentage = parseInt(data.loaded / data.total * 100, 10);
+ 		            // console.log("Progress: " + percentage);
+                 	$("#progress").html(`<div class="progress-bar" role="progressbar" style="width: ${percentage}%;" aria-valuenow="${percentage}" aria-valuemin="0" aria-valuemax="100">${percentage}%</div>`);
  		        }
  		    });
+ 
+ 			$('#buttonStartDeduplication').on('click', function (event) {
+ 				event.preventDefault();
+				disableButton('#buttonStartDeduplication');
+    			$("#fileNameResultFile").val($('#fileName_1').val());	// in getResultFile_form
+    			$("#markModeResultFile").val($('#markMode').prop("checked"));	// in getResultFile_form
+
+ 	    		$.ajax({
+ 	    			url: '/startOneFile',
+ 	    			type: 'POST',
+ 	    			data: new FormData(document.getElementById('start_form')),
+ 	    			dataType: 'json',
+ 	    			processData: false,
+ 	    			contentType: false,
+ 					success: function(response) {
+ 						console.log("RESPONSE: " + response);
+	                    if (response.result.match("^DONE")) {  
+	                        $('#results').html(response.result);      
+	                    } else if (response.result.match("^ERROR")) {  
+	 		        		$('#results').removeClass('alert-warning');
+	 		        		$('#results').addClass('alert-danger');
+	                        $('#results').html(response.result);      
+	                    } else {
+	                    	$('#results').html(response.result);
+	                    }
+ 	    			}
+ 	    		});
+ 			});
+			
  		});
  	</script>
 </head>
@@ -136,43 +206,74 @@
 						<a class="list-group-item list-group-item-action" href="#examples">Examples of comparison</a>
 						<a class="list-group-item list-group-item-action" href="#test">Test results</a>
 						<a class="list-group-item list-group-item-action" href="#limitations">Limitations</a>
-						<a class="list-group-item list-group-item-action" href="/justification">Justification</a>
-						<a class="list-group-item list-group-item-action" href="/faq">FAQ</a>
-						<a class="list-group-item list-group-item-action" href="/developers">Developers</a>
+						<!-- these links to other pages open a new window in order to preserve the Web Socket sessionId on this page (possibly running a deduplication --> 
+						<a class="list-group-item list-group-item-action" href="/justification" target="window2">Justification</a>
+						<a class="list-group-item list-group-item-action" href="/resources/faq.html" target="window2">FAQ</a>
+						<a class="list-group-item list-group-item-action" href="/resources/developers.html" target="window2">Developers</a>
 					</nav>
 				</nav>
 			</div>
 			<div class="col-9" style="height: 100vh; position: relative;">
-				<h1 id="start">DedupEndNote (version 0.9.4 20210411)</h1>
-				<div class="card bg-light mb-3">
-					<div class="card-body">
-						<form class="form-horizontal" id="upload_form" method="post" enctype="multipart/form-data" th:action="@{|/upload|}">
-							<p>Select an EndNote RIS file (local file, max. file size: 150MB).<br/>
-							See <a href="/twofiles">/twofiles</a> to deduplicate a new file against an existing file / EndNote database.</p>
-							<div class="form-check form-check-inline" style="margin-left: 20px;">
-								<input class="form-check-input" type="checkbox" id="markMode" name="markMode"/>
-								<label class="form-check-label" for="file"> Do NOT deduplicate but mark the duplicate records (see <a href="#markModeText">Mark mode</a>)</label>
+				<h1 id="start">DedupEndNote (version 0.9.7b 20230326)</h1>
+				<div class="row col-11 border border-primary rounded alert alert-secondary" id="step1">
+					<div class="col-3">
+						<h3>1. INPUT FILE</h3>
+					</div>
+					<div class="col-9">
+						<form class="form-horizontal" id="upload_form" method="post" enctype="multipart/form-data" th:action="@{|/uploadFile|}">
+							<div class="form-group">
+								<label for="oldFile">Select the EndNote RIS file to deduplicate<br/>(use <a href="/twofiles">/twofiles</a> to deduplicate an new set of records against an old set)</label><br/>
+								<input type="file" id="fileUpload1" name="file"/>
 							</div>
-							<div class="form-group" style="margin-left: 20px;">
-<!-- 								<label for="file">Select an EndNote RIS file (local file, max. file size: 150MB).<br/> -->
-<!-- 								See <a href="/twofiles">/twofiles</a> to deduplicate a new file against an existing file / EndNote database.</label> -->
-								<input type="file" id="file" name="file" class="form-control-file"/>
-							</div>
-						    <div id="progress" class="progress">
-						        <div class="progress-bar progress-bar-success"></div>
-						    </div>						
-			  				<p id="results" class="alert-danger"> </p>
-							<p id="reportLink" class="alert-danger"> </p>
-						</form>
-						<form class="form-horizontal" style="display: none;" id="getResultFile_form" method="post" th:action="@{|/getResultFile|}">
-							<input type="hidden" name="fileName" id="fileName" />
-							<input type="hidden" name="markModeResultFile" id="markModeResultFile" />
-							<!-- nodig om submit() voor IE te laten werken -->
-							<button type="submit" class="btn btn-primary mb-2" onclick="this.form.submit()">Get the result</button>
 						</form>
 					</div>
 				</div>
-	        	<h3 id="steps">Steps</h3>
+				<div class="row col-11 border border-primary rounded alert alert-secondary" id="step2">
+					<div class="col-3">
+						<h3>2. START</h3>
+					</div>
+					<div class="col-9">
+						<form class="form-horizontal" id="start_form" method="post" action="">
+							<input type="hidden" id="fileName_1" name="fileName_1" value="" />
+							<input type="hidden" id="wssessionId" name="wssessionId" value="" />
+							<div class="form-check form-check-inline">
+								<input class="form-check-input" type="checkbox" id="markMode" name="markMode"/>
+								<label class="form-check-label" for="file"> Do NOT deduplicate the file but mark the duplicate records (see <a href="#markModeText">Mark mode</a>)</label>
+							</div>
+							<div>
+								<button type="submit" id="buttonStartDeduplication" disabled class="btn btn-primary mb-2">Start deduplication</button>
+							</div>
+						</form>
+					</div>
+				</div>
+				<div class="row col-11 border border-primary rounded alert alert-secondary" id="step3">
+					<div class="col-3">
+						<h3>3. RESULT</h3>
+					</div>
+					<div class="col-9">
+						<form class="form-horizontal" id="getResultFile_form" method="post" th:action="@{|/getResultFile|}">
+							<input type="hidden" name="fileNameResultFile" id="fileNameResultFile" />
+							<input type="hidden" name="markModeResultFile" id="markModeResultFile" />
+							<!-- nodig om submit() voor IE te laten werken -->
+							<button type="submit" id="buttonResultFile" disabled class="btn btn-primary mb-2" onclick="this.form.submit(); markAsDone('#step3');">Get the result</button>
+						</form>
+					</div>
+				</div>
+				<div class="row" style="margin-top: 10px;">
+					<div class="col-8 border border-primary rounded">
+						<h3>Progress</h3>
+					    <div id="progress" class="progress" style="height: 20px;">
+					        <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+					    </div>
+						<p id="results" class="alert alert-warning">Waiting for new input file ...</p>
+					</div>
+					<div class="col-1"></div>
+					<div class="col-2">
+						<a class="btn btn-primary" href="/" role="button">Restart</a>
+					</div>
+				</div>
+
+	        	<h3 id="steps" style="margin-top: 20px;">Steps</h3>
 
 	        	<ol>
 	        		<li>Deduplicate one file:
@@ -208,6 +309,8 @@
 	        	
 		        <h3 id="what">What does DedupEndNote do?</h3>
 		        
+		        <h5>1. Deduplicate records in a RIS file</h5>
+		        
 		        <p>Each pair of records is compared in 5 different ways. The general rule is:</p>
 		        <table class="table table-bordered" style="width: 60%;">
 		        	<thead>
@@ -238,20 +341,23 @@
 		        	<li><strong>Publication year:</strong> Are they at most 1 year apart?<br/>
 <!-- 		        	We use a sliding window technique: records are put into sets of publication years, the records of each set are compared with the record from the same set -->
 <!-- 		        	and the set of the following publication year.<br/> -->
-		        	<i>Insufficient data: Records without a publication year are compared to all records unless they have been identified as a duplicate.</i></li>
+		        	<i>Insufficient data: Records without a publication year are compared to all records unless they have been identified as a duplicate.</i><br/>
+		        	<i>Special cases: Cochrane Reviews are compared for the same publication year</i>
+		        	</li>
 		        	
 	 				<li><strong>Starting page or DOI:</strong> Are they the same?<br/>
 		 				If the starting pages are different or one or both are absent, the DOIs are compared.<br/>
 				        <i>Preprocessing: Article number is treated as a starting page if starting page itself is empty or contains "-".</i><br/>
 				        <i>Preprocessing: Starting pages are compared only for number: "S123" and "123" are considered the same.</i><br/> 
 				        <i>Preprocessing: In DOIs 'http://dx.doi.org/', 'http://doi.org/', ... are left out.</i><br/>
-				        <i>Insufficient data: If one or both DOIs are missing and one or both of the starting pages are missing, the answer is YES. This is important because of PubMed ahead of print publications.</i>
+				        <i>Insufficient data: If one or both DOIs are missing and one or both of the starting pages are missing, the answer is YES. This is important because of PubMed ahead of print publications.</i><br/>
+			        	<i>Special cases: For Cochrane Reviews DOIs are compared before starting pages.</i>
 			        </li>
 	
 			        <li><strong>Authors:</strong> Is the <a href="https://en.wikipedia.org/wiki/Jaro%E2%80%93Winkler_distance" target="_blank">Jaro-Winkler similarity</a> of the authors &gt;
 			        	<span th:text="${T(edu.dedupendnote.services.DeduplicationService.DefaultAuthorsComparator).AUTHOR_SIMILARITY_NO_REPLY}">-0.67</span>?<br/>
-				        <i>Preprocessing: The author "Anonymous," is treated as no author.</i><br/>
-				        <i>Preprocessing: First names are reduced to initials ("Moorthy, Ranjith K." to "Moorthy, R. K.").</i><br/> 
+				        <i>Preprocessing: The author "Anonymous," and all Author Groups are skipped.</i><br/>
+				        <i>Preprocessing: First names are reduced to initials ("Moorthy, Ranjith K." to "Moorthy, RK").</i><br/> 
 				        <i>Preprocessing: All authors from each record are joined by "; ".</i><br/>
 				        <i>Insufficient data: If one or both records have no authors, the answer is YES (except if one of the records is a reply (see below)
 				        and one of the records has no starting page or DOI).</i>
@@ -269,9 +375,9 @@
 				    </li>
 	
 			        <li><strong>ISSN or Journal:</strong> Are they the same (ISSN) or similar (Journal)?<br/>
-				        The fields Journal / Book Title (T2), Alternate Journal (J2) and sometimes Book section (T3, see below) are treated as journals, ISBNs as ISSNs. All ISSns and journal titles (including abbreviations) in the records are used.<br/>
-				        Abbreviated and full journal titles are compared in a sensible way (see examples below).<br/>
+				        The fields Journal / Book Title (T2), Alternate Journal (J2) and sometimes Book section (T3, see below) are treated as journals, ISBNs are treated as ISSNs. All ISSns and journal titles (including abbreviations) in the records are used.<br/>
 				        If the ISSns are different or one or both records have no ISSN, the journals are compared.<br/>
+				        Abbreviated and full journal titles are compared in a sensible way (see examples below).<br/>
 				        <i>Preprocessing: ISSNs are normalized (dash between position 4 and 5 for ISSN, no dashes in ISBNs, both uppercased).</i><br/>
 				        <i>Preprocessing: Journal titles of the form "Zhonghua wai ke za zhi [Chinese journal of surgery]"
 				        or "Zhonghua wei chang wai ke za zhi = Chinese journal of gastrointestinal surgery"
@@ -280,10 +386,17 @@
 				        end part between round or square brackets is removed, initial article is removed, ...).</i>
 			        </li>
 		        </ol>
+   				<p><i>T3 field: Especially EMBASE (OVID) uses this field for (1) Conference title (majority of cases), (2) an alternative journal title, and (3) original (non English) title. Case 1 (identified as containing a
+				number or "Annual", "Conference", "Congress", "Meeting" or "Society") is skipped. All other T3 fields are treated as Journals and as titles.</i>
+   				
+   				<p><i>Reply: a publication is considered a reply if the title (field TI) contains "reply", or contains "author(...)respon(...)", or is nothing but "response" (all case insensitive).</i></p>
+   				
+
+		        <p>If two records get 5 YES answers, they are considered duplicates.<br/>
 		        
-		        <p>If two records get 5 YES answers, they are considered duplicates.<br/> 
+		        <h5>2. Enrich the deduplicated records</h5> 
 		        Only the first record of a set of duplicate records is copied to the output file.</p>
-		        <p>Moreover: When writing the output file, the following fields can be changed:</p>
+		        <p>When writing the output file, the following fields will be changed:</p>
 		        <ul>
 		        	<li>Author (AU):
 		        		<ul>
@@ -311,6 +424,7 @@
 		        				the first not empty pages of the duplicates are copied to the saved record.</li>
 		        			<li>the Pages field gets an unabbreviated form: e.g. "482-91" is rewritten as "482-491".</li>
 		        			<li>if the ending page is the same as the starting page, only the starting page is written ("192" instead of "192-192").</li>
+		        			<li>for Cochrane Reviews a missing review number ("CD...") is extracted from the DOI.</li> 
 		        		</ul>
 		        	</li>
 		        	<li>Title (TI):
@@ -327,22 +441,21 @@
 		        EndNote can deduplicate a EndNote database of ca. 15,000 records in less dan 5 seconds. DedupEndNote needs around 20 seconds to deduplicate
 		        the export file in RIS format (115MB).</p>
 				
-				<p><i>T3 field: Especially EMBASE (OVID) uses this field for (1) Conference title (majority of cases), (2) an alternative journal title, and (3) original (non English) title. Case 1 (identified as containing a
-				number or "Annual", "Conference", "Congress", "Meeting" or "Society") is skipped. All other T3 fields are treated as Journals and as titles.</i>
-   				
-   				<p><i>Reply: a publication is considered a reply if the title (field TI) contains "reply", or contains "author(...)respon(...)", or is nothing but "response" (all case insensitive).</i></p>
-   				
 		        <p>DedupEndNote has borrowed several ideas from: Yu Jiang, Can Lin, Weiyi Meng, Clement Yu, Aaron M. Cohen and Neil R. Smalheiser:
 		        <a href="http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3893659/" target="_blank">Rule-based deduplication of article records from bibliographic databases</a>, in: Database 2014, ID bat086, doi:10.1093/database/bat086</p>
 		        
 		        <h3 id="markModeText">Mark mode</h3>
-		        
+
+				<p>If you want to manually merge the records which are duplicates according to DedupEndNote, you can use Mark mode.</p>  		        
 		        <p>In Mark mode the ID of the first record of a set of duplicate records is copied to the label field ("LB") of all duplicate records.
 		        The input file is copied to the output file with the addition of the Label field if it is not empty.
-		        The original content of the Label field is overwritten! All other fields are copied as is (so no prescribed form of DOI, ...).</p>
+		        The original content of the Label field is overwritten! All other fields are copied as is (so no enriching of the output: prescribed form of DOI, ...).</p>
 		        
-				<p>After importing the results file into a new EndNote database, make the Label field visible. To see the duplicates, search for "Label" "is greater than" 0, and sort on the label field.
-				The IDs in the Label field refer to the IDs of the original EndNote database.</p>
+				<p>After importing the results file into a new EndNote database, make the Label field visible. The IDs in the Label field refer to the IDs of the <u>original</u> EndNote database.</p>
+				<ul>
+					<li>To see the duplicates, search for "Label" "is greater than" 0, and sort on the label field.</li>
+					<li>To manually merge, change in Preferences / Deduplicate the fields to deduplicate on to the Label field, deduplicate (in EndNote) and merge at will</li>
+				</ul>
 				
 				<p>Comparing the results of deduplication by EndNote itself and DedupEndNote:</p>
 				<ul>
@@ -703,7 +816,7 @@
 
 				<h5>Validation</h5>
 
-				<p>A general subset of 3647 records was manually checked (150 records without an Author, 79 with Author "Anonymous",
+				<p>A general subset of 4923 records was manually checked (150 records without an Author, 79 with Author "Anonymous",
 				the 366 articles with "phase" in the title (because of "Phase I", Phase I/II", ...)
 				the rest: "Aagaard"  ... "Abbitt", "Anoob" ... "Axelrod",
 				"Liu", "v Koppenfels" ... "von Woellwarth", and some others). Because replies are treated in a special way, 130 records with "reply" in the title
@@ -726,17 +839,18 @@
 							<td></td>
 							<td>correctly identified unique records</td>
 							<td>incorrectly identified as duplicates</td>
+							<td></td>
 						</tr>
 					</thead>
 					<tbody>
 						<tr>
 							<td>General</td>
-							<td>2781</td>
-							<td>146</td>
-							<td>95.0%</td>
-							<td>720</td>
-							<td>0</td>
-							<td>100.0%</td>
+							<td>3697</td>
+							<td>257</td>
+							<td>93.5%</td>
+							<td>964</td>
+							<td>5</td>
+							<td>99.5%</td>
 						</tr>
 						<tr>
 							<td>Replies</td>
@@ -749,6 +863,27 @@
 						</tr>
 					</tbody>
 				</table>
+				<p>The False Positives were all conference abstracts:</p>
+				<ul>
+					<li>Cheah, Y. L.; Simon, C. J.; Jenkins, R. L.; Akoad, M.: Portal vein thrombosis is not a contraindication to liver transplantation<br/>
+						in: Transplantation 103 (8 Supplement 1), 2019, p.383 DOI: 10.1097/01.tp.0000580472.17422.db</li>
+					<li>Cheah, Y. L.; Simon, C. J.; Jenkins, R. L.; Akoad, M.: Portal vein thrombosis is not a contraindication to liver transplantation<br/>
+						In: Transplantation 103 (8), 2019, p. 383-383</li>
+					<li>Cheah, Y. L.; Simon, C. J.; Jenkins, R.; Akoad, M.: Portal vein thrombosis is not a contraindication in liver transplantation<br/>
+						In: Transplantation 103 (8 Supplement 1), 2019, p.439 DOI: 10.1097/01.tp.0000580472.17422.db</li>
+					<li>Cool, J.; Rosenblatt, R.; Kumar, S.; Lucero, C.; Fortune, B.; Crawford, C. V.; Jesudian, A.: THE ASSOCIATION BETWEEN PORTAL VEIN THROMBOSIS AND OTHER VENOUS THROMBOEMBOLISM IN CIRRHOSIS: ANALYSIS OF A NATIONALLY REPRESENTATIVE INPATIENT COHORT<br/>
+						In: Gastroenterology 154 (6), 2018, p. S1178-S1179</li>
+					<li>Cool, J.; Rosenblatt, R.; Kumar, S.; Lucero, C.; Fortune, B.; Crawford, C. V.; Jesudian, A.: TRENDS IN THE PREVALENCE OF PORTAL VEIN THROMBOSIS AND ASSOCIATED MORTALITY IN CIRRHOSIS: ANALYSIS OF A NATIONALLY REPRESENTATIVE INPATIENT COHORT<br/>
+						In: Gastroenterology 154 (6 Supplement 1), 2018, p. S-1178 DOI: 10.1016/s0016-5085(18)33901-5</li>
+					<li>Fortounis, K.; Delivorias, P.; Paralikoudi, D.; Anastasiadou, A.; Makridis, C.: Complications of laparoscopic sleeve gastrectomy<br/>
+						In: Surgical Endoscopy and Other Interventional Techniques 29 (SUPPL. 1), 2015, p. S215 DOI: 10.1007/s00464-015-4136-7</li>
+					<li>Delivorias, P.; Fortounis, K.; Konstantinidis, K.; Fahiridis, D.; Makridis, C.: Complication-based learning curve in laparoscopic sleeve gastrectomy<br/>
+						In: Surgical Endoscopy and Other Interventional Techniques 29 (SUPPL. 1), 2015, p. S214 DOI: 10.1007/s00464-015-4136-7</li>
+				</ul>
+
+
+
+
 				
 				<h4>Cannabis test database (15,216 records)</h4>
 				<p>See: <a href="https://zenodo.org/record/3531487" target="blank">https://zenodo.org/record/3531487</a> and <a href="https://zenodo.org/communities/icasr/search?page=1&size=20" target="blank">https://zenodo.org/communities/icasr/search?page=1&size=20</a></p>
@@ -819,16 +954,22 @@
 				<h3 id="limitations">Limitations</h3>
 				<ul>
 					<li>Input file size: The maximum size of the input file is limited to 150MB.</li>
+					<li>Input file format: The program only handles files in RIS format, not in XML or CSV format.</li>
 					<li>Encoding: The program assumes that the input file is encoded as UTF-8.</li>
 					<li>If authors AND (all) titles AND (all) journal names for a record use a non-Latin script, results for this record may be inaccurate.</li>
-					<li>The input file must be an export from ONE EndNote database: the ID fields are used internally for identifying the records, so they have to be unique.</li>
+					<li>(when deduplicating one file:) The input file must be an export from ONE EndNote database: the ID fields are used internally for identifying the records, so they have to be unique.</li>
 					<li>The program has been developed and tested for biomedical databases (PubMed, EMBASE, ...) and some general databases (Web of Science, Scopus).
 					Deduplicating records from other databases is not garanteed to work.</li>
-					<li>Records for each publication year are compared to records from the same and the following year: a record from 2016 is compared to the records from 2015 (when treating the records from
-					2015) and from 2016 and 2017 (when treating the records from 2016). A PubMed ahead-of-print record from 2013 and a corresponding record from 2017 (when it was 'officially' 
-					published) will not be compared (and possibly deduplicated).</li>
-					<li>Bibliographic databases are not always very accurate in the starting page of a publication. Because starting page is part of the comparisons,
-					DedupEndNote misses the duplicates when bibliographic databases don't agree on the starting page (and one or both records have no DOIs).</li> 
+					<li>The program uses a bibliographic point of view:
+						<ul>
+							<li>an article or conference abstract that has been published in more than one (issue of a) journal	is not considered a duplicate publication.</li>
+							<li>Records for each publication year are compared to records from the same and the following year: a record from 2016 is compared to the records from 2015 (when treating the records from
+							2015) and from 2016 and 2017 (when treating the records from 2016). A PubMed ahead-of-print record from 2013 and a corresponding record from 2017 (when it was 'officially' 
+							published) will not be compared (and possibly deduplicated).</li>
+							<li>Bibliographic databases are not always very accurate in the starting page of a publication. Because starting page is part of the comparisons,
+							DedupEndNote misses the duplicates when bibliographic databases don't agree on the starting page (and one or both records have no DOIs).</li>
+						</ul>
+					</li> 
 				</ul>
 	        </div>
        </div>

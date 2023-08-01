@@ -10,14 +10,12 @@ public class WebConfig implements WebMvcConfigurer {
 
 	@Override
 	public void addResourceHandlers(ResourceHandlerRegistry registry) {
-		registry
-			.addResourceHandler("/webjars/**") // .addResourceLocations("classpath:/META-INF/resources/webjars/");
-			.addResourceLocations("/webjars/").resourceChain(false);
-		// registry.addResourceHandler("/webjars/**").addResourceLocations("/webjars/");
+		registry.addResourceHandler("/webjars/**").addResourceLocations("/webjars/").resourceChain(false);
+		registry.addResourceHandler("/resources/**").addResourceLocations("/public", "classpath:/static/");
 	}
 
-    @Override
-    public void configureAsyncSupport (AsyncSupportConfigurer configurer) {
-        configurer.setDefaultTimeout(25 * 1000L); 
-    }
+	@Override
+	public void configureAsyncSupport(AsyncSupportConfigurer configurer) {
+		configurer.setDefaultTimeout(25 * 1000L);
+	}
 }

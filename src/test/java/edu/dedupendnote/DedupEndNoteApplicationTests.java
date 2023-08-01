@@ -18,12 +18,12 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.mock.web.MockHttpSession;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
-import edu.dedupendnote.domain.Record;
+import edu.dedupendnote.controllers.DedupEndNoteController;
+import edu.dedupendnote.domain.Publication;
 import edu.dedupendnote.services.DeduplicationService;
 import edu.dedupendnote.services.IOService;
 import lombok.extern.slf4j.Slf4j;
@@ -31,7 +31,14 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @TestConfiguration
 public class DedupEndNoteApplicationTests {
+
 	public DeduplicationService deduplicationService = new DeduplicationService();
+
+	String homeDir = System.getProperty("user.home");
+
+	String testdir = homeDir + "/dedupendnote_files/experiments/";
+
+	String wssessionId = "";
 
 	@BeforeAll
 	static void beforeAll() {
@@ -40,23 +47,24 @@ public class DedupEndNoteApplicationTests {
 		rootLogger.setLevel(Level.INFO);
 		log.debug("Logging level set to INFO");
 	}
-	
+
 	@Test
 	void contextLoads() {
 		assertThat(deduplicationService).isNotNull();
 	}
-	
+
 	// Input file can contain LINE SEPARATOR (\u2028)
 	@Test
 	void lineSeparator() {
 		String line = "ST  - Total Pancreatectomy With Islet Cell Transplantation\u2028for the Treatment of Pancreatic Cancer";
-		
+
 		// LINE SEPARATOR is not an end of line character for a Reader
 		try (StringReader stringReader = new StringReader(line);
 				BufferedReader bufferedReader = new BufferedReader(stringReader)) {
 			Stream<String> lines = bufferedReader.lines();
 			assertThat(lines.count()).as("LINE SEPARATOR is not an end of line character").isEqualTo(1);
-		} catch (IOException e) {
+		}
+		catch (IOException e) {
 			e.printStackTrace();
 		}
 
@@ -67,7 +75,7 @@ public class DedupEndNoteApplicationTests {
 		// Replacing the LINE SEPARATOR is necessary
 		line = line.replaceAll("\\u2028", " ");
 		matcher = IOService.risLinePattern.matcher(line);
-		
+
 		assertThat(matcher.matches()).isTrue();
 		assertThat(matcher.group(1)).isEqualTo("ST");
 		assertThat(matcher.group(3)).endsWith("for the Treatment of Pancreatic Cancer");
@@ -75,146 +83,166 @@ public class DedupEndNoteApplicationTests {
 
 	@Test
 	void deduplicate_OK() {
-		String inputFileName = "src/test/resources/t1.txt";
+		String inputFileName = testdir + "t1.txt";
 		boolean markMode = false;
-		String outputFileName = DedupEndNoteApplication.createOutputFileName(inputFileName, markMode);
+		String outputFileName = DedupEndNoteController.createOutputFileName(inputFileName, markMode);
 
-		String resultString = deduplicationService.deduplicateOneFile(inputFileName, outputFileName, markMode, new MockHttpSession());
+		String resultString = deduplicationService.deduplicateOneFile(inputFileName, outputFileName, markMode,
+				wssessionId);
 
 		assertThat(resultString).isEqualTo(deduplicationService.formatResultString(4, 1));
-//		assertThat(resultString).startsWith("DONE: DedupEndNote removed 3 records, and has written 1 records.");
+		// assertThat(resultString).startsWith("DONE: DedupEndNote removed 3 records, and
+		// has written 1 records.");
 	}
 
 	@Test
 	void deduplicate_OK_test805() {
-		String inputFileName = "src/test/resources/test805.txt";
+		String inputFileName = testdir + "test805.txt";
 		boolean markMode = false;
-		String outputFileName = DedupEndNoteApplication.createOutputFileName(inputFileName, markMode);
+		String outputFileName = DedupEndNoteController.createOutputFileName(inputFileName, markMode);
 		assertThat(new File(inputFileName)).exists();
 
-		String resultString = deduplicationService.deduplicateOneFile(inputFileName, outputFileName, markMode, new MockHttpSession());
-		
+		String resultString = deduplicationService.deduplicateOneFile(inputFileName, outputFileName, markMode,
+				wssessionId);
+
 		assertThat(resultString).isEqualTo(deduplicationService.formatResultString(805, 644));
 	}
 
 	@Disabled("Very slow test")
 	@Test
 	void deduplicate_BIG_FILE() {
-		String inputFileName = "src/test/resources/DedupEndNote_portal_vein_thrombosis_37741.txt";
+		String inputFileName = testdir + "DedupEndNote_portal_vein_thrombosis_37741.txt";
 		boolean markMode = false;
-		String outputFileName = DedupEndNoteApplication.createOutputFileName(inputFileName, markMode);
+		String outputFileName = DedupEndNoteController.createOutputFileName(inputFileName, markMode);
 		assertThat(new File(inputFileName)).exists();
 
-		String resultString = deduplicationService.deduplicateOneFile(inputFileName, outputFileName, markMode, new MockHttpSession());
-		
+		String resultString = deduplicationService.deduplicateOneFile(inputFileName, outputFileName, markMode,
+				wssessionId);
+
 		assertThat(resultString).isEqualTo(deduplicationService.formatResultString(37741, 24382));
 	}
 
 	@Test
 	void deduplicate_NonLatinInput() {
-		String inputFileName = "src/test/resources/Non_Latin_input.txt";
+		String inputFileName = testdir + "Non_Latin_input.txt";
 		boolean markMode = false;
-		String outputFileName = DedupEndNoteApplication.createOutputFileName(inputFileName, markMode);
+		String outputFileName = DedupEndNoteController.createOutputFileName(inputFileName, markMode);
 		assertThat(new File(inputFileName)).exists();
 
-		String resultString = deduplicationService.deduplicateOneFile(inputFileName, outputFileName, markMode, new MockHttpSession());
-		
+		String resultString = deduplicationService.deduplicateOneFile(inputFileName, outputFileName, markMode,
+				wssessionId);
+
 		assertThat(resultString).isEqualTo(deduplicationService.formatResultString(2, 2));
 	}
 
 	@Test
 	void deduplicate_Possibly_missed() {
-		String inputFileName = "src/test/resources/Dedup_PATIJ2_Possibly_missed.txt";
+		String inputFileName = testdir + "Dedup_PATIJ2_Possibly_missed.txt";
 		boolean markMode = false;
-		String outputFileName = DedupEndNoteApplication.createOutputFileName(inputFileName, markMode);
+		String outputFileName = DedupEndNoteController.createOutputFileName(inputFileName, markMode);
 		assertThat(new File(inputFileName)).exists();
 
-		String resultString = deduplicationService.deduplicateOneFile(inputFileName, outputFileName, markMode, new MockHttpSession());
-				
+		String resultString = deduplicationService.deduplicateOneFile(inputFileName, outputFileName, markMode,
+				testdir + "");
+
 		assertThat(resultString).isEqualTo(deduplicationService.formatResultString(18, 12));
 	}
 
 	@Disabled("File missing")
 	@Test
 	void file_without_IDs() {
-		String fileName = "src/test/resources/Recurrance_rate_EndNote_Library_original_deduplicated.txt";
+		String fileName = testdir + "Recurrance_rate_EndNote_Library_original_deduplicated.txt";
 		boolean markMode = false;
-		String outputFileName = DedupEndNoteApplication.createOutputFileName(fileName, markMode);
+		String outputFileName = DedupEndNoteController.createOutputFileName(fileName, markMode);
 
-		String resultString = deduplicationService.deduplicateOneFile(fileName, outputFileName, markMode, new MockHttpSession());
+		String resultString = deduplicationService.deduplicateOneFile(fileName, outputFileName, markMode, wssessionId);
 		assertThat(resultString).startsWith("ERROR: The input file contains records without IDs");
 	}
 
 	@Test
 	void deduplicate_withDuplicateIDs() {
-		String inputFileName = "src/test/resources/Bestand_met_duplicate_IDs.txt";
+		String inputFileName = testdir + "Bestand_met_duplicate_IDs.txt";
 		boolean markMode = false;
-		String outputFileName = DedupEndNoteApplication.createOutputFileName(inputFileName, markMode);
+		String outputFileName = DedupEndNoteController.createOutputFileName(inputFileName, markMode);
 
-		String resultString = deduplicationService.deduplicateOneFile(inputFileName, outputFileName, markMode, new MockHttpSession());
+		String resultString = deduplicationService.deduplicateOneFile(inputFileName, outputFileName, markMode,
+				wssessionId);
 
-		assertThat(resultString).startsWith("ERROR: The IDs of the records of input file " + inputFileName +  " are not unique");
+		assertThat(resultString)
+			.startsWith("ERROR: The IDs of the records of input file " + inputFileName + " are not unique");
 	}
 
 	@Test
 	void addDois() {
 		String doiString = "10.1371/journal.pone.11 onzin http://dx.doi.org/10.1371/journal%2EPONE.22. 10.1371/journal.pone";
-		Record record = new Record();
-		Map<String, Integer> dois = record.addDois(doiString);
+		Publication publication = new Publication();
+		Map<String, Integer> dois = publication.addDois(doiString);
 
-		assertThat(dois).containsOnlyKeys("10.1371/journal.pone.11", "10.1371/journal.pone.22",	"10.1371/journal.pone");
+		assertThat(dois).containsOnlyKeys("10.1371/journal.pone.11", "10.1371/journal.pone.22", "10.1371/journal.pone");
 	}
 
 	@Test
 	void addDoisEscaped() {
 		String doiString = "10.1016/S0016-5085(18)34101-5 http://dx.doi.org/10.1016/S0016-5085%2818%2934101-5";
-		Record record = new Record();
-		Map<String, Integer> dois = record.addDois(doiString);
+		Publication publication = new Publication();
+		Map<String, Integer> dois = publication.addDois(doiString);
 
-		assertThat(dois).containsOnlyKeys("10.1016/s0016-5085(18)34101-5");	// is lowercased!
+		assertThat(dois).containsOnlyKeys("10.1016/s0016-5085(18)34101-5"); // is
+																			// lowercased!
 	}
 
 	@Test
-	void addIssns() {
-		String issn = "0002-9343 (Print) 00029342 (Electronic) 0-12-34567890x (ISBN)";
-		Record record = new Record();
-		List<String> issns = record.addIssns(issn);
+	void addIssns_valid() {
+		String issn = "0002-9343 (Print) 00029342 (Electronic) 0-9752298-0-X (ISBN) xxxxXXXX (all X-es)";
+		Publication publication = new Publication();
+		List<String> issns = publication.addIssns(issn);
 
-		assertThat(issns).containsAll(Arrays.asList("0002-9343", "0002-9342", "01234567890X"));
+		assertThat(issns).hasSize(4).containsAll(Arrays.asList("00029343", "00029342", "097522980X", "XXXXXXXX"));
+	}
+
+	@Test
+	void addIssns_nonvalid() {
+		String issn = "a002-9343 (with letter) 00029342X (11 characters) 0-12-34567890x (12 characters)";
+
+		Publication publication = new Publication();
+		List<String> issns = publication.addIssns(issn);
+
+		assertThat(issns).hasSize(0);
 	}
 
 	@Test
 	void compareIssns() {
-		Record r1 = new Record();
-		Record r2 = new Record();
+		Publication r1 = new Publication();
+		Publication r2 = new Publication();
 		r1.addIssns("0000-0000 1111-1111");
 		r2.addIssns("2222-2222 1111-1111");
 
 		assertThat(deduplicationService.compareIssns(r1, r2)).isTrue();
 
-		Record r3 = new Record();
-		Record r4 = new Record();
+		Publication r3 = new Publication();
+		Publication r4 = new Publication();
 		r3.addIssns("0000-0000");
 		r4.addIssns("1111-1111 2222-2222");
 
 		assertThat(deduplicationService.compareIssns(r3, r4)).isFalse();
 
-		Record r5 = new Record();
-		Record r6 = new Record();
+		Publication r5 = new Publication();
+		Publication r6 = new Publication();
 		r5.addIssns("1234-568x (Print)");
 		r6.addIssns("1234568X (ISSN)");
 
 		assertThat(deduplicationService.compareIssns(r5, r6)).isTrue();
 	}
-	
+
 	@Test
 	void checkReply() {
 		Pattern replyPattern = Pattern.compile("(.*\\breply\\b.*|.*author(.+)respon.*|^response$)");
-		Stream<String> titles = Stream.of("Could TIPS be Applied in All Kinds of Portal Vein Thrombosis: We are not Sure! Reply",
-				"Reply");
-		
+		Stream<String> titles = Stream
+			.of("Could TIPS be Applied in All Kinds of Portal Vein Thrombosis: We are not Sure! Reply", "Reply");
+
 		titles.forEach(t -> assertThat(replyPattern.matcher(t.toLowerCase()).matches()).isTrue());
 	}
 
 	// FIXME: tests for markMode = true;
+
 }

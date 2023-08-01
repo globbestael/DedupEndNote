@@ -2,10 +2,10 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <title>DedupEndNote - Justification</title>
-	<script th:src="@{/webjars/jquery/jquery.min.js}"></script>
-	<script th:src="@{/webjars/jquery-ui/jquery-ui.min.js}"></script>
-	<script th:src="@{/webjars/blueimp-file-upload/js/jquery.fileupload.js}"></script>
-	<script th:src="@{/webjars/blueimp-file-upload/js/jquery.fileupload-process.js}"></script>
+<!-- 	<script th:src="@{/webjars/jquery/jquery.min.js}"></script> -->
+<!-- 	<script th:src="@{/webjars/jquery-ui/jquery-ui.min.js}"></script> -->
+<!-- 	<script th:src="@{/webjars/blueimp-file-upload/js/jquery.fileupload.js}"></script> -->
+<!-- 	<script th:src="@{/webjars/blueimp-file-upload/js/jquery.fileupload-process.js}"></script> -->
 	<link rel="stylesheet" th:href="@{/webjars/bootstrap/css/bootstrap.min.css}">
     <style type="text/css">
     	.bg-info {
@@ -181,9 +181,8 @@
 	       			and sometimes the original title in another field.<br/>
 	       			The translation may be their own: the original title "Autogreffe de cellules souches hématopoïétiques périphériques dans le cadre du traitement d'hémopathies malignes. Partie I: patients." became: 
 	       			<ul>
-	       				<li>Autologous transplantation of peripheral blood stem cells for haematological malignancies. Part I: patients (Web of Science)</li>
 	       				<li>[Autologous transplantation of peripheral blood hematopoietic stem cells in the treatment of hematological malignancies. I: patients] (PubMed)</li>
-	       				<li>Autologous transplantation of peripheral blood stem cells for haematological malignancies. Part I: Patients (Scopus)</li> 
+	       				<li>Autologous transplantation of peripheral blood stem cells for haematological malignancies. Part I: patients (Scopus, Web of Science)</li>
 	       			</ul>
 	       			<p>In the test database of 52.000 records 11% of the records were of non-English origin</p></li> 
 	       			<li>Starting Page: Bibliographic databases do not always use the same fields for comparable content (e.g. PubMed doesn't use the Article number field, and puts the
@@ -213,7 +212,7 @@
 					<li>(see <a href="/#examples">Examples of comparisons</a> on the home page)</li>
 					<li>Most bibliographic databases use UTF-8, some however still use the ASCII set (Web of Science) making comparisons by equality hopeless
 					when diacritical signs or Greek letters are used in one but not both records</li>
-					<li>Bibliographic databases may add metadata ("[French]", "Authors reply", ...)</li>
+					<li>Bibliographic databases may add metadata (e.g. for Title: "[French]", "Authors reply", ...)</li>
 					<li>Bibliographic databases may use different rules for number of authors recorded (when to use "et al."). Are:
 						<ul>
 							<li>Albrecht, M. H.; Vogl, T. J.; Wichmann, J. L.; Martin, S. S.; Scholtz, J. E.; Fischer, S.; Hammerstingl, R. M.; Harth, M.; Nour-Eldin, N. A.; Thalhammer, A.; et al.,</li>
@@ -280,7 +279,7 @@
 						</tr>
 					</tbody>
 				</table>
-				<div><i>Journals: if the JWS between Journal titles is below the threshold, two comparisons of the follwing types are tried:
+				<div><i>Journals: if the JWS between Journal titles is below the threshold, two comparisons of the following types are tried:
 					<ul>
 						<li>"Ann Fr Anesth Reanim" and "Ann... Fr... Anesth... Reanim..."</li>
 						<li>"BMJ" and "B... M... J..."</li>
@@ -289,7 +288,7 @@
 				
 				<p><u><strong>Why Jaro-Winkler Similarity (JWS) and not Levenshtein distance / ...?</strong></u></p>
 				<ul>
-					<li>JWS is always a value between 0 and 1 making it easier to chose a cut-off point for allowed similarity (e.g. similarity > 0.91)</li>
+					<li>JWS is always a value between 0 and 1 making it easier to choose a cut-off point for allowed similarity (e.g. similarity > 0.91)</li>
 					<li>JWS's property of putting a heavier penalty on differences at the beginning of strings proved very helpful in comparing Titles and Authors:
 						<ul>
 							<li>"..." and "... - Commentary" are more similar than if a less partial similarity measure was used</li>
@@ -304,7 +303,7 @@
 	       		<p>Records are put in year sets based on the publication year. Records without publication year are put in a special year set YEAR_0.</p>
 
 				<p>When deduplicating 1 file, records are compared in descending order of pairs of year sets.
-				The YEAR_0 is added to each of these pairs, but records which are marked as duplicates are first removed.
+				The records in YEAR_0 are added to each of these pairs except for the ones which are already marked as duplicates.
 				For an EndNote RIS file with records from 1889 to 2020:</p>
 				<ul>
 					<li>YEAR 2020 + YEAR 2019 + YEAR 0: all records of YEAR 2020 are compared to all records of YEAR 2020 and YEAR 2019 and YEAR 0</li>

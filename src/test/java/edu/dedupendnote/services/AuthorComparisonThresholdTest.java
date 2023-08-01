@@ -14,7 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.test.context.TestConfiguration;
 
-import edu.dedupendnote.domain.Record;
+import edu.dedupendnote.domain.Publication;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
@@ -26,6 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @TestConfiguration
 public class AuthorComparisonThresholdTest extends AuthorsBaseTest {
+
 	List<Triple> triples = new ArrayList<>();
 
 	@BeforeAll
@@ -44,14 +45,14 @@ public class AuthorComparisonThresholdTest extends AuthorsBaseTest {
 	@Test
 	void test() {
 		triples.stream().limit(5).forEach(System.err::println);
-		
+
 		for (Triple triple : triples) {
-			Record r1 = fillRecord(triple.getAuthors1());
-			Record r2 = fillRecord(triple.getAuthors2());
+			Publication r1 = fillRecord(triple.getAuthors1());
+			Publication r2 = fillRecord(triple.getAuthors2());
 			triple.setJws(getHighestSimilarity(r1.getAllAuthors(), r2.getAllAuthors()));
 		}
 		triples.sort(Comparator.comparing(Triple::getJws).reversed());
-		
+
 		triples.stream().limit(10).forEach(System.err::println);
 		for (int i = 100; i > 90; i--) {
 			System.err.println("At " + i + ": " + percentile(triples, i));
@@ -63,12 +64,13 @@ public class AuthorComparisonThresholdTest extends AuthorsBaseTest {
 			.as("AUTHOR_SIMILARITY_NO_REPLY could have a higher value because 99% of validated authors pairs are above this threshold")
 			.isLessThan(DeduplicationService.DefaultAuthorsComparator.AUTHOR_SIMILARITY_NO_REPLY);
 	}
-			
-	private Record fillRecord(String authors) {
-		Record r = new Record();
+
+	private Publication fillRecord(String authors) {
+		Publication r = new Publication();
 		List<String> authorList1 = Arrays.asList(authors.split("; "));
 		authorList1.stream().forEach(a -> r.addAuthors(a));
 		r.fillAllAuthors();
 		return r;
 	}
+
 }

@@ -1,8 +1,11 @@
 package edu.dedupendnote.services;
 
-import edu.dedupendnote.domain.Record;
+import edu.dedupendnote.domain.Publication;
 
 public interface AuthorsComparator {
-	boolean compare(Record r1, Record r2);
+
+	boolean compare(Publication r1, Publication r2);
+
 	Double getSimilarity();
+
 }
