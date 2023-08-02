@@ -287,13 +287,13 @@ Data are from:
         </tr>  
         <tr>
             <td>DedupEndNote</td>
-            <td align="right">769</td>
-            <td align="right">31</td>
-            <td align="right"><strong>96.1%</strong></td>
+            <td align="right">766</td>
+            <td align="right">34</td>
+            <td align="right"><strong>95.7%</strong></td>
             <td align="right">1188</td>
             <td align="right">0</td>
             <td align="right"><strong>100.0%</strong></td>
-            <td align="right"><strong>98.4%</strong></td>
+            <td align="right"><strong>97.8%</strong></td>
         </tr>
         <tr>
             <td cellspan="9" style="height: 15px;"></td>
@@ -395,13 +395,13 @@ Data are from:
         </tr>
         <tr>
             <td>DedupEndNote</td>
-            <td align="right">2013</td>
-            <td align="right">59</td>
-            <td align="right">97.2%</td>
+            <td align="right">2010</td>
+            <td align="right">62</td>
+            <td align="right">97.0%</td>
             <td align="right">1058</td>
             <td align="right">0</td>
             <td align="right"><strong>100.0%</strong></td>
-            <td align="right"><strong>98.1%</strong></td>
+            <td align="right"><strong>98.0%</strong></td>
         </tr>
         <tr>
             <td cellspan="9" style="height: 15px;"></td>
@@ -409,13 +409,13 @@ Data are from:
         <tr>
             <td>BIG_SET<br>(4923 rec)</td>
             <td>DedupEndNote</td>
-            <td align="right">3697</td>
-            <td align="right">257</td>
-            <td align="right">93.5%</td>
-            <td align="right">964</td>
-            <td align="right">5</td>
-            <td align="right">99.5%</td>
-            <td align="right">94.7%</td>
+            <td align="right">3681</td>
+            <td align="right">275</td>
+            <td align="right">93.0%</td>
+            <td align="right">966</td>
+            <td align="right">1</td>
+            <td align="right">99.9%</td>
+            <td align="right">94.4%</td>
         </tr>
 	</tbody>
 </table>
@@ -512,7 +512,7 @@ For the ASySD validation files the results are reported in a different way:
             <td align="right">3516</td>
             <td align="right">21</td>
             <td align="right">99.4%</td>
-            <td align="right">5421</td>
+            <td align="right">5411</td>
             <td align="right">0</td>
             <td align="right"><strong>100.0%</strong></td>
             <td align="right"><strong>100.0%</strong></td>
@@ -586,7 +586,7 @@ For the ASySD validation files the results are reported in a different way:
         <tr>
             <td>DedupEndNote (corrected GOLD)</td>
             <td align="right">9731</td>
-            <td align="right">671</td>
+            <td align="right">571</td>
             <td align="right">94.5%</td>
             <td align="right">69563</td>
             <td align="right">15</td>
@@ -777,14 +777,14 @@ For the ASySD validation files the results are reported in a different way:
         </tr>
         <tr>
             <td>DedupEndNote</td>
-            <td align="right">16804</td>
-            <td align="right">111</td>
-            <td align="right"><strong>99.3%</strong></td>
-            <td align="right">36072</td>
-            <td align="right">14</td>
+            <td align="right">16784</td>
+            <td align="right">101</td>
+            <td align="right"><strong>99.4%</strong></td>
+            <td align="right">36098</td>
+            <td align="right">18</td>
             <td align="right"><strong>99.9%</strong></td>
             <td align="right"><strong>99.9%</strong></td>
-            <td align="right"><strong>99.7%</strong></td>
+            <td align="right"><strong>99.8%</strong></td>
             <td align="right"><strong>99.6%</strong></td>
         </tr>
         <tr>
