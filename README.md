@@ -435,6 +435,8 @@ For the ASySD validation files the results are reported in a different way:
 | **accuracy** | (TP + TN) / (TP + FN + TN + FP) |
 | **F1** | 2 * (precision * recall) / (precision + recall) |
 
+The performance scores in the table below are copied from the bioRxiv ASySD publication ([https://doi.org/10.1101/2021.05.04.442412](https://doi.org/10.1101/2021.05.04.442412),  May 2021) except for the scores of DedupEndNote. 
+Newer versions of ASySD can have other / better scores.
 
 <table border="1">
     <colgroup>
