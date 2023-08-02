@@ -464,62 +464,62 @@ Newer versions of ASySD can have other / better scores.
             <td rowspan="5">ASySD Cardiac Human<br>(8948 rec)</td>
             <td>Human</td>
             <td align="right">3136</td>
-            <td align="right">374</td>
-            <td align="right">89.3%</td>
-            <td align="right">5421</td>
+            <td align="right">394</td>
+            <td align="right">88.8%</td>
+            <td align="right">5401</td>
             <td align="right">17</td>
-            <td align="right">99.7%</td>
-            <td align="right">99.5%</td>
-            <td align="right">95.6%</td>
-            <td align="right">94.1%</td>
+            <td align="right"><strong>100.0%</strong></td>
+            <td align="right">99.4%</td>
+            <td align="right">95.4%</td>
+            <td align="right">93.9%</td>
         </tr>
         <tr>
-            <td>EndNote</td>
-            <td align="right">2734</td>
-            <td align="right">776</td>
-            <td align="right">77.9%</td>
-            <td align="right">5435</td>
-            <td align="right">3</td>
+            <td>EndNote X9</td>
+            <td align="right">2735</td>
+            <td align="right">795</td>
+            <td align="right">77.5%</td>
+            <td align="right">5416</td>
+            <td align="right">2</td>
+            <td align="right">100,0%</td>
             <td align="right">99.9%</td>
-            <td align="right">99.9%</td>
-            <td align="right">91.3%</td>
-            <td align="right">94.1%</td>
+            <td align="right">91.1%</td>
+            <td align="right">87.3%</td>
         </tr>
         <tr>
             <td>SRA-DM</td>
-            <td align="right">1149</td>
-            <td align="right">2361</td>
-            <td align="right">32.7%</td>
-            <td align="right">5163</td>
-            <td align="right">275</td>
-            <td align="right">94.9%</td>
-            <td align="right">80.7%</td>
+            <td align="right">1151</td>
+            <td align="right">2379</td>
+            <td align="right">32.6%</td>
+            <td align="right">5145</td>
+            <td align="right">273</td>
+            <td align="right">95.0%</td>
+            <td align="right">80.8%</td>
             <td align="right">70.4%</td>
-            <td align="right">46.6%</td>
+            <td align="right">46.5%</td>
         </tr>
         <tr>
             <td>ASySD</td>
             <td align="right">3503</td>
-            <td align="right">7</td>
-            <td align="right"><strong>99.8%</strong></td>
-            <td align="right">5434</td>
-            <td align="right">7</td>
+            <td align="right">27</td>
+            <td align="right">99.2%</td>
+            <td align="right">5414</td>
+            <td align="right">4</td>
             <td align="right">99.9%</td>
             <td align="right">99.9%</td>
-            <td align="right"><strong>99.9%</strong></td>
-            <td align="right"><strong>99.8%</strong></td>
+            <td align="right">99.7%</td>
+            <td align="right">99.6%</td>
         </tr>
         <tr>
             <td>DedupEndNote</td>
             <td align="right">3516</td>
             <td align="right">21</td>
-            <td align="right">99.4%</td>
+            <td align="right"><strong>99.4%</strong></td>
             <td align="right">5411</td>
             <td align="right">0</td>
             <td align="right"><strong>100.0%</strong></td>
             <td align="right"><strong>100.0%</strong></td>
-            <td align="right">99.8%</td>
-            <td align="right">99.7%</td>
+            <td align="right"><strong>99.8%</strong></td>
+            <td align="right"><strong>99.7%</strong></td>
         </tr>
         <tr>
             <td cellspan="9" style="height: 15px;"></td>
@@ -527,51 +527,51 @@ Newer versions of ASySD can have other / better scores.
         <tr>
             <td rowspan="6">ASySD Depression<br>(79880 rec)</td>
             <td>Human</td>
-            <td align="right">9380</td>
-            <td align="right">669</td>
-            <td align="right">93.3%</td>
-            <td align="right">69793</td>
-            <td align="right">28</td>
-            <td align="right"><strong>99.9%</strong></td>
+            <td align="right">9393</td>
+            <td align="right">499</td>
+            <td align="right">92.7%</td>
+            <td align="right">69720</td>
+            <td align="right">60</td>
+            <td align="right"><strong>100.0%</strong></td>
             <td align="right">99.7%</td>
-            <td align="right">99.1%</td>
-            <td align="right">96.4%</td>
+            <td align="right">99.0%</td>
+            <td align="right">96.1%</td>
         </tr>
         <tr>
-            <td>EndNote</td>
+            <td>EndNote X9</td>
             <td align="right">7531</td>
-            <td align="right">2528</td>
-            <td align="right">74.9%</td>
-            <td align="right">69816</td>
+            <td align="right">2604</td>
+            <td align="right">74.3%</td>
+            <td align="right">69740</td>
             <td align="right">5</td>
+            <td align="right">98.1%</td>
             <td align="right"><strong>99.9%</strong></td>
-            <td align="right"><strong>99.9%</strong></td>
-            <td align="right">96.8%</td>
-            <td align="right">85.6%</td>
+            <td align="right">96.7%</td>
+            <td align="right">85.2%</td>
         </tr>
         <tr>
             <td>SRA-DM</td>
-            <td align="right">9448</td>
-            <td align="right">611</td>
-            <td align="right">93.9%</td>
-            <td align="right">68473</td>
-            <td align="right">1348</td>
-            <td align="right">98.0%</td>
-            <td align="right">87.5%</td>
-            <td align="right">97.6%</td>
-            <td align="right">90.6%</td>
+            <td align="right">9462</td>
+            <td align="right">673</td>
+            <td align="right">93.4%</td>
+            <td align="right">68411</td>
+            <td align="right">1334</td>
+            <td align="right">98.1%</td>
+            <td align="right">87.6%</td>
+            <td align="right">97.5%</td>
+            <td align="right">90.4%</td>
         </tr>
         <tr>
             <td>ASySD</td>
-            <td align="right">9624</td>
-            <td align="right">435</td>
-            <td align="right"><strong>95.7%</strong></td>
-            <td align="right">69747</td>
-            <td align="right">72</td>
-            <td align="right"><strong>99.9%</strong></td>
+            <td align="right">9636</td>
+            <td align="right">499</td>
+            <td align="right"><strong>95.1%</strong></td>
+            <td align="right">69685</td>
+            <td align="right">60</td>
+            <td align="right">99.9%</td>
+            <td align="right">99.4%</td>
             <td align="right">99.3%</td>
-            <td align="right"><strong>99.4%</strong></td>
-            <td align="right"><strong>97.4%</strong></td>
+            <td align="right"><strong>97.2%</strong></td>
         </tr>
         <tr>
             <td>DedupEndNote</td>
@@ -592,9 +592,9 @@ Newer versions of ASySD can have other / better scores.
             <td align="right">94.5%</td>
             <td align="right">69563</td>
             <td align="right">15</td>
-            <td align="right"><strong>99.9%</string></td>
+            <td align="right">99.9%</td>
             <td align="right">99.8%</td>
-            <td align="right">99.3%</td>
+            <td align="right"><strong>99.4%</strong></td>
             <td align="right">97.1%</td>
         </tr>
         <tr>
@@ -614,7 +614,7 @@ Newer versions of ASySD can have other / better scores.
             <td align="right">82.8%</td>
         </tr>
         <tr>
-            <td>EndNote</td>
+            <td>EndNote X9</td>
             <td align="right">1218</td>
             <td align="right">43</td>
             <td align="right">96.6%</td>
@@ -669,49 +669,49 @@ Newer versions of ASySD can have other / better scores.
             <td>Human</td>
             <td align="right">1274</td>
             <td align="right">19</td>
-            <td align="right">98.5%</td>
+            <td align="right"><strong>98.5%</strong></td>
             <td align="right">2139</td>
             <td align="right">6</td>
             <td align="right">99.7%</td>
             <td align="right">99.6%</td>
             <td align="right">99.3%</td>
-            <td align="right">99.0%</td>
+            <td align="right">98.8%</td>
         </tr>
         <tr>
-            <td>EndNote</td>
+            <td>EndNote X9</td>
             <td align="right">983</td>
-            <td align="right">310</td>
-            <td align="right">76.0%</td>
-            <td align="right">2142</td>
+            <td align="right">315</td>
+            <td align="right">75.7%</td>
+            <td align="right">2137</td>
             <td align="right">3</td>
-            <td align="right">99.0%</td>
+            <td align="right"><strong>99.9%</strong></td>
             <td align="right">99.7%</td>
-            <td align="right">90.9%</td>
-            <td align="right">86.3%</td>
+            <td align="right">90.7%</td>
+            <td align="right">86.1%</td>
         </tr>
         <tr>
             <td>SRA-DM</td>
             <td align="right">1050</td>
-            <td align="right">243</td>
-            <td align="right">81.2%</td>
-            <td align="right">2103</td>
+            <td align="right">248</td>
+            <td align="right">81.0%</td>
+            <td align="right">2098</td>
             <td align="right">42</td>
             <td align="right">98.0%</td>
             <td align="right">96.2%</td>
-            <td align="right">91.7%</td>
-            <td align="right">88.0%</td>
+            <td align="right">91.6%</td>
+            <td align="right">87.9%</td>
         </tr>
         <tr>
             <td>ASySD</td>
-            <td align="right">1278</td>
-            <td align="right">15</td>
-            <td align="right"><strong>98.8%</strong></td>
-            <td align="right">2141</td>
-            <td align="right">4</td>
-            <td align="right">99.8%</td>
-            <td align="right">99.7%</td>
+            <td align="right">1279</td>
+            <td align="right">19</td>
+            <td align="right"><strong>98.5%</strong></td>
+            <td align="right">2137</td>
+            <td align="right">3</td>
+            <td align="right"><strong>99.9%</strong></td>
+            <td align="right"><strong>99.8%</strong></td>
             <td align="right"><strong>99.4%</strong></td>
-            <td align="right"><strong>99.3%</strong></td>
+            <td align="right"><strong>99.1%</strong></td>
         </tr>
         <tr>
             <td>DedupEndNote</td>
@@ -721,7 +721,7 @@ Newer versions of ASySD can have other / better scores.
             <td align="right">2124</td>
             <td align="right">3</td>
             <td align="right"><strong>99.9%</strong></td>
-            <td align="right">99.8%</td>
+            <td align="right"><strong>99.8%</strong></td>
             <td align="right">99.0%</td>
             <td align="right">98.7%</td>
         </tr>
@@ -731,35 +731,35 @@ Newer versions of ASySD can have other / better scores.
         <tr>
             <td rowspan="5">ASySD SRSR Human<br>53001 rec</td>
             <td>Human</td>
-            <td align="right">16668</td>
-            <td align="right">170</td>
-            <td align="right">99.0%</td>
-            <td align="right">36053</td>
-            <td align="right">110</td>
+            <td align="right">16653</td>
+            <td align="right">202</td>
+            <td align="right">98.8%</td>
+            <td align="right">36021</td>
+            <td align="right">125</td>
             <td align="right">99.7%</td>
             <td align="right">99.3%</td>
-            <td align="right">99.5%</td>
-            <td align="right">99.2%</td>
+            <td align="right">99.4%</td>
+            <td align="right">99.0%</td>
         </tr>
         <tr>
-            <td>EndNote</td>
-            <td align="right">12794</td>
-            <td align="right">4044</td>
-            <td align="right">76.0%</td>
-            <td align="right">36127</td>
-            <td align="right">36</td>
+            <td>EndNote X9</td>
+            <td align="right">12784</td>
+            <td align="right">4071</td>
+            <td align="right">75.8%</td>
+            <td align="right">36100</td>
+            <td align="right">46</td>
             <td align="right"><strong>99.9%</strong></td>
-            <td align="right">99.7%</td>
-            <td align="right">92.3%</td>
-            <td align="right">86.2%</td>
+            <td align="right">99.6%</td>
+            <td align="right">92.2%</td>
+            <td align="right">86.1%</td>
         </tr>
         <tr>
             <td>SRA-DM</td>
-            <td align="right">11946</td>
-            <td align="right">4892</td>
+            <td align="right">11943</td>
+            <td align="right">4912</td>
             <td align="right">70.9%</td>
-            <td align="right">34295</td>
-            <td align="right">1868</td>
+            <td align="right">34275</td>
+            <td align="right">1871</td>
             <td align="right">94.8%</td>
             <td align="right">86.5%</td>
             <td align="right">87.2%</td>
@@ -767,15 +767,15 @@ Newer versions of ASySD can have other / better scores.
         </tr>
         <tr>
             <td>ASySD</td>
-            <td align="right">16543</td>
-            <td align="right">295</td>
-            <td align="right">98.2%</td>
-            <td align="right">36142</td>
-            <td align="right">21</td>
+            <td align="right">16529</td>
+            <td align="right">326</td>
+            <td align="right">98.1%</td>
+            <td align="right">36111</td>
+            <td align="right">35</td>
             <td align="right"><strong>99.9%</strong></td>
-            <td align="right"><strong>99.9%</strong></td>
-            <td align="right">99.4%</td>
-            <td align="right">99.1%</td>
+            <td align="right">99.8%</td>
+            <td align="right">99.3%</td>
+            <td align="right">98.9%</td>
         </tr>
         <tr>
             <td>DedupEndNote</td>
