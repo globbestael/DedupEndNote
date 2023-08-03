@@ -31,10 +31,12 @@
 	       		<h3 id="endnote">1. Why only EndNote export files?</h3>
 	   			<div>EndNote is very good at importing export files from many bibliographic databases. The export from an EndNote database has a standard format,
 	   			which makes reading and interpreting records for DedupEndNote a lot easier.</div>
+	   			<div>(This version of) DedupEndNote does not read EndNote XML exports, because reading and writing XML files is more complex 
+					   than reading and writing a RIS file, without offering any benefit.</div>
 	
 	       		<h3 id="not_endnote">2. I don't use EndNote, but ...</h3>
 	   			<div>Sorry, the program has been developed and tested with EndNote export files in RIS format.</div>
-	   			<div>However, the code is available on <a href="TODO"><span style="color: red">TODO ...</span></a>. For other databases the main changes will probably have
+	   			<div>However, the code is available on <a href="https://github.com/globbestael/DedupEndNote">GitHub</a>. For other databases the main changes will probably have
 	   			to be made only in the functions for reading and writing.</div>
 	
 	       		<h3 id="groups">3. I use groups, comments, ... in EndNote and don't want to lose them</h3>
@@ -99,16 +101,24 @@
 				making comparison between results of deduplication by EndNote and by DedupEndNote feasible.</p>
 				
 				<h5>False positives</h5>
-				<p>No false positive were found in the validation sets (10,198 validated records):</p>
+				<p>There was only 1 false positive found in the validation sets (11,474 validated records):</p>
 				<ul>
 					<li>Cytology screening (from SRA-DM, 1856 records, all validated)</li>
 					<li>Haematology (from SRA-DM, 1415 records, all validated)</li>
 					<li>Respiratory (from SRA-DM, 1988 records, all validated)</li>
 					<li>Stroke (from SRA-DM, 1292 records, all validated)</li>
-					<li>BIG SET (our own test database of 52,828 records, with 3647 records validated)
+					<li>BIG SET (our own test database of 52,828 records, with 4923 records validated)
+				</ul>
+				
+				<ul>
+					<li>Cool, J.; Rosenblatt, R.; Kumar, S.; Lucero, C.; Fortune, B.; Crawford, C. V.; Jesudian, A.: 
+						The Association Between Portal Vein Thrombosis and Other Venous Thromboembolism in Cirrhosis: 
+						Analysis of a Nationally Representative Inpatient Cohort, in: Gastroenterology 154 (6 Supplement 1), 2018, S-1179</li>
+					<li>Cool, J.; Rosenblatt, R.; Kumar, S.; Lucero, C.; Fortune, B.; Crawford, C. V.; Jesudian, A.: 
+						TRENDS IN THE PREVALENCE OF PORTAL VEIN THROMBOSIS AND ASSOCIATED MORTALITY IN CIRRHOSIS: 
+						ANALYSIS OF A NATIONALLY REPRESENTATIVE INPATIENT COHORT, in: Gastroenterology 154 (6 Supplement 1), 2018, S-1178</li>
 				</ul>
 					
-
 				<h5>False negatives</h5>
 				<p>DedupEndNote will miss some duplicate records, e.g.:</p>
 				<ol>

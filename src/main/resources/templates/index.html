@@ -204,7 +204,7 @@
 						<a class="list-group-item list-group-item-action" href="#what">What does DedupEndNote do?</a>
 						<a class="list-group-item list-group-item-action" href="#markModeText">Mark mode</a>
 						<a class="list-group-item list-group-item-action" href="#examples">Examples of comparison</a>
-						<a class="list-group-item list-group-item-action" href="#test">Test results</a>
+						<a class="list-group-item list-group-item-action" href="#performance">Performance</a>
 						<a class="list-group-item list-group-item-action" href="#limitations">Limitations</a>
 						<!-- these links to other pages open a new window in order to preserve the Web Socket sessionId on this page (possibly running a deduplication --> 
 						<a class="list-group-item list-group-item-action" href="/justification" target="window2">Justification</a>
@@ -214,7 +214,7 @@
 				</nav>
 			</div>
 			<div class="col-9" style="height: 100vh; position: relative;">
-				<h1 id="start">DedupEndNote (version 0.9.7b 20230326)</h1>
+				<h1 id="start">DedupEndNote (version 0.9.7c 20230803)</h1>
 				<div class="row col-11 border border-primary rounded alert alert-secondary" id="step1">
 					<div class="col-3">
 						<h3>1. INPUT FILE</h3>
@@ -764,7 +764,10 @@
 				<p>*: In these cases the comparison of DedupEndNote for this content for this field is not accurate. However, the comparison of the other fields
 				for these records does not result in YES answers, so the records are ultimately not considered duplicates.</p>
 	
-				<h3 id="test">Test results</h3>
+				<h3 id="performance">Performance</h3>
+				
+				<p>See <a href="https://github.com/globbestael/DedupEndnote#performance" target="github">here</a> for comparison with other tools 
+				and published test sets.</p>
 
 				<h4>Own test database: portal vein thrombosis (52,828 records) </h4>
 				<p>See <a href="/test_results_details">Test results - details</a> for a description of this test database.</p>				
@@ -845,12 +848,12 @@
 					<tbody>
 						<tr>
 							<td>General</td>
-							<td>3697</td>
-							<td>257</td>
-							<td>93.5%</td>
-							<td>964</td>
-							<td>5</td>
-							<td>99.5%</td>
+							<td>3681</td>
+							<td>275</td>
+							<td>93.0%</td>
+							<td>966</td>
+							<td>1</td>
+							<td>99.9%</td>
 						</tr>
 						<tr>
 							<td>Replies</td>
@@ -882,9 +885,7 @@
 				</ul>
 
 
-
-
-				
+<!--					
 				<h4>Cannabis test database (15,216 records)</h4>
 				<p>See: <a href="https://zenodo.org/record/3531487" target="blank">https://zenodo.org/record/3531487</a> and <a href="https://zenodo.org/communities/icasr/search?page=1&size=20" target="blank">https://zenodo.org/communities/icasr/search?page=1&size=20</a></p>
 				<table class="table table-sm">
@@ -950,12 +951,12 @@
 					<li>Different journals: <a target="blank" href="http://dx.doi.org/10.1016/S0168-8278%2811%2960938-0">http://dx.doi.org/10.1016/S0168-8278%2811%2960938-0</a> and <a target="blank" href="10.1016/s1590-8658(11)60057-1">10.1016/s1590-8658(11)60057-1</a></li>
 					<li>Same journal: <a target="blank" href="10.1002/cld.552 and 10.1002/cld.599">10.1002/cld.552 and 10.1002/cld.599</a></li>
 				</ul>
-
+-->
 				<h3 id="limitations">Limitations</h3>
 				<ul>
 					<li>Input file size: The maximum size of the input file is limited to 150MB.</li>
 					<li>Input file format: The program only handles files in RIS format, not in XML or CSV format.</li>
-					<li>Encoding: The program assumes that the input file is encoded as UTF-8.</li>
+					<li>Input file encoding: The program assumes that the input file is encoded as UTF-8.</li>
 					<li>If authors AND (all) titles AND (all) journal names for a record use a non-Latin script, results for this record may be inaccurate.</li>
 					<li>(when deduplicating one file:) The input file must be an export from ONE EndNote database: the ID fields are used internally for identifying the records, so they have to be unique.</li>
 					<li>The program has been developed and tested for biomedical databases (PubMed, EMBASE, ...) and some general databases (Web of Science, Scopus).
