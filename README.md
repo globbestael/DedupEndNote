@@ -420,7 +420,7 @@ Data are from:
 ## Limitations
 * Input file size: The maximum size of the input file is limited to 150MB.
 * Input file format: only EndNote RIS file (at present)
-* Encoding: The program assumes that the input file is encoded as UTF-8.
+* Input file encoding: The program assumes that the input file is encoded as UTF-8.
 * The program uses a bibliographic point of view: an article or conference abstract that has been published in more than one (issue of a) journal is not considered a duplicate publication.
 * If authors AND (all) titles AND (all) journal names for a record use a non-Latin script, results for this record may be inaccurate.
 * Each input file must be an export from ONE EndNote database: the ID fields are used internally for identifying the records, so they have to be unique. When comparing 2 files the ID fields may be common between the 2 files.
