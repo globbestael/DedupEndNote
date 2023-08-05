@@ -64,64 +64,22 @@ public class DedupEndNoteController {
 	 */
 	// @formatter:on
 
+	public static String createOutputFileName(String fileName, boolean markMode) {
+		String extension = StringUtils.getFilenameExtension(fileName);
+		String outputFileName = fileName.replaceAll("." + extension + "$",
+				(markMode ? "_mark." : "_deduplicated.") + extension);
+		return outputFileName;
+	}
+
+	private static void log(Object message) {
+		System.out.println(String.format("%s %s ", Thread.currentThread().getName(), message));
+	}
+
 	@Autowired
 	public DeduplicationService deduplicationService;
 
-	// @Autowired
-	// private SimpMessagingTemplate simpMessagingTemplate;
-
-	// private Map<String, ListenableFuture<String>> runningFutures = new HashMap<>();
-
 	@Value("upload-dir")
 	private String uploadDir;
-
-	// @MessageMapping("/start")
-	// @SendToUser("/topic/messages")
-	// public StompMessage greeting(String message, @Header("simpSessionId") String
-	// wssessionId) throws Exception {
-	// Thread.sleep(1000); // simulated delay
-	// System.err.println("EINDELIJK HIER met sessionId " + wssessionId);
-	// return new StompMessage("Hello, " + message + "!");
-	// }
-
-	@GetMapping("/")
-	public String home(HttpSession session) {
-		return "index";
-	}
-
-	// FIXME: use resources
-	@GetMapping("/developers")
-	public String developers(HttpSession session) {
-		return "developers";
-	}
-
-	@GetMapping("/faq")
-	public String faq(HttpSession session) {
-		return "faq";
-	}
-
-	@GetMapping("/justification")
-	public String justification() {
-		return "justification";
-	}
-
-	@GetMapping("/test_results_details")
-	public String test_results_details(HttpSession session) {
-		return "test_results_details";
-	}
-
-	@GetMapping("/twofiles")
-	public String twofiles(final HttpSession session) {
-		return "twofiles";
-	}
-
-	// @GetMapping("/recordstatus.json")
-	// @ResponseBody
-	// public String recordStatus(HttpSession session) {
-	// String result = (String) session.getAttribute("result");
-	// log.info("Session: {}", result);
-	// return "{ \"result\": \"" + result + "\" }";
-	// }
 
 	@PostMapping(value = "/getResultFile", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
 	public void getResultFile(@RequestParam("fileNameResultFile") String fileName,
@@ -134,158 +92,19 @@ public class DedupEndNoteController {
 		try {
 			Files.copy(path, response.getOutputStream());
 			response.getOutputStream().flush();
-		}
-		catch (IOException ex) {
+		} catch (IOException ex) {
 			ex.printStackTrace();
 		}
 	}
 
-	public static String createOutputFileName(String fileName, boolean markMode) {
-		String extension = StringUtils.getFilenameExtension(fileName);
-		String outputFileName = fileName.replaceAll("." + extension + "$",
-				(markMode ? "_mark." : "_deduplicated.") + extension);
-		return outputFileName;
+	@GetMapping("/")
+	public String home(HttpSession session) {
+		return "index";
 	}
 
-	// @PostMapping(value = "/upload", produces = "application/json")
-	// public ResponseEntity<String> handleFormUpload(@RequestParam("file") MultipartFile
-	// file, @RequestParam(name = "markMode", required = false) boolean markMode,
-	// String wssessionId, HttpSession session) throws Exception {
-	// log.info("markMode is: {}", markMode);
-	// System.err.println("wssessionId is: " + wssessionId);
-	// if (!file.isEmpty()) {
-	// try {
-	// Path path = Paths.get(ROOT, file.getOriginalFilename());
-	// if (Files.exists(path, LinkOption.NOFOLLOW_LINKS)) {
-	// Files.delete(path);
-	// }
-	// Files.copy(file.getInputStream(), path);
-	// return ResponseEntity.ok("{ \"result\": \"You successfully uploaded " +
-	// file.getOriginalFilename() + "\"}");
-	// } catch (IOException | RuntimeException e) {
-	// e.printStackTrace();
-	// return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-	// .body("{ \"result\": \"Failed to upload " + file.getOriginalFilename() + " => " +
-	// e.getClass() + "\"}");
-	// }
-	// } else {
-	// return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-	// .body("{ \"result\": \"Failed to upload " + file.getOriginalFilename() + " because
-	// it was empty" + "\"}");
-	// }
-	// }
-
-	@PostMapping(value = "/uploadFile", produces = "application/json")
-	public ResponseEntity<String> uploadFile(@RequestParam("file") MultipartFile file) throws Exception {
-		if (!file.isEmpty()) {
-			try {
-				Path path = Paths.get(uploadDir, file.getOriginalFilename());
-				if (Files.exists(path, LinkOption.NOFOLLOW_LINKS)) {
-					Files.delete(path);
-				}
-				Files.copy(file.getInputStream(), path);
-				return ResponseEntity
-					.ok("{ \"result\": \"You successfully uploaded " + file.getOriginalFilename() + "\"}");
-			}
-			catch (IOException | RuntimeException e) {
-				e.printStackTrace();
-				return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-					.body("{ \"result\": \"Failed to upload " + file.getOriginalFilename() + " => " + e.getClass()
-							+ "\"}");
-			} 
-		}
-		else {
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-				.body("{ \"result\": \"Failed to upload " + file.getOriginalFilename() + " because it was empty"
-						+ "\"}");
-		}
-	}
-
-	// @PostMapping(value = "/upload", produces = "application/json")
-	// public ResponseEntity<String> handleFormUpload(@RequestParam("file") MultipartFile
-	// file, @RequestParam(name = "markMode", required = false) boolean markMode,
-	// HttpSession session) {
-	// log.info("markMode is: {}", markMode);
-	// if (!file.isEmpty()) {
-	// try {
-	// Path path = Paths.get(ROOT, file.getOriginalFilename());
-	// if (Files.exists(path, LinkOption.NOFOLLOW_LINKS)) {
-	// Files.delete(path);
-	// }
-	// Files.copy(file.getInputStream(), path);
-	// String inputFileName = file.getOriginalFilename();
-	// String outputFileName = createOutputFileName(inputFileName, markMode);
-	// startDeduplication(inputFileName, outputFileName, markMode, session);
-	// return ResponseEntity.ok("{ \"result\": \"You successfully uploaded " +
-	// file.getOriginalFilename() + "\"}");
-	// } catch (IOException | RuntimeException e) {
-	// e.printStackTrace();
-	// return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-	// .body("{ \"result\": \"Failed to upload " + file.getOriginalFilename() + " => " +
-	// e.getClass() + "\"}");
-	// }
-	// } else {
-	// return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-	// .body("{ \"result\": \"Failed to upload " + file.getOriginalFilename() + " because
-	// it was empty" + "\"}");
-	// }
-	// }
-
-	/*
-	 * Deduplicating 2 files in 2 steps: - "/uploadTwoFiles": upload 2 files
-	 * (MultiPartFile's) - "/startTwoFiles": read the 2 fileNames and the number
-	 * indicating which file contains the old records
-	 */
-	// @PostMapping(value = "/uploadTwoFiles", produces = "application/json")
-	// public ResponseEntity<String> handleMultipleFormUpload(@RequestParam("files")
-	// MultipartFile[] files, HttpSession session) {
-	// log.info("file 0: {}", files[0].getOriginalFilename());
-	// log.info("file 1: {}", files[1].getOriginalFilename());
-	//
-	// if (!files[0].isEmpty() && !files[1].isEmpty()) {
-	// for (int i = 0; i < files.length; i++) {
-	// try {
-	// Path path = Paths.get(ROOT, files[i].getOriginalFilename());
-	// if (Files.exists(path, LinkOption.NOFOLLOW_LINKS))
-	// Files.delete(path);
-	// Files.copy(files[i].getInputStream(), path);
-	// } catch (IOException | RuntimeException e) {
-	// e.printStackTrace();
-	// return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-	// .body("{ \"result\": \"Failed to upload " + files[i].getOriginalFilename() + " => "
-	// + e.getClass() + "\"}");
-	// }
-	// }
-	// } else {
-	// return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-	// .body("{ \"result\": \"Failed to upload " + files[0].getOriginalFilename() + " and
-	// " + files[1].getOriginalFilename()
-	// + " because at least one of them was empty" + "\"}");
-	// }
-	// // startDeduplication(files[0].getOriginalFilename(),
-	// files[1].getOriginalFilename(),
-	// // createOutputFileName(files[0].getOriginalFilename()), session);
-	// return ResponseEntity.ok("{ \"result\": \"You successfully uploaded " +
-	// files[0].getOriginalFilename() + " and "
-	// + files[1].getOriginalFilename() + "\"}");
-	// }
-
-	@PostMapping(value = "/startOneFile", produces = "application/json")
-	public ResponseEntity<String> startOneFile(@RequestParam("fileName_1") String inputFileName,
-			@RequestParam(name = "markMode", required = false) boolean markMode,
-			@RequestParam("wssessionId") String wssessionId) throws Exception {
-		String outputFileName = createOutputFileName(inputFileName, markMode);
-		startDeduplication(inputFileName, outputFileName, markMode, wssessionId);
-		return ResponseEntity.ok("{ \"result\": \"Deduplication of " + inputFileName + " has started\"}");
-	}
-
-	@PostMapping(value = "/startTwoFiles", produces = "application/json")
-	public ResponseEntity<String> startTwoFiles(@RequestParam("oldFile") String oldFile,
-			@RequestParam("newFile") String newFile,
-			@RequestParam(name = "markMode", required = false) boolean markMode,
-			@RequestParam("wssessionId") String wssessionId) {
-		startDeduplication(newFile, oldFile, createOutputFileName(newFile, markMode), markMode, wssessionId);
-		return ResponseEntity.ok("{ \"result\": \"Deduplication of " + oldFile + " and " + newFile + " has started\"}");
+	@GetMapping("/justification")
+	public String justification() {
+		return "justification";
 	}
 
 	private String startDeduplication(String inputFileName, String outputFileName, boolean markMode, String wssessionId)
@@ -317,18 +136,18 @@ public class DedupEndNoteController {
 
 		future.addCallback(new ListenableFutureCallback<String>() {
 			@Override
+			public void onFailure(Throwable t) {
+				// runningFutures.remove(wssessionId);
+				result.setErrorResult(t.getMessage());
+			}
+
+			@Override
 			public void onSuccess(String response) {
 				// Will be called in thread
 				log("Success");
 				log.info("Writing to result: {}", response);
 				// runningFutures.remove(wssessionId);
 				result.setResult(response);
-			}
-
-			@Override
-			public void onFailure(Throwable t) {
-				// runningFutures.remove(wssessionId);
-				result.setErrorResult(t.getMessage());
 			}
 		});
 		// Return the thread to servlet container,
@@ -338,9 +157,6 @@ public class DedupEndNoteController {
 
 	private String startDeduplication(String newInputFileName, String oldInputFileName, String outputFileName,
 			boolean markMode, String wssessionId) {
-		// if (runningFutures.containsKey(wssessionId)) {
-		// throw new RuntimeException("There is already a running deduplication");
-		// }
 
 		// Create DeferredResult with timeout 5s
 		DeferredResult<String> result = new DeferredResult<>(5000L);
@@ -353,6 +169,12 @@ public class DedupEndNoteController {
 
 		future.addCallback(new ListenableFutureCallback<String>() {
 			@Override
+			public void onFailure(Throwable t) {
+				// runningFutures.remove(wssessionId);
+				result.setErrorResult(t.getMessage());
+			}
+
+			@Override
 			public void onSuccess(String response) {
 				// Will be called in thread
 				log("Success");
@@ -360,20 +182,58 @@ public class DedupEndNoteController {
 				// runningFutures.remove(wssessionId);
 				result.setResult(response);
 			}
-
-			@Override
-			public void onFailure(Throwable t) {
-				// runningFutures.remove(wssessionId);
-				result.setErrorResult(t.getMessage());
-			}
 		});
 		// Return the thread to servlet container,
 		// the response will be processed by another thread.
 		return "index";
 	}
 
-	private static void log(Object message) {
-		System.out.println(String.format("%s %s ", Thread.currentThread().getName(), message));
+	@PostMapping(value = "/startOneFile", produces = "application/json")
+	public ResponseEntity<String> startOneFile(@RequestParam("fileName_1") String inputFileName,
+			@RequestParam(name = "markMode", required = false) boolean markMode,
+			@RequestParam("wssessionId") String wssessionId) throws Exception {
+		String outputFileName = createOutputFileName(inputFileName, markMode);
+		startDeduplication(inputFileName, outputFileName, markMode, wssessionId);
+		return ResponseEntity.ok("{ \"result\": \"Deduplication of " + inputFileName + " has started\"}");
+	}
+
+	@PostMapping(value = "/startTwoFiles", produces = "application/json")
+	public ResponseEntity<String> startTwoFiles(@RequestParam("oldFile") String oldFile,
+			@RequestParam("newFile") String newFile,
+			@RequestParam(name = "markMode", required = false) boolean markMode,
+			@RequestParam("wssessionId") String wssessionId) {
+		startDeduplication(newFile, oldFile, createOutputFileName(newFile, markMode), markMode, wssessionId);
+		return ResponseEntity.ok("{ \"result\": \"Deduplication of " + oldFile + " and " + newFile + " has started\"}");
+	}
+
+	@GetMapping("/test_results_details")
+	public String test_results_details(HttpSession session) {
+		return "test_results_details";
+	}
+
+	@GetMapping("/twofiles")
+	public String twofiles(final HttpSession session) {
+		return "twofiles";
+	}
+
+	@PostMapping(value = "/uploadFile", produces = "application/json")
+	public ResponseEntity<String> uploadFile(@RequestParam("file") MultipartFile file) throws Exception {
+		if (file.isEmpty()) {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+					"{ \"result\": \"Failed to upload " + file.getOriginalFilename() + " because it was empty" + "\"}");
+		}
+		try {
+			Path path = Paths.get(uploadDir, file.getOriginalFilename());
+			if (Files.exists(path, LinkOption.NOFOLLOW_LINKS)) {
+				Files.delete(path);
+			}
+			Files.copy(file.getInputStream(), path);
+			return ResponseEntity.ok("{ \"result\": \"You successfully uploaded " + file.getOriginalFilename() + "\"}");
+		} catch (IOException | RuntimeException e) {
+			e.printStackTrace();
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+					"{ \"result\": \"Failed to upload " + file.getOriginalFilename() + " => " + e.getClass() + "\"}");
+		}
 	}
 
 }
