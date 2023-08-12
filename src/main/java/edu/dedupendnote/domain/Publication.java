@@ -61,6 +61,8 @@ public class Publication {
 
 	public Integer publicationYear = 0;
 
+	public String referenceType;
+	
 	public String title; // only set for Reply-titles
 
 	public List<String> titles = new ArrayList<>();
@@ -98,9 +100,7 @@ public class Publication {
 	 * ISSN/ISBN pattern: very crude pattern for ISSN, ISBN-10 and ISBN-13. Will accept
 	 * invalid input: 1234-x567, "-1-2-30x4", ISBN-13 with a "X" check digit
 	 */
-	private static Pattern issnIsbnPattern = Pattern.compile("\\b([-\\dxX]{8,17})\\b"); // ISSN
-																						// or
-																						// ISBN
+	private static Pattern issnIsbnPattern = Pattern.compile("\\b([-\\dxX]{8,17})\\b");
 
 	/*
 	 * In Java 8 replaceAll via PATTERN.matcher(s).replaceAll(replacement) is faster than
@@ -115,21 +115,18 @@ public class Publication {
 	 * All characters between a non-initial "[" and "]", including the square brackets and
 	 * the preceding character
 	 */
-	private static Pattern nonInitialSquareBracketsPattern = Pattern.compile(".\\[[^\\\\]+\\]$"); // non
-																									// initial
-																									// "[...]"
+	private static Pattern nonInitialSquareBracketsPattern = Pattern.compile(".\\[[^\\\\]+\\]$");
 
 	/**
 	 * All characters between "<" and ">", including the pointy brackets
 	 */
-	private static Pattern pointyBracketsPattern = Pattern.compile("<[^>]+>"); // "<...>"
+	private static Pattern pointyBracketsPattern = Pattern.compile("<[^>]+>");
 
 	/**
 	 * "(" and ")"
 	 */
-	private static Pattern roundBracketsPattern = Pattern.compile("[\\(\\)]"); // "(" or
-																				// ")"
-
+	private static Pattern roundBracketsPattern = Pattern.compile("[\\(\\)]");
+	
 	/**
 	 * "-"
 	 */
@@ -431,18 +428,14 @@ public class Publication {
 																			// causes
 																			// regex
 																			// problems
-		if (r.toLowerCase().startsWith("http")) { // Cochrane library CENTRAL has journal
-													// name of type:
-													// Https://clinicaltrials.gov/show/nct00969397
+		if (r.toLowerCase().startsWith("http")) { 
+			// Cochrane library CENTRAL has journal  name of type:
+			// Https://clinicaltrials.gov/show/nct00969397
 			r = r.toLowerCase();
 		}
 		else {
-			r = journalAdditionPattern.matcher(r).replaceAll(""); // "BJOG: An
-																	// International
-																	// Journal of
-																	// Obstetrics and
-																	// Gynaecology" -->
-																	// "BJOG"
+			r = journalAdditionPattern.matcher(r).replaceAll("");
+			// "BJOG: An Journal of Obstetrics and Gynaecology" --> "BJOG"
 			r = nonAsciiPattern.matcher(r).replaceAll(" ");
 		}
 		r = multipleWhiteSpacePattern.matcher(r).replaceAll(" ");
@@ -671,8 +664,8 @@ public class Publication {
 	}
 
 	public Map<String, Integer> addDois(String doi) {
-		if (doi.length() > 100) { // Scopus records sometimes add Cited references in this
-									// field
+		// Scopus records sometimes add Cited references in this field
+		if (doi.length() > 100) {
 			return dois;
 		}
 		try {
@@ -691,14 +684,17 @@ public class Publication {
 		return dois;
 	}
 
+	// @formatter:off
 	/*
-	 * ISSNs and ISBNs are treated in the same way: - uppercased - hyphens removed
+	 * ISSNs and ISBNs are treated in the same way: uppercased and hyphens removed
 	 *
 	 * Crude validation: only lengths 8, 10 and 13 are accepted. Invalid results as
-	 * "X2345678" ("X" on non last position) are acceoted.
+	 * "X2345678" ("X" on non last position) are accepted.
 	 *
-	 * Paths not chosen: - full validation - (ISBN) conversion to ISBN-13 - (ISSN) use of
-	 * ISSN-L and the linking table: see
+	 * Paths not chosen:
+	 * - full validation 
+	 * - (ISBN) conversion to ISBN-13 
+	 * - (ISSN) use of ISSN-L and the linking table: see
 	 * https://www.issn.org/understanding-the-issn/assignment-rules/the-issn-l-for-
 	 * publications-on-multiple-media/
 	 *
@@ -711,6 +707,7 @@ public class Publication {
 	 * ISSN-L and the linking table: in theory this should be useful. But a test with some
 	 * large data files should prove its extra value.
 	 */
+	// @formatter:on
 	public List<String> addIssns(String issn) {
 		Matcher matcher = issnIsbnPattern.matcher(issn.toUpperCase());
 		while (matcher.find()) {
@@ -731,15 +728,10 @@ public class Publication {
 		if (journal.toLowerCase().contains("cochrane")) {
 			this.isCochrane = true;
 		}
-		// journal = journalExtraPattern.matcher(journal).replaceAll(""); // Strip last
-		// part of "Clinical neuropharmacology.12 Suppl 2 ()(pp v-xii; S1-105) 1989.Date
+		// journal = journalExtraPattern.matcher(journal).replaceAll(""); 
+		// Strip last part of "Clinical neuropharmacology.12 Suppl 2 ()(pp v-xii; S1-105) 1989.Date
 		// of Publication: 1989."
-		Matcher matcher = journalExtraPattern.matcher(journal); // Strip last part of
-																// "Clinical
-																// neuropharmacology.12
-																// Suppl 2 ()(pp v-xii;
-																// S1-105) 1989.Date of
-																// Publication: 1989."
+		Matcher matcher = journalExtraPattern.matcher(journal);
 		while (matcher.find()) {
 			journal = matcher.group(1);
 		}
@@ -877,8 +869,9 @@ public class Publication {
 			return;
 		}
 
-		pages = pages.replaceAll("(\\u2010|\\u00ad)", "-"); // Cochrane uses hyphen
-															// characters instead of minus
+		// Cochrane uses hyphen characters instead of minus
+		pages = pages.replaceAll("(\\u2010|\\u00ad)", "-"); 
+
 		// normalize starting page: W-22 --> 22
 		pages = pages.replaceAll("^([^\\d]+)\\-(\\d+)", "$1$2");
 		if (pages.contains("-")) {
@@ -925,13 +918,17 @@ public class Publication {
 
 	public void addReversedTitles() {
 		List<String> reversed = new ArrayList<>();
-		if (titles.isEmpty()) {
+		boolean hasId = this.id != null;
+		
+		if (titles.isEmpty() && hasId) {
 			titles.add(this.id);
 		}
-		for (String t : titles) {
-			reversed.add(new StringBuilder(t).reverse().toString());
+		if (! titles.isEmpty()) {
+			for (String t : titles) {
+				reversed.add(new StringBuilder(t).reverse().toString());
+			}
+			titles.addAll(reversed);
 		}
-		titles.addAll(reversed);
 	}
 
 	public void fillAllAuthors() {

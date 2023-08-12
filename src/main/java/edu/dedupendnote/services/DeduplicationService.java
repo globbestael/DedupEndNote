@@ -12,8 +12,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import javax.servlet.http.HttpSession;
-
 import org.apache.commons.text.similarity.JaroWinklerSimilarity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -186,32 +184,23 @@ public class DeduplicationService {
 	}
 
 	public boolean compareIssns(Publication r1, Publication r2) {
-		// log.debug("Comparing for ISSN " + r1.getId() + ": " + r1.getTitles().get(0) +
-		// "\nto " + r2.getId() + ": " + r2.getTitles().get(0));
-		if (listsContainSameString(r1.getIssns(), r2.getIssns())) {
-			return true;
-		}
-		return false;
+		return listsContainSameString(r1.getIssns(), r2.getIssns());
 	}
 
-	// @Async
-	// public void deduplicateOneFileAsync(String inputFileName, String
-	// outputFileName,
-	// boolean markMode, String wssessionId) {
-	// deduplicateOneFile(inputFileName, outputFileName, markMode, session);
-	// }
-
+	// @formatter:off
 	/*
 	 * compareJournals
 	 *
-	 * Paths not chosen: - Creation of sets of journalPatterns for the whole set of
+	 * Paths not chosen:
+	 * - Creation of sets of journalPatterns for the whole set of
 	 * records. This might be overkill, since the comparison by journal is the last
-	 * of all comparisons between any two records -
-	 * "AJR American Journal of Radiology": split into "AJR" and
+	 * of all comparisons between any two records
+	 * - "AJR American Journal of Radiology": split into "AJR" and
 	 * "American Journal of Radiology"
 	 * compareJournals_FirstWithStartingInitialism(...) will create a pattern on A,
 	 * J en R which will find the second title.
 	 */
+	// @formatter:on
 	public boolean compareJournals(Publication r1, Publication r2) {
 		Set<String> set1 = r1.getJournals();
 		Set<String> set2 = r2.getJournals();
@@ -231,11 +220,10 @@ public class DeduplicationService {
 
 		for (String s1 : set1) {
 			for (String s2 : set2) {
-				if ((s1.startsWith("http") && s2.startsWith("http")) && !s1.equals(s2)) { // JaroWinkler
-																							// 0.9670930232558139 for
+				if (s1.startsWith("http") && s2.startsWith("http") && !s1.equals(s2)) {
+					// JaroWinkler 0.9670930232558139 for
 					// 'Https://clinicaltrials.gov/show/nct00830466'
-					// and
-					// 'Https://clinicaltrials.gov/show/nct00667472'
+					// and 'Https://clinicaltrials.gov/show/nct00667472'
 					continue;
 				}
 				Double similarity = jws.apply(s1.toLowerCase(), s2.toLowerCase());
@@ -361,43 +349,42 @@ public class DeduplicationService {
 			log.debug("Comparing " + publications.size() + " records to: " + publication.getId() + " : "
 					+ publication.getTitles().get(0));
 			// FIXME? Shouldn't use functional style because it is impure
-			List<Publication> doubles = publications.stream().filter(r -> compareStartPageOrDoi(r, publication)
-					// && compareAuthors(r, record) == true
-					&& authorsComparator.compare(r, publication) && compareTitles(r, publication)
-					&& (compareIssns(r, publication) || compareJournals(r, publication))
-			// && compareAbstracttexts(r, record) == true
-			).map(r -> { // Label is used later in enrich() to recreate the duplicate
-							// lists, and is used / exported if markMode is set
-				// If the record was already a duplicate, use its label the new
-				// duplicates found, otherwise its ID
-				if (r.getLabel() == null) {
-					if (publication.getLabel() != null) {
-						log.debug(
-								"==> SETTING LABEL ALREADY PRESENT: {} has label {} and now sets label of duplicate to {}",
-								publication.getId(), publication.getLabel(), r.getId());
-						r.setLabel(publication.getLabel());
-					} else {
-						r.setLabel(publication.getId());
-						publication.setLabel(publication.getId());
-					}
-				} else {
-					// log.debug("==> LABEL ALREADY PRESENT: {} has label {} and
-					// should also get label {}", r.getId(), r.getLabel(),
-					// record.getId());
-					if (publication.getLabel() == null) {
-						publication.setLabel(r.getLabel());
-					}
-					if (!r.getLabel().equals(publication.getLabel())) {
-						log.error("Records have different labels: {}, {}\n- {}\n- {}", publication.getLabel(),
-								r.getLabel(), publication, r);
-					}
-				}
-				if (r.isReply()) {
-					publication.setReply(true);
-				}
-				log.debug("1. setting label {} to record {}", r.getLabel(), r.getId());
-				return r;
-			}).collect(Collectors.toList());
+			List<Publication> doubles = publications.stream()
+					.filter(r -> compareStartPageOrDoi(r, publication) && authorsComparator.compare(r, publication)
+							&& compareTitles(r, publication)
+							&& (compareIssns(r, publication) || compareJournals(r, publication)))
+					.map(r -> { // Label is used later in enrich() to recreate the duplicate
+								// lists, and is used / exported if markMode is set
+						// If the record was already a duplicate, use its label the new
+						// duplicates found, otherwise its ID
+						if (r.getLabel() == null) {
+							if (publication.getLabel() != null) {
+								log.debug(
+										"==> SETTING LABEL ALREADY PRESENT: {} has label {} and now sets label of duplicate to {}",
+										publication.getId(), publication.getLabel(), r.getId());
+								r.setLabel(publication.getLabel());
+							} else {
+								r.setLabel(publication.getId());
+								publication.setLabel(publication.getId());
+							}
+						} else {
+							// log.debug("==> LABEL ALREADY PRESENT: {} has label {} and
+							// should also get label {}", r.getId(), r.getLabel(),
+							// record.getId());
+							if (publication.getLabel() == null) {
+								publication.setLabel(r.getLabel());
+							}
+							if (!r.getLabel().equals(publication.getLabel())) {
+								log.error("Records have different labels: {}, {}\n- {}\n- {}", publication.getLabel(),
+										r.getLabel(), publication, r);
+							}
+						}
+						if (r.isReply()) {
+							publication.setReply(true);
+						}
+						log.debug("1. setting label {} to record {}", r.getLabel(), r.getId());
+						return r;
+					}).collect(Collectors.toList());
 			if (!doubles.isEmpty()) {
 				// @formatter:off
 				/*
@@ -432,8 +419,6 @@ public class DeduplicationService {
 				// record.getId());
 				// }
 				doubleSize += doubles.size();
-				// updateSession(session, "Working on " + year + " for " + listSize + "
-				// records (marked " + doubleSize + " duplicates)");
 				wsMessage(wssessionId,
 						"Working on " + year + " for " + listSize + " records (marked " + doubleSize + " duplicates)");
 			}
@@ -451,8 +436,10 @@ public class DeduplicationService {
 	public boolean compareStartPageOrDoi(Publication r1, Publication r2) {
 		log.debug("Comparing " + r1.getId() + ": " + r1.getPageForComparison() + " to " + r2.getId() + ": "
 				+ r2.getPageForComparison());
-		Map<String, Integer> dois1 = r1.getDois();
-		Map<String, Integer> dois2 = r2.getDois();
+//		Map<String, Integer> dois1 = r1.getDois();
+//		Map<String, Integer> dois2 = r2.getDois();
+		List<String> dois1 = new ArrayList<>(r1.getDois().keySet());
+		List<String> dois2 = new ArrayList<>(r2.getDois().keySet());
 		boolean bothCochrane = r1.isCochrane() && r2.isCochrane();
 		boolean sufficientStartPages = r1.getPageForComparison() != null && r2.getPageForComparison() != null;
 		boolean sufficientDois = !dois1.isEmpty() && !dois2.isEmpty();
@@ -465,11 +452,8 @@ public class DeduplicationService {
 		if (bothCochrane) {
 			if (r1.getPublicationYear().equals(r2.getPublicationYear())) {
 				if (sufficientDois) {
-					for (String d : dois1.keySet()) {
-						if (dois2.containsKey(d)) {
-							log.debug("BOTH Cochrane: One or more DOIs are the same: '{}' and '{}'", dois1, dois2);
-							return true;
-						}
+					if (listsContainSameString(dois1, dois2)) {
+						return true;
 					}
 				} else if (sufficientStartPages && r1.getPageForComparison().equals(r2.getPageForComparison())) {
 					log.debug("Same starting pages");
@@ -487,13 +471,8 @@ public class DeduplicationService {
 		if (sufficientStartPages && r1.getPageForComparison().equals(r2.getPageForComparison())) {
 			log.debug("Same starting pages");
 			return true;
-		} else if (!sufficientStartPages && sufficientDois) {
-			for (String d : dois1.keySet()) {
-				if (dois2.containsKey(d)) {
-					log.debug("One or more DOIs are the same: '{}' and '{}'", dois1, dois2);
-					return true;
-				}
-			}
+		} else if (!sufficientStartPages && sufficientDois && listsContainSameString(dois1, dois2)) {
+			return true;
 		}
 		log.debug("Starting pages and DOIs are different");
 		return false;
@@ -539,14 +518,6 @@ public class DeduplicationService {
 		return !publications.stream().map(Publication::getId).allMatch(new HashSet<>()::add);
 	}
 
-	// public boolean compareAbstracttexts(Publication r1, Publication r2) {
-	// if (r1.getAbstracttext() != null && r2.getAbstracttext() != null) {
-	// Double similarity = jws.apply(r1.getAbstracttext(), r2.getAbstracttext());
-	// return (similarity > 0.96);
-	// }
-	// return true;
-	// }
-
 	private boolean containsOnlyRecordsWithoutPublicationYear(List<Publication> publications) {
 		return publications.stream().filter(r -> r.getPublicationYear() == 0).count() == publications.size();
 	}
@@ -563,7 +534,6 @@ public class DeduplicationService {
 
 		String s = doSanityChecks(publications, inputFileName);
 		if (s != null) {
-			// return updateSession(session, s);
 			wsMessage(wssessionId, s);
 			return s;
 		}
@@ -577,9 +547,6 @@ public class DeduplicationService {
 					+ " duplicates marked in the Label field.";
 			wsMessage(wssessionId, s);
 			return s;
-			// return updateSession(session, "DONE: DedupEndNote has written " +
-			// numberWritten + " records with " + labeledRecords + " duplicates marked in
-			// the Label field.");
 		}
 
 		wsMessage(wssessionId, "Enriching the " + publications.size() + " deduplicated results");
@@ -587,9 +554,7 @@ public class DeduplicationService {
 		wsMessage(wssessionId, "Saving the " + publications.size() + " deduplicated results");
 		int numberWritten = ioService.writeDeduplicatedRecords(publications, inputFileName, outputFileName);
 		s = formatResultString(publications.size(), numberWritten);
-		// updateSession(session, s); // not return yet
 		wsMessage(wssessionId, s);
-		// simpMessagingTemplate.convertAndSend("/topic/messages", new StompMessage(s));
 
 		return s;
 	}
@@ -613,7 +578,6 @@ public class DeduplicationService {
 
 		String s = doSanityChecks(publications, oldInputFileName);
 		if (s != null) {
-			// return updateSession(session, s);
 			wsMessage(wssessionId, s);
 			return s;
 		}
@@ -625,9 +589,9 @@ public class DeduplicationService {
 			// When writing the deduplicated records for the second list, records with
 			// label "-..." can be skipped
 			// because they are duplicates of records from the first list.
-			// When markMode is set, these records are written. Because of this "-", de
+			// When markMode is set, these records are written. Because of this "-", the
 			// records which have duplicates in the first file (label = "-...")
-			// can be distinguised from records which have duplicates in the second file.
+			// can be distinguished from records which have duplicates in the second file.
 			r.setId("-" + r.getId());
 			r.setPresentInOldFile(true);
 		});
@@ -635,7 +599,6 @@ public class DeduplicationService {
 		List<Publication> newRecords = ioService.readPublications(newInputFileName);
 		s = doSanityChecks(newRecords, newInputFileName);
 		if (s != null) {
-			// return updateSession(session, s);
 			wsMessage(wssessionId, s);
 			return s;
 		}
@@ -646,11 +609,8 @@ public class DeduplicationService {
 
 		if (markMode) { // no enrich(), and add / overwrite LB (label) field
 			int numberWritten = ioService.writeMarkedRecords(publications, newInputFileName, outputFileName);
-			long labeledRecords = publications.stream()
-					.filter(r -> r.getLabel() != null && !r.isPresentInOldFile()).count();
-			// return updateSession(session, "DONE: DedupEndNote has written " +
-			// numberWritten + " records with " + labeledRecords + " duplicates marked in
-			// the Label field.");
+			long labeledRecords = publications.stream().filter(r -> r.getLabel() != null && !r.isPresentInOldFile())
+					.count();
 			s = "DONE: DedupEndNote has written " + numberWritten + " records with " + labeledRecords
 					+ " duplicates marked in the Label field.";
 			wsMessage(wssessionId, s);
@@ -659,16 +619,12 @@ public class DeduplicationService {
 
 		enrich(publications);
 		// Get the records from the new file that are not duplicates or not duplicates
-		// of
-		// records of the old file
+		// of records of the old file
 		List<Publication> filteredRecords = publications.stream()
 				.filter(r -> !r.isPresentInOldFile() && (r.getLabel() == null || !r.getLabel().startsWith("-")))
 				.collect(Collectors.toList());
 		log.error("Records to write: {}", filteredRecords.size());
 		int numberWritten = ioService.writeDeduplicatedRecords(filteredRecords, newInputFileName, outputFileName);
-		// return updateSession(session, "DONE: DedupEndNote removed " +
-		// (newRecords.size() - numberWritten) + " records from the new set, and has
-		// written " + numberWritten + " records.");
 		s = "DONE: DedupEndNote removed " + (newRecords.size() - numberWritten)
 				+ " records from the new set, and has written " + numberWritten + " records.";
 		wsMessage(wssessionId, s);
@@ -704,21 +660,10 @@ public class DeduplicationService {
 		log.debug("Start enrich");
 		// First the records with duplicates
 		Map<String, List<Publication>> labelMap = publications.stream()
-				.filter(r -> r.getLabel() != null && !r.getLabel().startsWith("-")) // when
-																					// comparing
-																					// 2
-																					// files,
-																					// duplicates
-																					// from
-																					// the
-																					// old
-																					// file
-																					// start
-																					// with
-																					// "-"
+				// when comparing 2 files, duplicates from the old file start with "-"
+				.filter(r -> r.getLabel() != null && !r.getLabel().startsWith("-"))
 				.collect(Collectors.groupingBy(Publication::getLabel));
-		log.debug("Number of duplicate lists {}, en IDs of kept records: {}", labelMap.size(),
-				labelMap.keySet());
+		log.debug("Number of duplicate lists {}, en IDs of kept records: {}", labelMap.size(), labelMap.keySet());
 		List<Publication> recordList;
 		if (labelMap.size() > 0) {
 			for (String l : labelMap.keySet()) {
@@ -859,22 +804,6 @@ public class DeduplicationService {
 				+ " duplicates, and has written " + totalWritten + " records.";
 	}
 
-	@Async
-	public ListenableFuture<String> generateReport(HttpSession session) {
-		try {
-			for (int i = 0; i < 10; i++) {
-				Thread.sleep(2000);
-				log.debug("in generateReport: {}", i);
-				session.setAttribute("result", "Working on " + i);
-			}
-			session.setAttribute("result", "COMPLETE");
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-		String s = "COMPLETE";
-		return new AsyncResult<>(s);
-	}
-
 	public AuthorsComparator getAuthorsComparator() {
 		return authorsComparator;
 	}
@@ -889,12 +818,16 @@ public class DeduplicationService {
 		return !common.isEmpty();
 	}
 
+	// @formatter:off
 	/*
-	 * For 1 file: - order year descending - add empty years (year == 0 and not
-	 * identified as duplicate yet) AFTER each year1 Reason: we prefer the data
-	 * (duplicate kept) which is most recent (e.g. complete publication BEFORE ahead
+	 * For 1 file:
+	 * - order year descending
+	 *  - add empty years (year == 0 and not identified as duplicate yet) AFTER each year1
+	 *
+	 *  Reason: we prefer the data (duplicate kept) which is most recent (e.g. complete publication BEFORE ahead
 	 * of print which is possibly from earlier year or without a year).
 	 */
+	// @formatter:on
 	public void searchYearOneFile(List<Publication> publications, String wssessionId) {
 		Map<Integer, List<Publication>> yearSets = publications.stream()
 				.collect(Collectors.groupingBy(Publication::getPublicationYear, TreeMap::new, Collectors.toList()))
@@ -921,8 +854,6 @@ public class DeduplicationService {
 			if (previousYearSet != null) {
 				yearSet.addAll(previousYearSet);
 			}
-			// updateSession(session, "Working on " + year + " for " + yearSet.size() + "
-			// records");
 			wsMessage(wssessionId, "Working on " + year + " for " + yearSet.size() + " records");
 			compareSet(yearSet, year, true, wssessionId);
 			wsMessage(wssessionId, "PROGRESS: " + cumulativePercentages.get(year));
@@ -954,25 +885,14 @@ public class DeduplicationService {
 			if (nextYearSet != null) {
 				yearSet.addAll(nextYearSet);
 			}
-			// updateSession(session, "Working on " + year + " for " + yearSet.size() + "
-			// records");
 			wsMessage(wssessionId, "Working on " + year + " for " + yearSet.size() + " records");
 			compareSet(yearSet, year, false, wssessionId);
 		});
 		return;
 	}
 
-	// private String updateSession(HttpSession session, String message) {
-	// log.debug(message);
-	// session.setAttribute("result", message);
-	// return message;
-	// }
-
 	private void wsMessage(String wssessionId, String message) {
 		if (simpMessagingTemplate != null) {
-			// System.err.println(wssessionId + ": " + message);
-			// simpMessagingTemplate.convertAndSendToUser(wssessionId, "/topic/messages",
-			// new StompMessage(message));
 			simpMessagingTemplate.convertAndSend("/topic/messages-" + wssessionId, new StompMessage(message));
 		}
 	}

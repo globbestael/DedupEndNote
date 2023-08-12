@@ -217,7 +217,7 @@ public class DedupEndNoteController {
 	}
 
 	@PostMapping(value = "/uploadFile", produces = "application/json")
-	public ResponseEntity<String> uploadFile(@RequestParam("file") MultipartFile file) throws Exception {
+	public ResponseEntity<String> uploadFile(@RequestParam("file") MultipartFile file) {
 		if (file.isEmpty()) {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
 					"{ \"result\": \"Failed to upload " + file.getOriginalFilename() + " because it was empty" + "\"}");
@@ -229,10 +229,14 @@ public class DedupEndNoteController {
 			}
 			Files.copy(file.getInputStream(), path);
 			return ResponseEntity.ok("{ \"result\": \"You successfully uploaded " + file.getOriginalFilename() + "\"}");
-		} catch (IOException | RuntimeException e) {
+		} catch (IOException e) {
 			e.printStackTrace();
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
 					"{ \"result\": \"Failed to upload " + file.getOriginalFilename() + " => " + e.getClass() + "\"}");
+		} catch (RuntimeException e) {
+			log.error( "RuntimeException met cause: {}", e.getCause());
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+					"{ \"result\": \"RuntimeException with cause " + e.getCause() + "\"}");
 		}
 	}
 

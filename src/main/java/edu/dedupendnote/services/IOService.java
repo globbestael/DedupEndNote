@@ -71,7 +71,8 @@ public class IOService {
 		Publication publication = new Publication();
 
 		boolean hasBom = utilities.detectBom(inputFileName);
-
+		int missingId = 1;
+		
 		// Line starting with "TY - " triggers creation of record, line starting with
 		// "ER - " signals end of record
 		try (BufferedReader br = new BufferedReader(new FileReader(inputFileName))) {
@@ -111,6 +112,9 @@ public class IOService {
 						previousFieldName = fieldName;
 						break;
 					case "ER":
+						if (publication.getId() == null) {
+							publication.setId(Integer.valueOf(missingId++).toString());
+						}
 						publication.addReversedTitles();
 						publication.fillAllAuthors();
 						publications.add(publication);
@@ -124,8 +128,12 @@ public class IOService {
 					case "J2": // Alternate journal
 						publication.addJournals(fieldContent);
 						break;
-					case "OP": // original title (PubMed)
-						publication.addTitles(fieldContent);
+					case "OP": // in PubMed: original title, in Web of Science (at least for conference papaers): conference title
+						if ("CONF".equals(publication.getReferenceType())) {
+							publication.addJournals(fieldContent); 
+						} else {
+							publication.addTitles(fieldContent);
+						}
 						break;
 					case "PY": // Publication year
 						publication.setPublicationYear(Integer.valueOf(fieldContent.trim()));
@@ -192,6 +200,7 @@ public class IOService {
 					// TODO: When does TT occur? is translated (i.e. original?) title
 					case "TY": // Type
 						publication = new Publication();
+						publication.setReferenceType(fieldContent);
 						break;
 					default:
 						previousFieldName = fieldName;
@@ -253,6 +262,9 @@ public class IOService {
 			}
 			String line;
 			Publication publication = null;
+			Integer phantomId = 0;
+			String realId = null;
+			
 			while ((line = br.readLine()) != null) {
 				line = unusualWhiteSpacePattern.matcher(line).replaceAll(" ");
 				Matcher matcher = risLinePattern.matcher(line);
@@ -263,16 +275,23 @@ public class IOService {
 					switch (fieldName) {
 					case "ER":
 						map.put(fieldName, fieldContent);
+						phantomId++;
+						if (realId == null) {
+							publication = recordIdMap.get(phantomId.toString());
+							publication.setId(phantomId.toString());
+							map.put("ID", phantomId.toString());
+						}
 						if (publication != null && publication.getKeptRecord() == true) {
 							writeRecord(map, publication, bw, true);
 							numberWritten++;
 						}
 						map.clear();
+						realId = null;
 						break;
 					case "ID": // EndNote Publication number
 						map.put(fieldName, fieldContent);
-						String id = line.substring(6);
-						publication = recordIdMap.get(id);
+						realId = line.substring(6);
+						publication = recordIdMap.get(realId);
 						break;
 					default:
 						if (map.containsKey(fieldName)) {
@@ -318,6 +337,9 @@ public class IOService {
 			}
 			String line;
 			Publication publication = null;
+			Integer phantomId = 0;
+			String realId = null;
+
 			while ((line = br.readLine()) != null) {
 				line = unusualWhiteSpacePattern.matcher(line).replaceAll(" ");
 				Matcher matcher = risLinePattern.matcher(line);
@@ -327,6 +349,12 @@ public class IOService {
 					previousFieldName = "XYZ";
 					switch (fieldName) {
 					case "ER":
+						phantomId++;
+						if (realId == null) {
+							publication = recordIdMap.get(phantomId.toString());
+							publication.setId(phantomId.toString());
+							map.put("ID", phantomId.toString());
+						}
 						if (publication != null && publication.getKeptRecord() == true) {
 							map.put(fieldName, fieldContent);
 							if (publication.getLabel() != null) {
@@ -336,11 +364,12 @@ public class IOService {
 							numberWritten++;
 						}
 						map.clear();
+						realId = null;
 						break;
 					case "ID": // EndNote Publication number
 						map.put(fieldName, fieldContent);
-						String id = fieldContent;
-						publication = recordIdMap.get(id);
+						realId = fieldContent;
+						publication = recordIdMap.get(realId);
 						break;
 					default:
 						if (map.containsKey(fieldName)) {
