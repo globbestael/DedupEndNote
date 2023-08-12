@@ -211,11 +211,12 @@
 						<a class="list-group-item list-group-item-action" href="/resources/faq.html" target="window2">FAQ</a>
 						<a class="list-group-item list-group-item-action" href="/resources/developers.html" target="window2">Developers</a>
 						<a class="list-group-item list-group-item-action" href="#issues">Issues and feature requests</a>
+						<a class="list-group-item list-group-item-action" href="#changes">Latest changes</a>
 					</nav>
 				</nav>
 			</div>
 			<div class="col-9" style="height: 100vh; position: relative;">
-				<h1 id="start">DedupEndNote (version 0.9.7c 20230803)</h1>
+				<h1 id="start">DedupEndNote (version 0.9.7d 20230812)</h1>
 				<div class="row col-11 border border-primary rounded alert alert-secondary" id="step1">
 					<div class="col-3">
 						<h3>1. INPUT FILE</h3>
@@ -305,7 +306,7 @@
 	        		<li>PsycINFO (OVID)
 	        		<li>PubMed</li>
 	        		<li>Scopus</li>
-	        		<li>Web of Science</li>
+	        		<li>Web of Science (very few tests with conference papers)</li>
 	        	</ul>
 	        	
 		        <h3 id="what">What does DedupEndNote do?</h3>
@@ -949,7 +950,10 @@
 					<li>Input file format: The program only handles files in RIS format, not in XML or CSV format.</li>
 					<li>Input file encoding: The program assumes that the input file is encoded as UTF-8.</li>
 					<li>If authors AND (all) titles AND (all) journal names for a record use a non-Latin script, results for this record may be inaccurate.</li>
-					<li>(when deduplicating one file:) The input file must be an export from ONE EndNote database: the ID fields are used internally for identifying the records, so they have to be unique.</li>
+					<li>(when deduplicating one file:) The input file must be an export from ONE EndNote database: the ID fields are used internally for identifying the records, so they have to be unique.
+						However, if the RIS file does not have an ID field in the first publication, DedupEndNote assumes the whole file has no ID fields 
+						and gives every publication an ID (starting with 1). This has only been tested on Zotero files!
+					</li>
 					<li>The program has been developed and tested for biomedical databases (PubMed, EMBASE, ...) and some general databases (Web of Science, Scopus).
 					Deduplicating records from other databases is not garanteed to work.</li>
 					<li>The program uses a bibliographic point of view:
@@ -967,6 +971,12 @@
 				<h3 id="issues">Issues and feature requests</h3>
 				<div>If you have any questions about the tool or come across a problem when trying to use it,
 					please raise an issue on the <a href="https://github.com/globbestael/DedupEndNote" target="github">GitHub Repository</a>.</div>
+
+				<h3 id="issues">Latest</h3>
+				<ul>
+					<li>2023-08-12: Files without IDs (record numbers) for each record (e.g. Zotero), get an ID by DedupdEndNote</li>
+					<li>2023-08-12: Deduplication of Conference proceedings from Web of Science was very poor (too many false positives). This problem has been solved</li>   					
+				</ul>
 	        </div>
        </div>
     </div>

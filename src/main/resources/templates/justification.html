@@ -133,22 +133,22 @@
 	       					<td rowspan="4" class="align-middle" style="border-left: 2px solid black;">4</td>
 	       				</tr>
 	       				<tr>
-	       					<td>OP</td>
-	       					<td>Original title</td>
+	       					<td>OP *</td>
+	       					<td>Original title (when reference type is not Conference Proceedings)</td>
 	       				</tr>
 	       				<tr>
 	       					<td>ST</td>
 	       					<td>Short title</td>
 	       				</tr>
 	       				<tr>
-	       					<td>T3 *</td>
+	       					<td>T3 **</td>
 	       					<td>Conference title<br/>Alternate journal title<br/>Original title</td>
 	       				</tr>
 	       				<tr>
 	       					<td>SN</td>
 	       					<td>ISSN or ISBN</td>
 	       					<td>ISSN</td>
-	       					<td rowspan="4" class="align-middle" style="border-left: 2px solid black;">5</td>
+	       					<td rowspan="5" class="align-middle" style="border-left: 2px solid black;">5</td>
 	       				</tr>
 	       				<tr>
 	       					<td>T2</td>
@@ -160,12 +160,17 @@
 	       					<td>Alternate journal</td>
 	       				</tr>
 	       				<tr>
-	       					<td>T3 *</td>
+	       					<td>OP *</td>
+	       					<td>Conference title (when reference type is Conference Proceedings)</td>
+	       				</tr>
+	       				<tr>
+	       					<td>T3 **</td>
 	       					<td>Conference title<br/>Alternate journal title<br/>Original title</td>
 	       				</tr>
 	       			</tbody>
 	       		</table>
-	       		<p><i>*: Conference titles in T3 are omitted.</i>
+	       		<p><i>*: the field OP can be a title variant or a journal variant.</i></p>
+	       		<p><i>**: Conference titles in T3 are omitted.</i></p>
 
 				<p><u><strong>Justification:</strong></u></p>
 	       		<ul>
@@ -196,7 +201,8 @@
 				<p><u><strong>Justification:</strong></u></p>
 	       		<ul>
 	       			<li>Reference type: Bibliographic databases don't agree on this.
-	       			Publications in "Advances in Experimental Medicine and Biology" are Journal Article when imported from PubMed or EMBASE, but Serial when imported from Web of Science.</li>
+	       			Publications in "Advances in Experimental Medicine and Biology" are Journal Article when imported from PubMed or EMBASE, but Serial when imported from Web of Science.<br/>
+	       			The only exception to this rule is Conference proceedings: The OP field can be the title of a conference or the original (non-English) title</li>
 	       			<li>Volume and Issue: these fields were found to have no additional value for deduplication</li>
 	       			<li>Accession number: are tied to specific bibliographic databases, so of minimal value for deduplication</li>
 	       			<li>Type of Work: Not always provided by bibliographic databases, not standardized over bibliographic databases</li>  
