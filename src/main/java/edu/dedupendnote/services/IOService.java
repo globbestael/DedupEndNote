@@ -371,6 +371,8 @@ public class IOService {
 						realId = fieldContent;
 						publication = recordIdMap.get(realId);
 						break;
+					case "LB":
+						break;	// to ensure that the present Label is not used.
 					default:
 						if (map.containsKey(fieldName)) {
 							map.put(fieldName, map.get(fieldName) + "\n" + line);
