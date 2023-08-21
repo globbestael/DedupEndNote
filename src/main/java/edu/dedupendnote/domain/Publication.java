@@ -164,6 +164,7 @@ public class Publication {
 	 */
 	static public String normalizeJava8(String s) {
 		s = doubleQuotesPattern.matcher(s).replaceAll("");
+		s = s.replaceAll("(<<|>>)", "");				// assume "<<...>>" is not an addition, but variant of double quote 
 		/*
 		 * FIXME: Do a thorough check of retractions (including "WITHDRAWN: ..." Cochrane
 		 * reviews). Cochrane: PubMed, Medline and EMBASE use format "WITHDRAWN: ...", Web
@@ -197,15 +198,14 @@ public class Publication {
 		}
 		String r = s.toLowerCase();
 		r = nonInitialSquareBracketsPattern.matcher(r).replaceAll("");
-		r = r.replaceAll("(<<|>>)", "");	// assume "<<...>>" is not an addition, but variant of double quote 
 		r = pointyBracketsPattern.matcher(r).replaceAll("");
 		r = roundBracketsPattern.matcher(r).replaceAll("");
 		r = hyphenPattern.matcher(r).replaceAll("");
 		r = nonAsciiLowercasePattern.matcher(r).replaceAll(" ");
-		r = r.trim();
+		r = r.strip();
 		r = multipleWhiteSpacePattern.matcher(r).replaceAll(" ");
 		r = startingArticlePattern.matcher(r).replaceAll("");
-		return r.trim();
+		return r.strip();
 	}
 
 	/**
@@ -440,7 +440,7 @@ public class Publication {
 			r = nonAsciiPattern.matcher(r).replaceAll(" ");
 		}
 		r = multipleWhiteSpacePattern.matcher(r).replaceAll(" ");
-		return r.trim(); // DO NOT lowercase (http titles are the exception)
+		return r.strip(); // DO NOT lowercase (http titles are the exception)
 	}
 
 	/**
@@ -598,7 +598,7 @@ public class Publication {
 			// See
 			// https://stackoverflow.com/questions/51266582/difference-between-string-trim-and-strip-methods-in-java-11
 			// lastName = (matcher.group(1) + matcher.group(3)).strip();
-			lastName = (matcher.group(1).trim() + " " + matcher.group(3).trim()).trim();
+			lastName = (matcher.group(1).strip() + " " + matcher.group(3).strip()).strip();
 			log.debug("new lastName: {}", lastName);
 		}
 
@@ -799,7 +799,7 @@ public class Publication {
 		 * and will be skipped
 		 */
 		for (String j : list) {
-			j = j.trim();
+			j = j.strip();
 			// FIXME: what happens when excludedJournalsParts.contains(j.toLowerCase())??
 			if (!j.isEmpty() && !excludedJournalsParts.contains(j.toLowerCase())) {
 				if (j.equals(j.toUpperCase()) && (j.contains(" ") || j.length() > 6)) {
@@ -825,7 +825,7 @@ public class Publication {
 		List<String> list = new ArrayList<String>(Arrays.asList(parts));
 
 		for (String t : list) {
-			if (!titles.contains(t.trim())) {
+			if (!titles.contains(t.strip())) {
 				titles.add(normalized);
 			}
 		}

@@ -85,9 +85,9 @@ public class IOService {
 				Matcher matcher = risLinePattern.matcher(line);
 				if (matcher.matches()) {
 					fieldName = matcher.group(1);
-					fieldContent = matcher.group(3);
-					// Added for the ASySD Depression set (R artifact)
-					if ("NA".equals(fieldContent)) {
+					fieldContent = matcher.group(3).strip();
+					// "NA" added for the ASySD Depression set (R artifact)
+					if ((fieldContent.isEmpty() && ! "ER".equals(fieldName)) || "NA".equals(fieldContent)) {
 						continue;
 					}
 					previousFieldName = "XYZ";
@@ -136,7 +136,7 @@ public class IOService {
 						}
 						break;
 					case "PY": // Publication year
-						publication.setPublicationYear(Integer.valueOf(fieldContent.trim()));
+						publication.setPublicationYear(Integer.valueOf(fieldContent));
 						break;
 					case "SN": // ISSN / ISBN
 						publication.addIssns(fieldContent);
