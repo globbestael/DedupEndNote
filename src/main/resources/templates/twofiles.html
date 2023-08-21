@@ -131,8 +131,8 @@
  	        		$('#results').removeClass('alert-warning');
  		        },
   				progressall: function (e, data) {
- 		            var progress = parseInt(data.loaded / data.total * 100, 10);
- 		            // console.log("Progress: " + progress);
+ 		            var percentage = parseInt(data.loaded / data.total * 100, 10);
+ 		            // console.log("Percentage: " + percentage);
                  	$("#progress").html(`<div class="progress-bar" role="progressbar" style="width: ${percentage}%;" aria-valuenow="${percentage}" aria-valuemin="0" aria-valuemax="100">${percentage}%</div>`);
  		        }
  		    });
