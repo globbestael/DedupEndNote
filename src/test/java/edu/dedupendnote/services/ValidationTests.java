@@ -88,7 +88,7 @@ public class ValidationTests {
 					new ValidationResult("ASySD_Diabetes", 1816, 18, 11, 0),
 					new ValidationResult("ASySD_Neuroimaging", 2158, 43, 1235, 2),
 					new ValidationResult("ASySD_SRSR_Human", 27802, 197, 24988, 14),
-					new ValidationResult("BIG_SET", 3681, 275, 966, 1),
+					new ValidationResult("BIG_SET", 3685, 271, 966, 1),
 					new ValidationResult("McKeown_2021", 2010, 62, 1058, 0),
 					new ValidationResult("SRA2_Cytology_screening", 1359, 61, 436, 0),
 					new ValidationResult("SRA2_Haematology", 222, 14, 1179, 0),
@@ -99,7 +99,8 @@ public class ValidationTests {
 					Collectors.toMap(ValidationResult::getFileName, Function.identity(), (o1, o2) -> o1, TreeMap::new));
 
 		Map<String, ValidationResult> resultsMap = List
-				.of(checkResults_ASySD_Cardiac_human()
+				.of(
+						checkResults_ASySD_Cardiac_human()
 						, checkResults_ASySD_Depression()
 						, checkResults_ASySD_Diabetes()
 						, checkResults_ASySD_Neuroimaging()
@@ -109,7 +110,8 @@ public class ValidationTests {
 						, checkResults_SRA2_Cytology_screening()
 						, checkResults_SRA2_Haematology()
 						, checkResults_SRA2_Respiratory()
-						, checkResults_SRA2_Stroke())
+						, checkResults_SRA2_Stroke()
+						)
 				.stream().collect(Collectors.toMap(ValidationResult::getFileName, Function.identity(), (o1, o2) -> o1,
 						TreeMap::new));
 
@@ -202,7 +204,7 @@ public class ValidationTests {
 				// new ValidationResult("Haematology", 222, 14, 1179, 0),
 				// new ValidationResult("Respiratory", 765, 35, 1188, 0),
 				// new ValidationResult("Stroke", 504, 6, 782, 0),
-				// new ValidationResult("BIG_SET", 3697, 257, 964, 5), // 1347 unique
+				new ValidationResultASySD("BIG_SET", 3685, 271, 966, 1, 1344), // 1347 unique
 				// new ValidationResult("McKeown_2021", 2014, 58, 1058, 0),
 
 				new ValidationResultASySD("ASySD_Cardiac_human", 6752, 21, 2175, 0, 3236),

@@ -37,6 +37,29 @@ public class JaroWinklerTitleTest {
 	}
 
 	@ParameterizedTest(name = "{index}: jaroWinkler({0}, {1})={2}")
+	@MethodSource("positiveArgumentProvider")
+	void jwFullPositiveTest(String input1, String input2, double expected) {
+		Publication p1 = new Publication(); p1.addTitles(input1);
+		Publication p2 = new Publication(); p2.addTitles(input2);
+
+		Double highestDistance = 0.0;
+
+		for (String title1 : p1.getTitles()) {
+			for (String title2 : p2.getTitles()) {
+				Double distance = jws.apply(title1, title2);
+				if (distance > highestDistance) {
+					highestDistance = distance;
+				}
+			}
+		}
+
+		assertThat(highestDistance)
+			.as("\nTitle1: %s\nTitle2: %s", p1.getTitles().get(0), p2.getTitles().get(0))
+			.isEqualTo(highestDistance, within(0.01))
+			.isGreaterThanOrEqualTo(DeduplicationService.TITLE_SIMILARITY_SUFFICIENT_STARTPAGES_OR_DOIS);
+	}
+
+	@ParameterizedTest(name = "{index}: jaroWinkler({0}, {1})={2}")
 	@MethodSource("negativeArgumentProvider")
 	void jwNegativeTest(String input1, String input2, double expected) {
 		Double distance = jws.apply(Publication.normalizeJava8(input1), Publication.normalizeJava8(input2));
@@ -276,8 +299,16 @@ public class JaroWinklerTitleTest {
 				arguments(
 						"A phase 3 study of durvalumab with or without bevacizumab as adjuvant therapy in patients with hepatocellular carcinoma at high risk of recurrence after curative hepatic resection or ablation: EMERALD-2",
 						"A phase 3 study of durvalumab with or without bevacizumab as adjuvant therapy in patients with hepatocellular carcinoma (HCC) who are at high risk of recurrence after curative hepatic resection",
-						0.9474) // example of False Positive: difference at the end
-		);
+						0.9474), // example of False Positive: difference at the end
+				arguments(
+						"<<Except for the war's laws>>. Psychic trauma in soldiers murderers. French",
+						"Except for the war's laws. Psychic trauma in soldiers murderers. French",
+						1.0),
+				arguments(
+						"What can psychoanalysis contribute to the current refugee crisis?: Preliminary reports from STEP-BY-STEP: A psychoanalytic pilot project for supporting refugees in a \"first reception camp\" and crisis interventions with traumatized refugees",
+						"What can psychoanalysis contribute to the current refugee crisis?",
+						0.9)
+				);
 	}
 
 	static Stream<Arguments> negativeArgumentProvider() {

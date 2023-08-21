@@ -278,8 +278,10 @@ public class IOService {
 						phantomId++;
 						if (realId == null) {
 							publication = recordIdMap.get(phantomId.toString());
-							publication.setId(phantomId.toString());
-							map.put("ID", phantomId.toString());
+							if (publication != null) {
+								publication.setId(phantomId.toString());
+								map.put("ID", phantomId.toString());
+							}
 						}
 						if (publication != null && publication.getKeptRecord() == true) {
 							writeRecord(map, publication, bw, true);

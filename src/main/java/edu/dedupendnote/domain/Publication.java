@@ -197,6 +197,7 @@ public class Publication {
 		}
 		String r = s.toLowerCase();
 		r = nonInitialSquareBracketsPattern.matcher(r).replaceAll("");
+		r = r.replaceAll("(<<|>>)", "");	// assume "<<...>>" is not an addition, but variant of double quote 
 		r = pointyBracketsPattern.matcher(r).replaceAll("");
 		r = roundBracketsPattern.matcher(r).replaceAll("");
 		r = hyphenPattern.matcher(r).replaceAll("");
@@ -815,10 +816,24 @@ public class Publication {
 		return journals;
 	}
 
+	// The first group is non greedy (with 2 times ": " in string, first group captures before first ": ", second the rest of the string
+	Pattern titleAndSubtitlePattern = Pattern.compile("^(.{50,}?): (.{50,})$");
+
 	public void addTitles(String title) {
 		String normalized = normalizeJava8(title);
-		if (!titles.contains(normalized)) {
-			titles.add(normalized);
+		String[] parts = normalized.split("=");
+		List<String> list = new ArrayList<String>(Arrays.asList(parts));
+
+		for (String t : list) {
+			if (!titles.contains(t.trim())) {
+				titles.add(normalized);
+			}
+		}
+		Matcher matcher = titleAndSubtitlePattern.matcher(title);
+		while (matcher.find()) {
+			titles.add(matcher.group(1)); // add only the first part (min 50 characters)
+			// titles.add(matcher.group(2));
+			// log.error("Title split in\n- {}: {}\n- {}: {}", matcher.group(1).length(), matcher.group(1), matcher.group(2).length(), matcher.group(2));
 		}
 	}
 

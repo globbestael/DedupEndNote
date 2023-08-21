@@ -405,13 +405,13 @@ Data are from:
         <tr>
             <td>BIG_SET<br>(4923 rec)</td>
             <td>DedupEndNote</td>
-            <td align="right">3681</td>
-            <td align="right">275</td>
-            <td align="right">93.0%</td>
+            <td align="right">3685</td>
+            <td align="right">271</td>
+            <td align="right">93.1%</td>
             <td align="right">966</td>
             <td align="right">1</td>
             <td align="right">99.9%</td>
-            <td align="right">94.4%</td>
+            <td align="right">94.5%</td>
         </tr>
 	</tbody>
 </table>

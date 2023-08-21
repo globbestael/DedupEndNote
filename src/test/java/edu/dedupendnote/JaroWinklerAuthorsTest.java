@@ -240,8 +240,11 @@ public class JaroWinklerAuthorsTest {
 				arguments(
 						"Cruz-Ramon, V.; Chinchilla-Lopez, P.; Ramirez-Perez, O.; Aguilar-Olivos, N. E.; Alva-Lopez, L. F.; Fajardo-Ordonez, E.; Ponciano-Rodriguez, G.; Northup, P. G.; Intagliata, N.; Caldwell, S. H.; Qi, X. S.; Mendez-Sanchez, N.",
 						"Raoul, J. L.; Decaens, T.; Burak, K.; Koskinas, J.; Villadsen, G. E.; Heurgue-Berlot, A.; Bayh, I.; Cheng, A. L.; Kudo, M.; Lee, H. C.; Nakajima, K.; Peck-Radosavljevic, M.",
-						0.67, 0.67), // 0.68 // !!! despite big differences: NO NAMES IN
-										// COMMON
+						0.67, 0.67), // 0.68 // !!! despite big differences: NO NAMES IN COMMON
+				arguments(
+					"Lofving Gupta, S.; Wijk, K.; Warner, G.; Sarkadi, A.",
+					"Gupta, S. L.; Wijk, K.; Warner, G.; Sarkadi, A.",
+					0.8, 0.8),
 				arguments("", "", 1.0, 1.0));
 	}
 
@@ -254,7 +257,12 @@ public class JaroWinklerAuthorsTest {
 				arguments("Iacoviello, L.; Donati, M. B.", "Jolobe, O. M.", 0.49),
 				arguments("Armentano, P.", "Carter, G. T.; Mirken, B.", 0.47),
 				arguments("Clendenning, R.", "Finnerup, N. B.; Otto, M.; Jensen, T. S.; Sindrup, S. H.", 0.47),
-				arguments("Armentano, P.", "Finnerup, N. B.; Otto, M.; Jensen, T. S.; Sindrup, S. H.", 0.43));
+				arguments("Armentano, P.", "Finnerup, N. B.; Otto, M.; Jensen, T. S.; Sindrup, S. H.", 0.43),
+				arguments( // authors 3ff ecept for last 4 are group authors
+						"Burgin, D.; Anagnostopoulos, D.; Doyle, M.; Eliez, S.; Fegert, J.; Fuentes, J.; Hebebrand, J.; Hillegers, M.; Karwautz, A.; Kiss, E.; Kotsis, K.; Pejovic-Milovancevic, M.; Raberg Christensen, A. M.; Raynaud, J. P.; Crommen, S.; Cetin, F. C.; Boricevic, V. M.; Kehoe, L.; Radobuljac, M. D.; Schepker, R.; Vermeiren, R.; Vitiello, B.; Sukale, T.; Schmid, M.; Fegert, J. M.",
+						"Burgin, D.; Anagnostopoulos, D.; Vitiello, B.; Sukale, T.; Schmid, M.; Fegert, J. M.",
+						0.63)
+			);
 	}
 
 }

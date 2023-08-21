@@ -302,7 +302,11 @@ public class JaroWinklerJournalTest {
 																														// !!
 						"Journal of Thoracic Oncology", "Journal of Clinical Oncology"),
 				arguments( // see issue #1
-						"ADHD-ATTENTION DEFICIT AND HYPERACTIVITY DISORDERS", "Atten Defic Hyperact Disord"));
+						"ADHD-ATTENTION DEFICIT AND HYPERACTIVITY DISORDERS", "Atten Defic Hyperact Disord"),
+				arguments(
+						"European Child and Adolescent Psychiatry",
+						"European Child & Adolescent Psychiatry")
+			);
 	}
 
 	static Stream<Arguments> fullNegativeArgumentProvider() {
