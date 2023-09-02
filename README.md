@@ -118,7 +118,7 @@ The fields Journal / Book Title (T2), Alternate Journal (J2) and sometimes Book 
 All ISSns and journal titles (including abbreviations) in the records are used.
 Abbreviated and full journal titles are compared in a sensible way (see examples below).
 If the ISSns are different or one or both records have no ISSN, the journals are compared.
-  * Preprocessing: ISSNs are normalized (dash between position 4 and 5 for ISSN, no dashes in ISBNs, both uppercased).
+  * Preprocessing:  ISSNs are normalized (dashes are removed, lowercased). For ISBN-10 the first 9 digits are used, for ISBN-13 the 9 digits starting at position 4.
   * Preprocessing: Journal titles of the form "Zhonghua wai ke za zhi [Chinese journal of surgery]" or
     "Zhonghua wei chang wai ke za zhi = Chinese journal of gastrointestinal surgery" or
     "The Canadian Journal of Neurological Sciences / Le Journal Canadien Des Sciences Neurologiques" are split into 2 journal titles.
