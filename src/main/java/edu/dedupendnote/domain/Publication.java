@@ -691,6 +691,8 @@ public class Publication {
 	 *
 	 * Crude validation: only lengths 8, 10 and 13 are accepted. Invalid results as
 	 * "X2345678" ("X" on non last position) are accepted.
+	 * 
+	 * For ISBN-10 the check digit is removed, for ISBN-13 the new prefix and the check digit 
 	 *
 	 * Paths not chosen:
 	 * - full validation 
@@ -713,8 +715,16 @@ public class Publication {
 		Matcher matcher = issnIsbnPattern.matcher(issn.toUpperCase());
 		while (matcher.find()) {
 			String group = matcher.group(1).replaceAll("-", "");
-			if (group.length() == 8 || group.length() == 10 || group.length() == 13) {
-				issns.add(group);
+			switch (group.length()) {
+				case 8: 
+					issns.add(group);
+					break;
+				case 10: 
+					issns.add(group.substring(0,9));
+					break;
+				case 13: 
+					issns.add(group.substring(3,12));
+					break;
 			}
 		}
 		return issns;
@@ -851,8 +861,8 @@ public class Publication {
 		// "UNSP ..." should be cleaned from the C7 field (WoS). Import may have changed
 		// "UNSP" Into "Unsp"
 		pages = pages.replaceAll("(UNSP|Unsp)\\s*", "");
-		Matcher matcher = pagesDatePattern.matcher(pages); // if Pages contains a date
-															// string, omit the pages
+		// if Pages contains a date string, omit the pages
+		Matcher matcher = pagesDatePattern.matcher(pages); 
 		while (matcher.find()) {
 			pages = null;
 		}
@@ -928,6 +938,14 @@ public class Publication {
 					this.pageForComparison = pageEndForComparison;
 				}
 			}
+		}
+	}
+	
+	Pattern publicationYearPattern = Pattern.compile("(^|\\D)(\\d{4})(\\D|$)");
+	public void parsePublicationYear(String input) {
+		Matcher matcher = publicationYearPattern.matcher(input);
+		if (matcher.find()) {
+			publicationYear = Integer.valueOf(matcher.group(2));
 		}
 	}
 

@@ -136,7 +136,7 @@ public class IOService {
 						}
 						break;
 					case "PY": // Publication year
-						publication.setPublicationYear(Integer.valueOf(fieldContent));
+						publication.parsePublicationYear(fieldContent);
 						break;
 					case "SN": // ISSN / ISBN
 						publication.addIssns(fieldContent);
@@ -221,6 +221,9 @@ public class IOService {
 				}
 			}
 		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (NumberFormatException e) {
+			log.error("In field {} with content {}: Number could not be parsed", fieldName, fieldContent);
 			e.printStackTrace();
 		}
 		log.debug("Records read: {}", publications.size());
