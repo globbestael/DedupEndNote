@@ -861,6 +861,7 @@ public class Publication {
 		// "UNSP ..." should be cleaned from the C7 field (WoS). Import may have changed
 		// "UNSP" Into "Unsp"
 		pages = pages.replaceAll("(UNSP|Unsp)\\s*", "");
+		pages = pages.replaceAll("author.+$", "");
 		// if Pages contains a date string, omit the pages
 		Matcher matcher = pagesDatePattern.matcher(pages); 
 		while (matcher.find()) {
@@ -890,12 +891,12 @@ public class Publication {
 		 * TODO: Should range of pages starting with "1-" be excluded? But type "1-234" occurs with books.
 		 */
 		// @formatter:on
+		// Cochrane uses hyphen characters instead of minus
+		pages = pages.replaceAll("(\\u2010|\\u00ad)", "-"); 
+
 		if (pageForComparison != null && !pages.contains("-")) {
 			return;
 		}
-
-		// Cochrane uses hyphen characters instead of minus
-		pages = pages.replaceAll("(\\u2010|\\u00ad)", "-"); 
 
 		// normalize starting page: W-22 --> 22
 		pages = pages.replaceAll("^([^\\d]+)\\-(\\d+)", "$1$2");
@@ -910,9 +911,12 @@ public class Publication {
 				this.pageEnd = this.pageStart.substring(0, this.pageStart.length() - this.pageEnd.length())
 						+ this.pageEnd;
 			}
-		}
-		else {
+		} else {
 			this.pageStart = pages;
+		}
+		if (! pageStart.matches(".*\\d+.*") && pageEnd != null && pageEnd.matches(".*\\d+.*")) {
+			pageStart = pageEnd;
+			pageEnd = null;
 		}
 		if (pageStart.matches(".*\\d+.*")) {
 			/*

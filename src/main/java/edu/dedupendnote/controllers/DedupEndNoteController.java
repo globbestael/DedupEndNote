@@ -2,6 +2,7 @@ package edu.dedupendnote.controllers;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
@@ -227,8 +228,10 @@ public class DedupEndNoteController {
 			if (Files.exists(path, LinkOption.NOFOLLOW_LINKS)) {
 				Files.delete(path);
 			}
-			Files.copy(file.getInputStream(), path);
-			return ResponseEntity.ok("{ \"result\": \"You successfully uploaded " + file.getOriginalFilename() + "\"}");
+			try (InputStream inputStream = file.getInputStream()) {
+				Files.copy(inputStream, path);
+				return ResponseEntity.ok("{ \"result\": \"You successfully uploaded " + file.getOriginalFilename() + "\"}");
+			}
 		} catch (IOException e) {
 			e.printStackTrace();
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
