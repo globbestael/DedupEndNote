@@ -37,6 +37,7 @@
 						<a class="list-group-item list-group-item-action" href="#fields_not_chosen">2.2. The fields not chosen</a>
 						<a class="list-group-item list-group-item-action" href="#similarity">2.3. Similarity</a>
 						<a class="list-group-item list-group-item-action" href="#order_of_comparisons">2.4. Order of comparisons</a>
+						<a class="list-group-item list-group-item-action" href="#effect">2.5. Effect of 'insufficient data from one of two records'</a>
 						<a class="list-group-item list-group-item-action" href="#enriching">3. Enriching the duplicate chosen</a>
 					</nav>
 				</nav>
@@ -47,7 +48,7 @@
 	       		<h3 id="general_rule">1. General rule</h3>
 	       		<div>
 			        <p>The general rule is:</p>
-			        <table class="table table-bordered" style="width: 60%;">
+			        <table class="table table-bordered" style="width: 80%;">
 			        	<thead>
 			        		<tr>
 			        			<th>Comparison</th>
@@ -62,7 +63,7 @@
 			        			<td rowspan="2" class="align-middle">go to next comparison if present,<br/>else mark the records as duplicates</td>
 			        		</tr>
 			        		<tr>
-			        			<td>(insufficient data for comparison)</td>
+			        			<td>(insufficient data for the comparison in one of the records)</td>
 			        		</tr>
 			        		<tr>
 			        			<td>NO</td>
@@ -71,7 +72,7 @@
 			        	</tbody>
 			        </table>
 			    </div>
-			    <div>The part "(insufficient data for comparison) &#x2192; goto next comparison ..." sets DedupEndNote apart from other deduplication programs.</div>
+			    <div>The part "(insufficient data for the comparison in one of the records) &#x2192; goto next comparison ..." sets DedupEndNote apart from other deduplication programs.</div>
 
 				<p><u><strong>Justification:</strong></u></p>
 			    <ul>
@@ -84,6 +85,9 @@
 			    <p>DedupEndNote therefore interprets a comparison with insufficient data from one of two records not as "NO" (i.e. these records are different), but as "UNKNOWN" (i.e. we can't tell (yet)),
 			    and continues with the other comparisons for these records.</p>
 			    <p>As a consequence, fields which are useful in comparisons but are not always available (e.g. DOI), can be used.</p>
+			    <p>NOTE: If <strong>both</strong> records have insufficient data for a comparison, DedupEndNote interprets the fields as different. 
+			    If there is no alternative for the comparison (see below), then DedupEndNote stops the comparisons for this pair of records and considers 
+			    them different publications. See <a href="#effect">2.5. Effect of 'insufficient data from one of two records'</a>.</p>
 	
 	       		<h3 id="comparisons">2. Comparisons</h3>
 	       		
@@ -361,6 +365,19 @@
 						</ul>
 					</li> 
 				</ul>
+
+	       		<h5 id="effect">2.5. Effect of 'insufficient data from one of two records'</h5>
+	       		
+	       		<p>The 5th comparison (ISSN or Journal: Are they the same (ISSN) or similar (Journal)?) looks at first sight to only compare journal articles
+					   (with the additional effect that no publications of another type can ever be a duplicate). This is not completely true:</p>
+				<ul>
+					<li>ISBN is treated the same way as a ISSN</li>
+					<li>The EndNote fields T2, J2, OP and T3 can also be used with other publications types</li>
+				</ul>
+				<p>However: the general rule treats 2 records / field sets as different if <strong>both</strong> records have insufficient data for that comparison.
+				Two book records with the same authors, publication year and book title will be considered duplicates only if both have the same / a similar ISBN.</p>
+				<p>Relaxing this general rule (so that comparisons with insufficient data in one or both records are treated the same way: UNKNOWN, 
+					so go on to the next comparison) would result in a lot more False Positives.</p>
 
 	       		<h3 id="enriching">3. Enriching the duplicate chosen</h3>
 				

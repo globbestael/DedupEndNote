@@ -128,6 +128,7 @@ public class DedupEndNoteController {
 
 		// Create DeferredResult with timeout 5s
 		DeferredResult<String> result = new DeferredResult<>(5000L);
+		String logPrefix = "1F" + (markMode ? "M" : "D");
 
 		// Let's call the backend
 		ListenableFuture<String> future = deduplicationService.deduplicateOneFileAsync(
@@ -146,7 +147,7 @@ public class DedupEndNoteController {
 			public void onSuccess(String response) {
 				// Will be called in thread
 				log("Success");
-				log.info("Writing to result: {}", response);
+				log.info("Writing to result: {}: {}", logPrefix, response);
 				// runningFutures.remove(wssessionId);
 				result.setResult(response);
 			}
@@ -161,6 +162,7 @@ public class DedupEndNoteController {
 
 		// Create DeferredResult with timeout 5s
 		DeferredResult<String> result = new DeferredResult<>(5000L);
+		String logPrefix = "2F" + (markMode ? "M" : "D");
 
 		// Let's call the backend
 		ListenableFuture<String> future = deduplicationService.deduplicateTwoFilesAsync(
@@ -179,7 +181,7 @@ public class DedupEndNoteController {
 			public void onSuccess(String response) {
 				// Will be called in thread
 				log("Success");
-				log.info("Writing to result: {}", response);
+				log.info("Writing to result: {}: {}", logPrefix, response);
 				// runningFutures.remove(wssessionId);
 				result.setResult(response);
 			}

@@ -159,6 +159,10 @@ public class Publication {
 	private static Pattern balancedBracespattern = Pattern
 		.compile("(?=\\()(?:(?=.*?\\((?!.*?\\1)(.*\\)(?!.*\\2).*))(?=.*?\\)(?!.*?\\2)(.*)).)+?.*?(?=\\1)[^(]*(?=\\2$)");
 
+	// The first group is non greedy (with 2 times ": " in string, first group captures before first ": ", second the rest of the string
+	private static Pattern titleAndSubtitlePattern = Pattern.compile("^(.{50,}?): (.{50,})$");
+
+
 	/*
 	 * FIXME: Why is normalizeToBasicLatin not used?
 	 */
@@ -826,9 +830,6 @@ public class Publication {
 		return journals;
 	}
 
-	// The first group is non greedy (with 2 times ": " in string, first group captures before first ": ", second the rest of the string
-	Pattern titleAndSubtitlePattern = Pattern.compile("^(.{50,}?): (.{50,})$");
-
 	public void addTitles(String title) {
 		String normalized = normalizeJava8(title);
 		String[] parts = normalized.split("=");
@@ -945,7 +946,8 @@ public class Publication {
 		}
 	}
 	
-	Pattern publicationYearPattern = Pattern.compile("(^|\\D)(\\d{4})(\\D|$)");
+	private static Pattern publicationYearPattern = Pattern.compile("(^|\\D)(\\d{4})(\\D|$)");
+	
 	public void parsePublicationYear(String input) {
 		Matcher matcher = publicationYearPattern.matcher(input);
 		if (matcher.find()) {
