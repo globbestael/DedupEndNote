@@ -167,6 +167,7 @@ public class Publication {
 	 * FIXME: Why is normalizeToBasicLatin not used?
 	 */
 	static public String normalizeJava8(String s) {
+		s = normalizeToBasicLatin(s);
 		s = doubleQuotesPattern.matcher(s).replaceAll("");
 		s = s.replaceAll("(<<|>>)", "");				// assume "<<...>>" is not an addition, but variant of double quote 
 		/*

@@ -56,11 +56,20 @@ public class IOService {
 	public static Pattern risLinePattern = Pattern.compile("(^[A-Z][A-Z0-9])(  -[ ,\\u00A0])(.*)$");
 
 	/**
-	 * Unusual white space characters within input fields (LINE SEPARATOR, NO-BREAK
-	 * SPACE): will be replaced by SPACE
+	 * All white space characters within input fields will replaced with a normal SPACE.
+	 * LINE SEPARATOR and NO-BREAK SPACE have been observed in the test files. 
+	 * The pattern uses a maximum view:
+	 * - all white space / "Separator, space" characters (class Zs): https://www.fileformat.info/info/unicode/category/Zs/list.htm
+	 * - all "Separator, Line" (Zl)  and "Separator, Paragraph" (Zp) characters
+	 * - some "Control, other" characters (class Cc), but not all: https://www.fileformat.info/info/unicode/category/Cc/list.htm
+	 * 
+	 * Pattern excludes SPACE from class Zs for performance reason by making an intersection (&&) with the negation ([^ ]).
+	 *  
+	 * Tested in TextNormalizerTest
 	 */
-	public static Pattern unusualWhiteSpacePattern = Pattern.compile("(\\u2028|\\u00A0)");
-
+//	public static Pattern unusualWhiteSpacePattern = Pattern.compile("[\\p{Zs}\\p{Cc}]");
+	public static Pattern unusualWhiteSpacePattern = Pattern.compile("[\\p{Zs}\\p{Zl}\\p{Zp}\\u0009\\u000A\\u000B\\u000C\\u000D&&[^ ]]");
+	
 	private UtilitiesService utilities = new UtilitiesService();
 
 	public List<Publication> readPublications(String inputFileName) {
