@@ -871,8 +871,15 @@ public class DeduplicationService {
 	public void searchYearTwoFiles(List<Publication> publications, String wssessionId) {
 		Map<Integer, List<Publication>> yearSets = publications.stream()
 				.collect(Collectors.groupingBy(Publication::getPublicationYear));
-		// TODO: should there be a progress message with cumulative percentage, as in
-		// searchYearOneFile()?
+		Map<Integer, Integer> cumulativePercentages = new LinkedHashMap<>();
+		int current = 0;
+		Integer total = publications.size();
+		for (Integer year : yearSets.keySet()) {
+			Integer simple = yearSets.get(year).size();
+			cumulativePercentages.put(year, 100 * (simple + current) / total);
+			current += simple;
+		}
+
 		List<Publication> emptyYearlist = yearSets.remove(0);
 		log.debug("YearSets: {}", yearSets.keySet().stream().sorted().collect(Collectors.toList()));
 		yearSets.keySet().stream().sorted().forEach(year -> {
@@ -887,6 +894,7 @@ public class DeduplicationService {
 			}
 			wsMessage(wssessionId, "Working on " + year + " for " + yearSet.size() + " records");
 			compareSet(yearSet, year, false, wssessionId);
+			wsMessage(wssessionId, "PROGRESS: " + cumulativePercentages.get(year));
 		});
 		return;
 	}
