@@ -12,5 +12,5 @@ authors:
     family-names: Lobbestael
 repository-code: 'https://github.com/globbestael/DedupEndNote'
 url: 'http://dedupendnote.nl'
-version: 0.9.7f
-date-released: '2023-10-07'
+version: 1.0.0
+date-released: '2023-10-08'
