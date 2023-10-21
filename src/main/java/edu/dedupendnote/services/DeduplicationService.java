@@ -822,9 +822,9 @@ public class DeduplicationService {
 	/*
 	 * For 1 file:
 	 * - order year descending
-	 *  - add empty years (year == 0 and not identified as duplicate yet) AFTER each year1
+	 * - add empty years (year == 0 and not identified as duplicate yet) AFTER each year1
 	 *
-	 *  Reason: we prefer the data (duplicate kept) which is most recent (e.g. complete publication BEFORE ahead
+	 * Reason: we prefer the data (duplicate kept) which is most recent (e.g. complete publication BEFORE ahead
 	 * of print which is possibly from earlier year or without a year).
 	 */
 	// @formatter:on
@@ -861,13 +861,16 @@ public class DeduplicationService {
 		return;
 	}
 
+	// @formatter:off
 	/*
-	 * For 2 files: - order year ascending - add empty years (year == 0 and not
-	 * identified as duplicate yet) BEFORE each year1 Reason: the oldest data should
-	 * set the label for a duplicate set (e.g. ahead of print (which is possibly
-	 * from earlier year or without a year and more probably in the old file than in
-	 * the new file) BEFORE the complete data
+	 * For 2 files: 
+	 * - order year ascending 
+	 * - add empty years (year == 0 and not identified as duplicate yet) BEFORE each year1 
+	 * 
+	 * Reason: the oldest data should set the label for a duplicate set (e.g. ahead of print (which is possibly
+	 * from earlier year or without a year and more probably in the old file than in the new file) BEFORE the complete data
 	 */
+	// @formatter:on
 	public void searchYearTwoFiles(List<Publication> publications, String wssessionId) {
 		Map<Integer, List<Publication>> yearSets = publications.stream()
 				.collect(Collectors.groupingBy(Publication::getPublicationYear));
