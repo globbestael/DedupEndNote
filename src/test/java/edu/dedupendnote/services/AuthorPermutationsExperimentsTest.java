@@ -134,8 +134,9 @@ class AuthorPermutationsExperimentsTest {
 				System.err.println("Found at " + i);
 			}
 		}
-		assertThat(permutedAuthorLists).contains(other);
-		assertThat(permutedAuthorLists).hasSize(2187);
+		assertThat(permutedAuthorLists)
+			.contains(other)
+			.hasSize(2187);
 		assertThat(3 * 3 * 3 * 3 * 3 * 3 * 3).isEqualTo(2187);
 	}
 
@@ -156,9 +157,10 @@ class AuthorPermutationsExperimentsTest {
 				System.err.println("Found at " + i);
 			}
 		}
-		assertThat(permutedAuthorLists).contains(other);
-		assertThat(permutedAuthorLists).hasSize(144);
-		assertThat(permutedAuthorLists).hasSize(2 * 3 * 2 * 2 * 3 * 2);
+		assertThat(permutedAuthorLists)
+			.contains(other)
+			.hasSize(144)
+			.hasSize(2 * 3 * 2 * 2 * 3 * 2);
 	}
 
 }

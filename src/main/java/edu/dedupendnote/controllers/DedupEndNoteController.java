@@ -11,7 +11,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -32,9 +31,12 @@ import lombok.extern.slf4j.Slf4j;
 @Controller
 @Slf4j
 public class DedupEndNoteController {
-	@Autowired
 	private SimpMessagingTemplate simpMessagingTemplate;
 
+	public DedupEndNoteController(SimpMessagingTemplate simpMessagingTemplate) {
+		this.simpMessagingTemplate = simpMessagingTemplate;
+	}
+	
 	// @formatter:off
 	/*
 	 * Communication between client / browser uses different techniques
@@ -69,17 +71,9 @@ public class DedupEndNoteController {
 
 	public static String createOutputFileName(String fileName, Boolean markMode) {
 		String extension = StringUtils.getFilenameExtension(fileName);
-		String outputFileName = fileName.replaceAll("." + extension + "$",
+		return fileName.replaceAll("." + extension + "$",
 				(Boolean.TRUE.equals(markMode) ? "_mark." : "_deduplicated.") + extension);
-		return outputFileName;
 	}
-
-//	private static void log(Object message) {
-//		System.out.println("%s %s ".formatted(Thread.currentThread().getName(), message));
-//	}
-
-//	@Autowired
-//	public DeduplicationService deduplicationService;
 
 	@Value("${upload-dir}")
 	private String uploadDir;
@@ -132,10 +126,10 @@ public class DedupEndNoteController {
 	@PostMapping(value = "/startTwoFiles", produces = "application/json")
 	public ResponseEntity<String> startTwoFiles(@RequestParam String oldFile,
 			@RequestParam String newFile,
-			@RequestParam(required = false) Boolean markMode,
+			@RequestParam(required = false, defaultValue = "false") Boolean markMode,
 			@RequestParam String wssessionId) throws InterruptedException, ExecutionException {
 
-		String logPrefix = "2F" + (markMode ? "M" : "D");
+		String logPrefix = "2F" + (Boolean.TRUE.equals(markMode) ? "M" : "D");
 		DeduplicationService deduplicationService = new DeduplicationService(simpMessagingTemplate);
 		
 		try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
@@ -149,42 +143,8 @@ public class DedupEndNoteController {
 		}
 	}
 
-//	private String startDeduplication(String newInputFileName, String oldInputFileName, String outputFileName,
-//			boolean markMode, String wssessionId) {
-//
-//		// Create DeferredResult with timeout 5s
-//		DeferredResult<String> result = new DeferredResult<>(5000L);
-//		String logPrefix = "2F" + (markMode ? "M" : "D");
-//
-//		// Let's call the backend
-//		ListenableFuture<String> future = deduplicationService.deduplicateTwoFilesAsync(
-//				uploadDir + File.separator + newInputFileName, uploadDir + File.separator + oldInputFileName,
-//				uploadDir + File.separator + outputFileName, markMode, wssessionId);
-//		// runningFutures.put(wssessionId, future);
-//
-//		future.addCallback(new ListenableFutureCallback<String>() {
-//			@Override
-//			public void onFailure(Throwable t) {
-//				// runningFutures.remove(wssessionId);
-//				result.setErrorResult(t.getMessage());
-//			}
-//
-//			@Override
-//			public void onSuccess(String response) {
-//				// Will be called in thread
-//				log("Success");
-//				log.info("Writing to result: {}: {}", logPrefix, response);
-//				// runningFutures.remove(wssessionId);
-//				result.setResult(response);
-//			}
-//		});
-//		// Return the thread to servlet container,
-//		// the response will be processed by another thread.
-//		return "index";
-//	}
-
 	@GetMapping("/test_results_details")
-	public String test_results_details(HttpSession session) {
+	public String testResultsDetails(HttpSession session) {
 		return "test_results_details";
 	}
 

@@ -25,7 +25,7 @@ public class DedupEndNoteApplication {
 		log.info("DedupEndNote: the web server is reachable at http://localhost:9777");
 	}
 
-	@Value("upload-dir")
+	@Value("${upload-dir}")
 	private String uploadDir;
 
 	@Bean

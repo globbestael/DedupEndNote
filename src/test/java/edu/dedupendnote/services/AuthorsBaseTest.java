@@ -11,19 +11,26 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.junit.jupiter.api.Test;
+
 import edu.dedupendnote.BaseTest;
 import edu.dedupendnote.domain.Publication;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class AuthorsBaseTest extends BaseTest {
+class AuthorsBaseTest extends BaseTest {
 
 	String homeDir = System.getProperty("user.home");
 
 	String testdir = homeDir + "/dedupendnote_files";
 
 	List<Triple> localTriples = new ArrayList<>();
+	
+	@Test
+	void fillerTest() {
+		assertThat(1*1).isEqualTo(1);
+	}
 
 	@Data
 	public class Triple {

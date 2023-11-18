@@ -1,8 +1,11 @@
 package edu.dedupendnote;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.util.List;
 
 import org.apache.commons.text.similarity.JaroWinklerSimilarity;
+import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.TestConfiguration;
 
 @TestConfiguration
@@ -24,4 +27,8 @@ public class BaseTest {
 		return highestSimilarity;
 	}
 
+	@Test
+	void fillerBaseTest() {
+		assertThat(1*1).isEqualTo(1);
+	}
 }

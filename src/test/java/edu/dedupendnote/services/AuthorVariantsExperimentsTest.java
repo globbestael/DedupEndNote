@@ -106,7 +106,7 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 
 		assertThat(a1).isEqualTo("GJV");
 		assertThat(a2).isEqualTo("DDJ");
-		assertThat(0.0).as("Even with 1 letter out of 3 in common JWS is 0.0").isEqualTo(jws.apply(a1, a2));
+		assertThat(jws.apply(a1, a2)).as("Even with 1 letter out of 3 in common JWS is 0.0").isEqualTo(0.0);
 	}
 
 	/*

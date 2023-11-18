@@ -24,7 +24,7 @@ class DoiTest {
 		r.addDois(input);
 
 		Map<String, Integer> map = r.getDois();
-		assertThat(map.size()).isEqualTo(numberOfDois);
+		assertThat(map).hasSize(numberOfDois);
 		assertThat(map).containsAllEntriesOf(dois);
 	}
 

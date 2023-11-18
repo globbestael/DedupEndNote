@@ -35,14 +35,13 @@ public class DeduplicationService {
 
 		private static JaroWinklerSimilarity jws = new JaroWinklerSimilarity();
 
-		public Double similarity = 0.0;
+		private Double similarity = 0.0;
 
 		/*
 		 * See AuthorVariantsExperimentsTest for possible enhancements.
 		 */
 		@Override
 		public boolean compare(Publication r1, Publication r2) {
-			// log.error("Using the default AuthorComparator");
 			similarity = 0.0;
 			boolean isReply = r1.isReply() || r2.isReply();
 			boolean sufficientStartPages = r1.getPageForComparison() != null && r2.getPageForComparison() != null;
@@ -370,16 +369,12 @@ public class DeduplicationService {
 	/*
 	 * Comparing starting page before DOI may be faster than the other way around.
 	 * But: a complete set of conference abstracts has the same DOI. So starting
-	 * page MUST be compared before DOI.
-	 *
-	 * Exception: Cochrane Reviews. See the comment at {@link
-	 * edu.dedupendnote.domain.Publication#isCochrane Publication#isCochrane}
+	 * page MUST be compared before DOI, except for Cochrane Reviews.
+	 * See the comment at {@link edu.dedupendnote.domain.Publication#isCochrane}
 	 */
 	public boolean compareStartPageOrDoi(Publication r1, Publication r2) {
 		log.debug("Comparing " + r1.getId() + ": " + r1.getPageForComparison() + " to " + r2.getId() + ": "
 				+ r2.getPageForComparison());
-//		Map<String, Integer> dois1 = r1.getDois();
-//		Map<String, Integer> dois2 = r2.getDois();
 		List<String> dois1 = new ArrayList<>(r1.getDois().keySet());
 		List<String> dois2 = new ArrayList<>(r2.getDois().keySet());
 		boolean bothCochrane = r1.isCochrane() && r2.isCochrane();
@@ -427,7 +422,7 @@ public class DeduplicationService {
 		if (r1.isReply() || r2.isReply()) {
 			return true;
 		}
-		Double similarity = 0.0;
+		Double similarity;
 		List<String> titles1 = r1.getTitles();
 		List<String> titles2 = r2.getTitles();
 		boolean sufficientStartPages = r1.getPageForComparison() != null && r2.getPageForComparison() != null;
@@ -468,9 +463,7 @@ public class DeduplicationService {
 		return publications.stream().filter(r -> r.getId() == null).count() > 0L;
 	}
 
-	public String deduplicateOneFile(String inputFileName, String outputFileName, boolean markMode,
-			String wssessionId) {
-		// this.session = session;
+	public String deduplicateOneFile(String inputFileName, String outputFileName, boolean markMode, String wssessionId) {
 		wsMessage(wssessionId, "Reading file " + inputFileName);
 		List<Publication> publications = ioService.readPublications(inputFileName);
 
@@ -500,13 +493,6 @@ public class DeduplicationService {
 
 		return s;
 	}
-
-//	@Async
-//	public ListenableFuture<String> deduplicateOneFileAsync(String inputFileName, String outputFileName,
-//			boolean markMode, String wssessionId) {
-//		String s = deduplicateOneFile(inputFileName, outputFileName, markMode, wssessionId);
-//		return new AsyncResult<>(s);
-//	}
 
 	public String deduplicateTwoFiles(String newInputFileName, String oldInputFileName, String outputFileName,
 			boolean markMode, String wssessionId) {
@@ -561,7 +547,7 @@ public class DeduplicationService {
 		// of records of the old file
 		List<Publication> filteredRecords = publications.stream()
 				.filter(r -> !r.isPresentInOldFile() && (r.getLabel() == null || !r.getLabel().startsWith("-")))
-				.collect(Collectors.toList());
+				.toList();
 		log.error("Records to write: {}", filteredRecords.size());
 		int numberWritten = ioService.writeDeduplicatedRecords(filteredRecords, newInputFileName, outputFileName);
 		s = "DONE: DedupEndNote removed " + (newRecords.size() - numberWritten)
@@ -636,7 +622,7 @@ public class DeduplicationService {
 				// when record.dois is a Set
 				recordList.stream().forEach(r -> {
 					if (!r.getDois().isEmpty()) {
-						r.getDois().forEach((k, v) -> dois.putIfAbsent(k, v));
+						r.getDois().forEach(dois::putIfAbsent);
 					}
 				});
 				if (!dois.isEmpty()) {
@@ -695,13 +681,13 @@ public class DeduplicationService {
 			log.debug("Reached Cochrane record without pageStart, getting it from pageStart of the duplicates: {}", recordToKeep.getAuthors());
 			for (Publication r : duplicates) {
 				if (r.getPageStart() != null && r.getPageStart().toUpperCase().startsWith("C")) {
-					pageStart = r.getPageStart().toUpperCase();
+					recordToKeep.setPageStart(r.getPageStart().toUpperCase());
 					return;
 				}
 			}
 			log.debug("Reached Cochrane record without pageStart, getting it from the DOIs: {}", recordToKeep.getAuthors());
 			if (!recordToKeep.getDois().isEmpty()) {
-				String doi = recordToKeep.getDois().keySet().stream().collect(Collectors.toList()).get(0);
+				String doi = recordToKeep.getDois().keySet().stream().toList().get(0);
 				Matcher matcher = cochraneIdentifierPattern.matcher(doi);
 				if (matcher.matches()) {
 					pageStart = matcher.group(1);
@@ -748,22 +734,14 @@ public class DeduplicationService {
 				.collect(Collectors.groupingBy(Publication::getPublicationYear, TreeMap::new, Collectors.toList()))
 				.descendingMap();
 
-		Map<Integer, Integer> cumulativePercentages = new LinkedHashMap<>();
-		int current = 0;
-		Integer total = publications.size();
-		for (Integer year : yearSets.keySet()) {
-			Integer simple = yearSets.get(year).size();
-			cumulativePercentages.put(year, 100 * (simple + current) / total);
-			current += simple;
-		}
-		// log.error("cumulativePercentages: " + cumulativePercentages);
+		Map<Integer, Integer> cumulativePercentages = getCumulativePercentages(publications, yearSets);
 
 		List<Publication> emptyYearlist = yearSets.remove(0);
-		log.debug("YearSets: {}", yearSets.keySet().stream().sorted().collect(Collectors.toList()));
+		log.debug("YearSets: {}", yearSets.keySet().stream().sorted().toList());
 		yearSets.keySet().stream().sorted(Comparator.reverseOrder()).forEach(year -> {
 			List<Publication> yearSet = yearSets.get(year);
 			if (emptyYearlist != null) {
-				yearSet.addAll(emptyYearlist.stream().filter(r -> r.getLabel() == null).collect(Collectors.toList()));
+				yearSet.addAll(emptyYearlist.stream().filter(r -> r.getLabel() == null).toList());
 			}
 			List<Publication> previousYearSet = yearSets.get(year - 1);
 			if (previousYearSet != null) {
@@ -788,21 +766,14 @@ public class DeduplicationService {
 	public void searchYearTwoFiles(List<Publication> publications, String wssessionId) {
 		Map<Integer, List<Publication>> yearSets = publications.stream()
 				.collect(Collectors.groupingBy(Publication::getPublicationYear));
-		Map<Integer, Integer> cumulativePercentages = new LinkedHashMap<>();
-		int current = 0;
-		Integer total = publications.size();
-		for (Integer year : yearSets.keySet()) {
-			Integer simple = yearSets.get(year).size();
-			cumulativePercentages.put(year, 100 * (simple + current) / total);
-			current += simple;
-		}
+		Map<Integer, Integer> cumulativePercentages = getCumulativePercentages(publications, yearSets);
 
 		List<Publication> emptyYearlist = yearSets.remove(0);
-		log.debug("YearSets: {}", yearSets.keySet().stream().sorted().collect(Collectors.toList()));
+		log.debug("YearSets: {}", yearSets.keySet().stream().sorted().toList());
 		yearSets.keySet().stream().sorted().forEach(year -> {
 			List<Publication> yearSet = new ArrayList<>();
 			if (emptyYearlist != null) {
-				yearSet.addAll(emptyYearlist.stream().filter(r -> r.getLabel() == null).collect(Collectors.toList()));
+				yearSet.addAll(emptyYearlist.stream().filter(r -> r.getLabel() == null).toList());
 			}
 			yearSet.addAll(yearSets.get(year));
 			List<Publication> nextYearSet = yearSets.get(year + 1);
@@ -813,6 +784,19 @@ public class DeduplicationService {
 			compareSet(yearSet, year, wssessionId);
 			wsMessage(wssessionId, "PROGRESS: " + cumulativePercentages.get(year));
 		});
+	}
+
+	private Map<Integer, Integer> getCumulativePercentages(List<Publication> publications, Map<Integer, List<Publication>> yearSets) {
+		Map<Integer, Integer> cumulativePercentages = new LinkedHashMap<>();
+		int current = 0;
+		Integer total = publications.size();
+		for (Map.Entry<Integer, List<Publication>> year : yearSets.entrySet()) {
+			int simple = year.getValue().size();
+			cumulativePercentages.put(year.getKey(), 100 * (simple + current) / total);
+			current += simple;		
+		}
+		log.debug("cumulativePercentages: " + cumulativePercentages);
+		return cumulativePercentages;
 	}
 
 	private void wsMessage(String wssessionId, String message) {
