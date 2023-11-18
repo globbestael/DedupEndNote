@@ -10,7 +10,7 @@ import edu.dedupendnote.controllers.DedupEndNoteController;
 import edu.dedupendnote.services.DeduplicationService;
 
 @TestConfiguration
-public class TwoFilesTest {
+class TwoFilesTest {
 
 	public DeduplicationService deduplicationService = new DeduplicationService();
 
@@ -34,7 +34,7 @@ public class TwoFilesTest {
 			.startsWith("DONE: DedupEndNote removed 552 records from the new set, and has written 113 records.");
 	}
 
-	@Disabled
+	@Disabled("TODO: Why was this disabled")
 	@Test
 	void files_without_IDs() {
 		String oldFileName = testdir + "Recurrance_rate_EndNote_Library_original_deduplicated.txt";

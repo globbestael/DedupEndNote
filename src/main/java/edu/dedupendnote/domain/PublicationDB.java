@@ -82,9 +82,9 @@ public class PublicationDB {
 	@JsonIgnore
 	List<String> doisList = new ArrayList<>();
 
-	private static String TAB = "\t";
+	private static final String TAB = "\t";
 
-	private static String NEWLINE = "\n";
+	private static final String NEWLINE = "\n";
 
 	public String toDBLine() {
 		StringBuilder sb = new StringBuilder();

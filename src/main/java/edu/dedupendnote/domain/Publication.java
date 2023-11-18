@@ -26,20 +26,20 @@ public class Publication {
 
 	private List<String> allAuthors = new ArrayList<>();
 
-	public List<String> authors = new ArrayList<>();
+	protected List<String> authors = new ArrayList<>();
 
-	public List<String> authorsTransposed = new ArrayList<>();
+	private List<String> authorsTransposed = new ArrayList<>();
 
-	public boolean authorsAreTransposed = false;
+	private boolean authorsAreTransposed = false;
 
 	// FIXME: change to Set<String>()
-	public Map<String, Integer> dois = new HashMap<>();
+	private Map<String, Integer> dois = new HashMap<>();
 
-	public String id;
+	private String id;
 
-	public List<String> issns = new ArrayList<>();
+	private List<String> issns = new ArrayList<>();
 
-	public Set<String> journals = new HashSet<>();
+	private Set<String> journals = new HashSet<>();
 
 	/*
 	 * The label field is used internally to mark the duplicate lists: the label of all
@@ -49,23 +49,23 @@ public class Publication {
 	 * exported. The original content of the Label field in the EndNote export file is
 	 * overwritten in this case!
 	 */
-	public String label;
+	private String label;
 
-	public String pageEnd;
+	private String pageEnd;
 
-	public String pageStart;
+	private String pageStart;
 
 	private String pageForComparison;
 
 	private boolean presentInOldFile = false; // used when comparing 2 files
 
-	public Integer publicationYear = 0;
+	private Integer publicationYear = 0;
 
-	public String referenceType;
+	private String referenceType;
 	
-	public String title; // only set for Reply-titles
+	private String title; // only set for Reply-titles
 
-	public List<String> titles = new ArrayList<>();
+	private List<String> titles = new ArrayList<>();
 
 	/*
 	 * Cochrane publications need a slightly different comparison. The starting page is
@@ -166,7 +166,7 @@ public class Publication {
 	/*
 	 * FIXME: Why is normalizeToBasicLatin not used?
 	 */
-	static public String normalizeJava8(String s) {
+	public static String normalizeJava8(String s) {
 		s = normalizeToBasicLatin(s);
 		s = doubleQuotesPattern.matcher(s).replaceAll("");
 		s = s.replaceAll("(<<|>>)", "");				// assume "<<...>>" is not an addition, but variant of double quote 
@@ -265,7 +265,7 @@ public class Publication {
 	/**
 	 * Initial "Zbl(.?) " (case insensitive): will be replaced by "Zentralblatt"
 	 */
-	private static Pattern zentralblattPattern = Pattern.compile("^Zbl(\\.| )", Pattern.CASE_INSENSITIVE);
+	private static Pattern zentralblattPattern = Pattern.compile("^Zbl[\\. ]", Pattern.CASE_INSENSITIVE);
 
 	/**
 	 * "Jbr-btr" (case insensitive): will be replaced by "JBR BTR". Cheater!
@@ -276,7 +276,7 @@ public class Publication {
 	 * "^(Rofo|Fortschritte .* Gebiet.* R.ntgenstrahlen)" (case insensitive): will be
 	 * replaced by "Rofo". Cheater!
 	 *
-	 * Must be used BEFORE the latin_o_Pattern
+	 * Must be used BEFORE the latinOPattern
 	 *
 	 */
 	private static Pattern rofoPattern = Pattern.compile("^(Rofo|Fortschritte .* Gebiet.* R.ntgenstrahlen)",
@@ -286,16 +286,12 @@ public class Publication {
 	 * "o-[NON-WHITE-SPACE]": the hyphen will be removed. E.g. "gastro-enterology" -->
 	 * "gastroenterology". Must be used BEFORE the minusOrDotPattern
 	 */
-	private static Pattern latin_o_Pattern = Pattern.compile("o\\-(\\S)"); // before
-																			// minusOrDotPattern!
-																			// gastro-enterology
-																			// -->
-																			// gastroenterology
+	private static Pattern latinOPattern = Pattern.compile("o\\-(\\S)");
 
 	/**
 	 * "-" or ".": will be replaced by a SPACE
 	 */
-	private static Pattern hyphenOrDotPattern = Pattern.compile("(-|\\.)");
+	private static Pattern hyphenOrDotPattern = Pattern.compile("[\\.-]");
 
 	/**
 	 * Initial "(The |Le |La |Les |L'|Der |Die |Das |Il |Het )": will be removed
@@ -326,13 +322,13 @@ public class Publication {
 	 * "(" and ")": will be replaced by SPACE. See also journalEndingRoundBracketsPattern.
 	 * Some journals only have "(" without a ")", which causes regex problems
 	 */
-	private static Pattern journalOtherRoundBracketsPattern = Pattern.compile("(\\)|\\()");
+	private static Pattern journalOtherRoundBracketsPattern = Pattern.compile("[\\)\\(]");
 
 	/**
 	 * ":" or "/" and all following characters: will be removed. E.g. "BJOG: An
 	 * International Journal of Obstetrics and Gynaecology" --> "BJOG"
 	 */
-	private static Pattern journalAdditionPattern = Pattern.compile("(:|/).*$");
+	private static Pattern journalAdditionPattern = Pattern.compile("[:/].*$");
 
 	/**
 	 * "/" not preceded and followed by white space: will be replaced by a space. E.g.
@@ -372,7 +368,7 @@ public class Publication {
 	private static Pattern journalSupplementPattern = Pattern.compile("(\\b(Suppl|Supplement|Supplementum)\\b.*)$",
 			Pattern.CASE_INSENSITIVE);
 
-	static public String normalizeJournalJava8(String s) {
+	public static String normalizeJournalJava8(String s) {
 		String r = s;
 		r = normalizeToBasicLatin(r);
 		r = ampersandPattern.matcher(r).replaceAll(" "); // we don't want "&" in the
@@ -389,22 +385,21 @@ public class Publication {
 		r = jbrPattern.matcher(r).replaceAll("JBR BTR");
 		r = rofoPattern.matcher(r).replaceAll("Rofo");
 		// Java 8-version
-		if (latin_o_Pattern.matcher(r).find()) { // "Gastro-Enterology" ->
-													// "Gastroenterology"
+		if (latinOPattern.matcher(r).find()) { // "Gastro-Enterology" -> "Gastroenterology"
 			StringBuilder sb = new StringBuilder();
 			int last = 0;
-			Matcher latin_o_matcher = latin_o_Pattern.matcher(r);
-			while (latin_o_matcher.find()) {
-				sb.append(r.substring(last, latin_o_matcher.start()));
-				sb.append("o").append(latin_o_matcher.group(1).toLowerCase());
-				last = latin_o_matcher.end();
+			Matcher latinOMatcher = latinOPattern.matcher(r);
+			while (latinOMatcher.find()) {
+				sb.append(r.substring(last, latinOMatcher.start()));
+				sb.append("o").append(latinOMatcher.group(1).toLowerCase());
+				last = latinOMatcher.end();
 			}
 			sb.append(r.substring(last));
 			r = sb.toString();
 		}
 		// Java 9+-version: see
 		// https://stackoverflow.com/questions/2770967/use-java-and-regex-to-convert-casing-in-a-string
-		// r = latin_o_Pattern.matcher(r).replaceAll(m -> "o" + m.group(1).toLowerCase());
+		// r = latinOPattern.matcher(r).replaceAll(m -> "o" + m.group(1).toLowerCase());
 		// // "Gastro-Enterology" -> "Gastroenterology"
 		r = hyphenOrDotPattern.matcher(r).replaceAll(" ");
 		r = journalStartingArticlePattern.matcher(r).replaceAll(""); // article at start
@@ -556,12 +551,12 @@ public class Publication {
 	 */
 	// @formatter:on
 
-	static private Pattern lastNameAdditionsPattern = Pattern.compile("^(.+)\\b(jr|sr|1st|2nd|3rd|ii|iii)\\b(.*)$",
+	private static final Pattern lastNameAdditionsPattern = Pattern.compile("^(.+)\\b(jr|sr|1st|2nd|3rd|ii|iii)\\b(.*)$",
 			Pattern.CASE_INSENSITIVE);
 
 	// public because used in tests
 	// FIXME: add "No authorship, indicated"?
-	static public Pattern anonymousOrGroupNamePattern = Pattern
+	public static final Pattern anonymousOrGroupNamePattern = Pattern
 		.compile("\\b(anonymous|consortium|et al|grp|group|nct|study)\\b", Pattern.CASE_INSENSITIVE);
 
 	public void addAuthors(String author) {
@@ -575,8 +570,7 @@ public class Publication {
 		author = author.replaceAll("-", " ");
 
 		// FIXME: should this be a Pattern?
-		String[] parts = author.split("\\s*,\\s+"); // see testfile Non_Latin_input.txt
-													// for " , "
+		String[] parts = author.split("\\s*,\\s+"); // see testfile Non_Latin_input.txt for " , "
 		if (parts.length < 2) {
 			log.debug("Author {} cannot be split", author);
 			this.authors.add(author);
@@ -595,14 +589,10 @@ public class Publication {
 		if (lastName.equals(lastName.toUpperCase())) {
 			String[] lastNameParts2 = lastName.toLowerCase().split(" ");
 			List<String> lastNameParts = new ArrayList<>(Arrays.asList(lastNameParts2));
-			lastName = lastNameParts.stream().map(p -> StringUtils.capitalize(p)).collect(Collectors.joining(" "));
+			lastName = lastNameParts.stream().map(StringUtils::capitalize).collect(Collectors.joining(" "));
 		}
 		matcher = lastNameAdditionsPattern.matcher(lastName);
 		if (matcher.find()) {
-			// FIXME Java 8: NOT in Java 8, but in Java 11: String.strip()
-			// See
-			// https://stackoverflow.com/questions/51266582/difference-between-string-trim-and-strip-methods-in-java-11
-			// lastName = (matcher.group(1) + matcher.group(3)).strip();
 			lastName = (matcher.group(1).strip() + " " + matcher.group(3).strip()).strip();
 			log.debug("new lastName: {}", lastName);
 		}
@@ -653,8 +643,6 @@ public class Publication {
 			List<String> lastNameParts = new ArrayList<>(Arrays.asList(lastNameParts2));
 			String lastPart = lastNameParts.remove(lastNameParts.size() - 1);
 			if (!lastNameParts.isEmpty()) {
-				// initials += lastNameParts.stream().collect(Collectors.joining());
-				// initials = initials.replaceAll("[^A-Z]", "");
 				initials += lastNameParts.stream().map(p -> p.substring(0, 1)).collect(Collectors.joining());
 				authorsAreTransposed = true;
 				log.debug("Author {} is transposed as {} {}", author, lastPart, initials);
@@ -730,6 +718,8 @@ public class Publication {
 				case 13: 
 					issns.add(group.substring(3,12));
 					break;
+				default:
+					break;
 			}
 		}
 		return issns;
@@ -744,7 +734,6 @@ public class Publication {
 		if (journal.toLowerCase().contains("cochrane")) {
 			this.isCochrane = true;
 		}
-		// journal = journalExtraPattern.matcher(journal).replaceAll(""); 
 		// Strip last part of "Clinical neuropharmacology.12 Suppl 2 ()(pp v-xii; S1-105) 1989.Date
 		// of Publication: 1989."
 		Matcher matcher = journalExtraPattern.matcher(journal);
@@ -770,8 +759,8 @@ public class Publication {
 		 * Neurological Sciences / Le Journal Canadien Des Sciences Neurologiques - ... =
 		 * ...: Zhen ci yan jiu = Acupuncture research
 		 */
-		String[] parts = journal.split("(\\[|\\]|=|/)");
-		List<String> list = new ArrayList<String>(Arrays.asList(parts));
+		String[] parts = journal.split("[\\[\\]=|/]");
+		List<String> list = new ArrayList<>(Arrays.asList(parts));
 
 		/*
 		 * Journals with a ":" will get 2 variants. e.g
@@ -801,7 +790,7 @@ public class Publication {
 			}
 			matcher = journalSupplementPattern.matcher(journal);
 			if (matcher.find()) {
-				// log.debug("SupplementMatcher fired for: {}", journal);
+				log.debug("SupplementMatcher fired for: {}", journal);
 				additional.add(matcher.replaceAll(""));
 			}
 		}
@@ -819,7 +808,7 @@ public class Publication {
 			if (!j.isEmpty() && !excludedJournalsParts.contains(j.toLowerCase())) {
 				if (j.equals(j.toUpperCase()) && (j.contains(" ") || j.length() > 6)) {
 					List<String> words = Arrays.asList(j.toLowerCase().split(" "));
-					j = words.stream().map(p -> StringUtils.capitalize(p)).collect(Collectors.joining(" "));
+					j = words.stream().map(StringUtils::capitalize).collect(Collectors.joining(" "));
 				}
 				String normalized = normalizeJournalJava8(j);
 				if (!normalized.isEmpty()) {
@@ -834,7 +823,7 @@ public class Publication {
 	public void addTitles(String title) {
 		String normalized = normalizeJava8(title);
 		String[] parts = normalized.split("=");
-		List<String> list = new ArrayList<String>(Arrays.asList(parts));
+		List<String> list = new ArrayList<>(Arrays.asList(parts));
 
 		for (String t : list) {
 			if (!titles.contains(t.strip())) {
@@ -844,8 +833,7 @@ public class Publication {
 		Matcher matcher = titleAndSubtitlePattern.matcher(title);
 		while (matcher.find()) {
 			titles.add(matcher.group(1)); // add only the first part (min 50 characters)
-			// titles.add(matcher.group(2));
-			// log.error("Title split in\n- {}: {}\n- {}: {}", matcher.group(1).length(), matcher.group(1), matcher.group(2).length(), matcher.group(2));
+			// do not add the subtitle: titles.add(matcher.group(2));
 		}
 	}
 
@@ -894,7 +882,7 @@ public class Publication {
 		 */
 		// @formatter:on
 		// Cochrane uses hyphen characters instead of minus
-		pages = pages.replaceAll("(\\u2010|\\u00ad)", "-"); 
+		pages = pages.replaceAll("[\\u2010\\u00ad]", "-"); 
 
 		if (pageForComparison != null && !pages.contains("-")) {
 			return;
@@ -907,7 +895,6 @@ public class Publication {
 			this.pageStart = pages.substring(0, indexOf);
 			pageStart = pageStart.replaceAll("^0+", "");
 			this.pageEnd = pages.substring(indexOf + 1);
-			// pageEnd = pageEnd.replaceAll("^([^1-9]*)([\\d]+)(.*)$", "$2");
 			pageEnd = pageEnd.replaceAll("^0+", "");
 			if (this.pageStart.length() > this.pageEnd.length()) {
 				this.pageEnd = this.pageStart.substring(0, this.pageStart.length() - this.pageEnd.length())
@@ -936,9 +923,9 @@ public class Publication {
 			 * https://github.com/globbestael/DedupEndnote/issues/4 for preprint
 			 * publications.
 			 */
-			pageForComparison = pageForComparison.replaceAll("^([^0-9]*)([\\d]+)(.*)$", "$2");
+			pageForComparison = pageForComparison.replaceAll("^(\\D*)([\\d]+)(.*)$", "$2");
 			if ("1".equals(pageForComparison) && pageEnd != null && pageEnd.length() > 2) {
-				// log.error("Long pageEnd used for pageForComparison {}", pageEnd);
+				log.debug("Long pageEnd used for pageForComparison {}", pageEnd);
 				String pageEndForComparison = pageEnd.replaceAll("^([^1-9]*)([\\d]+)(.*)$", "$2");
 				if (pageEndForComparison.length() > 2) {
 					this.pageForComparison = pageEndForComparison;
@@ -979,7 +966,6 @@ public class Publication {
 		String s = authors.stream().collect(Collectors.joining("; "));
 		allAuthors.add(s);
 		// DONT: lowercasing the names makes different authors closer to 1.0
-		// allAuthors = allAuthors.toLowerCase();
 
 		if (authorsAreTransposed) {
 			allAuthors.add(authorsTransposed.stream().collect(Collectors.joining("; ")));

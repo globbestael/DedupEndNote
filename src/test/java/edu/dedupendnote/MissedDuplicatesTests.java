@@ -5,8 +5,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.File;
 
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.test.context.TestConfiguration;
 
@@ -19,7 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @TestConfiguration
-public class MissedDuplicatesTests {
+class MissedDuplicatesTests {
 
 	public DeduplicationService deduplicationService = new DeduplicationService();
 
@@ -37,59 +37,29 @@ public class MissedDuplicatesTests {
 		log.debug("Logging level set to DEBUG");
 	}
 
-	@Test
-	void deduplicate_missed_BIG_SET() {
+	  @ParameterizedTest
+	    @CsvSource({
+	        "'/own/missed_duplicates/9165.txt', 2, 2",
+	        "'/own/missed_duplicates/Rofo.txt', 3, 1",
+	        "'/ASySD/dedupendnote_files/missed_duplicates/SRSR_Human_52927.txt', 2, 1"	// Solved: authors in ALL CAPS are treated better
+	    })
+	  void deduplicateMissedDuplicates(String fileName, int total, int totalWritten) {
+		  setLoggerToDebug();
+		  String inputFileName = testdir + fileName;
+			boolean markMode = false;
+			String outputFileName = DedupEndNoteController.createOutputFileName(inputFileName, markMode);
+			assertThat(new File(inputFileName)).exists();
+
+			String resultString = deduplicationService.deduplicateOneFile(inputFileName, outputFileName, markMode, wssessionId);
+
+			assertThat(resultString).isEqualTo(deduplicationService.formatResultString(total, totalWritten));
+	  }
+
+	private void setLoggerToDebug() {
 		LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
 		Logger rootLogger = loggerContext.getLogger("edu.dedupendnote.services");
 		rootLogger.setLevel(Level.DEBUG);
 		log.debug("Logging level set to DEBUG");
-
-		String inputFileName = testdir + "/own/missed_duplicates/9165.txt";
-		boolean markMode = false;
-		String outputFileName = DedupEndNoteController.createOutputFileName(inputFileName, markMode);
-		assertThat(new File(inputFileName)).exists();
-
-		String resultString = deduplicationService.deduplicateOneFile(inputFileName, outputFileName, markMode,
-				wssessionId);
-
-		assertThat(resultString).isEqualTo(deduplicationService.formatResultString(2, 2));
-	}
-
-	@Test
-	void deduplicate_missed_BIG_SET_Rofo() {
-		LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
-		Logger rootLogger = loggerContext.getLogger("edu.dedupendnote.services");
-		rootLogger.setLevel(Level.DEBUG);
-		log.debug("Logging level set to DEBUG");
-
-		String inputFileName = testdir + "/own/missed_duplicates/Rofo.txt";
-		boolean markMode = false;
-		String outputFileName = DedupEndNoteController.createOutputFileName(inputFileName, markMode);
-		assertThat(new File(inputFileName)).exists();
-
-		String resultString = deduplicationService.deduplicateOneFile(inputFileName, outputFileName, markMode,
-				wssessionId);
-
-		assertThat(resultString).isEqualTo(deduplicationService.formatResultString(3, 1));
-	}
-
-	@Disabled("Solved: authors in ALL CAPS are treated better")
-	@Test
-	void deduplicate_missed_SRSR_Human() {
-		LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
-		Logger rootLogger = loggerContext.getLogger("edu.dedupendnote.services");
-		rootLogger.setLevel(Level.DEBUG);
-		log.debug("Logging level set to DEBUG");
-
-		String inputFileName = testdir + "/ASySD/dedupendnote_files/missed_duplicates/SRSR_Human_52927.txt";
-		boolean markMode = false;
-		String outputFileName = DedupEndNoteController.createOutputFileName(inputFileName, markMode);
-		assertThat(new File(inputFileName)).exists();
-
-		String resultString = deduplicationService.deduplicateOneFile(inputFileName, outputFileName, markMode,
-				wssessionId);
-
-		assertThat(resultString).isEqualTo(deduplicationService.formatResultString(2, 2));
 	}
 
 	// FIXME: tests for markMode = true;

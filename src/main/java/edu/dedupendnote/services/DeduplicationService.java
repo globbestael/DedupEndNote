@@ -556,15 +556,6 @@ public class DeduplicationService {
 		return s;
 	}
 
-	// split into deduplicateTwoFilesAsync(...) and duplicateTwoFiles(...) for
-	// testability
-//	@Async
-//	public ListenableFuture<String> deduplicateTwoFilesAsync(String newInputFileName, String oldInputFileName,
-//			String outputFileName, boolean markMode, String wssessionId) {
-//		String s = deduplicateTwoFiles(newInputFileName, oldInputFileName, outputFileName, markMode, wssessionId);
-//		return new AsyncResult<>(s);
-//	}
-
 	public String doSanityChecks(List<Publication> publications, String fileName) {
 		if (containsRecordsWithoutId(publications)) {
 			return "ERROR: The input file " + fileName

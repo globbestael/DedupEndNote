@@ -66,7 +66,6 @@ public class IOService {
 	 *  
 	 * Tested in TextNormalizerTest
 	 */
-//	public static final Pattern unusualWhiteSpacePattern = Pattern.compile("[\\p{Zs}\\p{Cc}]");
 	public static final Pattern unusualWhiteSpacePattern = Pattern.compile("[\\p{Zs}\\p{Zl}\\p{Zp}\\u0009\\u000A\\u000B\\u000C\\u000D&&[^ ]]");
 	
 	public List<Publication> readPublications(String inputFileName) {
@@ -225,6 +224,8 @@ public class IOService {
 					case "TI": // EMBASE original title
 						publication.addTitles(line);
 						break;
+					default:
+						log.error("readPlublication reads a continuation line of unknown type, previousFieldName {}, with content: {}", previousFieldName, line);
 					}
 				}
 			}
@@ -251,8 +252,7 @@ public class IOService {
 	 */
 	public int writeDeduplicatedRecords(List<Publication> publications, String inputFileName, String outputFileName) {
 		log.debug("Start writing to file {}", outputFileName);
-		List<Publication> recordsToKeep = publications.stream().filter(Publication::getKeptRecord)
-				.collect(Collectors.toList());
+		List<Publication> recordsToKeep = publications.stream().filter(Publication::getKeptRecord).toList();
 		log.debug("Records to be kept: {}", recordsToKeep.size());
 
 		Map<String, Publication> recordIdMap = publications.stream().filter(r -> !r.getId().startsWith("-"))
@@ -328,8 +328,7 @@ public class IOService {
 
 	public int writeMarkedRecords(List<Publication> publications, String inputFileName, String outputFileName) {
 		log.debug("Start writing to file {}", outputFileName);
-		List<Publication> recordsToKeep = publications.stream().filter(Publication::getKeptRecord)
-				.collect(Collectors.toList());
+		List<Publication> recordsToKeep = publications.stream().filter(Publication::getKeptRecord).toList();
 		log.debug("Records to be kept: {}", recordsToKeep.size());
 
 		Map<String, Publication> recordIdMap = publications.stream().filter(r -> !r.getId().startsWith("-"))

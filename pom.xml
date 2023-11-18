@@ -6,7 +6,6 @@
 	<groupId>dedupendnote.edu</groupId>
 	<artifactId>DedupEndNote</artifactId>
 	<version>0.9.7b-SNAPSHOT</version>
-<!-- 	<packaging>war</packaging> -->
 
 	<name>DedupEndNote</name>
 	<description>Deduplicates EndNote export file in RIS format</description>
@@ -80,7 +79,6 @@
 		<dependency>
 			<groupId>com.fasterxml.jackson.dataformat</groupId>
 			<artifactId>jackson-dataformat-csv</artifactId>
-<!-- 			<version>2.12.3</version> -->
 			<scope>test</scope>
 		</dependency>
 		

@@ -104,6 +104,11 @@ public class DedupEndNoteController {
 		return "justification";
 	}
 
+	/*
+	 * VirtualThreads: 
+	 * 
+	 * TODO: https://horstmann.com/unblog/2023-06-27/index.html
+	 */
 	@PostMapping(value = "/startOneFile", produces = "application/json")
 	public ResponseEntity<String> startOneFile(@RequestParam("fileName_1") String inputFileName,
 			@RequestParam(required = false, defaultValue = "false") Boolean markMode,

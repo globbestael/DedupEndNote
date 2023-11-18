@@ -114,10 +114,9 @@ class JournalsBaseTest extends BaseTest {
 		long numberMissed = triples.stream().filter(t -> t.getSimilar() == false).count();
 
 		// 20220528: started with 125 missed
-		assertThat(0L)
-			.as(numberMissed + " journal pairs (of " + triples.size()
-					+ ") were not seen as similar by comparison on journal names")
-			.isEqualTo(numberMissed);
+		assertThat(numberMissed)
+			.as(numberMissed + " journal pairs (of " + triples.size() + ") were not seen as similar by comparison on journal names")
+			.isZero();
 	}
 
 }
