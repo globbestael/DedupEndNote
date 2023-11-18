@@ -17,7 +17,7 @@ import edu.dedupendnote.domain.Publication;
 import edu.dedupendnote.services.IOService;
 
 @TestConfiguration
-public class TextNormalizerTest {
+class TextNormalizerTest {
 
 	/*
 	 * Comparison of different methods to remove accents and diacritics. See also

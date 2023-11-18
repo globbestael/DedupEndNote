@@ -24,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Service
 public class IOService {
+	private UtilitiesService utilities = new UtilitiesService();
 
 	/*
 	 * Patterns
@@ -70,8 +71,6 @@ public class IOService {
 //	public static Pattern unusualWhiteSpacePattern = Pattern.compile("[\\p{Zs}\\p{Cc}]");
 	public static Pattern unusualWhiteSpacePattern = Pattern.compile("[\\p{Zs}\\p{Zl}\\p{Zp}\\u0009\\u000A\\u000B\\u000C\\u000D&&[^ ]]");
 	
-	private UtilitiesService utilities = new UtilitiesService();
-
 	public List<Publication> readPublications(String inputFileName) {
 		List<Publication> publications = new ArrayList<>();
 		String fieldContent = null;

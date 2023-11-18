@@ -322,12 +322,12 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 			List<Triple> worse, List<Triple> bothBelow) {
 		System.err.println("\nExperiment: " + nameExperiment);
 		System.err.println("--------------------------------------------------------------------");
-		System.err.println(String.format("| %10s | %15s | %15s | %15s |", "Total", "Default wins", "Experiment wins",
-				"Both below"));
+		System.err.println("| %10s | %15s | %15s | %15s |".formatted("Total", "Default wins", "Experiment wins",
+			"Both below"));
 		System.err.println("--------------------------------------------------------------------");
-		System.err.println(String.format("| %10d | %7d (%2.2f%%) | %7d (%2.2f%%) | %7d (%2.2f%%) |", triples.size(),
-				better.size(), better.size() * 100.0 / triples.size(), worse.size(),
-				worse.size() * 100.0 / triples.size(), bothBelow.size(), bothBelow.size() * 100.0 / triples.size()));
+		System.err.println("| %10d | %7d (%2.2f%%) | %7d (%2.2f%%) | %7d (%2.2f%%) |".formatted(triples.size(),
+			better.size(), better.size() * 100.0 / triples.size(), worse.size(),
+			worse.size() * 100.0 / triples.size(), bothBelow.size(), bothBelow.size() * 100.0 / triples.size()));
 		System.err.println("--------------------------------------------------------------------");
 		triples.sort(Comparator.comparing(Triple::getJws).reversed());
 		double default98 = percentile(triples, 98);
@@ -336,11 +336,11 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 		double exp98 = expPercentile(triples, 98);
 		double exp99 = expPercentile(triples, 99);
 		System.err
-			.println(String.format("98th percentile for default at %2.2f, for experiment at %2.2f: experiment wins? %b",
-					default98, exp98, default98 < exp98));
+			.println("98th percentile for default at %2.2f, for experiment at %2.2f: experiment wins? %b".formatted(
+			default98, exp98, default98 < exp98));
 		System.err
-			.println(String.format("99th percentile for default at %2.2f, for experiment at %2.2f: experiment wins? %b",
-					default99, exp99, default99 < exp99));
+			.println("99th percentile for default at %2.2f, for experiment at %2.2f: experiment wins? %b".formatted(
+			default99, exp99, default99 < exp99));
 	}
 
 }

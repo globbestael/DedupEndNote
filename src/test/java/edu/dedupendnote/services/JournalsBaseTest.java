@@ -24,7 +24,7 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class JournalsBaseTest extends BaseTest {
+class JournalsBaseTest extends BaseTest {
 
 	DeduplicationService deduplicationService = new DeduplicationService();
 

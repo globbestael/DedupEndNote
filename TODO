@@ -1,3 +1,13 @@
+Upgrade to Spring Boot 3
+------------------------
+Used OpenRewrite
+1. Problem webjars-locator: why is this removed by by OpenReWrite
+WARNING Cannot find template location: classpath:/templates/ (please add some templates, check your Thymeleaf configuration, or set spring.thymeleaf.check-template-location=false)
+- WebConfig::addResourceHandlers
+with
+  registry.addResourceHandler("/resources/**").addResourceLocations("/public", "classpath:/static/");
+the application won't start (and there's a message that Thymeleaf cannot find its /templates directory
+
 
 Migraine False Positives
 ------------------------

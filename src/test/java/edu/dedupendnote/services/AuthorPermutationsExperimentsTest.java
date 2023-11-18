@@ -24,7 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 @Disabled("Experiment shows that this should not be implemented")
 @Slf4j
 @TestConfiguration
-public class AuthorPermutationsExperimentsTest {
+class AuthorPermutationsExperimentsTest {
 
 	// from:
 	// https://stackoverflow.com/questions/17192796/generate-all-combinations-from-multiple-lists

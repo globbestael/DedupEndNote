@@ -18,7 +18,7 @@ import info.debatty.java.stringsimilarity.RatcliffObershelp;
 //@Slf4j
 //@ExtendWith(TimingExtension.class)
 @TestConfiguration
-public class AbstracttextTest {
+class AbstracttextTest {
 
 	/*
 	 * This test file tries to find a workable solution for comparing abstracts -
@@ -123,7 +123,7 @@ public class AbstracttextTest {
 		String t1 = cleanAbstracttext(input1);
 		String t2 = cleanAbstracttext(input2);
 		Double distance = jws.apply(t1, t2);
-		System.err.println(String.format("- 1: %s\n- 2: %s\n- 3: %s\n- 4: %s\n", input1, t1, input2, t2));
+		System.err.println("- 1: %s\n- 2: %s\n- 3: %s\n- 4: %s\n".formatted(input1, t1, input2, t2));
 		assertThat(distance).isLessThanOrEqualTo(expected);
 		// assertThat(distance).isLessThan(DeduplicationService.TITLE_SIMILARITY_SUFFICIENT_STARTPAGES_OR_DOIS);
 	}
@@ -135,7 +135,7 @@ public class AbstracttextTest {
 		String t1 = cleanAbstracttext(input1);
 		String t2 = cleanAbstracttext(input2);
 		Double distance = jws.apply(t1, t2);
-		System.err.println(String.format("- 1: %s\n- 2: %s\n- 3: %s\n- 4: %s\n", input1, t1, input2, t2));
+		System.err.println("- 1: %s\n- 2: %s\n- 3: %s\n- 4: %s\n".formatted(input1, t1, input2, t2));
 		showDiffs(t1, t2);
 		assertThat(distance).isEqualTo(expected, within(0.01));
 		assertThat(distance).isGreaterThanOrEqualTo(expected);
@@ -146,18 +146,18 @@ public class AbstracttextTest {
 	@MethodSource("negativeArgumentProvider")
 	void ratcliffObershelpNegative(String input1, String input2, double expected) {
 		System.err
-				.println(String.format("RO: %.3f\tROlc: %.3f\tROclean: %.3f\tJWS: %.3f\tJWSclean: %.3f\texpected: %.3f",
-						ro.similarity(input1, input2), ro.similarity(input1.toLowerCase(), input2.toLowerCase()),
-						ro.similarity(cleanAbstracttext(input1), cleanAbstracttext(input2)), jws.apply(input1, input2),
-						jws.apply(cleanAbstracttext(input1), cleanAbstracttext(input2)), expected));
+				.println("RO: %.3f\tROlc: %.3f\tROclean: %.3f\tJWS: %.3f\tJWSclean: %.3f\texpected: %.3f".formatted(
+			ro.similarity(input1, input2), ro.similarity(input1.toLowerCase(), input2.toLowerCase()),
+			ro.similarity(cleanAbstracttext(input1), cleanAbstracttext(input2)), jws.apply(input1, input2),
+			jws.apply(cleanAbstracttext(input1), cleanAbstracttext(input2)), expected));
 	}
 
 	@ParameterizedTest(name = "{index}: RatcliffObershelp({0}, {1})={2}")
 	@MethodSource("negativeArgumentProvider")
 	void ratcliffObershelpNegative200(String input1, String input2, double expected) {
-		System.err.println(String.format("RO200: %.3f\texpected: %.3f",
-				ro.similarity(input1.toLowerCase().substring(0, 200), input2.toLowerCase().substring(0, 200)),
-				expected));
+		System.err.println("RO200: %.3f\texpected: %.3f".formatted(
+			ro.similarity(input1.toLowerCase().substring(0, 200), input2.toLowerCase().substring(0, 200)),
+			expected));
 	}
 
 	/*
@@ -171,26 +171,26 @@ public class AbstracttextTest {
 	@MethodSource("positiveArgumentProvider")
 	void ratcliffObershelpPositive(String input1, String input2, double expected) {
 		System.err
-				.println(String.format("RO: %.3f\tROlc: %.3f\tROclean: %.3f\tJWS: %.3f\tJWSclean: %.3f\texpected: %.3f",
-						ro.similarity(input1, input2), ro.similarity(input1.toLowerCase(), input2.toLowerCase()),
-						ro.similarity(cleanAbstracttext(input1), cleanAbstracttext(input2)), jws.apply(input1, input2),
-						jws.apply(cleanAbstracttext(input1), cleanAbstracttext(input2)), expected));
+				.println("RO: %.3f\tROlc: %.3f\tROclean: %.3f\tJWS: %.3f\tJWSclean: %.3f\texpected: %.3f".formatted(
+			ro.similarity(input1, input2), ro.similarity(input1.toLowerCase(), input2.toLowerCase()),
+			ro.similarity(cleanAbstracttext(input1), cleanAbstracttext(input2)), jws.apply(input1, input2),
+			jws.apply(cleanAbstracttext(input1), cleanAbstracttext(input2)), expected));
 	}
 
 	@ParameterizedTest(name = "{index}: RatcliffObershelp({0}, {1})={2}")
 	@MethodSource("positiveArgumentProvider")
 	void ratcliffObershelpPositive200(String input1, String input2, double expected) {
-		System.err.println(String.format("RO200: %.3f\texpected: %.3f",
-				ro.similarity(input1.toLowerCase().substring(0, 200), input2.toLowerCase().substring(0, 200)),
-				expected));
+		System.err.println("RO200: %.3f\texpected: %.3f".formatted(
+			ro.similarity(input1.toLowerCase().substring(0, 200), input2.toLowerCase().substring(0, 200)),
+			expected));
 	}
 
 	private void showDiffs(String text1, String text2) {
 		System.err.println("- " + text1 + "\n- " + text2);
 		for (int i = 0; i < Math.min(text1.length(), text2.length()) - 1; i++) {
 			if (text1.charAt(i) != text2.charAt(i)) {
-				System.err.println(String.format("Difference at %d: char'%s' (0x%04X),  char'%s' (0x%04X)", i,
-						text1.charAt(i), (int) text1.charAt(i), text2.charAt(i), (int) text2.charAt(i)));
+				System.err.println("Difference at %d: char'%s' (0x%04X),  char'%s' (0x%04X)".formatted(i,
+					text1.charAt(i), (int) text1.charAt(i), text2.charAt(i), (int) text2.charAt(i)));
 			}
 		}
 	}

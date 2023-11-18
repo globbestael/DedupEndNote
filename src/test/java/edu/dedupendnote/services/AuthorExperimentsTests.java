@@ -15,7 +15,7 @@ import lombok.extern.slf4j.Slf4j;
  * production version.
  */
 @Slf4j
-public class AuthorExperimentsTests {
+class AuthorExperimentsTests {
 
 	DeduplicationService service = new DeduplicationService();
 

@@ -14,7 +14,7 @@ import org.springframework.boot.test.context.TestConfiguration;
 import edu.dedupendnote.domain.Publication;
 
 @TestConfiguration
-public class DoiTest {
+class DoiTest {
 
 	@ParameterizedTest(name = "{index}: addDois({0})=({1},{2})")
 	@MethodSource("argumentProvider")

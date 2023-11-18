@@ -51,7 +51,7 @@ import lombok.extern.slf4j.Slf4j;
  * See http://localhost:9777/developers for a description of the database.
  */
 @Slf4j
-public class ValidationTests {
+class ValidationTests {
 
 	private DeduplicationService deduplicationService = new DeduplicationService();
 
@@ -131,11 +131,11 @@ public class ValidationTests {
 				System.out.println("\nResults: " + setName);
 				System.out.println(
 						"------------------------------------------------------------------------------------------------------------------------------");
-				System.out.println(String.format("| %7s | %12s | %7s | %7s | %12s | %7s | %7s | %12s | %12s | %12s |",
-						"TOTAL", "% duplicates", "TP", "FN", "Sensitivity", "TN", "FP", "Specificity", "Precision",
-						"F1-score"));
-				System.out.println(String.format(
-						"| %7d | %11.2f%% | %7d | %7d | %11.2f%% | %7d | %7d | %11.3f%% | %11.3f%% | %11.3f%% |",
+				System.out.println("| %7s | %12s | %7s | %7s | %12s | %7s | %7s | %12s | %12s | %12s |".formatted(
+					"TOTAL", "% duplicates", "TP", "FN", "Sensitivity", "TN", "FP", "Specificity", "Precision",
+					"F1-score"));
+				System.out.println(
+					"| %7d | %11.2f%% | %7d | %7d | %11.2f%% | %7d | %7d | %11.3f%% | %11.3f%% | %11.3f%% |".formatted(
 						tp + tn + fp + fn, (tp + fn) * 100.0 / (tp + tn + fp + fn), tp, fn, sensitivity, tn, fp,
 						specificity, precision, f1_score));
 				System.out.println(
@@ -148,9 +148,9 @@ public class ValidationTests {
 				System.err.println("\nResults: " + setName + ": HAS DIFFERENT RESULTS (first new, second old");
 				System.err.println(
 						"------------------------------------------------------------------------------------------------------------------------------");
-				System.err.println(String.format("| %7s | %12s | %7s | %7s | %12s | %7s | %7s | %12s | %12s | %12s |",
-						"TOTAL", "% duplicates", "TP", "FN", "Sensitivity", "TN", "FP", "Specificity", "Precision",
-						"F1-score"));
+				System.err.println("| %7s | %12s | %7s | %7s | %12s | %7s | %7s | %12s | %12s | %12s |".formatted(
+					"TOTAL", "% duplicates", "TP", "FN", "Sensitivity", "TN", "FP", "Specificity", "Precision",
+					"F1-score"));
 				// System.err.println(String.format("| %7d | %11.2f%% | %7d | %7d |
 				// %11.2f%% | %7d | %7d | %11.2f%% |",
 				// tp + tn + fp + fn, (tp + fn) * 100.0 / (tp + tn + fp + fn), tp, fn, (tp
@@ -159,8 +159,8 @@ public class ValidationTests {
 				// %11.2f%% | %7d | %7d | %11.2f%% |",
 				// tp + tn + fp + fn, (tp + fn) * 100.0 / (tp + tn + fp + fn), tp, fn, (tp
 				// * 100.0/(tp + fn)), tn, fp, (tn * 100.0/(tn + fp))));
-				System.err.println(String.format(
-						"| %7d | %11.2f%% | %7d | %7d | %11.2f%% | %7d | %7d | %11.3f%% | %11.3f%% | %11.3f%% |",
+				System.err.println(
+					"| %7d | %11.2f%% | %7d | %7d | %11.2f%% | %7d | %7d | %11.3f%% | %11.3f%% | %11.3f%% |".formatted(
 						tp + tn + fp + fn, (tp + fn) * 100.0 / (tp + tn + fp + fn), tp, fn, sensitivity, tn, fp,
 						specificity, precision, f1_score));
 				tp = v.getTp();
@@ -171,8 +171,8 @@ public class ValidationTests {
 				sensitivity = tp * 100.0 / (tp + fn); // == recall
 				specificity = tn * 100.0 / (tn + fp);
 				f1_score = 2 * precision * sensitivity / (precision + sensitivity);
-				System.err.println(String.format(
-						"| %7d | %11.2f%% | %7d | %7d | %11.2f%% | %7d | %7d | %11.3f%% | %11.3f%% | %11.3f%% |",
+				System.err.println(
+					"| %7d | %11.2f%% | %7d | %7d | %11.2f%% | %7d | %7d | %11.3f%% | %11.3f%% | %11.3f%% |".formatted(
 						tp + tn + fp + fn, (tp + fn) * 100.0 / (tp + tn + fp + fn), tp, fn, sensitivity, tn, fp,
 						specificity, precision, f1_score));
 				System.err.println(
@@ -198,7 +198,7 @@ public class ValidationTests {
 		 * FIXME: the number of unique duplicates has to be from the ..._to_validate.txt
 		 * files.
 		 */
-
+				
 		Map<String, ValidationResultASySD> validationResultsMap = List.of(
 				// new ValidationResult("Cytology_screening", 1360, 60, 436, 0),
 				// new ValidationResult("Haematology", 222, 14, 1179, 0),
@@ -226,11 +226,11 @@ public class ValidationTests {
 			System.out.println(
 					"---------------------------------------------------------------------------------------------------------------------------------------------");
 			System.out
-				.println(String.format("| %7s | %12s | %7s | %7s | %12s | %7s | %7s | %12s | %12s | %12s | %12s |",
-						"TOTAL", "% duplicates", "TP", "FN", "Sensitivity", "TN", "FP", "Specificity", "Precision",
-						"Accuracy", "F1"));
-			System.out.println(String.format(
-					"| %7d | %11.2f%% | %7d | %7d | %11.2f%% | %7d | %7d | %11.3f%% | %11.3f%% | %11.3f%% | %11.3f%% |",
+				.println("| %7s | %12s | %7s | %7s | %12s | %7s | %7s | %12s | %12s | %12s | %12s |".formatted(
+				"TOTAL", "% duplicates", "TP", "FN", "Sensitivity", "TN", "FP", "Specificity", "Precision",
+				"Accuracy", "F1"));
+			System.out.println(
+				"| %7d | %11.2f%% | %7d | %7d | %11.2f%% | %7d | %7d | %11.3f%% | %11.3f%% | %11.3f%% | %11.3f%% |".formatted(
 					tp + tn + fp + fn, (tp + fn) * 100.0 / (tp + tn + fp + fn), tp, fn, sensitivity, tn, fp,
 					tn * 100.0 / (tn + fp), precision, (tp + tn) * 100.0 / (tp + fn + tn + fp),
 					2 * precision * sensitivity / (precision + sensitivity)));
@@ -695,4 +695,5 @@ public class ValidationTests {
 		
 		return records;
 	}
+
 }
