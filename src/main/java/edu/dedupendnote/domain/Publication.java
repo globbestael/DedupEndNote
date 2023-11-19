@@ -342,8 +342,6 @@ public class Publication {
 	/**
 	 * Section markers and possibly name of the sections: will be removed
 	 */
-	// TODO: Should "Part", "Section", ... at the end of $1 be left out? E.g. "Comp
-	// Biochem Physiol Part D Genomics Proteomics"
 	private static Pattern journalSectionMarkers = Pattern.compile("^(.+)(\\b(Part|Section))?\\b([A-I]\\b.*)$");
 
 	/**
@@ -457,9 +455,10 @@ public class Publication {
 	/*
 	 * TODO: From Java 9 onwards performance of String::replaceAll is much better
 	 *
-	 * But please check first: - if the performance is better than the Java 8 Pattern
-	 * approach chosen - if naming the patterns isn't useful (names, testability) - align
-	 * the Java9Plus versions with the Java8 versions!!! the Java9Plus versions are old.
+	 * But please check first:
+	 *  - if the performance is better than the Java 8 Pattern approach chosen
+	 *  - if naming the patterns isn't useful (names, testability) 
+	 *  - align the Java9Plus versions with the Java8 versions!!! the Java9Plus versions are old.
 	 */
 	// static public String normalizeJava9Plus(String s) {
 	// String r = s.replaceAll(".\\[[^\\\\]+\\]$", "") // remove non initial "[...]"
@@ -872,8 +871,6 @@ public class Publication {
 		 *  - if C7 has already been called AND SE is a range of pages, then SE can overwrite the C7 data.
 		 *  - if C7 or SE has already been called AND SP is a range of pages (e.g. C7: Pmid 29451177, and SP: 3-4)
 		 *    then SP can overwrite the C7 data.
-		 *
-		 * TODO: Should range of pages starting with "1-" be excluded? But type "1-234" occurs with books.
 		 */
 		// @formatter:on
 		// Cochrane uses hyphen characters instead of minus
@@ -919,6 +916,7 @@ public class Publication {
 			 * publications.
 			 */
 			pageForComparison = pageForComparison.replaceAll("^(\\D*)([\\d]+)(.*)$", "$2");
+			// Use pageEnd instead of pageStart for books (criteria: start = 1, end >= 100)
 			if ("1".equals(pageForComparison) && pageEnd != null && pageEnd.length() > 2) {
 				log.debug("Long pageEnd used for pageForComparison {}", pageEnd);
 				String pageEndForComparison = pageEnd.replaceAll("^([^1-9]*)([\\d]+)(.*)$", "$2");

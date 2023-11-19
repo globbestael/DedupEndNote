@@ -221,7 +221,6 @@ public class IOService {
 							publication.addTitles(line);
 							break;
 						default:
-							// log.error("readPublication reads a continuation line of unknown type, previousFieldName {}, with content: {}", previousFieldName, line);
 							break;
 					}
 				}
