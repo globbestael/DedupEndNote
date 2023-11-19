@@ -38,11 +38,6 @@ public class IOService {
 	/** Pattern to identify clinical trials phase (1 ..4, i .. iv) */
 	private static final Pattern phasePattern = Pattern.compile(".*phase\\s[\\di].*", Pattern.CASE_INSENSITIVE);
 
-	/*
-	 * FIXME Java 11ff: Switch to NIO2. See
-	 * https://horstmann.com/unblog/2023-04-09/index.html
-	 */
-
 	// Don't use "Response" as last word, e.g: Endothelial cell injury in
 	// cardiovascular surgery: the procoagulant response
 	private static final Pattern replyPattern = Pattern.compile("(.*\\breply\\b.*|.*author(.+)respon.*|^response$)");
@@ -209,23 +204,25 @@ public class IOService {
 						publication = new Publication();
 						publication.setReferenceType(fieldContent);
 						break;
+					// do not use UR to extract more DOI's: see https://github.com/globbestael/DedupEndNote/issues/14
 					default:
 						previousFieldName = fieldName;
 						break;
 					}
 				} else { // continuation line
 					switch (previousFieldName) {
-					case "DO":
-						publication.addDois(line);
-						break;
-					case "SN":
-						publication.addIssns(line);
-						break;
-					case "TI": // EMBASE original title
-						publication.addTitles(line);
-						break;
-					default:
-						log.error("readPlublication reads a continuation line of unknown type, previousFieldName {}, with content: {}", previousFieldName, line);
+						case "DO":
+							publication.addDois(line);
+							break;
+						case "SN":
+							publication.addIssns(line);
+							break;
+						case "TI": // EMBASE original title
+							publication.addTitles(line);
+							break;
+						default:
+							// log.error("readPublication reads a continuation line of unknown type, previousFieldName {}, with content: {}", previousFieldName, line);
+							break;
 					}
 				}
 			}

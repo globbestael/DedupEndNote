@@ -68,16 +68,13 @@ class AuthorExperimentsTests {
 						// TODO: do we have examples of this case?
 						if (!sufficientStartPages && similarity > AUTHOR_SIMILARITY_NO_REPLY) {
 							return true;
-						}
-						else if (sufficientStartPages
+						} else if (sufficientStartPages
 								&& similarity > AUTHOR_SIMILARITY_REPLY_SUFFICIENT_STARTPAGES_OR_DOIS) {
 							return true;
 						}
-					}
-					else if (similarity > AUTHOR_SIMILARITY_NO_REPLY) {
+					} else if (similarity > AUTHOR_SIMILARITY_NO_REPLY) {
 						return true;
 					}
-					;
 				}
 			}
 			return false;

@@ -193,8 +193,7 @@ public class Publication {
 				if (matcher.end(0) == s.length()) {
 					if (matcher.start() == 0) {
 						s = s.substring(1, s.length() - 1);
-					}
-					else {
+					} else {
 						s = s.substring(0, matcher.start() - 1);
 					}
 				}
@@ -433,8 +432,7 @@ public class Publication {
 			// Cochrane library CENTRAL has journal  name of type:
 			// Https://clinicaltrials.gov/show/nct00969397
 			r = r.toLowerCase();
-		}
-		else {
+		} else {
 			r = journalAdditionPattern.matcher(r).replaceAll("");
 			// "BJOG: An Journal of Obstetrics and Gynaecology" --> "BJOG"
 			r = nonAsciiPattern.matcher(r).replaceAll(" ");
@@ -647,26 +645,23 @@ public class Publication {
 				authorsAreTransposed = true;
 				log.debug("Author {} is transposed as {} {}", author, lastPart, initials);
 				this.authorsTransposed.add(lastPart + " " + initials);
-			}
-			else {
+			} else {
 				this.authorsTransposed.add(lastName + " " + initials);
 			}
-		}
-		else {
+		} else {
 			this.authorsTransposed.add(lastName + " " + initials);
 		}
 	}
 
 	public Map<String, Integer> addDois(String doi) {
 		// Scopus records sometimes add Cited references in this field
-		if (doi.length() > 100) {
-			return dois;
-		}
+//		if (doi.length() > 200) {
+//			return dois;
+//		}
 		try {
 			doi = URLDecoder.decode(doi, "UTF8");
 			doi = StringEscapeUtils.unescapeHtml4(doi);
-		}
-		catch (UnsupportedEncodingException e) {
+		} catch (UnsupportedEncodingException e) {
 			log.info(e.getMessage());
 			e.printStackTrace();
 		}

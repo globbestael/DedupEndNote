@@ -12,7 +12,8 @@ import lombok.Data;
 
 /*
  * The @Json... annotations are necessary because ValidationTests::readTruthFile() uses jackson-dataformat-csv to read TAB delimited files.
- * Several dataformats in Jackson are based on the JSON. See https://github.com/FasterXML/jackson-dataformats-text/wiki, and esp. https://cowtowncoder.medium.com/reading-csv-with-jackson-c4e74a15ddc1
+ * Several dataformats in Jackson are based on JSON. 
+ * See https://github.com/FasterXML/jackson-dataformats-text/wiki, and esp. https://cowtowncoder.medium.com/reading-csv-with-jackson-c4e74a15ddc1
  */
 @Data
 @JsonPropertyOrder({ "id", "dedupid", "correction", "validated", "true_pos", "true_neg", "false_pos", "false_neg",

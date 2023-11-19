@@ -31,6 +31,10 @@ import lombok.extern.slf4j.Slf4j;
 @Controller
 @Slf4j
 public class DedupEndNoteController {
+
+	@Value("${upload-dir}")
+	private String uploadDir;
+
 	private SimpMessagingTemplate simpMessagingTemplate;
 
 	public DedupEndNoteController(SimpMessagingTemplate simpMessagingTemplate) {
@@ -46,12 +50,8 @@ public class DedupEndNoteController {
 	 *   FIXME: is it possible to stop these running deduplications? A server could be flooded with interrupted calls?
 	 *   See a.o. https://stackoverflow.com/questions/54946096/spring-boot-websocket-how-do-i-know-when-a-client-has-unsubscribed/54948213
 	 * - files are uploaded with AJAX (uploadFile)
-	 * - deduplication is started with AJAX (startOneFile|StartTwoFiles) which calls the DeduplicationService asynchronously with DeferredResult and ListenableFuture.
-	 *   The return value of the function (the DeferredResult) is not used
+	 * - deduplication is started with AJAX (startOneFile|StartTwoFiles) which calls the DeduplicationService.
 	 * - the DeduplicationService uses Web Sockets to report progress to the browser.
-	 *
-	 * DeferredResult etc based on - https://blog.krecan.net/2014/06/10/what-are-listenablefutures-good-for/ -
-	 * http://blog.inflinx.com/2012/09/09/spring-async-and-future-report-generation-example/
 	 *
 	 * Web Socket: Messages should be sent to the individual user.
 	 * Normally a user would send a message to the server. The @MessageMapping function could retrieve the Web Socket SessionId with a @HeaderId argument of the function.
@@ -74,9 +74,6 @@ public class DedupEndNoteController {
 		return fileName.replaceAll("." + extension + "$",
 				(Boolean.TRUE.equals(markMode) ? "_mark." : "_deduplicated.") + extension);
 	}
-
-	@Value("${upload-dir}")
-	private String uploadDir;
 
 	@PostMapping(value = "/getResultFile", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
 	public void getResultFile(@RequestParam("fileNameResultFile") String fileName,
@@ -104,11 +101,6 @@ public class DedupEndNoteController {
 		return "justification";
 	}
 
-	/*
-	 * VirtualThreads: 
-	 * 
-	 * TODO: https://horstmann.com/unblog/2023-06-27/index.html
-	 */
 	@PostMapping(value = "/startOneFile", produces = "application/json")
 	public ResponseEntity<String> startOneFile(@RequestParam("fileName_1") String inputFileName,
 			@RequestParam(required = false, defaultValue = "false") Boolean markMode,
@@ -183,5 +175,4 @@ public class DedupEndNoteController {
 					"{ \"result\": \"RuntimeException with cause " + e.getCause() + "\"}");
 		}
 	}
-
 }

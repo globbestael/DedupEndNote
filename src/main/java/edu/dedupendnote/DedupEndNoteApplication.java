@@ -16,17 +16,16 @@ import lombok.extern.slf4j.Slf4j;
 
 @Controller
 @SpringBootApplication
-// @EnableAsync
 @Slf4j
 public class DedupEndNoteApplication {
+
+	@Value("${upload-dir}")
+	private String uploadDir;
 
 	public static void main(String[] args) {
 		SpringApplication.run(DedupEndNoteApplication.class, args);
 		log.info("DedupEndNote: the web server is reachable at http://localhost:9777");
 	}
-
-	@Value("${upload-dir}")
-	private String uploadDir;
 
 	@Bean
 	CommandLineRunner init() {

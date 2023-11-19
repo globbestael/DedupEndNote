@@ -142,8 +142,7 @@ class ValidationTests {
 						"------------------------------------------------------------------------------------------------------------------------------");
 				System.out.flush();
 				// errors.stream().forEach(System.err::println);
-			}
-			else {
+			} else {
 				changed = true;
 				System.err.println("\nResults: " + setName + ": HAS DIFFERENT RESULTS (first new, second old");
 				System.err.println(

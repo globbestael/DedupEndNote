@@ -663,6 +663,7 @@ public class DeduplicationService {
 		String pageStart = recordToKeep.getPageStart();
 		if (pageStart != null) {
 			pageStart = pageStart.toUpperCase();
+			// C: cochrane reviews nd protocols, E: editorials, M: ???
 			if ( ! (pageStart.startsWith("C") || pageStart.startsWith("E") || pageStart.startsWith("M"))) {
 				pageStart = null;
 			}
@@ -671,7 +672,7 @@ public class DeduplicationService {
 		if (pageStart == null) {
 			log.debug("Reached Cochrane record without pageStart, getting it from pageStart of the duplicates: {}", recordToKeep.getAuthors());
 			for (Publication r : duplicates) {
-				if (r.getPageStart() != null && r.getPageStart().toUpperCase().startsWith("C")) {
+				if (r.getPageStart() != null && r.getPageStart().toUpperCase().matches("^[CEM].+")) {
 					recordToKeep.setPageStart(r.getPageStart().toUpperCase());
 					return;
 				}
@@ -683,7 +684,7 @@ public class DeduplicationService {
 				if (matcher.matches()) {
 					pageStart = matcher.group(1);
 				}
-				// FIXME: add else to get pageStart from DOIs of one of he duplicates?
+				// assume that Cochrane records never have more than 1 DOI, so no need to check others
 			}
 		}
 		if (pageStart != null) {
