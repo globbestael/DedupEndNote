@@ -410,7 +410,7 @@ public class IOService {
 		if (enhance) {
 			if (!publication.getDois().isEmpty()) {
 				map.put("DO", "https://doi.org/"
-						+ publication.getDois().keySet().stream().collect(Collectors.joining("\nhttps://doi.org/")));
+						+ publication.getDois().stream().collect(Collectors.joining("\nhttps://doi.org/")));
 			}
 			if (publication.getPageStart() != null) {
 				if (publication.getPageEnd() != null && !publication.getPageEnd().equals(publication.getPageStart())) {

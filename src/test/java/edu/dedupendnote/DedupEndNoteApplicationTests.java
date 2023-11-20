@@ -9,6 +9,7 @@ import java.io.StringReader;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -144,18 +145,18 @@ class DedupEndNoteApplicationTests {
 	void addDois() {
 		String doiString = "10.1371/journal.pone.11 onzin http://dx.doi.org/10.1371/journal%2EPONE.22. 10.1371/journal.pone";
 		Publication publication = new Publication();
-		Map<String, Integer> dois = publication.addDois(doiString);
+		Set<String> dois = publication.addDois(doiString);
 
-		assertThat(dois).containsOnlyKeys("10.1371/journal.pone.11", "10.1371/journal.pone.22", "10.1371/journal.pone");
+		assertThat(dois).containsOnly("10.1371/journal.pone.11", "10.1371/journal.pone.22", "10.1371/journal.pone");
 	}
 
 	@Test
 	void addDoisEscaped() {
 		String doiString = "10.1016/S0016-5085(18)34101-5 http://dx.doi.org/10.1016/S0016-5085%2818%2934101-5";
 		Publication publication = new Publication();
-		Map<String, Integer> dois = publication.addDois(doiString);
+		Set<String> dois = publication.addDois(doiString);
 
-		assertThat(dois).containsOnlyKeys("10.1016/s0016-5085(18)34101-5"); // is lowercased!
+		assertThat(dois).containsOnly("10.1016/s0016-5085(18)34101-5"); // is lowercased!
 	}
 
 	@Test
@@ -164,7 +165,7 @@ class DedupEndNoteApplicationTests {
 		Publication publication = new Publication();
 		List<String> issns = publication.addIssns(issn);
 
-		assertThat(issns).hasSize(4).containsAll(Arrays.asList("00029343", "00029342", "097522980X", "XXXXXXXX"));
+		assertThat(issns).hasSize(4).containsAll(Arrays.asList("00029343", "00029342", "097522980", "XXXXXXXX"));
 	}
 
 	@Test

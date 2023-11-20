@@ -375,8 +375,8 @@ public class DeduplicationService {
 	public boolean compareStartPageOrDoi(Publication r1, Publication r2) {
 		log.debug("Comparing " + r1.getId() + ": " + r1.getPageForComparison() + " to " + r2.getId() + ": "
 				+ r2.getPageForComparison());
-		List<String> dois1 = new ArrayList<>(r1.getDois().keySet());
-		List<String> dois2 = new ArrayList<>(r2.getDois().keySet());
+		Set<String> dois1 = r1.getDois();
+		Set<String> dois2 = r2.getDois();
 		boolean bothCochrane = r1.isCochrane() && r2.isCochrane();
 		boolean sufficientStartPages = r1.getPageForComparison() != null && r2.getPageForComparison() != null;
 		boolean sufficientDois = !dois1.isEmpty() && !dois2.isEmpty();
@@ -389,7 +389,7 @@ public class DeduplicationService {
 		if (bothCochrane) {
 			if (r1.getPublicationYear().equals(r2.getPublicationYear())) {
 				if (sufficientDois) {
-					if (listsContainSameString(dois1, dois2)) {
+					if (setsContainSameString(dois1, dois2)) {
 						return true;
 					}
 				} else if (sufficientStartPages && r1.getPageForComparison().equals(r2.getPageForComparison())) {
@@ -408,7 +408,7 @@ public class DeduplicationService {
 		if (sufficientStartPages && r1.getPageForComparison().equals(r2.getPageForComparison())) {
 			log.debug("Same starting pages");
 			return true;
-		} else if (!sufficientStartPages && sufficientDois && listsContainSameString(dois1, dois2)) {
+		} else if (!sufficientStartPages && sufficientDois && setsContainSameString(dois1, dois2)) {
 			return true;
 		}
 		log.debug("Starting pages and DOIs are different");
@@ -608,14 +608,12 @@ public class DeduplicationService {
 				}
 
 				// Gather all the DOIs
-				final Map<String, Integer> dois = recordToKeep.getDois();
-				// FIXME: impure (function changes external value). Change will be easier
-				// when record.dois is a Set
-				recordList.stream().forEach(r -> {
-					if (!r.getDois().isEmpty()) {
-						r.getDois().forEach(dois::putIfAbsent);
+				final Set<String> dois = recordToKeep.getDois();
+				for (Publication p : recordList) {
+					if (!p.getDois().isEmpty()) {
+						dois.addAll(p.getDois());
 					}
-				});
+				}
 				if (!dois.isEmpty()) {
 					recordToKeep.setDois(dois);
 				}
@@ -678,13 +676,12 @@ public class DeduplicationService {
 				}
 			}
 			log.debug("Reached Cochrane record without pageStart, getting it from the DOIs: {}", recordToKeep.getAuthors());
-			if (!recordToKeep.getDois().isEmpty()) {
-				String doi = recordToKeep.getDois().keySet().stream().toList().get(0);
+			for (String doi : recordToKeep.getDois()) {
 				Matcher matcher = cochraneIdentifierPattern.matcher(doi);
 				if (matcher.matches()) {
 					pageStart = matcher.group(1);
+					break;
 				}
-				// assume that Cochrane records never have more than 1 DOI, so no need to check others
 			}
 		}
 		if (pageStart != null) {
@@ -708,6 +705,15 @@ public class DeduplicationService {
 		}
 		List<String> common = new ArrayList<>(list1);
 		common.retainAll(list2);
+		return !common.isEmpty();
+	}
+
+	private boolean setsContainSameString(Set<String> set1, Set<String> set2) {
+		if (set1.isEmpty() || set2.isEmpty()) {
+			return false;
+		}
+		Set<String> common = new HashSet<>(set1);
+		common.retainAll(set2);
 		return !common.isEmpty();
 	}
 

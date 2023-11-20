@@ -33,8 +33,8 @@ public class Publication {
 	private boolean authorsAreTransposed = false;
 
 	// FIXME: change to Set<String>()
-	private Map<String, Integer> dois = new HashMap<>();
-
+//	private Map<String, Integer> dois = new HashMap<>();
+	private Set<String> dois = new HashSet<>();
 	private String id;
 
 	private List<String> issns = new ArrayList<>();
@@ -566,7 +566,6 @@ public class Publication {
 		author = normalizeToBasicLatin(author);
 		author = author.replaceAll("-", " ");
 
-		// FIXME: should this be a Pattern?
 		String[] parts = author.split("\\s*,\\s+"); // see testfile Non_Latin_input.txt for " , "
 		if (parts.length < 2) {
 			log.debug("Author {} cannot be split", author);
@@ -652,11 +651,11 @@ public class Publication {
 		}
 	}
 
-	public Map<String, Integer> addDois(String doi) {
+	public Set<String> addDois(String doi) {
 		// Scopus records sometimes add Cited references in this field
-//		if (doi.length() > 200) {
-//			return dois;
-//		}
+		if (doi.length() > 200) {
+			return dois;
+		}
 		try {
 			doi = URLDecoder.decode(doi, "UTF8");
 			doi = StringEscapeUtils.unescapeHtml4(doi);
@@ -667,7 +666,7 @@ public class Publication {
 		Matcher matcher = doiPattern.matcher(doi.toLowerCase());
 		while (matcher.find()) {
 			String group = matcher.group(1);
-			dois.put(group.replaceAll("\\.$", ""), 1);
+			dois.add(group.replaceAll("\\.$", ""));
 		}
 		return dois;
 	}
