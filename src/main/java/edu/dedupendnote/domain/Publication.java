@@ -2,6 +2,7 @@ package edu.dedupendnote.domain;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.nio.charset.Charset;
 import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -656,7 +657,9 @@ public class Publication {
 		if (doi.length() > 200) {
 			return dois;
 		}
+		// TODO: should illegal strings (java.lang.IllegalArgumentException) be treated differently?
 		try {
+//			doi = URLDecoder.decode(doi, Charset.forName("UTF8"));
 			doi = URLDecoder.decode(doi, "UTF8");
 			doi = StringEscapeUtils.unescapeHtml4(doi);
 		} catch (UnsupportedEncodingException e) {

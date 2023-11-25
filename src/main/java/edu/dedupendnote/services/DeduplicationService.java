@@ -329,13 +329,19 @@ public class DeduplicationService {
 		return false;
 	}
 
-	public void compareSet(List<Publication> publications, Integer year, String wssessionId) {
+	public void compareSet(List<Publication> publications, Integer year, boolean descending, String wssessionId) {
 		int noOfPublications = publications.size(); 
 		int noOfDuplicates = 0;
 		
 		while (publications.size() > 1) {
 			Publication publication = publications.remove(0);
-			if (! year.equals(publication.getPublicationYear())) { // publications of the other year will be compared in next call
+			/*
+			 * If descending / OneFile mode: only records of year1 should be compared to records of year1 and year2.
+			 * The records of year2 will be compared in the next pair of years.
+			 * If ascending / TwoFile mode: publicationYear 0 records are at the head of the publicationList!
+			 */
+			if ((descending && publication.getPublicationYear() < year)
+				|| (!descending && publication.getPublicationYear() != 0 && publication.getPublicationYear() > year)) {
 				break;
 			}
 			log.debug("Comparing {} publications to {}: {}", publications.size(), publication.getId(), publication.getTitles().get(0));
@@ -351,10 +357,10 @@ public class DeduplicationService {
 					if (publication.getLabel() != null) {
 						r.setLabel(publication.getLabel());
 					} else if (r.getLabel() != null) {
-							publication.setLabel(r.getLabel());
+						publication.setLabel(r.getLabel());
 					} else {
-							publication.setLabel(publication.getId());
-							r.setLabel(publication.getId());
+						publication.setLabel(publication.getId());
+						r.setLabel(publication.getId());
 					}
 
 					if (r.isReply()) {
@@ -507,16 +513,14 @@ public class DeduplicationService {
 			return s;
 		}
 
+		// Put "-" before the IDs of the old records. In this way the labels of the records (used for 
+		// identifying duplicate records) will be unique over both lists.
+		// When writing the deduplicated records for the second list, records with label "-..." can 
+		// be skipped because they are duplicates of records from the first list.
+		// When markMode is set, these records are written. 
+		// Because of this "-", the records which have duplicates in the first file (label = "-...")
+		// can be distinguished from records which have duplicates in the second file.
 		publications.forEach(r -> {
-			// Put "-" before the IDs of the old records. In this way the labels of the
-			// records (used for identifying duplicate records) will be unique over both
-			// lists.
-			// When writing the deduplicated records for the second list, records with
-			// label "-..." can be skipped
-			// because they are duplicates of records from the first list.
-			// When markMode is set, these records are written. Because of this "-", the
-			// records which have duplicates in the first file (label = "-...")
-			// can be distinguished from records which have duplicates in the second file.
 			r.setId("-" + r.getId());
 			r.setPresentInOldFile(true);
 		});
@@ -534,24 +538,24 @@ public class DeduplicationService {
 
 		if (markMode) { // no enrich(), and add / overwrite LB (label) field
 			int numberWritten = ioService.writeMarkedRecords(publications, newInputFileName, outputFileName);
-			long labeledRecords = publications.stream().filter(r -> r.getLabel() != null && !r.isPresentInOldFile())
+			long numberLabeledRecords = publications.stream()
+					.filter(r -> r.getLabel() != null && !r.isPresentInOldFile())
 					.count();
-			s = "DONE: DedupEndNote has written " + numberWritten + " records with " + labeledRecords
-					+ " duplicates marked in the Label field.";
+			s = "DONE: DedupEndNote has written %s records with %d duplicates marked in the Label field."
+					.formatted(numberWritten, numberLabeledRecords);
 			wsMessage(wssessionId, s);
 			return s;
 		}
 
 		enrich(publications);
-		// Get the records from the new file that are not duplicates or not duplicates
-		// of records of the old file
+		// Get the records from the new file that are not duplicates or not duplicates of records of the old file
 		List<Publication> filteredRecords = publications.stream()
 				.filter(r -> !r.isPresentInOldFile() && (r.getLabel() == null || !r.getLabel().startsWith("-")))
 				.toList();
 		log.error("Records to write: {}", filteredRecords.size());
 		int numberWritten = ioService.writeDeduplicatedRecords(filteredRecords, newInputFileName, outputFileName);
-		s = "DONE: DedupEndNote removed " + (newRecords.size() - numberWritten)
-				+ " records from the new set, and has written " + numberWritten + " records.";
+		s = "DONE: DedupEndNote removed %d records from the new set, and has written %d records."
+				.formatted((newRecords.size() - numberWritten), numberWritten);
 		wsMessage(wssessionId, s);
 		return s;
 	}
@@ -736,17 +740,14 @@ public class DeduplicationService {
 
 		List<Publication> emptyYearlist = yearSets.remove(0);
 		log.debug("YearSets: {}", yearSets.keySet().stream().sorted().toList());
-		yearSets.keySet().stream().sorted(Comparator.reverseOrder()).forEach(year -> {
+		yearSets.keySet().stream().forEach(year -> {
 			List<Publication> yearSet = yearSets.get(year);
 			if (emptyYearlist != null) {
 				yearSet.addAll(emptyYearlist.stream().filter(r -> r.getLabel() == null).toList());
 			}
-			List<Publication> previousYearSet = yearSets.get(year - 1);
-			if (previousYearSet != null) {
-				yearSet.addAll(previousYearSet);
-			}
+			yearSet.addAll(yearSets.getOrDefault(year - 1, Collections.emptyList()));
 			wsMessage(wssessionId, "Working on " + year + " for " + yearSet.size() + " records");
-			compareSet(yearSet, year, wssessionId);
+			compareSet(yearSet, year, true, wssessionId);
 			wsMessage(wssessionId, "PROGRESS: " + cumulativePercentages.get(year));
 		});
 	}
@@ -763,23 +764,20 @@ public class DeduplicationService {
 	// @formatter:on
 	public void searchYearTwoFiles(List<Publication> publications, String wssessionId) {
 		Map<Integer, List<Publication>> yearSets = publications.stream()
-				.collect(Collectors.groupingBy(Publication::getPublicationYear));
+				.collect(Collectors.groupingBy(Publication::getPublicationYear, TreeMap::new, Collectors.toList()));
 		Map<Integer, Integer> cumulativePercentages = getCumulativePercentages(publications, yearSets);
 
 		List<Publication> emptyYearlist = yearSets.remove(0);
-		log.debug("YearSets: {}", yearSets.keySet().stream().sorted().toList());
-		yearSets.keySet().stream().sorted().forEach(year -> {
+		log.debug("YearSets: {}", yearSets.keySet().stream().toList());
+		yearSets.keySet().stream().forEach(year -> {
 			List<Publication> yearSet = new ArrayList<>();
 			if (emptyYearlist != null) {
 				yearSet.addAll(emptyYearlist.stream().filter(r -> r.getLabel() == null).toList());
 			}
 			yearSet.addAll(yearSets.get(year));
-			List<Publication> nextYearSet = yearSets.get(year + 1);
-			if (nextYearSet != null) {
-				yearSet.addAll(nextYearSet);
-			}
+			yearSet.addAll(yearSets.getOrDefault(year + 1, Collections.emptyList()));
 			wsMessage(wssessionId, "Working on " + year + " for " + yearSet.size() + " records");
-			compareSet(yearSet, year, wssessionId);
+			compareSet(yearSet, year, false, wssessionId);
 			wsMessage(wssessionId, "PROGRESS: " + cumulativePercentages.get(year));
 		});
 	}
