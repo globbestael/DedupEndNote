@@ -2,14 +2,11 @@ package edu.dedupendnote.domain;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
-import java.nio.charset.Charset;
 import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -33,8 +30,6 @@ public class Publication {
 
 	private boolean authorsAreTransposed = false;
 
-	// FIXME: change to Set<String>()
-//	private Map<String, Integer> dois = new HashMap<>();
 	private Set<String> dois = new HashSet<>();
 	private String id;
 
