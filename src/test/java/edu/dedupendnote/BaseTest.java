@@ -31,4 +31,9 @@ public class BaseTest {
 	void fillerBaseTest() {
 		assertThat(1*1).isEqualTo(1);
 	}
+	
+	@Test
+	void testReplace() {
+		assertThat("abababa".replace("a", "b")).isEqualTo("bbbbbbb");
+	}
 }
