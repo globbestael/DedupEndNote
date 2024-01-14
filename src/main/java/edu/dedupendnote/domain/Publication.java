@@ -572,7 +572,7 @@ public class Publication {
 		}
 
 		author = normalizeToBasicLatin(author);
-		author = author.replaceAll("-", " ");
+		author = author.replaceAll("-", " ").trim(); // trim if authors start or end with hyphen 
 
 		// FIXME: should this be a Pattern?
 		String[] parts = author.split("\\s*,\\s+"); // see testfile Non_Latin_input.txt

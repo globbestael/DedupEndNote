@@ -9,6 +9,7 @@ import java.io.StringReader;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -143,20 +144,9 @@ public class DedupEndNoteApplicationTests {
 		assertThat(new File(inputFileName)).exists();
 
 		String resultString = deduplicationService.deduplicateOneFile(inputFileName, outputFileName, markMode,
-				testdir + "");
+				wssessionId);
 
 		assertThat(resultString).isEqualTo(deduplicationService.formatResultString(18, 12));
-	}
-
-	@Disabled("File missing")
-	@Test
-	void file_without_IDs() {
-		String fileName = testdir + "Recurrance_rate_EndNote_Library_original_deduplicated.txt";
-		boolean markMode = false;
-		String outputFileName = DedupEndNoteController.createOutputFileName(fileName, markMode);
-
-		String resultString = deduplicationService.deduplicateOneFile(fileName, outputFileName, markMode, wssessionId);
-		assertThat(resultString).startsWith("ERROR: The input file contains records without IDs");
 	}
 
 	@Test
@@ -245,4 +235,23 @@ public class DedupEndNoteApplicationTests {
 
 	// FIXME: tests for markMode = true;
 
+	@SafeVarargs
+	public static <T> T coalesce(T... values) {
+		return Arrays.stream(values).filter(Objects::nonNull).findFirst().orElse(null);
+	}
+	
+	@Test
+	void checkCoalesce() {
+		// FIXME: make assertions comparing with Apache Commons lang3: ObjectUtils::firstNonNull 
+		assertThat(DedupEndNoteApplicationTests.coalesce((Object) null)).isNull();
+		assertThat(DedupEndNoteApplicationTests.coalesce((String) null, "One", (String) null)).isEqualTo("One");
+		
+		String[] arrayNulls = { null,  null };
+		assertThat(DedupEndNoteApplicationTests.coalesce(arrayNulls, "One")).isEqualTo("One");
+
+		String[] arrayNonNull = { null,  "A" };
+		assertThat(DedupEndNoteApplicationTests.coalesce(arrayNonNull, "One")).isEqualTo("A");
+
+		assertThat(DedupEndNoteApplicationTests.coalesce(List.of("A", "B").toArray(), "One")).isEqualTo("A");
+	}
 }
