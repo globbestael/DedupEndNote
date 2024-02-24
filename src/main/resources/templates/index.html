@@ -1,17 +1,16 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
 <head>
     <title>DedupEndNote</title>
 
-	<script th:src="@{/webjars/jquery/jquery.min.js}"></script>
-	<script th:src="@{/webjars/jquery-ui/jquery-ui.min.js}"></script>
+	<script th:src="@{/webjars/jquery/3.7.0/jquery.min.js}"></script>
+	<script th:src="@{/webjars/jquery-ui/1.13.2/jquery-ui.min.js}"></script>
 	<script th:src="@{/webjars/blueimp-file-upload/js/jquery.fileupload.js}"></script>
 	<script th:src="@{/webjars/blueimp-file-upload/js/jquery.fileupload-process.js}"></script>
-	<link rel="stylesheet" th:href="@{/webjars/bootstrap/css/bootstrap.min.css}">
-    
-	<script th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}" type="text/javascript"></script>
-    <script th:src="@{/webjars/sockjs-client/sockjs.min.js}"></script>
-    <script th:src="@{/webjars/stomp-websocket/stomp.min.js}"></script>
+	<link rel="stylesheet" th:href="@{/webjars/bootstrap/4.5.3/css/bootstrap.min.css}">
+	<script th:src="@{/webjars/bootstrap/4.5.3/js/bootstrap.bundle.min.js}" type="text/javascript"></script>
+    <script th:src="@{/webjars/sockjs-client/1.5.1/sockjs.min.js}"></script>
+    <script th:src="@{/webjars/stomp-websocket/2.3.4/stomp.min.js}"></script>
 
     <style type="text/css">
     	td {
@@ -105,7 +104,7 @@
  	                    	var percentage = found[1]; 
  	                    	showProgress(percentage);
  	                    } else {
- 		                  	// console.log("DATA: " + message);
+ 		                  	console.log("DATA: " + message);
  			 	       		$('#results').html("<span>" + message + "</span>");
  	                    }
  		 	        });
@@ -175,7 +174,7 @@
  	    			processData: false,
  	    			contentType: false,
  					success: function(response) {
- 						console.log("RESPONSE: " + response);
+ 						console.log("RESPONSE: " + response.result);
 	                    if (response.result.match("^DONE")) {  
 	                        $('#results').html(response.result);      
 	                    } else if (response.result.match("^ERROR")) {  
@@ -316,6 +315,7 @@
 		        
 		        <p>Each pair of records is compared in 5 different ways. The general rule is:</p>
 		        <table class="table table-bordered" style="width: 60%;">
+					<caption>General rule of DedupEndNote</caption>
 		        	<thead>
 		        		<tr>
 		        			<th>Comparison</th>
@@ -342,8 +342,6 @@
 		        <p>The following comparisons are used (in this order, chosen for performance reasons):</p>
 		        <ol>
 		        	<li><strong>Publication year:</strong> Are they at most 1 year apart?<br/>
-<!-- 		        	We use a sliding window technique: records are put into sets of publication years, the records of each set are compared with the record from the same set -->
-<!-- 		        	and the set of the following publication year.<br/> -->
 		        	<i>Insufficient data: Records without a publication year are compared to all records unless they have been identified as a duplicate.</i><br/>
 		        	<i>Special cases: Cochrane Reviews are compared for the same publication year</i>
 		        	</li>
@@ -477,6 +475,7 @@
 		        <p>In the following table the results of EndNote's Find duplicates is compared to the comparisons in DedupEndNote. For these tests only one field was 
 		        selected in EndNote in "Edit&nbsp;&gt;&nbsp;Preferences&nbsp;&gt; Duplicates", and "Ignore spacing and punctuation" was selected.</p>
 		        <table class="table table-sm">
+					<caption>Examples of duplicates found</caption>
 		        	<thead class="thead-light">
 		        		<tr>
 			        		<th>Field</th>
@@ -777,6 +776,7 @@
 				<p>See <a href="/test_results_details">Test results - details</a> for a description of this test database.</p>				
 							
 				<table class="table table-sm">
+					<caption>Perfomance table</caption>
 					<thead>
 						<tr>
 							<th>Tool</th>
@@ -829,6 +829,7 @@
 				"Liu", "v Koppenfels" ... "von Woellwarth", and some others). Because replies are treated in a special way, 130 records with "reply" in the title
 				which were identified as duplicates, were checked, but only for true and false positives.</p>
 				<table class="table table-bordered">
+					<caption>Performance table 2</caption>
 					<thead>
 						<tr>
 							<th>Set</th>
@@ -878,74 +879,6 @@
 						In: Gastroenterology 154 (6 Supplement 1), 2018, p. S-1178 DOI: 10.1016/s0016-5085(18)33901-5</li>
 				</ul>
 
-
-<!--					
-				<h4>Cannabis test database (15,216 records)</h4>
-				<p>See: <a href="https://zenodo.org/record/3531487" target="blank">https://zenodo.org/record/3531487</a> and <a href="https://zenodo.org/communities/icasr/search?page=1&size=20" target="blank">https://zenodo.org/communities/icasr/search?page=1&size=20</a></p>
-				<table class="table table-sm">
-					<thead>
-						<tr>
-							<th>Tool</th>
-							<th>Setting</th>
-							<th class="text-right">Duplicates found</th>
-							<th class="text-right">Duplicates to delete</th>
-							<th class="text-right">After deduplication</th>
-							<th class="text-right">% kept</th>
-						</tr>
-					</thead>
-					<tr>
-						<td>EndNote</td>
-						<td>Author + Year + Title + Reference Type<br/>(default setting)</td>
-						<td class="text-right">5,499</td>
-						<td class="text-right">3,460</td>
-						<td class="text-right">11,756</td>
-						<td class="text-right">77%</td>
-					</tr>
-					<tr>
-						<td>EndNote</td>
-						<td>Author + Year + Title</td>
-						<td class="text-right">5,504</td>
-						<td class="text-right">3,463</td>
-						<td class="text-right">11,753</td>
-						<td class="text-right">77%</td>
-					</tr>
-					<tr>
-						<td>EndNote</td>
-						<td>Author + Year + Title + Secondary Title (Journal)</td>
-						<td class="text-right">3,733</td>
-						<td class="text-right">2,256</td>
-						<td class="text-right">12,960</td>
-						<td class="text-right">85%</td>
-					</tr>
-					<tr>
-						<td>SRA Deduplicator *</td>
-						<td>???</td>
-						<td class="text-right">???</td>
-						<td class="text-right">3,791</td>
-						<td class="text-right">11,425</td>
-						<td class="text-right">75%</td>
-					</tr>
-					<tr>
-						<td>DedupEndNote</td>
-						<td></td>
-						<td class="text-right">6,987</td>
-						<td class="text-right">4,475</td>
-						<td class="text-right">10,741</td>
-						<td class="text-right">71%</td>
-					</tr>
-				</table>
-				
-				<p>SRA Deduplicator: <a href="https://sr-accelerator.com/#/help/dedupe-offline" target="blank">https://sr-accelerator.com/#/help/dedupe-offline</a>.
-				The Windows version on <a href="https://github.com/IEBH/sra-dedupe-ui" target="blank">https://github.com/IEBH/sra-dedupe-ui</a> (downloaded 17-7-2020)
-				was used.</p>
-
-				<p>EndNote deduplication may identify records as duplicates which aren't duplicates at all, e.g. with the most aggressive setting "Author + Year + Title":</p>
-				<ul>
-					<li>Different journals: <a target="blank" href="http://dx.doi.org/10.1111/ajt.14306">http://dx.doi.org/10.1111/ajt.14306</a> and <a target="blank" href="http://dx.doi.org/10.1111/petr.12972">http://dx.doi.org/10.1111/petr.12972</a></li>
-					<li>Different journals: <a target="blank" href="http://dx.doi.org/10.1016/S0168-8278%2811%2960938-0">http://dx.doi.org/10.1016/S0168-8278%2811%2960938-0</a> and <a target="blank" href="10.1016/s1590-8658(11)60057-1">10.1016/s1590-8658(11)60057-1</a></li>
-					<li>Same journal: <a target="blank" href="10.1002/cld.552 and 10.1002/cld.599">10.1002/cld.552 and 10.1002/cld.599</a></li>
-				</ul>
--->
 				<h3 id="limitations">Limitations</h3>
 				<ul>
 					<li>Input file size: The maximum size of the input file is limited to 150MB.</li>

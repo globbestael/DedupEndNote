@@ -13,7 +13,7 @@ import org.springframework.boot.test.context.TestConfiguration;
 import edu.dedupendnote.domain.Publication;
 
 @TestConfiguration
-public class PagesTest {
+class PagesTest {
 
 	@ParameterizedTest(name = "{index}: parsePages({0})=({1},{2},{3})")
 	@MethodSource("argumentProvider")

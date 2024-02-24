@@ -17,7 +17,7 @@ import edu.dedupendnote.domain.Publication;
 import edu.dedupendnote.services.IOService;
 
 @TestConfiguration
-public class TextNormalizerTest {
+class TextNormalizerTest {
 
 	/*
 	 * Comparison of different methods to remove accents and diacritics. See also
@@ -90,7 +90,6 @@ public class TextNormalizerTest {
 	@Test
 	void whiteSpaceReplacement() {
 		String input = " a\u000Ca\u00A0a\u2000a";
-		input = "ST  - Total Pancreatectomy With Islet Cell Transplantation for the Treatment of Pancreatic Cancer";
 		String output = IOService.unusualWhiteSpacePattern.matcher(input).replaceAll("A");
 		
 		assertThat(output).isEqualTo(" aAaAaAa");

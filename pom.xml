@@ -6,7 +6,6 @@
 	<groupId>dedupendnote.edu</groupId>
 	<artifactId>DedupEndNote</artifactId>
 	<version>0.9.7b-SNAPSHOT</version>
-<!-- 	<packaging>war</packaging> -->
 
 	<name>DedupEndNote</name>
 	<description>Deduplicates EndNote export file in RIS format</description>
@@ -14,13 +13,13 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>2.7.17</version>
+		<version>3.1.5</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
- 		<java.version>17</java.version> 
+ 		<java.version>21</java.version> 
 	</properties>
 
 	<dependencies>
@@ -45,9 +44,9 @@
 			See https://issues.apache.org/jira/browse/TEXT-104 for bug in JaroWinklerDistance (returns the JaroWinklerSimilarity). JaroWinklerSimilarity in 1.8 is correct. 
 		-->
 		<dependency>
-		    <groupId>org.apache.commons</groupId>
-		    <artifactId>commons-text</artifactId>
-		    <version>1.10.0</version>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-text</artifactId>
+			<version>1.10.0</version>
 		</dependency>
 		<!--
 			https://github.com/tdebatty/java-string-similarity has an implentation of Ratcliff-Obershelp.
@@ -60,6 +59,11 @@
 		    <groupId>info.debatty</groupId>
 		    <artifactId>java-string-similarity</artifactId>
 		    <version>2.0.0</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.glassfish.jaxb</groupId>
+			<artifactId>jaxb-runtime</artifactId>
 			<scope>test</scope>
 		</dependency>		
 		<dependency>
@@ -75,7 +79,6 @@
 		<dependency>
 			<groupId>com.fasterxml.jackson.dataformat</groupId>
 			<artifactId>jackson-dataformat-csv</artifactId>
-<!-- 			<version>2.12.3</version> -->
 			<scope>test</scope>
 		</dependency>
 		
@@ -85,11 +88,13 @@
 			zie http://www.webjars.org/documentation
 			zie: https://springframework.guru/spring-boot-web-application-part-2-using-thymeleaf/
 		-->
+		<!--
 		<dependency>
-			<groupId>org.webjars</groupId>
-			<artifactId>webjars-locator</artifactId>
-			<version>0.47</version>
+ 		   <groupId>org.webjars</groupId>
+		    <artifactId>webjars-locator-core</artifactId>
+		    <version>0.53</version>
 		</dependency>
+		-->
 		<dependency>
 		    <groupId>org.webjars</groupId>
 		    <artifactId>bootstrap</artifactId>
@@ -130,6 +135,23 @@
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 			</plugin>
-		</plugins>
+			<plugin>
+		        <groupId>org.openrewrite.maven</groupId>
+		        <artifactId>rewrite-maven-plugin</artifactId>
+		        <version>5.8.1</version>
+		        <configuration>
+		          <activeRecipes>
+		            <recipe>org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_0</recipe>
+		          </activeRecipes>
+		        </configuration>
+		        <dependencies>
+		          <dependency>
+		            <groupId>org.openrewrite.recipe</groupId>
+		            <artifactId>rewrite-spring</artifactId>
+		            <version>5.0.11</version>
+		          </dependency>
+		        </dependencies>
+		      </plugin>
+   		</plugins>
 	</build>
 </project>

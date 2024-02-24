@@ -1,12 +1,8 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
 <head>
     <title>DedupEndNote - Justification</title>
-<!-- 	<script th:src="@{/webjars/jquery/jquery.min.js}"></script> -->
-<!-- 	<script th:src="@{/webjars/jquery-ui/jquery-ui.min.js}"></script> -->
-<!-- 	<script th:src="@{/webjars/blueimp-file-upload/js/jquery.fileupload.js}"></script> -->
-<!-- 	<script th:src="@{/webjars/blueimp-file-upload/js/jquery.fileupload-process.js}"></script> -->
-	<link rel="stylesheet" th:href="@{/webjars/bootstrap/css/bootstrap.min.css}">
+	<link rel="stylesheet" th:href="@{/webjars/bootstrap/4.5.3/css/bootstrap.min.css}">
     <style type="text/css">
     	.bg-info {
     		padding: 10px;
@@ -49,6 +45,7 @@
 	       		<div>
 			        <p>The general rule is:</p>
 			        <table class="table table-bordered" style="width: 80%;">
+						<caption>General rule</caption>
 			        	<thead>
 			        		<tr>
 			        			<th>Comparison</th>
@@ -94,6 +91,7 @@
 	       		<h5 id="fields_chosen">2.1. The fields chosen</h5>
 	       		<p>The EndNote fields used in the comparisons are:</p>
 	       		<table class="table table-bordered" style="width: 60%;">
+					<caption>The EndNote fields used in the comparisons</caption>
 	       			<thead>
 	       				<tr>
 	       					<th>EndNote field</th>
@@ -240,6 +238,7 @@
 
 				<p>Values used for Jaro-Winkler Similarity:</p>
 				<table class="table table-bordered" style="width: 80%">
+					<caption>Values used for Jaro-Winkler Similarity</caption>
 					<thead>
 						<tr>
 							<th>Field</th>

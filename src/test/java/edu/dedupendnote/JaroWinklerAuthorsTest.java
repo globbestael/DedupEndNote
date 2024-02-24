@@ -21,7 +21,7 @@ import edu.dedupendnote.services.DeduplicationService;
 //@ExtendWith(TimingExtension.class)
 //@Slf4j
 @TestConfiguration
-public class JaroWinklerAuthorsTest {
+class JaroWinklerAuthorsTest {
 
 	JaroWinklerSimilarity jws = new JaroWinklerSimilarity();
 

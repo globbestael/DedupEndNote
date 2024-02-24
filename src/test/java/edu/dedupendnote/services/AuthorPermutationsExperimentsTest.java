@@ -24,7 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 @Disabled("Experiment shows that this should not be implemented")
 @Slf4j
 @TestConfiguration
-public class AuthorPermutationsExperimentsTest {
+class AuthorPermutationsExperimentsTest {
 
 	// from:
 	// https://stackoverflow.com/questions/17192796/generate-all-combinations-from-multiple-lists
@@ -134,8 +134,9 @@ public class AuthorPermutationsExperimentsTest {
 				System.err.println("Found at " + i);
 			}
 		}
-		assertThat(permutedAuthorLists).contains(other);
-		assertThat(permutedAuthorLists).hasSize(2187);
+		assertThat(permutedAuthorLists)
+			.contains(other)
+			.hasSize(2187);
 		assertThat(3 * 3 * 3 * 3 * 3 * 3 * 3).isEqualTo(2187);
 	}
 
@@ -156,9 +157,10 @@ public class AuthorPermutationsExperimentsTest {
 				System.err.println("Found at " + i);
 			}
 		}
-		assertThat(permutedAuthorLists).contains(other);
-		assertThat(permutedAuthorLists).hasSize(144);
-		assertThat(permutedAuthorLists).hasSize(2 * 3 * 2 * 2 * 3 * 2);
+		assertThat(permutedAuthorLists)
+			.contains(other)
+			.hasSize(144)
+			.hasSize(2 * 3 * 2 * 2 * 3 * 2);
 	}
 
 }

@@ -7,32 +7,40 @@ import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
-
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.StringUtils;
-import org.springframework.util.concurrent.ListenableFuture;
-import org.springframework.util.concurrent.ListenableFutureCallback;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.context.request.async.DeferredResult;
 import org.springframework.web.multipart.MultipartFile;
 
 import edu.dedupendnote.services.DeduplicationService;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import lombok.extern.slf4j.Slf4j;
 
 @Controller
 @Slf4j
 public class DedupEndNoteController {
 
+	@Value("${upload-dir}")
+	private String uploadDir;
+
+	private SimpMessagingTemplate simpMessagingTemplate;
+
+	public DedupEndNoteController(SimpMessagingTemplate simpMessagingTemplate) {
+		this.simpMessagingTemplate = simpMessagingTemplate;
+	}
+	
 	// @formatter:off
 	/*
 	 * Communication between client / browser uses different techniques
@@ -42,12 +50,8 @@ public class DedupEndNoteController {
 	 *   FIXME: is it possible to stop these running deduplications? A server could be flooded with interrupted calls?
 	 *   See a.o. https://stackoverflow.com/questions/54946096/spring-boot-websocket-how-do-i-know-when-a-client-has-unsubscribed/54948213
 	 * - files are uploaded with AJAX (uploadFile)
-	 * - deduplication is started with AJAX (startOneFile|StartTwoFiles) which calls the DeduplicationService asynchronously with DeferredResult and ListenableFuture.
-	 *   The return value of the function (the DeferredResult) is not used
+	 * - deduplication is started with AJAX (startOneFile|StartTwoFiles) which calls the DeduplicationService.
 	 * - the DeduplicationService uses Web Sockets to report progress to the browser.
-	 *
-	 * DeferredResult etc based on - https://blog.krecan.net/2014/06/10/what-are-listenablefutures-good-for/ -
-	 * http://blog.inflinx.com/2012/09/09/spring-async-and-future-report-generation-example/
 	 *
 	 * Web Socket: Messages should be sent to the individual user.
 	 * Normally a user would send a message to the server. The @MessageMapping function could retrieve the Web Socket SessionId with a @HeaderId argument of the function.
@@ -65,22 +69,11 @@ public class DedupEndNoteController {
 	 */
 	// @formatter:on
 
-	public static String createOutputFileName(String fileName, boolean markMode) {
+	public static String createOutputFileName(String fileName, Boolean markMode) {
 		String extension = StringUtils.getFilenameExtension(fileName);
-		String outputFileName = fileName.replaceAll("." + extension + "$",
-				(markMode ? "_mark." : "_deduplicated.") + extension);
-		return outputFileName;
+		return fileName.replaceAll("." + extension + "$",
+				(Boolean.TRUE.equals(markMode) ? "_mark." : "_deduplicated.") + extension);
 	}
-
-	private static void log(Object message) {
-		System.out.println(String.format("%s %s ", Thread.currentThread().getName(), message));
-	}
-
-	@Autowired
-	public DeduplicationService deduplicationService;
-
-	@Value("upload-dir")
-	private String uploadDir;
 
 	@PostMapping(value = "/getResultFile", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
 	public void getResultFile(@RequestParam("fileNameResultFile") String fileName,
@@ -108,109 +101,47 @@ public class DedupEndNoteController {
 		return "justification";
 	}
 
-	private String startDeduplication(String inputFileName, String outputFileName, boolean markMode, String wssessionId)
-			throws Exception {
-		// FIXME: cancelling a running deduplication in this way, doesn't work yet
-		// if (runningFutures.containsKey(wssessionId)) {
-		// String s = "You have a deduplication running. It will be stopped ad replaced
-		// with this new one";
-		// simpMessagingTemplate.convertAndSend("/topic/messages-" + wssessionId, new
-		// StompMessage(s));
-		// Thread.sleep(5000); // simulated delay
-		// boolean cancelled = runningFutures.get(wssessionId).cancel(true);
-		// runningFutures.remove(wssessionId);
-		// simpMessagingTemplate.convertAndSend("/topic/messages-" + wssessionId, new
-		// StompMessage("Running deduplication was cancelled"));
-		// }
-		// simpMessagingTemplate.convertAndSend("/topic/messages-" + wssessionId, new
-		// StompMessage("Starting the service at /topic/messages-[sessionId] for
-		// sessionID: " + wssessionId));
-
-		// Create DeferredResult with timeout 5s
-		DeferredResult<String> result = new DeferredResult<>(5000L);
-		String logPrefix = "1F" + (markMode ? "M" : "D");
-
-		// Let's call the backend
-		ListenableFuture<String> future = deduplicationService.deduplicateOneFileAsync(
-				uploadDir + File.separator + inputFileName, uploadDir + File.separator + outputFileName, markMode,
-				wssessionId);
-		// runningFutures.put(wssessionId, future);
-
-		future.addCallback(new ListenableFutureCallback<String>() {
-			@Override
-			public void onFailure(Throwable t) {
-				// runningFutures.remove(wssessionId);
-				result.setErrorResult(t.getMessage());
-			}
-
-			@Override
-			public void onSuccess(String response) {
-				// Will be called in thread
-				log("Success");
-				log.info("Writing to result: {}: {}", logPrefix, response);
-				// runningFutures.remove(wssessionId);
-				result.setResult(response);
-			}
-		});
-		// Return the thread to servlet container,
-		// the response will be processed by another thread.
-		return "index";
-	}
-
-	private String startDeduplication(String newInputFileName, String oldInputFileName, String outputFileName,
-			boolean markMode, String wssessionId) {
-
-		// Create DeferredResult with timeout 5s
-		DeferredResult<String> result = new DeferredResult<>(5000L);
-		String logPrefix = "2F" + (markMode ? "M" : "D");
-
-		// Let's call the backend
-		ListenableFuture<String> future = deduplicationService.deduplicateTwoFilesAsync(
-				uploadDir + File.separator + newInputFileName, uploadDir + File.separator + oldInputFileName,
-				uploadDir + File.separator + outputFileName, markMode, wssessionId);
-		// runningFutures.put(wssessionId, future);
-
-		future.addCallback(new ListenableFutureCallback<String>() {
-			@Override
-			public void onFailure(Throwable t) {
-				// runningFutures.remove(wssessionId);
-				result.setErrorResult(t.getMessage());
-			}
-
-			@Override
-			public void onSuccess(String response) {
-				// Will be called in thread
-				log("Success");
-				log.info("Writing to result: {}: {}", logPrefix, response);
-				// runningFutures.remove(wssessionId);
-				result.setResult(response);
-			}
-		});
-		// Return the thread to servlet container,
-		// the response will be processed by another thread.
-		return "index";
-	}
-
 	@PostMapping(value = "/startOneFile", produces = "application/json")
 	public ResponseEntity<String> startOneFile(@RequestParam("fileName_1") String inputFileName,
-			@RequestParam(name = "markMode", required = false) boolean markMode,
-			@RequestParam("wssessionId") String wssessionId) throws Exception {
+			@RequestParam(required = false, defaultValue = "false") Boolean markMode,
+			@RequestParam String wssessionId) throws Exception {
 		String outputFileName = createOutputFileName(inputFileName, markMode);
-		startDeduplication(inputFileName, outputFileName, markMode, wssessionId);
-		return ResponseEntity.ok("{ \"result\": \"Deduplication of " + inputFileName + " has started\"}");
+		String logPrefix = "1F" + (Boolean.TRUE.equals(markMode) ? "M" : "D");
+		DeduplicationService deduplicationService = new DeduplicationService(simpMessagingTemplate);
+
+		try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
+			Future<String> future = executor.submit(() -> 
+				deduplicationService.deduplicateOneFile(
+						uploadDir + File.separator + inputFileName, uploadDir + File.separator + outputFileName, markMode,
+						wssessionId)
+			);
+			log.info("Writing to result: {}: {}", logPrefix, future.get());
+			return ResponseEntity.ok("{ \"result\": " + future.get());
+		}
 	}
 
 	@PostMapping(value = "/startTwoFiles", produces = "application/json")
-	public ResponseEntity<String> startTwoFiles(@RequestParam("oldFile") String oldFile,
-			@RequestParam("newFile") String newFile,
-			@RequestParam(name = "markMode", required = false) boolean markMode,
-			@RequestParam("wssessionId") String wssessionId) {
-		startDeduplication(newFile, oldFile, createOutputFileName(newFile, markMode), markMode, wssessionId);
-		return ResponseEntity.ok("{ \"result\": \"Deduplication of " + oldFile + " and " + newFile + " has started\"}");
+	public ResponseEntity<String> startTwoFiles(@RequestParam String oldFile,
+			@RequestParam String newFile,
+			@RequestParam(required = false, defaultValue = "false") Boolean markMode,
+			@RequestParam String wssessionId) throws InterruptedException, ExecutionException {
+
+		String logPrefix = "2F" + (Boolean.TRUE.equals(markMode) ? "M" : "D");
+		DeduplicationService deduplicationService = new DeduplicationService(simpMessagingTemplate);
+		
+		try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
+			Future<String> future = executor.submit(() -> 
+				deduplicationService.deduplicateTwoFiles(
+					uploadDir + File.separator + newFile, uploadDir + File.separator + oldFile,
+					uploadDir + File.separator + createOutputFileName(newFile, markMode), markMode, wssessionId)
+				);
+			log.info("Writing to result: {}: {}", logPrefix, future.get());
+			return ResponseEntity.ok("{ \"result\": " + future.get());
+		}
 	}
 
 	@GetMapping("/test_results_details")
-	public String test_results_details(HttpSession session) {
+	public String testResultsDetails(HttpSession session) {
 		return "test_results_details";
 	}
 
@@ -220,7 +151,7 @@ public class DedupEndNoteController {
 	}
 
 	@PostMapping(value = "/uploadFile", produces = "application/json")
-	public ResponseEntity<String> uploadFile(@RequestParam("file") MultipartFile file) {
+	public ResponseEntity<String> uploadFile(@RequestParam MultipartFile file) {
 		if (file.isEmpty()) {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
 					"{ \"result\": \"Failed to upload " + file.getOriginalFilename() + " because it was empty" + "\"}");
@@ -244,5 +175,4 @@ public class DedupEndNoteController {
 					"{ \"result\": \"RuntimeException with cause " + e.getCause() + "\"}");
 		}
 	}
-
 }
