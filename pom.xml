@@ -13,13 +13,13 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.1.5</version>
+		<version>3.2.0</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
- 		<java.version>21</java.version> 
+ 		<java.version>19</java.version> 
 	</properties>
 
 	<dependencies>
@@ -76,11 +76,22 @@
 			<artifactId>lombok</artifactId>
 			<scope>provided</scope>
 		</dependency>
+
+		<dependency>
+			<groupId>jakarta.xml.bind</groupId>
+			<artifactId>jakarta.xml.bind-api</artifactId>
+			<version>4.0.0</version>
+		</dependency>
 		<dependency>
 			<groupId>com.fasterxml.jackson.dataformat</groupId>
 			<artifactId>jackson-dataformat-csv</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.dataformat</groupId>
+			<artifactId>jackson-dataformat-xml</artifactId>
+			<version>2.15.3</version>
+		</dependency>		
 		
 		<!--  
 			webjars
@@ -141,7 +152,7 @@
 		        <version>5.8.1</version>
 		        <configuration>
 		          <activeRecipes>
-		            <recipe>org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_0</recipe>
+		            <recipe>org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_2</recipe>
 		          </activeRecipes>
 		        </configuration>
 		        <dependencies>
