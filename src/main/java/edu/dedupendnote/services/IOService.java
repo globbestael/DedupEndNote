@@ -32,7 +32,7 @@ public class IOService {
 	/**
 	 * Pattern to identify conferences in the T3 field
 	 */
-	private static final Pattern conferencePattern = Pattern
+	public static final Pattern conferencePattern = Pattern
 			.compile("((^\\d)|(.*(\\d{4}|Annual|Conference|Congress|Meeting|Society|Symposium))).*");
 
 	/** Pattern to identify clinical trials phase (1 ..4, i .. iv) */
@@ -128,7 +128,7 @@ public class IOService {
 					case "J2": // Alternate journal
 						publication.addJournals(fieldContent);
 						break;
-					case "OP": // in PubMed: original title, in Web of Science (at least for conference papaers): conference title
+					case "OP": // in PubMed: original title, in Web of Science (at least for conference papers): conference title
 						if ("CONF".equals(publication.getReferenceType())) {
 							publication.addJournals(fieldContent); 
 						} else {

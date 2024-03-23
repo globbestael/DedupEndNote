@@ -108,7 +108,6 @@ public class EndnoteXmlRecord {
     protected Titles titles;
     @XmlElement(name = "alt-periodical")
     @JsonProperty("alt-periodical")
-    // @JsonIgnore
 	protected AltPeriodical altPeriodical;
     protected Periodical periodical;
     protected Pages pages;
@@ -1726,5 +1725,13 @@ public class EndnoteXmlRecord {
     public void setMisc3(Misc3 value) {
         this.misc3 = value;
     }
+
+	public AltPeriodical getAltPeriodical() {
+		return altPeriodical;
+	}
+
+	public void setAltPeriodical(AltPeriodical altPeriodical) {
+		this.altPeriodical = altPeriodical;
+	}
 
 }
