@@ -1,15 +1,15 @@
 XML parsing
 ===========
-- check if original DTD produces usable files with xjc (is this domain/xml?)
++ check if original DTD produces usable files with xjc (is this domain/xml?)
   if not: 
-  - clean up files in domain/xml
-  - document in wiki
+  + clean up files in domain/xml
+  + document in wiki
 - make DTD for Zotero
-  - parse files
+  + parse files
   - compare xml parses with RIS parses
-  - write records and compare with original Zotero xml files
+  + write records and compare with original Zotero xml files
 - input routine should be able to identify if the XML file is EndNote format or Zotero format
-- (additional reason to split the original DTD into 2 DTDs: writing to the same XML format as the inpt file is easier)  
+- (additional reason to split the original DTD into 2 DTDs: writing to the same XML format as the input file is easier)  
 
 Dependency bloat?
 =================
