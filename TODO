@@ -1,5 +1,31 @@
-- Dependency bloat? https://github.com/ASSERT-KTH/depclean
+XML parsing
+===========
+- check if original DTD produces usable files with xjc (is this domain/xml?)
+  if not: 
+  - clean up files in domain/xml
+  - document in wiki
+- make DTD for Zotero
+  - parse files
+  - compare xml parses with RIS parses
+  - write records and compare with original Zotero xml files
+- input routine should be able to identify if the XML file is EndNote format or Zotero format
+- (additional reason to split the original DTD into 2 DTDs: writing to the same XML format as the inpt file is easier)  
 
+Dependency bloat?
+=================
+ https://github.com/ASSERT-KTH/depclean
+
+Structure of EndNote files
+==========================
+- https://community.endnote.com/t/trying-to-understand-my-en20-library-and-recreate-it-for-en-21/711538
+- https://support.clarivate.com/Endnote/s/article/EndNote-Description-of-the-Data-folder-that-accompanies-enl-library-files?language=en_US
+- https://omicx.cc/posts/2021-11-04-fix-corrupted-endnote-library/ says:
+  The .enl and .eni are SQLite3 databases, and the validity of these files could be checked by SQLiteStudio. 
+  In this situation, the “mylib.enl” file might be ok, but index database “.eni” corrupted.
+  (SQLiteStudio: https://sqlitestudio.pl/) 
+  
+  Could an EndNote DB be opened with SQLite (https://www.sqlitetutorial.net/sqlite-java/sqlite-jdbc-driver/)?
+  
 Upgrade to Spring Boot 3
 ------------------------
 Used OpenRewrite

@@ -1,9 +1,13 @@
 package edu.dedupendnote;
 
+import static javax.xml.stream.XMLStreamConstants.CHARACTERS;
+import static javax.xml.stream.XMLStreamConstants.START_ELEMENT;
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -15,131 +19,100 @@ import javax.xml.stream.XMLStreamReader;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.TestConfiguration;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.PropertyNamingStrategies;
-import com.fasterxml.jackson.dataformat.xml.JacksonXmlModule;
-import com.fasterxml.jackson.dataformat.xml.XmlMapper;
-
 import edu.dedupendnote.domain.Publication;
 import edu.dedupendnote.domain.xml.endnote.Author;
 import edu.dedupendnote.domain.xml.endnote.EndnoteXmlRecord;
+import edu.dedupendnote.domain.xml.endnote.Xml;
 import edu.dedupendnote.services.IOService;
+import jakarta.xml.bind.JAXBContext;
+import jakarta.xml.bind.JAXBException;
+import jakarta.xml.bind.Unmarshaller;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @TestConfiguration
 class XmlEndnoteTest {
 
-	String homeDir = System.getProperty("user.home");
-
+	private record TestFile(File xmlInputFile, File textInputFile, int noOfRecords) {};
+	private record ParsedAndConverted(List<EndnoteXmlRecord> xmlRecords, List<Publication> publications) {};
+	
 	@Test
-	void readEndNoteXml() throws FileNotFoundException, XMLStreamException {
-		XMLInputFactory f = XMLInputFactory.newFactory();
-		/*
-		 * File is a subset of BIG_SET:
-		 * - first author >= almadi and first author <= andriulli
-		 * - order by author
-		 * 465 records
-		 * 
-		 * The file with "_pp" is pretty printed XML, the file without is the original EndNote XML output.
-		 * Following code can handle both cases thanks to interspersed "while (sr.isWhiteSpace()) sr.next();".
-		 * No configuration option found in FasterXML to do this automatically.
-		 */
-		File risInputFile = new File(homeDir + "/dedupendnote_files/xml/BIG_SET_part.txt");
-		IOService ioService = new IOService();
-		List<Publication> risPublications = ioService.readPublications(risInputFile.getAbsolutePath());
-		log.error("Eerste RIS record: {}", risPublications.get(0));
+	void testReadWithPullParser() throws FileNotFoundException, JAXBException, XMLStreamException {
+		String prefix = System.getProperty("user.home") + "/dedupendnote_files/xml/";
+		// First file is a subset of BIG_SET: first author >= almadi and first author <= andriulli, order by author = 465 records. XML is pretty-printed
+		TestFile shortTest = new TestFile(new File(prefix + "BIG_SET_part_pp.xml"), new File(prefix + "BIG_SET_part.txt"), 465);
+		TestFile longTest = new TestFile(new File(prefix + "BIG_SET.xml"), new File(prefix + "BIG_SET.txt"),  52828);
 		
-		File xmlInputFile = new File(homeDir + "/dedupendnote_files/xml/BIG_SET_part_pp.xml");
-		// File xmlInputFile = new File(homeDir + "/dedupendnote_files/xml/BIG_SET_part.xml");
-		XMLStreamReader sr = f.createXMLStreamReader(new FileInputStream(xmlInputFile));
+		ParsedAndConverted results = readWithPullParser(shortTest.xmlInputFile);
+		assertThat(results.publications).hasSize(shortTest.noOfRecords);
 
-		/*
-		 * See also https://stackify.com/java-xml-jackson/
-		 */
-		EndnoteXmlRecord xmlRecord;
-		List<Publication> xmlPublications = new ArrayList<>();
+		results = readWithPullParser(longTest.xmlInputFile);
+		assertThat(results.publications).hasSize(longTest.noOfRecords);
 		
-		/*
-		 * By changing the defaultUse Wrapper to false, 
-		 * it is not necessary to use "@JacksonXmlElementWrapper(useWrapping = false)" for every List<...> element.
-		 */
-		JacksonXmlModule xmlModule = new JacksonXmlModule();
-		xmlModule.setDefaultUseWrapper(false);
-		XmlMapper xmlMapper  = new XmlMapper(xmlModule);
+		ByteArrayOutputStream bos = new ByteArrayOutputStream();
 		
-		xmlMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, true);
-		xmlMapper.setPropertyNamingStrategy(PropertyNamingStrategies.KEBAB_CASE);
+		EndnoteXmlRecord xmlRecord = results.xmlRecords.get(0);
+		JAXBContext jaxbContext = JAXBContext.newInstance(Xml.class);
+		jaxbContext.createMarshaller().marshal(xmlRecord, bos);
 		
-		try {
-			// use this isWhiteSpace check to handle pretty printed XML files
-			while (sr.isWhiteSpace()) sr.next();
-			sr.next();
-			// System.err.println("NAme: "+ sr.getName());
-			sr.next(); // to point to <root>
+		System.err.println("Written back as: " + new String(bos.toByteArray()));
 
-			while (sr.isWhiteSpace()) sr.next();
-			// System.err.println("NAme: "+ sr.getName());
-			sr.next(); // to point to root-element under root
-
-			xmlRecord = xmlMapper.readValue(sr, EndnoteXmlRecord.class);
-			// sr now points to matching END_ELEMENT, so move forward
-			
-			convertToPublication(xmlRecord, xmlPublications);
-			System.err.println("First endnoteXmlRecord: " + xmlRecord.getTitles().getTitle().getStyle().get(0).getvalue());
-			log.error("Reached end of first endnoteXmlRecord: {}", xmlRecord);
-			
-			sr.next(); // should verify it's either closing root or new start, left as exercise
-			xmlRecord = xmlMapper.readValue(sr, EndnoteXmlRecord.class);
-			convertToPublication(xmlRecord, xmlPublications);
-			System.err.println("Second endnoteXmlRecord: " + xmlRecord);
-			
-			int i = 3;
-			while (i < 1000) {
-				sr.next(); // should verify it's either closing root or new start, left as exercise
-				while (sr.isWhiteSpace()) sr.next();
-				if (sr.isEndElement() && sr.getLocalName().equals("records")) {
-					break;
-				}
-				xmlRecord = xmlMapper.readValue(sr, EndnoteXmlRecord.class);
-				convertToPublication(xmlRecord, xmlPublications);
-				System.err.println("EndnoteRecord " + i + ": " + xmlRecord);
-				i++;
-			}
-			sr.close();		
-
-			String xml = xmlMapper.writeValueAsString(xmlRecord);
-			/*
-			 * The output file has NOT the same format as the input file, see e.g. the style element
-			 * Input:
-			 * 			<pages>
-			 * 				<style face="normal" font="default" size="100%">278-285</style>
-			 * 			</pages>
-			 * 
-			 * Output:
-			 * 	<pages>
-			 * 		<style>
-			 * 			<color/>
-			 * 			<face>normal</face>
-			 * 			<font>default</font>
-			 * 			<size>100%</size>179-192</style>
-			 * 	</pages>
-			 */
-			System.err.println("Written: " + xml);
-		
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-//		for (int i = 0; i < xmlPublications.size(); i++) {
-//			if (! risPublications.get(i).equals(xmlPublications.get(i))) {
-//				log.error("Record {} is different\n{}\n{}", i, risPublications.get(i), xmlPublications.get(i));
-//			}
-//		}
-		
+		// TODO: parse the textInputFiles and compare with the parses of the xmlInputFiles
 	}
 	
+	/*
+	 * JAXB User Guide: 4.4. Dealing with large documents
+	 * https://eclipse-ee4j.github.io/jaxb-ri/4.0.5/docs/ch03.html#unmarshalling-dealing-with-large-documents
+	 *   
+	 * See also the samples for JAXB
+	 * - https://github.com/eclipse-ee4j/jaxb-ri/tree/master/jaxb-ri/samples/src/main/samples/partial-unmarshalling
+	 * - https://github.com/eclipse-ee4j/jaxb-ri/tree/master/jaxb-ri/samples/src/main/samples/pull-parser
+	 * - https://github.com/eclipse-ee4j/jaxb-ri/tree/master/jaxb-ri/samples/src/main/samples/streaming-unmarshalling
+	 * - https://github.com/eclipse-ee4j/jaxb-ri/tree/master/jaxb-ri/samples/src/main/samples/xml-channel
+	 * 
+	 * Because writing the results will need to process one record at a time, using a pull parser might be the best choice. 
+	 * https://github.com/eclipse-ee4j/jaxb-ri/blob/master/jaxb-ri/samples/src/main/samples/pull-parser/src/Main.java
+	 * 
+	 * The first 2 elements are skipped. By using nextTag() whitespace is skipped automaically.
+	 * In the while loop however unmarshal(...) does not skip whiteSpace.
+	 */
+	ParsedAndConverted readWithPullParser(File inputFile) throws JAXBException, FileNotFoundException, XMLStreamException {
+		JAXBContext jaxbContext = JAXBContext.newInstance(Xml.class);
+		Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
+		XMLInputFactory xif = XMLInputFactory.newInstance();
+		XMLStreamReader xsr = xif.createXMLStreamReader(new FileReader(inputFile));
+
+		int i = 0;
+		List<EndnoteXmlRecord> xmlRecords = new ArrayList<>();
+		List<Publication> publications = new ArrayList<>();
+
+		xsr.nextTag();
+		xsr.require(START_ELEMENT, null, "xml");
+		xsr.nextTag();
+		xsr.require(START_ELEMENT, null, "records");
+		xsr.nextTag(); // Should now be at the first EndNoteXmlRecord
+		
+		while (xsr.getEventType() == START_ELEMENT) {
+			xsr.require(START_ELEMENT, null, "record");
+			EndnoteXmlRecord xmlRecord = (EndnoteXmlRecord) unmarshaller.unmarshal(xsr);
+			xmlRecords.add(xmlRecord);
+			System.err.println("Record " + ++i + " with recNo " + xmlRecord.getRecNumber());
+			if (xsr.getEventType() == CHARACTERS) {
+				xsr.next(); // skip the whitespace between EndNoteXmlRecords
+			}
+			
+			convertToPublication(xmlRecord, publications);
+			if (xmlRecord.getTitles().getTitle() != null) {
+				System.err.println("Record: " + xmlRecord.getTitles().getTitle().getStyle().get(0).getvalue());
+			} else {
+				System.err.println("Record: has no Title");
+			}
+		}
+		System.out.println("Finished with " + i + " records");
+		return new ParsedAndConverted(xmlRecords, publications);
+	}
+	
+	// TODO: Expand to all refTypes?
 	Map<String,String> refTypes = Map.of(
 			"Journal Article", "JOUR",
 			"Book Section", "CHAP");
@@ -166,8 +139,8 @@ class XmlEndnoteTest {
 			pub.addTitles(xmlRecord.getOrigPub().getStyle().get(0).getvalue());
 		}
 		// in RIS: ST before TI
-		pub.addTitles(xmlRecord.getTitles().getShortTitle().getStyle().get(0).getvalue());
-		pub.addTitles(xmlRecord.getTitles().getTitle().getStyle().get(0).getvalue());
+		if (xmlRecord.getTitles().getShortTitle() != null) pub.addTitles(xmlRecord.getTitles().getShortTitle().getStyle().get(0).getvalue());
+		if (xmlRecord.getTitles().getTitle() != null) pub.addTitles(xmlRecord.getTitles().getTitle().getStyle().get(0).getvalue());
 		
 		if (xmlRecord.getTitles() != null) {
 			if (xmlRecord.getTitles().getSecondaryTitle() != null) pub.addJournals(xmlRecord.getTitles().getSecondaryTitle().getStyle().get(0).getvalue());
