@@ -51,7 +51,7 @@ class XmlZoteroTest {
 		JAXBContext jaxbContext = JAXBContext.newInstance(Xml.class);
 		jaxbContext.createMarshaller().marshal(xmlRecord, bos);
 		
-		System.err.println("Written back as: " + new String(bos.toByteArray()));
+		log.info("Written back as: {}", new String(bos.toByteArray()));
 
 		// TODO: parse the textInputFiles and compare with the parses of the xmlInputFiles
 	}

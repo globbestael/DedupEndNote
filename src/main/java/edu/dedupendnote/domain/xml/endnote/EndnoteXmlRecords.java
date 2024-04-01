@@ -22,13 +22,13 @@ import jakarta.xml.bind.annotation.XmlType;
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "", propOrder = {
-    "record"
+    "endnoteXmlRecord"
 })
 @XmlRootElement(name = "records")
 public class EndnoteXmlRecords {
 
     @XmlElement(required = true)
-    protected List<EndnoteXmlRecord> record;
+    protected List<EndnoteXmlRecord> endnoteXmlRecord;
 
     /**
      * Gets the value of the record property.
@@ -52,11 +52,11 @@ public class EndnoteXmlRecords {
      * 
      * 
      */
-    public List<EndnoteXmlRecord> getRecord() {
-        if (record == null) {
-            record = new ArrayList<EndnoteXmlRecord>();
+    public List<EndnoteXmlRecord> getEndnoteXmlRecord() {
+        if (endnoteXmlRecord == null) {
+            endnoteXmlRecord = new ArrayList<>();
         }
-        return this.record;
+        return this.endnoteXmlRecord;
     }
 
 }

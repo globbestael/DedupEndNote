@@ -55,7 +55,7 @@ class XmlEndnoteTest {
 		JAXBContext jaxbContext = JAXBContext.newInstance(Xml.class);
 		jaxbContext.createMarshaller().marshal(xmlRecord, bos);
 		
-		System.err.println("Written back as: " + new String(bos.toByteArray()));
+		log.info("Written back as: {}", new String(bos.toByteArray()));
 
 		// TODO: parse the textInputFiles and compare with the parses of the xmlInputFiles
 	}
@@ -121,9 +121,6 @@ class XmlEndnoteTest {
 		Publication pub = new Publication();
 		xmlPublications.add(pub);
 		
-		if (xmlRecord.getRecNumber().equals("12451")) {
-			log.equals("hier");
-		}
 		pub.setId(xmlRecord.getRecNumber());
 		pub.setReferenceType(refTypes.get(xmlRecord.getRefType().getName()));
 

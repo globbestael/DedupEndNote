@@ -112,7 +112,7 @@ public class ObjectFactory {
      * Create an instance of {@link Records }
      * 
      */
-    public EndnoteXmlRecords createRecords() {
+    public EndnoteXmlRecords createEndnoteXmlRecords() {
         return new EndnoteXmlRecords();
     }
 
@@ -120,7 +120,7 @@ public class ObjectFactory {
      * Create an instance of {@link Record }
      * 
      */
-    public EndnoteXmlRecord createRecord() {
+    public EndnoteXmlRecord createEndnoteXmlRecord() {
         return new EndnoteXmlRecord();
     }
 

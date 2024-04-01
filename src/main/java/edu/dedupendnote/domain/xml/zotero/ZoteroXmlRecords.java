@@ -22,13 +22,13 @@ import jakarta.xml.bind.annotation.XmlType;
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "", propOrder = {
-    "record"
+    "zoteroXmlRecord"
 })
 @XmlRootElement(name = "records")
 public class ZoteroXmlRecords {
 
     @XmlElement(required = true)
-    protected List<ZoteroXmlRecord> record;
+    protected List<ZoteroXmlRecord> zoteroXmlRecord;
 
     /**
      * Gets the value of the record property.
@@ -52,11 +52,11 @@ public class ZoteroXmlRecords {
      * 
      * 
      */
-    public List<ZoteroXmlRecord> getRecord() {
-        if (record == null) {
-            record = new ArrayList<ZoteroXmlRecord>();
+    public List<ZoteroXmlRecord> getZoteroXmlRecord() {
+        if (zoteroXmlRecord == null) {
+            zoteroXmlRecord = new ArrayList<>();
         }
-        return this.record;
+        return this.zoteroXmlRecord;
     }
 
 }

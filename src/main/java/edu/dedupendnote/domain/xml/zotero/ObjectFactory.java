@@ -88,7 +88,7 @@ public class ObjectFactory {
      * Create an instance of {@link Records }
      * 
      */
-    public ZoteroXmlRecords createRecords() {
+    public ZoteroXmlRecords createZoteroXmlRecords() {
         return new ZoteroXmlRecords();
     }
 
@@ -96,7 +96,7 @@ public class ObjectFactory {
      * Create an instance of {@link Record }
      * 
      */
-    public ZoteroXmlRecord createRecord() {
+    public ZoteroXmlRecord createZoteroXmlRecord() {
         return new ZoteroXmlRecord();
     }
 
