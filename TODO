@@ -9,11 +9,18 @@ XML parsing
   - compare xml parses with RIS parses
   + write records and compare with original Zotero xml files
 - input routine should be able to identify if the XML file is EndNote format or Zotero format
-- (additional reason to split the original DTD into 2 DTDs: writing to the same XML format as the input file is easier)  
+- (additional reason to split the original DTD into 2 DTDs: writing to the same XML format as the input file is easier)
+- Zotero has no custom fields (?)  
 
 Dependency bloat?
 =================
  https://github.com/ASSERT-KTH/depclean
+ 
+ Error Prone and Null Away plugins
+ =================================
+ https://errorprone.info/docs/installation
+ 
+ Records and parameterized tests: https://foojay.io/today/records-for-cleaner-and-more-expressive-parameterized-tests-in-junit-5/
 
 Structure of EndNote files
 ==========================

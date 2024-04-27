@@ -8,9 +8,14 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
@@ -32,12 +37,14 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @TestConfiguration
 class XmlZoteroTest {
+	private IOService ioService = new IOService();
+	String wssessionId = "";
 
 	private record TestFile(File xmlInputFile, File textInputFile, int noOfRecords) {};
 	private record ParsedAndConverted(List<ZoteroXmlRecord> xmlRecords, List<Publication> publications) {};
 	
 	@Test
-	void testReadWithPullParser() throws FileNotFoundException, JAXBException, XMLStreamException {
+	void testReadWithPullParser() throws JAXBException, XMLStreamException, IOException {
 		String prefix = System.getProperty("user.home") + "/dedupendnote_files/xml/zotero/";
 		// First file is a subset of BIG_SET: first author >= almadi and first author <= andriulli, order by author = 465 records. XML is pretty-printed
 		TestFile shortTest = new TestFile(new File(prefix + "20240209_Upd_All_109_pp.xml"), new File(prefix + "20240209_Upd_All_109.ris"), 109);
@@ -45,15 +52,41 @@ class XmlZoteroTest {
 		ParsedAndConverted results = readWithPullParser(shortTest.xmlInputFile);
 		assertThat(results.publications).hasSize(shortTest.noOfRecords);
 
+		// testing marshalling 1 record
 		ByteArrayOutputStream bos = new ByteArrayOutputStream();
 		
 		ZoteroXmlRecord xmlRecord = results.xmlRecords.get(0);
 		JAXBContext jaxbContext = JAXBContext.newInstance(Xml.class);
 		jaxbContext.createMarshaller().marshal(xmlRecord, bos);
 		
-		log.info("Written back as: {}", new String(bos.toByteArray()));
+		String firstRecordAsXml = new String(bos.toByteArray());
+		log.info("Written back as:\n{}", firstRecordAsXml);
 
-		// TODO: parse the textInputFiles and compare with the parses of the xmlInputFiles
+		Path expectedFirstRecordPath = Paths.get(prefix + "20240209_Upd_All_109_written_back_rec_1.xml");
+		List<String> allLines = Files.readAllLines(expectedFirstRecordPath);
+		String expectedFirstRecord = allLines.stream().collect(Collectors.joining(""));
+		
+		assertThat(firstRecordAsXml).isEqualTo(expectedFirstRecord);
+
+		// parse the textInputFiles and compare with the parses of the xmlInputFiles
+		List<Publication> publicationsFromText = ioService.readPublications(shortTest.textInputFile.toString());
+		
+		assertThat(publicationsFromText).hasSize(shortTest.noOfRecords);
+		
+		int startRecNo = 0;
+		/*
+		 * The Zotero XML format misses some fields which appear in the RIS format,
+		 * a.o. T3 / Titles/TertiaryTitle 
+		 */
+		List<Integer> publicationsToSkip = List.of(5, 14, 49, 52);
+
+		for (int i = startRecNo; i < shortTest.noOfRecords; i++) {
+			if (publicationsToSkip.contains(i)) continue;
+			Publication risPub = publicationsFromText.get(i);
+			Publication xmlPub = results.publications.get(i);
+			xmlPub.setId(Integer.valueOf(i+1).toString());
+			assertThat(xmlPub).as("Comparing publication " + i).usingRecursiveComparison().isEqualTo(risPub);
+		}
 	}
 	
 	/*
@@ -136,22 +169,24 @@ class XmlZoteroTest {
 			pub.addTitles(xmlRecord.getOrigPub());
 		}
 		// in RIS: ST before TI
-		if (xmlRecord.getTitles().getShortTitle() != null) pub.addTitles(xmlRecord.getTitles().getShortTitle());
-		if (xmlRecord.getTitles().getTitle() != null) pub.addTitles(xmlRecord.getTitles().getTitle());
 		
 		if (xmlRecord.getTitles() != null) {
-			if (xmlRecord.getTitles().getSecondaryTitle() != null) pub.addJournals(xmlRecord.getTitles().getSecondaryTitle());
-			if (xmlRecord.getTitles().getAltTitle() != null) pub.addJournals(xmlRecord.getTitles().getAltTitle());
+			if (xmlRecord.getTitles().getShortTitle() != null) {
+				pub.addTitles(xmlRecord.getTitles().getShortTitle());
+			}
+			if (xmlRecord.getTitles().getTitle() != null) {
+				pub.addTitles(xmlRecord.getTitles().getTitle());
+			}
+			if (xmlRecord.getTitles().getSecondaryTitle() != null) {
+				pub.addJournals(xmlRecord.getTitles().getSecondaryTitle());
+			}
+			if (xmlRecord.getTitles().getAltTitle() != null) {
+				pub.addJournals(xmlRecord.getTitles().getAltTitle());
+			}
 		}
 		
-//		if (xmlRecord.getAltPeriodical() != null) {
-//			// if (xmlRecord.getAltPeriodical().getFullTitle() != null) pub.addJournals(xmlRecord.getAltPeriodical().getFullTitle().getStyle().get(0).getvalue());
-//			// if (xmlRecord.getAltPeriodical().getAbbr1() != null) pub.addJournals(xmlRecord.getAltPeriodical().getAbbr1().getStyle().get(0).getvalue());
-//		}
-		
+		//?? why test getPeriodical before getTitles?
 		if (xmlRecord.getPeriodical() != null) {
-			// if (xmlRecord.getPeriodical().getFullTitle() != null) pub.addJournals(xmlRecord.getPeriodical().getFullTitle().getStyle().get(0).getvalue());
-			// if (xmlRecord.getPeriodical().getAbbr1() != null) pub.addJournals(xmlRecord.getPeriodical().getAbbr1().getStyle().get(0).getvalue());
 			if (xmlRecord.getTitles() != null && xmlRecord.getTitles().getTertiaryTitle() != null) {
 				// conferencePattern
 				String j = xmlRecord.getTitles().getTertiaryTitle();
@@ -160,21 +195,30 @@ class XmlZoteroTest {
 					pub.addTitles(j);
 				}
 			}
+			if (xmlRecord.getPeriodical().getAbbr1() != null) {
+				pub.addJournals(xmlRecord.getPeriodical().getAbbr1());
+			}
 		}
 
 		if (xmlRecord.getCustom7() != null) {
 			pub.parsePages(xmlRecord.getCustom7());
 		}
 
-		if (xmlRecord.getPages() != null) pub.parsePages(xmlRecord.getPages().getvalue());
+		if (xmlRecord.getPages() != null) {
+			pub.parsePages(xmlRecord.getPages().getvalue());
+		}
 		
 		if (xmlRecord.getDates() != null && xmlRecord.getDates().getYear() != null) {
 			pub.setPublicationYear(Integer.valueOf(xmlRecord.getDates().getYear().getvalue()));
 		}
 
-		if (xmlRecord.getIsbn() != null) pub.addIssns(xmlRecord.getIsbn());
+		if (xmlRecord.getIsbn() != null) {
+			pub.addIssns(xmlRecord.getIsbn());
+		}
 		
-		if (xmlRecord.getElectronicResourceNum() != null) pub.addDois(xmlRecord.getElectronicResourceNum());
+		if (xmlRecord.getElectronicResourceNum() != null) {
+			pub.addDois(xmlRecord.getElectronicResourceNum());
+		}
 
 		pub.addReversedTitles();
 		pub.fillAllAuthors();

@@ -562,7 +562,7 @@ public class Publication {
 		author = normalizeToBasicLatin(author);
 		author = author.replaceAll("-", " ");
 
-		String[] parts = author.split("\\s*,\\s+"); // see testfile Non_Latin_input.txt for " , "
+		String[] parts = author.split("\\s*,\\s*"); // see testfile Non_Latin_input.txt for " , "
 		if (parts.length < 2) {
 			log.debug("Author {} cannot be split", author);
 			this.authors.add(author);
@@ -570,7 +570,9 @@ public class Publication {
 		}
 		String lastName = parts[0];
 		String firstNames = parts[1];
-
+		if (parts.length == 3) {
+			firstNames = (firstNames + " " + parts[2]).strip();
+		}
 		/*
 		 * Normalize lastName: - normal capitalization Some databases (a.o. Web of
 		 * Science) can have complete author names in capitals. EndNote X9 shows them

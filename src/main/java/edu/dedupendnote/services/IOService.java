@@ -36,11 +36,11 @@ public class IOService {
 			.compile("((^\\d)|(.*(\\d{4}|Annual|Conference|Congress|Meeting|Society|Symposium))).*");
 
 	/** Pattern to identify clinical trials phase (1 ..4, i .. iv) */
-	private static final Pattern phasePattern = Pattern.compile(".*phase\\s[\\di].*", Pattern.CASE_INSENSITIVE);
+	public static final Pattern phasePattern = Pattern.compile(".*phase\\s[\\di].*", Pattern.CASE_INSENSITIVE);
 
 	// Don't use "Response" as last word, e.g: Endothelial cell injury in
 	// cardiovascular surgery: the procoagulant response
-	private static final Pattern replyPattern = Pattern.compile("(.*\\breply\\b.*|.*author(.+)respon.*|^response$)");
+	public static final Pattern replyPattern = Pattern.compile("(.*\\breply\\b.*|.*author(.+)respon.*|^response$)");
 
 	/*
 	 * If field content starts with a comma (",") EndNote exports "[Fieldname]  -,",
@@ -110,6 +110,9 @@ public class IOService {
 					case "DO": // DOI
 						publication.addDois(fieldContent);
 						previousFieldName = fieldName;
+						break;
+					case "EP": // EndPage in Zotero RIS format (this is the full number (e.g. 115 with SP 107, not: 15)
+						publication.setPageEnd(fieldContent);
 						break;
 					case "ER":
 						if (publication.getId() == null) {
