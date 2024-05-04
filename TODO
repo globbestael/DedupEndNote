@@ -12,6 +12,15 @@ XML parsing
 - (additional reason to split the original DTD into 2 DTDs: writing to the same XML format as the input file is easier)
 - Zotero has no custom fields (?)  
 
+Rayyan files
+============
+[HOME]\dedupendnote_files\problems\articles_rayyan.ris has 9572 records from Rayyan
+DedupEndNote rejects the file because all records are without Publication Year
+- Y1 contains the Publication Year
+- TY can have abnormal content "C" for Conference Type?
+- Several fields have runs of space characters in them, sometimes more than once ("        "), fields TI, T2, KW, AB, ...  
+- DO can have extraneous content "DO  - 10.1038/s41380-021-01421-6     EA JAN 2022"
+
 Dependency bloat?
 =================
  https://github.com/ASSERT-KTH/depclean
