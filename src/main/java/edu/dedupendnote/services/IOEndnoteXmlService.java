@@ -29,7 +29,25 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
-public class IOEndnoteXmlService implements IoService {
+public class IOEndnoteXmlService extends IoXmlService {
+
+	@Override
+	public List<Publication> readPublications(String inputFileName) {
+		ParsedAndConvertedEndnote parsedAndConvertedEndnote = readEndnoteXmlWithPullParser(inputFileName);
+		return parsedAndConvertedEndnote.publications();
+	}
+
+	@Override
+	public int writeDeduplicatedRecords(List<Publication> publications, String inputFileName, String outputFileName) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public int writeMarkedRecords(List<Publication> publications, String inputFileName, String outputFileName) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
 
 	/*
 	 * JAXB User Guide: 4.4. Dealing with large documents
@@ -57,7 +75,6 @@ public class IOEndnoteXmlService implements IoService {
 			Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
 			XMLInputFactory xif = XMLInputFactory.newInstance();
 			XMLStreamReader xsr = xif.createXMLStreamReader(new FileReader(inputFileName));
-	
 	
 			xsr.nextTag();
 			xsr.require(START_ELEMENT, null, "xml");
@@ -89,48 +106,6 @@ public class IOEndnoteXmlService implements IoService {
 		return new ParsedAndConvertedEndnote(xmlRecords, publications);
 	}
 	
-//	public ParsedAndConvertedZotero readZoteroXmlWithPullParser(File inputFile) {
-//		List<ZoteroXmlRecord> xmlRecords = new ArrayList<>();
-//		List<Publication> publications = new ArrayList<>();
-//		int i = 0;
-//
-//		try {
-//			JAXBContext jaxbContext = JAXBContext.newInstance(edu.dedupendnote.domain.xml.zotero.Xml.class);
-//			Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
-//			XMLInputFactory xif = XMLInputFactory.newInstance();
-//			XMLStreamReader xsr = xif.createXMLStreamReader(new FileReader(inputFile));
-//	
-//			xsr.nextTag();
-//			xsr.require(START_ELEMENT, null, "xml");
-//			xsr.nextTag();
-//			xsr.require(START_ELEMENT, null, "records");
-//			xsr.nextTag(); // Should now be at the first EndNoteXmlRecord
-//			
-//			while (xsr.getEventType() == START_ELEMENT) {
-//				xsr.require(START_ELEMENT, null, "record");
-//				ZoteroXmlRecord xmlRecord = (ZoteroXmlRecord) unmarshaller.unmarshal(xsr);
-//				i++;
-//				xmlRecord.setRecNumber(Integer.valueOf(i).toString());
-//				xmlRecords.add(xmlRecord);
-//				log.debug("Record {} with recNo {}", i, xmlRecord.getRecNumber());
-//				if (xsr.getEventType() == CHARACTERS) {
-//					xsr.next(); // skip the whitespace between EndNoteXmlRecords
-//				}
-//				
-//				convertZoteroXmlToPublication(xmlRecord, publications);
-//				if (xmlRecord.getTitles().getTitle() != null) {
-//					log.debug("Record: {}", xmlRecord.getTitles().getTitle());
-//				} else {
-//					log.debug("Record has no Title");
-//				}
-//			}
-//		} catch (JAXBException | FileNotFoundException | XMLStreamException e) {
-//			e.printStackTrace();
-//		} 
-//		log.info("Finished with {} records", i);
-//		return new ParsedAndConvertedZotero(xmlRecords, publications);
-//	}
-
 	private void convertEndnoteXmlToPublication(EndnoteXmlRecord xmlRecord, List<Publication> xmlPublications) {
 		Publication pub = new Publication();
 		xmlPublications.add(pub);
@@ -216,168 +191,8 @@ public class IOEndnoteXmlService implements IoService {
 		pub.fillAllAuthors();
 	}
 
-//	private void convertZoteroXmlToPublication(ZoteroXmlRecord xmlRecord, List<Publication> xmlPublications) {
-//		Publication pub = new Publication();
-//		xmlPublications.add(pub);
-//		
-//		pub.setId(xmlRecord.getRecNumber());
-//		pub.setReferenceType(refTypes.get(xmlRecord.getRefType().getName()));
-//
-//		if (xmlRecord.getContributors() != null) {
-//			if (xmlRecord.getContributors().getAuthors() != null) {
-//				for (edu.dedupendnote.domain.xml.zotero.Author author : xmlRecord.getContributors().getAuthors().getAuthor()) {
-//					pub.addAuthors(author.getvalue());
-//				}
-//			}
-//		}
-//		
-//		if (xmlRecord.getOrigPub() != null) {
-//			pub.addTitles(xmlRecord.getOrigPub());
-//		}
-//		// in RIS: ST before TI
-//		
-//		if (xmlRecord.getTitles() != null) {
-//			if (xmlRecord.getTitles().getShortTitle() != null) {
-//				pub.addTitles(xmlRecord.getTitles().getShortTitle());
-//			}
-//			if (xmlRecord.getTitles().getTitle() != null) {
-//				pub.addTitles(xmlRecord.getTitles().getTitle());
-//			}
-//			if (xmlRecord.getTitles().getSecondaryTitle() != null) {
-//				pub.addJournals(xmlRecord.getTitles().getSecondaryTitle());
-//			}
-//			if (xmlRecord.getTitles().getAltTitle() != null) {
-//				pub.addJournals(xmlRecord.getTitles().getAltTitle());
-//			}
-//		}
-//		
-//		//?? why test getPeriodical before getTitles?
-//		if (xmlRecord.getPeriodical() != null) {
-//			if (xmlRecord.getTitles() != null && xmlRecord.getTitles().getTertiaryTitle() != null) {
-//				// conferencePattern
-//				String j = xmlRecord.getTitles().getTertiaryTitle();
-//				if (!IOEndnoteRisService.conferencePattern.matcher(j).matches()) {
-//					pub.addJournals(j);
-//					pub.addTitles(j);
-//				}
-//			}
-//			if (xmlRecord.getPeriodical().getAbbr1() != null) {
-//				pub.addJournals(xmlRecord.getPeriodical().getAbbr1());
-//			}
-//		}
-//
-//		if (xmlRecord.getCustom7() != null) {
-//			pub.parsePages(xmlRecord.getCustom7());
-//		}
-//
-//		if (xmlRecord.getPages() != null) {
-//			pub.parsePages(xmlRecord.getPages().getvalue());
-//		}
-//		
-//		if (xmlRecord.getDates() != null && xmlRecord.getDates().getYear() != null) {
-//			pub.setPublicationYear(Integer.valueOf(xmlRecord.getDates().getYear().getvalue()));
-//		}
-//
-//		if (xmlRecord.getIsbn() != null) {
-//			pub.addIssns(xmlRecord.getIsbn());
-//		}
-//		
-//		if (xmlRecord.getElectronicResourceNum() != null) {
-//			pub.addDois(xmlRecord.getElectronicResourceNum());
-//		}
-//
-//		pub.addReversedTitles();
-//		pub.fillAllAuthors();
-//	}
-
 	private String getAllText(List<Style> style) {
 		String line = style.stream().map(Style::getvalue).collect(Collectors.joining(" "));
 		return IORisService.unusualWhiteSpacePattern.matcher(line).replaceAll(" ");
 	}
-
-	// TODO: Expand to all refTypes?
-	Map<String,String> refTypes = Map.of(
-//			"Aggregated Database", "",
-//			"Ancient Text", "",
-//			"Artwork", "",
-//			"Audiovisual Material", "",
-//			"Bill", "",
-//			"Blog", "",
-			"Book Section", "CHAP",
-			"Book", "BOOK",
-//			"Case", "",
-//			"Catalog", "",
-//			"Chart or Table", "",
-//			"Classical Work", "",
-//			"Computer Program", "",
-//			"Conference Paper", "",
-			"Conference Proceedings", "CONF",
-//			"Dataset", "",
-//			"Dictionary", "",
-//			"Discussion Forum", "",
-//			"Edited Book", "",
-//			"Electronic Article", "",
-//			"Electronic Book Section", "",
-//			"Electronic Book", "",
-//			"Encyclopedia", "",
-//			"Equation", "",
-//			"Figure", "",
-//			"Film or Broadcast", "",
-			"Generic", "GEN",
-//			"Government Document", "",
-//			"Grant">, "",
-//			"Hearing", "",
-//			"Interview", "",
-			"Journal Article", "JOUR",
-//			"Legal Rule or Regulation", "",
-//			"Magazine Article", "",
-//			"Manuscript", "",
-//			"Map", "",
-//			"Multimedia Application", "",
-//			"Music", "",
-//			"Newspaper Article", "",
-//			"Online Database", "",
-//			"Online Multimedia", "",
-//			"Pamphlet", "",
-//			"Patent", "",
-//			"Personal Communication", "",
-//			"Podcast", "",
-//			"Press Release", "",
-//			"Report", "",
-			"Serial", "SER",
-//			"Social Media", "",
-//			"Standard", "",
-//			"Statute", "",
-//			"Television Episode", "",
-//			"Thesis", "",
-//			"Unpublished Work", "",
-//			"Unused 1", "",
-//			"Unused 2", "",
-//			"Unused 3", "",
-//			"Web Page"
-			"ZZZDUMMY", ""
-			);
-
-	@Override
-	public List<Publication> readPublications(String inputFileName) {
-		ParsedAndConvertedEndnote parsedAndConvertedEndnote = readEndnoteXmlWithPullParser(inputFileName);
-		return parsedAndConvertedEndnote.publications();
-	}
-
-	@Override
-	public int writeDeduplicatedRecords(List<Publication> publications, String inputFileName, String outputFileName) {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
-	@Override
-	public int writeMarkedRecords(List<Publication> publications, String inputFileName, String outputFileName) {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
-//	public  List<Publication> readZoteroXmlPublications(String inputFileName) {
-//		ParsedAndConvertedZotero parsedAndConvertedZotero = readZoteroXmlWithPullParser(new File(inputFileName));
-//		return parsedAndConvertedZotero.publications();
-//	}
 }
