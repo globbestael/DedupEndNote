@@ -55,7 +55,7 @@ class ValidationTests {
 
 	private DeduplicationService deduplicationService = new DeduplicationService();
 
-	private IOService ioService = new IOService();
+	private IORisService ioService = new IORisService();
 
 	private RecordDBService recordDBService = new RecordDBService();
 

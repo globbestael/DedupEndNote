@@ -21,8 +21,9 @@ import edu.dedupendnote.domain.Publication;
 import edu.dedupendnote.domain.XmlTestFile;
 import edu.dedupendnote.domain.xml.zotero.Xml;
 import edu.dedupendnote.domain.xml.zotero.ZoteroXmlRecord;
-import edu.dedupendnote.services.IOService;
-import edu.dedupendnote.services.IOXmlService;
+import edu.dedupendnote.services.IORisService;
+import edu.dedupendnote.services.IOZoteroXmlService;
+import edu.dedupendnote.services.IoService;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
 import lombok.extern.slf4j.Slf4j;
@@ -30,16 +31,16 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @TestConfiguration
 class XmlZoteroTest {
-	private IOService ioService = new IOService();
-	private IOXmlService ioXmlService = new IOXmlService();
+	private IoService ioService = new IORisService();
+	private IOZoteroXmlService ioZoteroXmlService = new IOZoteroXmlService();
 
 	@Test
 	void testReadWithPullParser() throws JAXBException, XMLStreamException, IOException {
 		String prefix = System.getProperty("user.home") + "/dedupendnote_files/xml/zotero/";
 		// First file is a subset of BIG_SET: first author >= almadi and first author <= andriulli, order by author = 465 records. XML is pretty-printed
-		XmlTestFile shortTest = new XmlTestFile(new File(prefix + "20240209_Upd_All_109_pp.xml"), new File(prefix + "20240209_Upd_All_109.ris"), 109);
+		XmlTestFile shortTest = new XmlTestFile(prefix + "20240209_Upd_All_109_pp.xml", prefix + "20240209_Upd_All_109.ris", 109);
 		
-		ParsedAndConvertedZotero results = ioXmlService.readZoteroXmlWithPullParser(shortTest.xmlInputFile());
+		ParsedAndConvertedZotero results = ioZoteroXmlService.readZoteroXmlWithPullParser(shortTest.xmlInputFileName());
 		assertThat(results.publications()).hasSize(shortTest.noOfRecords());
 
 		// testing marshalling 1 record
@@ -59,7 +60,7 @@ class XmlZoteroTest {
 		assertThat(firstRecordAsXml).isEqualTo(expectedFirstRecord);
 
 		// parse the textInputFiles and compare with the parses of the xmlInputFiles
-		List<Publication> publicationsFromText = ioService.readPublications(shortTest.textInputFile().toString());
+		List<Publication> publicationsFromText = ioService.readPublications(shortTest.textInputFileName());
 		
 		assertThat(publicationsFromText).hasSize(shortTest.noOfRecords());
 		

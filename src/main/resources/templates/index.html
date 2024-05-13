@@ -216,7 +216,7 @@
 				</nav>
 			</div>
 			<div class="col-9" style="height: 100vh; position: relative;">
-				<h1 id="start">DedupEndNote (version 1.0.1 20240114)</h1>
+				<h1 id="start">DedupEndNote (version 1.1 (2024-05-20)</h1>
 				<div class="row col-11 border border-primary rounded alert alert-secondary" id="step1">
 					<div class="col-3">
 						<h3>1. INPUT FILE</h3>
@@ -224,7 +224,7 @@
 					<div class="col-9">
 						<form class="form-horizontal" id="upload_form" method="post" enctype="multipart/form-data" th:action="@{|/uploadFile|}">
 							<div class="form-group">
-								<label for="oldFile">Select the EndNote RIS file to deduplicate<br/>(use <a href="/twofiles">/twofiles</a> to deduplicate an new set of records against an old set)</label><br/>
+								<label for="oldFile">Select the EndNote or Zotero RIS or XML file to deduplicate<br/>(use <a href="/twofiles">/twofiles</a> to deduplicate an new set of records against an old set)</label><br/>
 								<input type="file" id="fileUpload1" name="file"/>
 							</div>
 						</form>
@@ -882,7 +882,7 @@
 				<h3 id="limitations">Limitations</h3>
 				<ul>
 					<li>Input file size: The maximum size of the input file is limited to 150MB.</li>
-					<li>Input file format: The program only handles files in RIS format, not in XML or CSV format.</li>
+					<li>Input file format: The program only handles files in EndNote RIS, Zotero RIS, EndNote XML and Zotero XML format, not in CSV format.</li>
 					<li>Input file encoding: The program assumes that the input file is encoded as UTF-8.</li>
 					<li>If authors AND (all) titles AND (all) journal names for a record use a non-Latin script, results for this record may be inaccurate.</li>
 					<li>(when deduplicating one file:) The input file must be an export from ONE EndNote database: the ID fields are used internally for identifying the records, so they have to be unique.
@@ -911,11 +911,12 @@
 
 				<h3 id="citing">How to cite</h3>
 				<div>If you use this software, please cite it as:<br>
-				Lobbestael, G. (2023). DedupEndNote (Version 1.0.0) [Computer software]. https://github.com/globbestael/DedupEndNote</div> 
+				Lobbestael, G. (2024). DedupEndNote (Version 1.1) [Computer software]. https://github.com/globbestael/DedupEndNote</div> 
 
 				<h3 id="changes">Latest changes</h3>
 				<ul>
-					<li>2024-01-14: 1.0.1: UG: oesn't handle author last name starting with ahyphen
+					<li>2024-05-20: 1.1: Input files can be EndNote or Zotero XML files</li>
+					<li>2024-01-14: 1.0.1: BUG: Program crashed with authors with a last name starting with a hyphen</li>
 					<li>2023-09-02: ISBN-10 and ISBN-13 are compared correctly: 9024274214 = 9789024274215</li>
 					<li>2023-09-02: BUG: Publication years of form "1-1-1989" (instead of "1989") are parsed as years</li>
 					<li>2023-08-21: If a title with ": " has at least 50 characters before the ": ", that first part is also used as a title variant</li>

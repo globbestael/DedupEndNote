@@ -1,5 +1,8 @@
 package edu.dedupendnote.services;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -15,27 +18,25 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.text.similarity.JaroWinklerSimilarity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.util.StringUtils;
 
 import edu.dedupendnote.domain.Publication;
 import edu.dedupendnote.domain.StompMessage;
+import edu.dedupendnote.enums.FileType;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-// @Service
-//@SessionScope
+// Don't use @Service / create a singleton. JaroWinklerSimilarity jws is spceific for every file comparison 
 public class DeduplicationService {
 
 	public static class DefaultAuthorsComparator implements AuthorsComparator {
 
-		public static final Double AUTHOR_SIMILARITY_NO_REPLY = 0.67;
-
-		public static final Double AUTHOR_SIMILARITY_REPLY_INSUFFICIENT_STARTPAGES_AND_DOIS = 0.80;
-
-		public static final Double AUTHOR_SIMILARITY_REPLY_SUFFICIENT_STARTPAGES_OR_DOIS = 0.75;
-
 		private static JaroWinklerSimilarity jws = new JaroWinklerSimilarity();
-
 		private Double similarity = 0.0;
+
+		public static final Double AUTHOR_SIMILARITY_NO_REPLY = 0.67;
+		public static final Double AUTHOR_SIMILARITY_REPLY_INSUFFICIENT_STARTPAGES_AND_DOIS = 0.80;
+		public static final Double AUTHOR_SIMILARITY_REPLY_SUFFICIENT_STARTPAGES_OR_DOIS = 0.75;
 
 		/*
 		 * See AuthorVariantsExperimentsTest for possible enhancements.
@@ -89,17 +90,14 @@ public class DeduplicationService {
 	}
 
 	/*
-	 * Thresholds for Jaro-Winkler Similarity The thresholds for AUTHOR are part of
-	 * the AuthorComparator implementations
+	 * Thresholds for Jaro-Winkler Similarity.
+	 * 
+	 * The thresholds for AUTHOR are part of the AuthorComparator implementations.
 	 */
 	public static final Double JOURNAL_SIMILARITY_NO_REPLY = 0.90;
-
 	public static final Double JOURNAL_SIMILARITY_REPLY = 0.93;
-
 	public static final Double TITLE_SIMILARITY_INSUFFICIENT_STARTPAGES_AND_DOIS = 0.94;
-
 	public static final Double TITLE_SIMILARITY_PHASE = 0.96;
-
 	public static final Double TITLE_SIMILARITY_SUFFICIENT_STARTPAGES_OR_DOIS = 0.90;
 
 	protected AuthorsComparator authorsComparator;
@@ -108,7 +106,8 @@ public class DeduplicationService {
 	private static Pattern cochraneIdentifierPattern = Pattern.compile("^.*10.1002/14651858.([a-z][a-z]\\d+).*",
 			Pattern.CASE_INSENSITIVE);
 
-	private IOService ioService;
+	private UtilitiesService utilities = new UtilitiesService();
+	private IoService ioService;
 
 	private JaroWinklerSimilarity jws = new JaroWinklerSimilarity();
 
@@ -164,23 +163,20 @@ public class DeduplicationService {
 	 *  If the label starts with "-", it is a duplicate from a record from the OLD input file.
 	 */
 	// @formatter:on
-//	@Autowired
+
 	private SimpMessagingTemplate simpMessagingTemplate;
 
 	public DeduplicationService() {
 		this.authorsComparator = new DefaultAuthorsComparator();
-		this.ioService = new IOService();
 	}
 
 	public DeduplicationService(SimpMessagingTemplate simpMessagingTemplate) {
 		this.authorsComparator = new DefaultAuthorsComparator();
-		this.ioService = new IOService();
 		this.simpMessagingTemplate = simpMessagingTemplate;
 	}
 
 	public DeduplicationService(AuthorsComparator authorsComparator) {
 		this.authorsComparator = authorsComparator;
-		this.ioService = new IOService();
 	}
 
 	public boolean compareIssns(Publication r1, Publication r2) {
@@ -471,6 +467,19 @@ public class DeduplicationService {
 
 	public String deduplicateOneFile(String inputFileName, String outputFileName, boolean markMode, String wssessionId) {
 		wsMessage(wssessionId, "Reading file " + inputFileName);
+		FileType fileType = getFileType(inputFileName);
+		if (fileType.equals(FileType.UNKNOWNXML)) {
+			String s = "ERROR: With XML files only EndNote and Zotero XML files are accepted.";
+			wsMessage(wssessionId, s);
+			return s;
+		}
+
+		ioService = switch (fileType) {
+			case RIS ->  new IORisService();
+			case ENDNOTEXML -> new IOEndnoteXmlService();
+			case ZOTEROXML -> new IOZoteroXmlService();
+			case UNKNOWNXML -> throw new RuntimeException("XML file but not EndNote or Zotero format");
+		};
 		List<Publication> publications = ioService.readPublications(inputFileName);
 
 		String s = doSanityChecks(publications, inputFileName);
@@ -801,4 +810,36 @@ public class DeduplicationService {
 		}
 	}
 
+	/*
+	 * FIXME: Should ".enl" files be checked here?
+	 */
+	private FileType getFileType(String inputFileName) {
+	    char[] charArray = new char[500];
+		String extension = StringUtils.getFilenameExtension(inputFileName);
+		if ("xml".equalsIgnoreCase(extension)) {
+			boolean hasBom = utilities.detectBom(inputFileName);
+			try (BufferedReader br = new BufferedReader(new FileReader(inputFileName))) {
+				if (hasBom) {
+					br.skip(1);
+				}
+				br.read(charArray, 0, 499);
+				String firstString = new String(charArray);
+				if (firstString.contains("<source-app name=\"EndNote\"")) {
+					return FileType.ENDNOTEXML;
+				} else if (firstString.contains("<source-app name=\"Zotero\"")) {
+					return FileType.ZOTEROXML;
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			} 
+			return FileType.UNKNOWNXML;
+		} else {
+			/*
+			 * All files with an extension different from ".xml" are taken as RIS files!
+			 * 
+			 * TODO: Should e.g. Rayyan RIS files be recognised (and rejected)?
+			 */
+			return FileType.RIS;
+		}
+	}
 }

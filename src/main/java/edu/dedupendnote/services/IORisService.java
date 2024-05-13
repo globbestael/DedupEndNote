@@ -2,6 +2,7 @@ package edu.dedupendnote.services;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -16,14 +17,16 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import edu.dedupendnote.domain.Publication;
 import edu.dedupendnote.domain.PublicationDB;
+import edu.dedupendnote.enums.FileType;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
-public class IOService {
+public class IORisService implements IoService {
 	private UtilitiesService utilities = new UtilitiesService();
 
 	/*
@@ -63,6 +66,7 @@ public class IOService {
 	 */
 	public static final Pattern unusualWhiteSpacePattern = Pattern.compile("[\\p{Zs}\\p{Zl}\\p{Zp}\\u0009\\u000A\\u000B\\u000C\\u000D&&[^ ]]");
 	
+	@Override
 	public List<Publication> readPublications(String inputFileName) {
 		List<Publication> publications = new ArrayList<>();
 		String fieldContent = null;
@@ -252,6 +256,7 @@ public class IOService {
 	 * Records are read into a TreeMap, with continuation lines added.
 	 * writeRecords(...) does the replacements, and writes to the output file.
 	 */
+	@Override
 	public int writeDeduplicatedRecords(List<Publication> publications, String inputFileName, String outputFileName) {
 		log.debug("Start writing to file {}", outputFileName);
 		List<Publication> recordsToKeep = publications.stream().filter(Publication::getKeptRecord).toList();
@@ -328,6 +333,7 @@ public class IOService {
 		return numberWritten;
 	}
 
+	@Override
 	public int writeMarkedRecords(List<Publication> publications, String inputFileName, String outputFileName) {
 		log.debug("Start writing to file {}", outputFileName);
 		List<Publication> recordsToKeep = publications.stream().filter(Publication::getKeptRecord).toList();
@@ -608,4 +614,5 @@ public class IOService {
 		}
 		log.debug("Finished writing to file. # records: {}", numberWritten);
 	}
+
 }

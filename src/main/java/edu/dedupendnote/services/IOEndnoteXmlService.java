@@ -3,7 +3,6 @@ package edu.dedupendnote.services;
 import static javax.xml.stream.XMLStreamConstants.CHARACTERS;
 import static javax.xml.stream.XMLStreamConstants.START_ELEMENT;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.util.ArrayList;
@@ -18,13 +17,11 @@ import javax.xml.stream.XMLStreamReader;
 import org.springframework.stereotype.Service;
 
 import edu.dedupendnote.domain.ParsedAndConvertedEndnote;
-import edu.dedupendnote.domain.ParsedAndConvertedZotero;
 import edu.dedupendnote.domain.Publication;
 import edu.dedupendnote.domain.xml.endnote.Author;
 import edu.dedupendnote.domain.xml.endnote.EndnoteXmlRecord;
 import edu.dedupendnote.domain.xml.endnote.Style;
 import edu.dedupendnote.domain.xml.endnote.Xml;
-import edu.dedupendnote.domain.xml.zotero.ZoteroXmlRecord;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Unmarshaller;
@@ -32,7 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
-public class IOXmlService {
+public class IOEndnoteXmlService implements IoService {
 
 	/*
 	 * JAXB User Guide: 4.4. Dealing with large documents
@@ -50,80 +47,89 @@ public class IOXmlService {
 	 * The first 2 elements are skipped. By using nextTag() whitespace is skipped automatically.
 	 * In the while loop however unmarshal(...) does not skip whiteSpace.
 	 */
-	public ParsedAndConvertedEndnote readEndnoteXmlWithPullParser(File inputFile) throws JAXBException, FileNotFoundException, XMLStreamException {
-		JAXBContext jaxbContext = JAXBContext.newInstance(Xml.class);
-		Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
-		XMLInputFactory xif = XMLInputFactory.newInstance();
-		XMLStreamReader xsr = xif.createXMLStreamReader(new FileReader(inputFile));
-
-		int i = 0;
+	public ParsedAndConvertedEndnote readEndnoteXmlWithPullParser(String inputFileName) {
 		List<EndnoteXmlRecord> xmlRecords = new ArrayList<>();
 		List<Publication> publications = new ArrayList<>();
+		int i = 0;
 
-		xsr.nextTag();
-		xsr.require(START_ELEMENT, null, "xml");
-		xsr.nextTag();
-		xsr.require(START_ELEMENT, null, "records");
-		xsr.nextTag(); // Should now be at the first EndNoteXmlRecord
-		
-		while (xsr.getEventType() == START_ELEMENT) {
-			xsr.require(START_ELEMENT, null, "record");
-			EndnoteXmlRecord xmlRecord = (EndnoteXmlRecord) unmarshaller.unmarshal(xsr);
-			i++;
-			xmlRecords.add(xmlRecord);
-			log.debug("Record {} with recNo {}", i, xmlRecord.getRecNumber());
-			if (xsr.getEventType() == CHARACTERS) {
-				xsr.next(); // skip the whitespace between EndNoteXmlRecords
-			}
+		try {
+			JAXBContext jaxbContext = JAXBContext.newInstance(Xml.class);
+			Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
+			XMLInputFactory xif = XMLInputFactory.newInstance();
+			XMLStreamReader xsr = xif.createXMLStreamReader(new FileReader(inputFileName));
+	
+	
+			xsr.nextTag();
+			xsr.require(START_ELEMENT, null, "xml");
+			xsr.nextTag();
+			xsr.require(START_ELEMENT, null, "records");
+			xsr.nextTag(); // Should now be at the first EndNoteXmlRecord
 			
-			convertEndnoteXmlToPublication(xmlRecord, publications);
-			if (xmlRecord.getTitles().getTitle() != null) {
-				log.debug("Record: {}", getAllText(xmlRecord.getTitles().getTitle().getStyle()));
-			} else {
-				log.debug("Record has no Title");
+			while (xsr.getEventType() == START_ELEMENT) {
+				xsr.require(START_ELEMENT, null, "record");
+				EndnoteXmlRecord xmlRecord = (EndnoteXmlRecord) unmarshaller.unmarshal(xsr);
+				i++;
+				xmlRecords.add(xmlRecord);
+				log.debug("Record {} with recNo {}", i, xmlRecord.getRecNumber());
+				if (xsr.getEventType() == CHARACTERS) {
+					xsr.next(); // skip the whitespace between EndNoteXmlRecords
+				}
+				
+				convertEndnoteXmlToPublication(xmlRecord, publications);
+				if (xmlRecord.getTitles().getTitle() != null) {
+					log.debug("Record: {}", getAllText(xmlRecord.getTitles().getTitle().getStyle()));
+				} else {
+					log.debug("Record has no Title");
+				}
 			}
-		}
+		} catch (JAXBException | FileNotFoundException | XMLStreamException e) {
+			e.printStackTrace();
+		} 
 		log.info("Finished with {} records", i);
 		return new ParsedAndConvertedEndnote(xmlRecords, publications);
 	}
 	
-	public ParsedAndConvertedZotero readZoteroXmlWithPullParser(File inputFile) throws JAXBException, FileNotFoundException, XMLStreamException {
-		JAXBContext jaxbContext = JAXBContext.newInstance(edu.dedupendnote.domain.xml.zotero.Xml.class);
-		Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
-		XMLInputFactory xif = XMLInputFactory.newInstance();
-		XMLStreamReader xsr = xif.createXMLStreamReader(new FileReader(inputFile));
-
-		int i = 0;
-		List<ZoteroXmlRecord> xmlRecords = new ArrayList<>();
-		List<Publication> publications = new ArrayList<>();
-
-		xsr.nextTag();
-		xsr.require(START_ELEMENT, null, "xml");
-		xsr.nextTag();
-		xsr.require(START_ELEMENT, null, "records");
-		xsr.nextTag(); // Should now be at the first EndNoteXmlRecord
-		
-		while (xsr.getEventType() == START_ELEMENT) {
-			xsr.require(START_ELEMENT, null, "record");
-			ZoteroXmlRecord xmlRecord = (ZoteroXmlRecord) unmarshaller.unmarshal(xsr);
-			i++;
-			xmlRecord.setRecNumber(Integer.valueOf(i).toString());
-			xmlRecords.add(xmlRecord);
-			log.debug("Record {} with recNo {}", i, xmlRecord.getRecNumber());
-			if (xsr.getEventType() == CHARACTERS) {
-				xsr.next(); // skip the whitespace between EndNoteXmlRecords
-			}
-			
-			convertZoteroXmlToPublication(xmlRecord, publications);
-			if (xmlRecord.getTitles().getTitle() != null) {
-				log.debug("Record: {}", xmlRecord.getTitles().getTitle());
-			} else {
-				log.debug("Record has no Title");
-			}
-		}
-		log.info("Finished with {} records", i);
-		return new ParsedAndConvertedZotero(xmlRecords, publications);
-	}
+//	public ParsedAndConvertedZotero readZoteroXmlWithPullParser(File inputFile) {
+//		List<ZoteroXmlRecord> xmlRecords = new ArrayList<>();
+//		List<Publication> publications = new ArrayList<>();
+//		int i = 0;
+//
+//		try {
+//			JAXBContext jaxbContext = JAXBContext.newInstance(edu.dedupendnote.domain.xml.zotero.Xml.class);
+//			Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
+//			XMLInputFactory xif = XMLInputFactory.newInstance();
+//			XMLStreamReader xsr = xif.createXMLStreamReader(new FileReader(inputFile));
+//	
+//			xsr.nextTag();
+//			xsr.require(START_ELEMENT, null, "xml");
+//			xsr.nextTag();
+//			xsr.require(START_ELEMENT, null, "records");
+//			xsr.nextTag(); // Should now be at the first EndNoteXmlRecord
+//			
+//			while (xsr.getEventType() == START_ELEMENT) {
+//				xsr.require(START_ELEMENT, null, "record");
+//				ZoteroXmlRecord xmlRecord = (ZoteroXmlRecord) unmarshaller.unmarshal(xsr);
+//				i++;
+//				xmlRecord.setRecNumber(Integer.valueOf(i).toString());
+//				xmlRecords.add(xmlRecord);
+//				log.debug("Record {} with recNo {}", i, xmlRecord.getRecNumber());
+//				if (xsr.getEventType() == CHARACTERS) {
+//					xsr.next(); // skip the whitespace between EndNoteXmlRecords
+//				}
+//				
+//				convertZoteroXmlToPublication(xmlRecord, publications);
+//				if (xmlRecord.getTitles().getTitle() != null) {
+//					log.debug("Record: {}", xmlRecord.getTitles().getTitle());
+//				} else {
+//					log.debug("Record has no Title");
+//				}
+//			}
+//		} catch (JAXBException | FileNotFoundException | XMLStreamException e) {
+//			e.printStackTrace();
+//		} 
+//		log.info("Finished with {} records", i);
+//		return new ParsedAndConvertedZotero(xmlRecords, publications);
+//	}
 
 	private void convertEndnoteXmlToPublication(EndnoteXmlRecord xmlRecord, List<Publication> xmlPublications) {
 		Publication pub = new Publication();
@@ -159,7 +165,7 @@ public class IOXmlService {
 			if (xmlRecord.getTitles().getTertiaryTitle() != null) {
 				// conferencePattern
 				String j = getAllText(xmlRecord.getTitles().getTertiaryTitle().getStyle());
-				if (!IOService.conferencePattern.matcher(j).matches()) {
+				if (!IORisService.conferencePattern.matcher(j).matches()) {
 					pub.addJournals(j);
 					pub.addTitles(j);
 				}
@@ -167,11 +173,11 @@ public class IOXmlService {
 			if (xmlRecord.getTitles().getTitle() != null) {
 				String title = getAllText(xmlRecord.getTitles().getTitle().getStyle());
 				pub.addTitles(title);
-				if (IOService.replyPattern.matcher(title.toLowerCase()).matches()) {
+				if (IORisService.replyPattern.matcher(title.toLowerCase()).matches()) {
 					pub.setReply(true);
 					pub.setTitle(title);
 				}
-				if (IOService.phasePattern.matcher(title.toLowerCase()).matches()) {
+				if (IORisService.phasePattern.matcher(title.toLowerCase()).matches()) {
 					pub.setPhase(true);
 				}
 			}
@@ -210,83 +216,83 @@ public class IOXmlService {
 		pub.fillAllAuthors();
 	}
 
-	private void convertZoteroXmlToPublication(ZoteroXmlRecord xmlRecord, List<Publication> xmlPublications) {
-		Publication pub = new Publication();
-		xmlPublications.add(pub);
-		
-		pub.setId(xmlRecord.getRecNumber());
-		pub.setReferenceType(refTypes.get(xmlRecord.getRefType().getName()));
-
-		if (xmlRecord.getContributors() != null) {
-			if (xmlRecord.getContributors().getAuthors() != null) {
-				for (edu.dedupendnote.domain.xml.zotero.Author author : xmlRecord.getContributors().getAuthors().getAuthor()) {
-					pub.addAuthors(author.getvalue());
-				}
-			}
-		}
-		
-		if (xmlRecord.getOrigPub() != null) {
-			pub.addTitles(xmlRecord.getOrigPub());
-		}
-		// in RIS: ST before TI
-		
-		if (xmlRecord.getTitles() != null) {
-			if (xmlRecord.getTitles().getShortTitle() != null) {
-				pub.addTitles(xmlRecord.getTitles().getShortTitle());
-			}
-			if (xmlRecord.getTitles().getTitle() != null) {
-				pub.addTitles(xmlRecord.getTitles().getTitle());
-			}
-			if (xmlRecord.getTitles().getSecondaryTitle() != null) {
-				pub.addJournals(xmlRecord.getTitles().getSecondaryTitle());
-			}
-			if (xmlRecord.getTitles().getAltTitle() != null) {
-				pub.addJournals(xmlRecord.getTitles().getAltTitle());
-			}
-		}
-		
-		//?? why test getPeriodical before getTitles?
-		if (xmlRecord.getPeriodical() != null) {
-			if (xmlRecord.getTitles() != null && xmlRecord.getTitles().getTertiaryTitle() != null) {
-				// conferencePattern
-				String j = xmlRecord.getTitles().getTertiaryTitle();
-				if (!IOService.conferencePattern.matcher(j).matches()) {
-					pub.addJournals(j);
-					pub.addTitles(j);
-				}
-			}
-			if (xmlRecord.getPeriodical().getAbbr1() != null) {
-				pub.addJournals(xmlRecord.getPeriodical().getAbbr1());
-			}
-		}
-
-		if (xmlRecord.getCustom7() != null) {
-			pub.parsePages(xmlRecord.getCustom7());
-		}
-
-		if (xmlRecord.getPages() != null) {
-			pub.parsePages(xmlRecord.getPages().getvalue());
-		}
-		
-		if (xmlRecord.getDates() != null && xmlRecord.getDates().getYear() != null) {
-			pub.setPublicationYear(Integer.valueOf(xmlRecord.getDates().getYear().getvalue()));
-		}
-
-		if (xmlRecord.getIsbn() != null) {
-			pub.addIssns(xmlRecord.getIsbn());
-		}
-		
-		if (xmlRecord.getElectronicResourceNum() != null) {
-			pub.addDois(xmlRecord.getElectronicResourceNum());
-		}
-
-		pub.addReversedTitles();
-		pub.fillAllAuthors();
-	}
+//	private void convertZoteroXmlToPublication(ZoteroXmlRecord xmlRecord, List<Publication> xmlPublications) {
+//		Publication pub = new Publication();
+//		xmlPublications.add(pub);
+//		
+//		pub.setId(xmlRecord.getRecNumber());
+//		pub.setReferenceType(refTypes.get(xmlRecord.getRefType().getName()));
+//
+//		if (xmlRecord.getContributors() != null) {
+//			if (xmlRecord.getContributors().getAuthors() != null) {
+//				for (edu.dedupendnote.domain.xml.zotero.Author author : xmlRecord.getContributors().getAuthors().getAuthor()) {
+//					pub.addAuthors(author.getvalue());
+//				}
+//			}
+//		}
+//		
+//		if (xmlRecord.getOrigPub() != null) {
+//			pub.addTitles(xmlRecord.getOrigPub());
+//		}
+//		// in RIS: ST before TI
+//		
+//		if (xmlRecord.getTitles() != null) {
+//			if (xmlRecord.getTitles().getShortTitle() != null) {
+//				pub.addTitles(xmlRecord.getTitles().getShortTitle());
+//			}
+//			if (xmlRecord.getTitles().getTitle() != null) {
+//				pub.addTitles(xmlRecord.getTitles().getTitle());
+//			}
+//			if (xmlRecord.getTitles().getSecondaryTitle() != null) {
+//				pub.addJournals(xmlRecord.getTitles().getSecondaryTitle());
+//			}
+//			if (xmlRecord.getTitles().getAltTitle() != null) {
+//				pub.addJournals(xmlRecord.getTitles().getAltTitle());
+//			}
+//		}
+//		
+//		//?? why test getPeriodical before getTitles?
+//		if (xmlRecord.getPeriodical() != null) {
+//			if (xmlRecord.getTitles() != null && xmlRecord.getTitles().getTertiaryTitle() != null) {
+//				// conferencePattern
+//				String j = xmlRecord.getTitles().getTertiaryTitle();
+//				if (!IOEndnoteRisService.conferencePattern.matcher(j).matches()) {
+//					pub.addJournals(j);
+//					pub.addTitles(j);
+//				}
+//			}
+//			if (xmlRecord.getPeriodical().getAbbr1() != null) {
+//				pub.addJournals(xmlRecord.getPeriodical().getAbbr1());
+//			}
+//		}
+//
+//		if (xmlRecord.getCustom7() != null) {
+//			pub.parsePages(xmlRecord.getCustom7());
+//		}
+//
+//		if (xmlRecord.getPages() != null) {
+//			pub.parsePages(xmlRecord.getPages().getvalue());
+//		}
+//		
+//		if (xmlRecord.getDates() != null && xmlRecord.getDates().getYear() != null) {
+//			pub.setPublicationYear(Integer.valueOf(xmlRecord.getDates().getYear().getvalue()));
+//		}
+//
+//		if (xmlRecord.getIsbn() != null) {
+//			pub.addIssns(xmlRecord.getIsbn());
+//		}
+//		
+//		if (xmlRecord.getElectronicResourceNum() != null) {
+//			pub.addDois(xmlRecord.getElectronicResourceNum());
+//		}
+//
+//		pub.addReversedTitles();
+//		pub.fillAllAuthors();
+//	}
 
 	private String getAllText(List<Style> style) {
 		String line = style.stream().map(Style::getvalue).collect(Collectors.joining(" "));
-		return IOService.unusualWhiteSpacePattern.matcher(line).replaceAll(" ");
+		return IORisService.unusualWhiteSpacePattern.matcher(line).replaceAll(" ");
 	}
 
 	// TODO: Expand to all refTypes?
@@ -351,4 +357,27 @@ public class IOXmlService {
 //			"Web Page"
 			"ZZZDUMMY", ""
 			);
+
+	@Override
+	public List<Publication> readPublications(String inputFileName) {
+		ParsedAndConvertedEndnote parsedAndConvertedEndnote = readEndnoteXmlWithPullParser(inputFileName);
+		return parsedAndConvertedEndnote.publications();
+	}
+
+	@Override
+	public int writeDeduplicatedRecords(List<Publication> publications, String inputFileName, String outputFileName) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public int writeMarkedRecords(List<Publication> publications, String inputFileName, String outputFileName) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+//	public  List<Publication> readZoteroXmlPublications(String inputFileName) {
+//		ParsedAndConvertedZotero parsedAndConvertedZotero = readZoteroXmlWithPullParser(new File(inputFileName));
+//		return parsedAndConvertedZotero.publications();
+//	}
 }

@@ -27,7 +27,7 @@ import ch.qos.logback.classic.LoggerContext;
 import edu.dedupendnote.controllers.DedupEndNoteController;
 import edu.dedupendnote.domain.Publication;
 import edu.dedupendnote.services.DeduplicationService;
-import edu.dedupendnote.services.IOService;
+import edu.dedupendnote.services.IORisService;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -71,12 +71,12 @@ class DedupEndNoteApplicationTests {
 		}
 
 		// LINE SEPARATOR messes with '.*$'
-		Matcher matcher = IOService.risLinePattern.matcher(line);
+		Matcher matcher = IORisService.risLinePattern.matcher(line);
 		assertThat(matcher.matches()).as("LINE SEPARATOR messes with '.*$'").isFalse();
 
 		// Replacing the LINE SEPARATOR is necessary
 		line = line.replaceAll("\\u2028", " ");
-		matcher = IOService.risLinePattern.matcher(line);
+		matcher = IORisService.risLinePattern.matcher(line);
 
 		assertThat(matcher.matches()).isTrue();
 		assertThat(matcher.group(1)).isEqualTo("ST");

@@ -1,5 +1,3 @@
 package edu.dedupendnote.domain;
 
-import java.io.File;
-
-public record XmlTestFile(File xmlInputFile, File textInputFile, int noOfRecords) {};
+public record XmlTestFile(String xmlInputFileName, String textInputFileName, int noOfRecords) {};

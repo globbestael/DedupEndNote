@@ -6,7 +6,7 @@ XML parsing
   + document in wiki
 - make DTD for Zotero
   + parse files
-  - compare xml parses with RIS parses
+  + compare xml parses with RIS parses
   + write records and compare with original Zotero xml files
 - input routine should be able to identify if the XML file is EndNote format or Zotero format
 - (additional reason to split the original DTD into 2 DTDs: writing to the same XML format as the input file is easier)
@@ -20,6 +20,7 @@ DedupEndNote rejects the file because all records are without Publication Year
 - TY can have abnormal content "C" for Conference Type?
 - Several fields have runs of space characters in them, sometimes more than once ("        "), fields TI, T2, KW, AB, ...  
 - DO can have extraneous content "DO  - 10.1038/s41380-021-01421-6     EA JAN 2022"
+BUT: Should Rayyan output files be accepted. We currently treat only Endnote (or Zotero) output files 
 
 Dependency bloat?
 =================

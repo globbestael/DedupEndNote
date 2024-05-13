@@ -14,7 +14,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.boot.test.context.TestConfiguration;
 
 import edu.dedupendnote.domain.Publication;
-import edu.dedupendnote.services.IOService;
+import edu.dedupendnote.services.IORisService;
 
 @TestConfiguration
 class TextNormalizerTest {
@@ -90,7 +90,7 @@ class TextNormalizerTest {
 	@Test
 	void whiteSpaceReplacement() {
 		String input = " a\u000Ca\u00A0a\u2000a";
-		String output = IOService.unusualWhiteSpacePattern.matcher(input).replaceAll("A");
+		String output = IORisService.unusualWhiteSpacePattern.matcher(input).replaceAll("A");
 		
 		assertThat(output).isEqualTo(" aAaAaAa");
 	}

@@ -21,8 +21,9 @@ import edu.dedupendnote.domain.Publication;
 import edu.dedupendnote.domain.XmlTestFile;
 import edu.dedupendnote.domain.xml.endnote.EndnoteXmlRecord;
 import edu.dedupendnote.domain.xml.endnote.Xml;
-import edu.dedupendnote.services.IOService;
-import edu.dedupendnote.services.IOXmlService;
+import edu.dedupendnote.services.IORisService;
+import edu.dedupendnote.services.IOEndnoteXmlService;
+import edu.dedupendnote.services.IoService;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
 import lombok.extern.slf4j.Slf4j;
@@ -30,22 +31,22 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @TestConfiguration
 class XmlEndnoteTest {
-	private IOService ioService = new IOService();
-	private IOXmlService ioXmlService = new IOXmlService();
+	private IoService ioService = new IORisService();
+	private IOEndnoteXmlService ioEndnoteXmlService = new IOEndnoteXmlService();
 
 	@Test
 	void testReadWithPullParser() throws JAXBException, XMLStreamException, IOException {
 		String prefix = System.getProperty("user.home") + "/dedupendnote_files/xml/";
 		// First file is a subset of BIG_SET: first author >= almadi and first author <= andriulli, order by author = 465 records. XML is pretty-printed
-		XmlTestFile shortTest = new XmlTestFile(new File(prefix + "BIG_SET_part_pp.xml"), new File(prefix + "BIG_SET_part.txt"), 465);
-		XmlTestFile longTest = new XmlTestFile(new File(prefix + "BIG_SET.xml"), new File(prefix + "BIG_SET.txt"),  52828);
+		XmlTestFile shortTest = new XmlTestFile(prefix + "BIG_SET_part_pp.xml", prefix + "BIG_SET_part.txt", 465);
+		XmlTestFile longTest = new XmlTestFile(prefix + "BIG_SET.xml", prefix + "BIG_SET.txt",  52828);
 
 		// testing a small pretty printed XML files
-		ParsedAndConvertedEndnote results = ioXmlService.readEndnoteXmlWithPullParser(shortTest.xmlInputFile());
+		ParsedAndConvertedEndnote results = ioEndnoteXmlService.readEndnoteXmlWithPullParser(shortTest.xmlInputFileName());
 		assertThat(results.publications()).hasSize(shortTest.noOfRecords());
 
 		// testing a big XML file
-		results = ioXmlService.readEndnoteXmlWithPullParser(longTest.xmlInputFile());
+		results = ioEndnoteXmlService.readEndnoteXmlWithPullParser(longTest.xmlInputFileName());
 		assertThat(results.publications()).hasSize(longTest.noOfRecords());
 		
 		// testing marshalling 1 record
@@ -66,7 +67,7 @@ class XmlEndnoteTest {
 		
 		// parse the textInputFiles and compare with the parses of the xmlInputFiles
 		
-		List<Publication> publicationsFromText = ioService.readPublications(longTest.textInputFile().toString());
+		List<Publication> publicationsFromText = ioService.readPublications(longTest.textInputFileName());
 		
 		assertThat(publicationsFromText).hasSize(longTest.noOfRecords());
 		
