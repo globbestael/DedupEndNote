@@ -2,7 +2,6 @@ package edu.dedupendnote.services;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -17,11 +16,9 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
 import edu.dedupendnote.domain.Publication;
 import edu.dedupendnote.domain.PublicationDB;
-import edu.dedupendnote.enums.FileType;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -245,24 +242,14 @@ public class IORisService implements IoService {
 		return publications;
 	}
 
-	/*
-	 * PageStart (PG) and DOIs (DO) are replaced or inserted, but written at the
-	 * same place as in the input file to make comparisons between input file and
-	 * output file easier. Absent Publication year (PY) is replaced if there is one
-	 * found in a duplicate record. Author (AU) Anonymous is skipped. Title (TI) is
-	 * replaced with the longest duplicate title when it contains "Reply". Article
-	 * Number (C7) is skipped.
-	 *
-	 * Records are read into a TreeMap, with continuation lines added.
-	 * writeRecords(...) does the replacements, and writes to the output file.
-	 */
 	@Override
 	public int writeDeduplicatedRecords(List<Publication> publications, String inputFileName, String outputFileName) {
 		log.debug("Start writing to file {}", outputFileName);
-		List<Publication> recordsToKeep = publications.stream().filter(Publication::getKeptRecord).toList();
-		log.debug("Records to be kept: {}", recordsToKeep.size());
+//		List<Publication> recordsToKeep = publications.stream().filter(Publication::isKeptRecord).toList();
+//		log.debug("Records to be kept: {}", recordsToKeep.size());
 
-		Map<String, Publication> recordIdMap = publications.stream().filter(r -> !r.getId().startsWith("-"))
+		Map<String, Publication> recordIdMap = publications.stream()
+				.filter(r -> !r.getId().startsWith("-"))	// skip he records from first file if comparing 2 files
 				.collect(Collectors.toMap(Publication::getId, Function.identity()));
 
 		int numberWritten = 0;
@@ -280,7 +267,7 @@ public class IORisService implements IoService {
 			}
 			String line;
 			Publication publication = null;
-			Integer phantomId = 0;
+			Integer phantomId = 0;	// Zotero doesn't export the recordId, DedupEndNote creates phantomId's starting with 1
 			String realId = null;
 			
 			while ((line = br.readLine()) != null) {
@@ -301,7 +288,7 @@ public class IORisService implements IoService {
 								map.put("ID", phantomId.toString());
 							}
 						}
-						if (publication != null && publication.getKeptRecord()) {
+						if (publication != null && publication.isKeptRecord()) {
 							writeRecord(map, publication, bw, true);
 							numberWritten++;
 						}
@@ -336,8 +323,8 @@ public class IORisService implements IoService {
 	@Override
 	public int writeMarkedRecords(List<Publication> publications, String inputFileName, String outputFileName) {
 		log.debug("Start writing to file {}", outputFileName);
-		List<Publication> recordsToKeep = publications.stream().filter(Publication::getKeptRecord).toList();
-		log.debug("Records to be kept: {}", recordsToKeep.size());
+//		List<Publication> recordsToKeep = publications.stream().filter(Publication::isKeptRecord).toList();
+//		log.debug("Records to be kept: {}", recordsToKeep.size());
 
 		Map<String, Publication> recordIdMap = publications.stream().filter(r -> !r.getId().startsWith("-"))
 				.collect(Collectors.toMap(Publication::getId, Function.identity()));
@@ -375,7 +362,7 @@ public class IORisService implements IoService {
 							publication.setId(phantomId.toString());
 							map.put("ID", phantomId.toString());
 						}
-						if (publication != null && publication.getKeptRecord()) {
+						if (publication != null && publication.isKeptRecord()) {
 							map.put(fieldName, fieldContent);
 							if (publication.getLabel() != null) {
 								map.put("LB", publication.getLabel());
@@ -416,13 +403,15 @@ public class IORisService implements IoService {
 	/*
 	 * Ordering of an EndNote export RIS file: the fields are ordered
 	 * alphabetically, except for TY (first), and ID and ER (last fields)
+	 * 
+	 * FIXME: the boolean argument enhance is the opposite of markMode in DeduplicationService::deduplicateOneFile(...)
+	 * and DeduplicationService::deduplicateTwoFiles(...) 
 	 */
 	private void writeRecord(Map<String, String> map, Publication publication, BufferedWriter bw, boolean enhance)
 			throws IOException {
 		if (enhance) {
 			if (!publication.getDois().isEmpty()) {
-				map.put("DO", "https://doi.org/"
-						+ publication.getDois().stream().collect(Collectors.joining("\nhttps://doi.org/")));
+				map.put("DO", publication.getDois().stream().collect(Collectors.joining("\nhttps://doi.org/", "https://doi.org/", null)));
 			}
 			if (publication.getPageStart() != null) {
 				if (publication.getPageEnd() != null && !publication.getPageEnd().equals(publication.getPageStart())) {
@@ -434,7 +423,7 @@ public class IORisService implements IoService {
 			if (publication.isReply()) {
 				map.put("TI", publication.getTitle());
 			}
-			// An author as "Nct," should be kept
+			// Only "Anonymous" can be removed, not the other skipped authors
 			if (publication.getAuthors().isEmpty() && "Anonymous".equals(map.get("AU"))) {
 				map.remove("AU");
 			}

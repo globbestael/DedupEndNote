@@ -4,32 +4,46 @@ import static javax.xml.stream.XMLStreamConstants.CHARACTERS;
 import static javax.xml.stream.XMLStreamConstants.START_ELEMENT;
 
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
+import javax.xml.stream.XMLStreamWriter;
 
 import org.springframework.stereotype.Service;
 
 import edu.dedupendnote.domain.ParsedAndConvertedEndnote;
 import edu.dedupendnote.domain.Publication;
 import edu.dedupendnote.domain.xml.endnote.Author;
+import edu.dedupendnote.domain.xml.endnote.ElectronicResourceNum;
 import edu.dedupendnote.domain.xml.endnote.EndnoteXmlRecord;
+import edu.dedupendnote.domain.xml.endnote.ObjectFactory;
+import edu.dedupendnote.domain.xml.endnote.Pages;
 import edu.dedupendnote.domain.xml.endnote.Style;
+import edu.dedupendnote.domain.xml.endnote.Title;
+import edu.dedupendnote.domain.xml.endnote.Titles;
 import edu.dedupendnote.domain.xml.endnote.Xml;
+import edu.dedupendnote.domain.xml.endnote.Year;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
+import jakarta.xml.bind.Marshaller;
 import jakarta.xml.bind.Unmarshaller;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
 public class IOEndnoteXmlService extends IoXmlService {
+	
+	ObjectFactory objectFactory = new ObjectFactory();
 
 	@Override
 	public List<Publication> readPublications(String inputFileName) {
@@ -39,8 +53,177 @@ public class IOEndnoteXmlService extends IoXmlService {
 
 	@Override
 	public int writeDeduplicatedRecords(List<Publication> publications, String inputFileName, String outputFileName) {
-		// TODO Auto-generated method stub
-		return 0;
+		log.debug("Start writing to file {}", outputFileName);
+//		List<Publication> recordsToKeep = publications.stream().filter(Publication::isKeptRecord).toList();
+//		log.debug("Records to be kept: {}", recordsToKeep.size());
+
+		Map<String, Publication> recordIdMap = publications.stream()
+				.filter(r -> !r.getId().startsWith("-"))	// skip he records from first file if comparing 2 files
+				.collect(Collectors.toMap(Publication::getId, Function.identity()));
+
+		int numberWritten = 0;
+		int i = 0;
+		Publication publication;
+		
+		try {
+			JAXBContext jaxbContext = JAXBContext.newInstance(Xml.class);
+			
+			// input-related
+			Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
+			XMLInputFactory xif = XMLInputFactory.newInstance();
+			XMLStreamReader reader = xif.createXMLStreamReader(new FileReader(inputFileName));
+	
+			// output-related
+			Marshaller marshaller = jaxbContext.createMarshaller();
+			marshaller.setProperty(Marshaller.JAXB_FRAGMENT, Boolean.TRUE);
+			FileOutputStream fos = new FileOutputStream(outputFileName);
+			XMLStreamWriter writer = XMLOutputFactory.newFactory().createXMLStreamWriter(fos);
+
+			reader.nextTag();
+			writer.writeStartDocument();
+			reader.require(START_ELEMENT, null, "xml");
+			reader.nextTag();
+			writer.writeStartElement("xml");
+			reader.require(START_ELEMENT, null, "records");
+			reader.nextTag(); // Should now be at the first EndNoteXmlRecord
+			writer.writeStartElement("records");
+			
+			while (reader.getEventType() == START_ELEMENT) {
+				reader.require(START_ELEMENT, null, "record");
+				EndnoteXmlRecord xmlRecord = (EndnoteXmlRecord) unmarshaller.unmarshal(reader);
+				i++;
+				String recordId = xmlRecord.getRecNumber();
+				log.debug("Record {} with recNo {}", i, recordId);
+				publication = recordIdMap.get(recordId);
+				if (publication != null && publication.isKeptRecord()) {
+					enrichXmlOutput(xmlRecord, publication);
+					// FIXME: enrichment should happen here
+					marshaller.marshal(xmlRecord, writer);
+					numberWritten++;
+					log.error("Record {} saved", recordId);
+				} else {
+					log.error("Record {} skipped", recordId);
+				}
+				
+				if (reader.getEventType() == CHARACTERS) {
+					reader.next(); // skip the whitespace between EndNoteXmlRecords
+				}
+				
+//				convertEndnoteXmlToPublication(xmlRecord, publications);
+//				if (xmlRecord.getTitles().getTitle() != null) {
+//					log.debug("Record: {}", getAllText(xmlRecord.getTitles().getTitle().getStyle()));
+//				} else {
+//					log.debug("Record has no Title");
+//				}
+			}
+			writer.writeEndDocument(); // this will close any open tags
+			writer.close();
+		} catch (JAXBException | FileNotFoundException | XMLStreamException e) {
+			e.printStackTrace();
+		} 
+		log.info("Finished with {} records", numberWritten);
+
+		return numberWritten;
+	}
+
+	private void enrichXmlOutput(EndnoteXmlRecord xmlRecord, Publication publication) {
+		if (!publication.getDois().isEmpty()) {
+			Style style;
+			if (xmlRecord.getElectronicResourceNum() != null) {
+				style = xmlRecord.getElectronicResourceNum().getStyle().getFirst();
+			} else {
+				ElectronicResourceNum electronicResourceNum = objectFactory.createElectronicResourceNum();
+				xmlRecord.setElectronicResourceNum(electronicResourceNum);
+				style = objectFactory.createStyle();
+				// electronicResourceNum.getStyle().clear();
+				electronicResourceNum.getStyle().add(style);
+			}
+			setDefaultAttributes(style);
+			style.setvalue(publication.getDois().stream().collect(Collectors.joining("\nhttps://doi.org/", "https://doi.org/", "")));
+		}
+		
+		if (publication.getPageStart() != null) {
+			Style style;
+			if (xmlRecord.getPages() != null) {
+				style = xmlRecord.getPages().getStyle().getFirst();
+			} else {
+				Pages pages = objectFactory.createPages();
+				xmlRecord.setPages(pages);
+				style = objectFactory.createStyle();
+				pages.getStyle().add(style);
+			}
+			setDefaultAttributes(style);
+
+			if (publication.getPageEnd() != null && !publication.getPageEnd().equals(publication.getPageStart())) {
+				style.setvalue(publication.getPageStart() + "-" + publication.getPageEnd());
+			} else {
+				style.setvalue(publication.getPageStart());
+			}
+		}
+
+		if (publication.isReply()) {
+			Style style;
+			if (xmlRecord.getTitles() != null) {
+				if (xmlRecord.getTitles().getTitle() != null) {
+					style = xmlRecord.getTitles().getTitle().getStyle().getFirst();
+				} else {
+					Title title = objectFactory.createTitle();
+					xmlRecord.getTitles().setTitle(title);
+					style = objectFactory.createStyle();
+					title.getStyle().add(style);
+				}
+			} else {
+				Titles titles = objectFactory.createTitles();
+				xmlRecord.setTitles(titles);
+				Title title = objectFactory.createTitle();
+				xmlRecord.getTitles().setTitle(title);
+				style = objectFactory.createStyle();
+				title.getStyle().add(style);
+			}
+			setDefaultAttributes(style);
+			style.setvalue(publication.getTitle());
+		}
+
+		// Only Anonymous can be removed, not the other skipped authors
+		if (publication.getAuthors().isEmpty()) {
+			if (xmlRecord.getContributors() != null 
+					&& xmlRecord.getContributors().getAuthors() != null
+					&& xmlRecord.getContributors().getAuthors().getAuthor() != null) {
+				String firstAuthor = xmlRecord.getContributors().getAuthors().getAuthor().getFirst().getStyle().getFirst().getvalue();
+				if (firstAuthor.startsWith("Anonymous")) {	// format can be "Anonymous,"
+					xmlRecord.getContributors().getAuthors().getAuthor().clear();
+				}
+			}
+		}
+
+		if (publication.getPublicationYear() != 0) {
+			Style style;
+			if (xmlRecord.getDates() == null) {
+				xmlRecord.setDates(objectFactory.createDates());
+			}
+			if (xmlRecord.getDates().getYear() == null) {
+				Year year = objectFactory.createYear();
+				xmlRecord.getDates().setYear(year);
+				style = objectFactory.createStyle();
+				year.getStyle().add(style);
+			} else {
+				style = xmlRecord.getDates().getYear().getStyle().getFirst();
+			}
+
+			setDefaultAttributes(style);
+			style.setvalue(publication.getPublicationYear().toString());
+		}
+		
+		// remove C7/custom7 (Article Number)
+		if (xmlRecord.getCustom7() != null) {
+			xmlRecord.setCustom7(null);
+		}
+	}
+
+	private void setDefaultAttributes(Style style) {
+		style.setFace("normal");
+		style.setFont("default");
+		style.setSize("100%");
 	}
 
 	@Override

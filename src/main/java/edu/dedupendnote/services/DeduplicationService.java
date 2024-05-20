@@ -514,6 +514,7 @@ public class DeduplicationService {
 		// read the old records and mark them as present, then add the new records
 		log.info("oldInputFileName: {}", oldInputFileName);
 		log.info("newInputFileName: {}", newInputFileName);
+		// FIXME: ioService not initialized (test for fileType first) 
 		List<Publication> publications = ioService.readPublications(oldInputFileName);
 
 		String s = doSanityChecks(publications, oldInputFileName);
@@ -570,21 +571,48 @@ public class DeduplicationService {
 	}
 
 	public String doSanityChecks(List<Publication> publications, String fileName) {
-		if (containsRecordsWithoutId(publications)) {
-			return "ERROR: The input file " + fileName
-					+ " contains records without IDs. The input file is not a dump from an EndNote library!";
+		if (publications.isEmpty()) {
+			return "ERROR: DedupEndNote could not find any records in input file " + fileName
+					+ ". The input file has no records or is not a dump from an EndNote of Zotero library!"
+					+ " Output files from PubMed, EBSCO, ... are not accepted.";
 		}
+		// This check is not relevant any more since missing IDs (Zotero) are repaced with dummy IDs starting from 1. 
+		//		if (containsRecordsWithoutId(publications)) {
+		//			return "ERROR: The input file " + fileName
+		//					+ " contains records without IDs. The input file is not a dump from an EndNote library!"
+		//					+ " Output files from PubMed, EBSCO, ... are not accepted.";
+		//		}
 		if (containsOnlyRecordsWithoutPublicationYear(publications)) {
 			return "ERROR: All records of the input file " + fileName
-					+ " have no Publication Year. The input file is not a dump from an EndNote library!";
+					+ " have no Publication Year. The input file is not a dump from an EndNote library!"
+					+ " Output files from PubMed, EBSCO, ... are not accepted.";
 		}
 		if (containsDuplicateIds(publications)) {
 			return "ERROR: The IDs of the records of input file " + fileName
-					+ " are not unique. The input file is not a dump from 1 EndNote library!";
+					+ " are not unique. The input file is not a dump from 1 EndNote or Zotero library!";
 		}
 		return null;
 	}
 
+	// @formatter:off
+	/*
+	 * enrich(List<Publication>)
+	 * 
+	 * When not in MarkMode the kept records are enriched: missing data is added from the not kept duplicate records,
+	 * or data not present in the kept record (e.g. other DOIs) are added
+	 *   
+	 * - PageStart (PG) and DOIs (DO) are replaced or inserted, but written at the
+	 * same place as in the input file to make comparisons between input file and
+	 * output file easier. 
+	 * - Absent Publication year (PY) is replaced if there is one
+	 * found in a duplicate record. 
+	 * - Author (AU) Anonymous is skipped. 
+	 * - Title (TI) is replaced with the longest duplicate title when it contains "Reply". 
+	 * - Article Number (C7) is skipped.
+	 * 
+	 * Some of these enrichments are executed while writing the records!
+	 */
+	// @formatter:on
 	private void enrich(List<Publication> publications) {
 		log.debug("Start enrich");
 		// First the records with duplicates

@@ -87,7 +87,7 @@ public class Publication {
 
 	private boolean isPhase = false;
 
-	private Boolean keptRecord = true;
+	private boolean keptRecord = true;
 
 	// see: http://blog.crossref.org/2015/08/doi-regular-expressions.html
 	private static Pattern doiPattern = Pattern.compile("\\b(10.\\d{4,9}/[-._;()<>/:a-z0-9]+)\\b");
@@ -654,9 +654,8 @@ public class Publication {
 		if (doi.length() > 200) {
 			return dois;
 		}
-		// TODO: should illegal strings (java.lang.IllegalArgumentException) be treated differently?
 		try {
-//			doi = URLDecoder.decode(doi, Charset.forName("UTF8"));
+
 			doi = URLDecoder.decode(doi, "UTF8");
 			doi = StringEscapeUtils.unescapeHtml4(doi);
 		} catch (UnsupportedEncodingException e) {

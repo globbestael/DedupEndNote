@@ -3,7 +3,6 @@ package edu.dedupendnote;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -21,8 +20,8 @@ import edu.dedupendnote.domain.Publication;
 import edu.dedupendnote.domain.XmlTestFile;
 import edu.dedupendnote.domain.xml.endnote.EndnoteXmlRecord;
 import edu.dedupendnote.domain.xml.endnote.Xml;
-import edu.dedupendnote.services.IORisService;
 import edu.dedupendnote.services.IOEndnoteXmlService;
+import edu.dedupendnote.services.IORisService;
 import edu.dedupendnote.services.IoService;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
