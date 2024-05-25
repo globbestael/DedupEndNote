@@ -280,8 +280,10 @@ public class IORisService implements IoService {
 					switch (fieldName) {
 					case "ER":
 						map.put(fieldName, fieldContent);
-						phantomId++;
-						if (realId == null) {
+						if (realId != null) {
+							publication = recordIdMap.get(realId);
+						} else {
+							phantomId++;
 							publication = recordIdMap.get(phantomId.toString());
 							if (publication != null) {
 								publication.setId(phantomId.toString());
@@ -298,7 +300,6 @@ public class IORisService implements IoService {
 					case "ID": // EndNote Publication number
 						map.put(fieldName, fieldContent);
 						realId = line.substring(6);
-						publication = recordIdMap.get(realId);
 						break;
 					default:
 						if (map.containsKey(fieldName)) {
