@@ -323,10 +323,9 @@ public class IORisService implements IoService {
 	@Override
 	public int writeMarkedRecords(List<Publication> publications, String inputFileName, String outputFileName) {
 		log.debug("Start writing to file {}", outputFileName);
-//		List<Publication> recordsToKeep = publications.stream().filter(Publication::isKeptRecord).toList();
-//		log.debug("Records to be kept: {}", recordsToKeep.size());
 
-		Map<String, Publication> recordIdMap = publications.stream().filter(r -> !r.getId().startsWith("-"))
+		Map<String, Publication> recordIdMap = publications.stream()
+				.filter(r -> !r.getId().startsWith("-"))	// skip he records from first file if comparing 2 files
 				.collect(Collectors.toMap(Publication::getId, Function.identity()));
 
 		int numberWritten = 0;
@@ -355,39 +354,40 @@ public class IORisService implements IoService {
 					fieldContent = matcher.group(3);
 					previousFieldName = "XYZ";
 					switch (fieldName) {
-					case "ER":
-						phantomId++;
-						if (realId == null) {
-							publication = recordIdMap.get(phantomId.toString());
-							publication.setId(phantomId.toString());
-							map.put("ID", phantomId.toString());
-						}
-						if (publication != null && publication.isKeptRecord()) {
-							map.put(fieldName, fieldContent);
-							if (publication.getLabel() != null) {
-								map.put("LB", publication.getLabel());
+						case "ER":
+							if (realId != null) {
+								publication = recordIdMap.get(realId);
+							} else {
+								phantomId++;
+								publication = recordIdMap.get(phantomId.toString());
+								publication.setId(phantomId.toString());
+								map.put("ID", phantomId.toString());
 							}
-							writeRecord(map, publication, bw, false);
-							numberWritten++;
-						}
-						map.clear();
-						realId = null;
-						break;
-					case "ID": // EndNote Publication number
-						map.put(fieldName, fieldContent);
-						realId = fieldContent;
-						publication = recordIdMap.get(realId);
-						break;
-					case "LB":
-						break;	// to ensure that the present Label is not used.
-					default:
-						if (map.containsKey(fieldName)) {
-							map.put(fieldName, map.get(fieldName) + "\n" + line);
-						} else {
+							if (publication != null && publication.isKeptRecord()) {
+								map.put(fieldName, fieldContent);
+								if (publication.getLabel() != null) {
+									map.put("LB", publication.getLabel());
+								}
+								writeRecord(map, publication, bw, false);
+								numberWritten++;
+							}
+							map.clear();
+							realId = null;
+							break;
+						case "ID": // EndNote Publication number
 							map.put(fieldName, fieldContent);
-						}
-						previousFieldName = fieldName;
-						break;
+							realId = fieldContent;
+							break;
+						case "LB":
+							break;	// to ensure that the present Label is not used.
+						default:
+							if (map.containsKey(fieldName)) {
+								map.put(fieldName, map.get(fieldName) + "\n" + line);
+							} else {
+								map.put(fieldName, fieldContent);
+							}
+							previousFieldName = fieldName;
+							break;
 					}
 				} else { // continuation line
 					map.put(previousFieldName, map.get(previousFieldName) + "\n" + line);

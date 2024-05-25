@@ -9,7 +9,6 @@ import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -54,8 +53,6 @@ public class IOEndnoteXmlService extends IoXmlService {
 	@Override
 	public int writeDeduplicatedRecords(List<Publication> publications, String inputFileName, String outputFileName) {
 		log.debug("Start writing to file {}", outputFileName);
-//		List<Publication> recordsToKeep = publications.stream().filter(Publication::isKeptRecord).toList();
-//		log.debug("Records to be kept: {}", recordsToKeep.size());
 
 		Map<String, Publication> recordIdMap = publications.stream()
 				.filter(r -> !r.getId().startsWith("-"))	// skip he records from first file if comparing 2 files
@@ -97,7 +94,6 @@ public class IOEndnoteXmlService extends IoXmlService {
 				publication = recordIdMap.get(recordId);
 				if (publication != null && publication.isKeptRecord()) {
 					enrichXmlOutput(xmlRecord, publication);
-					// FIXME: enrichment should happen here
 					marshaller.marshal(xmlRecord, writer);
 					numberWritten++;
 					log.error("Record {} saved", recordId);
@@ -108,13 +104,6 @@ public class IOEndnoteXmlService extends IoXmlService {
 				if (reader.getEventType() == CHARACTERS) {
 					reader.next(); // skip the whitespace between EndNoteXmlRecords
 				}
-				
-//				convertEndnoteXmlToPublication(xmlRecord, publications);
-//				if (xmlRecord.getTitles().getTitle() != null) {
-//					log.debug("Record: {}", getAllText(xmlRecord.getTitles().getTitle().getStyle()));
-//				} else {
-//					log.debug("Record has no Title");
-//				}
 			}
 			writer.writeEndDocument(); // this will close any open tags
 			writer.close();
@@ -135,7 +124,6 @@ public class IOEndnoteXmlService extends IoXmlService {
 				ElectronicResourceNum electronicResourceNum = objectFactory.createElectronicResourceNum();
 				xmlRecord.setElectronicResourceNum(electronicResourceNum);
 				style = objectFactory.createStyle();
-				// electronicResourceNum.getStyle().clear();
 				electronicResourceNum.getStyle().add(style);
 			}
 			setDefaultAttributes(style);
@@ -185,14 +173,13 @@ public class IOEndnoteXmlService extends IoXmlService {
 		}
 
 		// Only Anonymous can be removed, not the other skipped authors
-		if (publication.getAuthors().isEmpty()) {
-			if (xmlRecord.getContributors() != null 
-					&& xmlRecord.getContributors().getAuthors() != null
-					&& xmlRecord.getContributors().getAuthors().getAuthor() != null) {
-				String firstAuthor = xmlRecord.getContributors().getAuthors().getAuthor().getFirst().getStyle().getFirst().getvalue();
-				if (firstAuthor.startsWith("Anonymous")) {	// format can be "Anonymous,"
-					xmlRecord.getContributors().getAuthors().getAuthor().clear();
-				}
+		if (publication.getAuthors().isEmpty()
+				&&  (xmlRecord.getContributors() != null 
+				&& xmlRecord.getContributors().getAuthors() != null
+				&& xmlRecord.getContributors().getAuthors().getAuthor() != null)) {
+			String firstAuthor = xmlRecord.getContributors().getAuthors().getAuthor().getFirst().getStyle().getFirst().getvalue();
+			if (firstAuthor.startsWith("Anonymous")) {	// format can be "Anonymous,"
+				xmlRecord.getContributors().getAuthors().getAuthor().clear();
 			}
 		}
 
