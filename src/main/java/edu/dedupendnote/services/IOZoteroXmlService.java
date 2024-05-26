@@ -4,27 +4,42 @@ import static javax.xml.stream.XMLStreamConstants.CHARACTERS;
 import static javax.xml.stream.XMLStreamConstants.START_ELEMENT;
 
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
+import javax.xml.stream.XMLStreamWriter;
 
 import org.springframework.stereotype.Service;
 
 import edu.dedupendnote.domain.ParsedAndConvertedZotero;
 import edu.dedupendnote.domain.Publication;
+import edu.dedupendnote.domain.xml.zotero.ObjectFactory;
+import edu.dedupendnote.domain.xml.zotero.Pages;
+import edu.dedupendnote.domain.xml.zotero.Titles;
+import edu.dedupendnote.domain.xml.zotero.Xml;
+import edu.dedupendnote.domain.xml.zotero.Year;
 import edu.dedupendnote.domain.xml.zotero.ZoteroXmlRecord;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
+import jakarta.xml.bind.Marshaller;
 import jakarta.xml.bind.Unmarshaller;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
 public class IOZoteroXmlService extends IoXmlService {
+	
+	ObjectFactory objectFactory = new ObjectFactory();
 
 	@Override
 	public  List<Publication> readPublications(String inputFileName) {
@@ -34,14 +49,150 @@ public class IOZoteroXmlService extends IoXmlService {
 
 	@Override
 	public int writeDeduplicatedRecords(List<Publication> publications, String inputFileName, String outputFileName) {
-		// TODO Auto-generated method stub
-		return 0;
+		return writeRecords(publications, inputFileName, outputFileName, false);
 	}
 	
 	@Override
 	public int writeMarkedRecords(List<Publication> publications, String inputFileName, String outputFileName) {
-		// TODO Auto-generated method stub
-		return 0;
+		return writeRecords(publications, inputFileName, outputFileName, true);
+	}
+
+	private int writeRecords(List<Publication> publications, String inputFileName, String outputFileName, boolean markMode) {
+		log.debug("Start writing to file {}", outputFileName);
+
+		Map<String, Publication> recordIdMap = publications.stream()
+				.filter(r -> !r.getId().startsWith("-"))	// skip he records from first file if comparing 2 files
+				.collect(Collectors.toMap(Publication::getId, Function.identity()));
+
+		int numberWritten = 0;
+		int i = 0;
+		Publication publication;
+		FileReader fileReader = null;
+		XMLStreamReader reader = null;
+		
+		try {
+			JAXBContext jaxbContext = JAXBContext.newInstance(Xml.class);
+			
+			// input-related
+			Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
+			XMLInputFactory xif = XMLInputFactory.newInstance();
+			fileReader = new FileReader(inputFileName);
+			reader = xif.createXMLStreamReader(fileReader);
+	
+			// output-related
+			Marshaller marshaller = jaxbContext.createMarshaller();
+			marshaller.setProperty(Marshaller.JAXB_FRAGMENT, Boolean.TRUE);
+			FileOutputStream fos = new FileOutputStream(outputFileName);
+			XMLStreamWriter writer = XMLOutputFactory.newFactory().createXMLStreamWriter(fos);
+
+			reader.nextTag();
+			writer.writeStartDocument();
+			reader.require(START_ELEMENT, null, "xml");
+			reader.nextTag();
+			writer.writeStartElement("xml");
+			reader.require(START_ELEMENT, null, "records");
+			reader.nextTag(); // Should now be at the first EndNoteXmlRecord
+			writer.writeStartElement("records");
+			
+			while (reader.getEventType() == START_ELEMENT) {
+				reader.require(START_ELEMENT, null, "record");
+				ZoteroXmlRecord xmlRecord = (ZoteroXmlRecord) unmarshaller.unmarshal(reader);
+				i++;
+				String recordId = Integer.valueOf(i).toString();
+				log.debug("Record {} with recNo {}", i, recordId);
+				publication = recordIdMap.get(recordId);
+				if (markMode) {
+					xmlRecord.setLabel(publication.getLabel());
+					marshaller.marshal(xmlRecord, writer);
+					numberWritten++;
+					log.error("Record {} saved", recordId);
+				} else {
+					if (publication != null && publication.isKeptRecord()) {
+						enrichXmlOutput(xmlRecord, publication);
+						marshaller.marshal(xmlRecord, writer);
+						numberWritten++;
+						log.error("Record {} saved", recordId);
+					} else {
+						log.error("Record {} skipped", recordId);
+					}
+				}
+				if (reader.getEventType() == CHARACTERS) {
+					reader.next(); // skip the whitespace between EndNoteXmlRecords
+				}
+			}
+			writer.writeEndDocument(); // this will close any open tags
+			writer.close();
+		} catch (JAXBException | FileNotFoundException | XMLStreamException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				if (reader != null) {
+					// Frees any resources associated with this Reader. This method does not close the underlying input source.
+					reader.close();
+					fileReader.close();
+					log.error("File {} is closed", inputFileName);
+				}
+			} catch (XMLStreamException | IOException e) {
+				e.printStackTrace();
+			}
+		}
+		log.info("Finished with {} records", numberWritten);
+
+		return numberWritten;
+	}
+
+	private void enrichXmlOutput(ZoteroXmlRecord xmlRecord, Publication publication) {
+		if (!publication.getDois().isEmpty()) {
+			xmlRecord.setElectronicResourceNum(publication.getDois().stream().collect(Collectors.joining("\nhttps://doi.org/", "https://doi.org/", "")));
+		}
+		
+		if (publication.getPageStart() != null) {
+			Pages pages = objectFactory.createPages();
+			if (publication.getPageEnd() != null && !publication.getPageEnd().equals(publication.getPageStart())) {
+				pages.setvalue(publication.getPageStart() + "-" + publication.getPageEnd());
+			} else {
+				pages.setvalue(publication.getPageStart());
+			}
+		}
+
+		if (publication.isReply()) {
+			if (xmlRecord.getTitles() != null) {
+				xmlRecord.getTitles().setTitle(publication.getTitle());
+			} else {
+				Titles titles = objectFactory.createTitles();
+				xmlRecord.setTitles(titles);
+				titles.setTitle(publication.getTitle());
+			}
+		}
+
+		// Only Anonymous can be removed, not the other skipped authors
+		if (publication.getAuthors().isEmpty()
+				&&  (xmlRecord.getContributors() != null 
+				&& xmlRecord.getContributors().getAuthors() != null
+				&& xmlRecord.getContributors().getAuthors().getAuthor() != null)) {
+			String firstAuthor = xmlRecord.getContributors().getAuthors().getAuthor().getFirst().getvalue();
+			if (firstAuthor.startsWith("Anonymous")) {	// format can be "Anonymous,"
+				xmlRecord.getContributors().getAuthors().getAuthor().clear();
+			}
+		}
+
+		if (publication.getPublicationYear() != 0) {
+			if (xmlRecord.getDates() == null) {
+				xmlRecord.setDates(objectFactory.createDates());
+			}
+			if (xmlRecord.getDates().getYear() == null) {
+				Year year = objectFactory.createYear();
+				xmlRecord.getDates().setYear(year);
+				year.setvalue(publication.getPublicationYear().toString());
+			} else {
+				xmlRecord.getDates().getYear().setvalue(publication.getPublicationYear().toString());
+			}
+		}
+		
+		// remove C7/custom7 (Article Number)
+		if (xmlRecord.getCustom7() != null) {
+			xmlRecord.setCustom7(null);
+		}
 	}
 
 	/*
@@ -64,12 +215,15 @@ public class IOZoteroXmlService extends IoXmlService {
 		List<ZoteroXmlRecord> xmlRecords = new ArrayList<>();
 		List<Publication> publications = new ArrayList<>();
 		int i = 0;
+		FileReader fileReader = null;
+		XMLStreamReader xsr = null;
 
 		try {
 			JAXBContext jaxbContext = JAXBContext.newInstance(edu.dedupendnote.domain.xml.zotero.Xml.class);
 			Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
 			XMLInputFactory xif = XMLInputFactory.newInstance();
-			XMLStreamReader xsr = xif.createXMLStreamReader(new FileReader(inputFileName));
+			fileReader = new FileReader(inputFileName);
+			xsr = xif.createXMLStreamReader(fileReader);
 	
 			xsr.nextTag();
 			xsr.require(START_ELEMENT, null, "xml");
@@ -97,6 +251,17 @@ public class IOZoteroXmlService extends IoXmlService {
 			}
 		} catch (JAXBException | FileNotFoundException | XMLStreamException e) {
 			e.printStackTrace();
+		} finally {
+			try {
+				if (xsr != null) {
+					// Frees any resources associated with this Reader. This method does not close the underlying input source.
+					xsr.close();
+					fileReader.close();
+					log.error("File {} is closed", inputFileName);
+				}
+			} catch (XMLStreamException | IOException e) {
+				e.printStackTrace();
+			}
 		} 
 		log.info("Finished with {} records", i);
 		return new ParsedAndConvertedZotero(xmlRecords, publications);
