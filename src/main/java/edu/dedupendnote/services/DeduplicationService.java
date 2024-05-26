@@ -461,10 +461,6 @@ public class DeduplicationService {
 		return publications.stream().filter(r -> r.getPublicationYear() == 0).count() == publications.size();
 	}
 
-	private boolean containsRecordsWithoutId(List<Publication> publications) {
-		return publications.stream().filter(r -> r.getId() == null).count() > 0L;
-	}
-
 	public String deduplicateOneFile(String inputFileName, String outputFileName, boolean markMode, String wssessionId) {
 		wsMessage(wssessionId, "Reading file " + inputFileName);
 		FileType fileType = getFileType(inputFileName);
@@ -576,12 +572,6 @@ public class DeduplicationService {
 					+ ". The input file has no records or is not a dump from an EndNote of Zotero library!"
 					+ " Output files from PubMed, EBSCO, ... are not accepted.";
 		}
-		// This check is not relevant any more since missing IDs (Zotero) are repaced with dummy IDs starting from 1. 
-		//		if (containsRecordsWithoutId(publications)) {
-		//			return "ERROR: The input file " + fileName
-		//					+ " contains records without IDs. The input file is not a dump from an EndNote library!"
-		//					+ " Output files from PubMed, EBSCO, ... are not accepted.";
-		//		}
 		if (containsOnlyRecordsWithoutPublicationYear(publications)) {
 			return "ERROR: All records of the input file " + fileName
 					+ " have no Publication Year. The input file is not a dump from an EndNote library!"
