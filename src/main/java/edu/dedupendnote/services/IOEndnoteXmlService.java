@@ -6,6 +6,7 @@ import static javax.xml.stream.XMLStreamConstants.START_ELEMENT;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +26,7 @@ import edu.dedupendnote.domain.Publication;
 import edu.dedupendnote.domain.xml.endnote.Author;
 import edu.dedupendnote.domain.xml.endnote.ElectronicResourceNum;
 import edu.dedupendnote.domain.xml.endnote.EndnoteXmlRecord;
+import edu.dedupendnote.domain.xml.endnote.Label;
 import edu.dedupendnote.domain.xml.endnote.ObjectFactory;
 import edu.dedupendnote.domain.xml.endnote.Pages;
 import edu.dedupendnote.domain.xml.endnote.Style;
@@ -52,6 +54,15 @@ public class IOEndnoteXmlService extends IoXmlService {
 
 	@Override
 	public int writeDeduplicatedRecords(List<Publication> publications, String inputFileName, String outputFileName) {
+		return writeRecords(publications, inputFileName, outputFileName, false);
+	}
+	
+	@Override
+	public int writeMarkedRecords(List<Publication> publications, String inputFileName, String outputFileName) {
+		return writeRecords(publications, inputFileName, outputFileName, true);
+	}
+
+	private int writeRecords(List<Publication> publications, String inputFileName, String outputFileName, boolean markMode) {
 		log.debug("Start writing to file {}", outputFileName);
 
 		Map<String, Publication> recordIdMap = publications.stream()
@@ -61,6 +72,8 @@ public class IOEndnoteXmlService extends IoXmlService {
 		int numberWritten = 0;
 		int i = 0;
 		Publication publication;
+		FileReader fileReader = null;
+		XMLStreamReader reader = null;
 		
 		try {
 			JAXBContext jaxbContext = JAXBContext.newInstance(Xml.class);
@@ -68,7 +81,8 @@ public class IOEndnoteXmlService extends IoXmlService {
 			// input-related
 			Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
 			XMLInputFactory xif = XMLInputFactory.newInstance();
-			XMLStreamReader reader = xif.createXMLStreamReader(new FileReader(inputFileName));
+			fileReader = new FileReader(inputFileName);
+			reader = xif.createXMLStreamReader(fileReader);
 	
 			// output-related
 			Marshaller marshaller = jaxbContext.createMarshaller();
@@ -92,15 +106,21 @@ public class IOEndnoteXmlService extends IoXmlService {
 				String recordId = xmlRecord.getRecNumber();
 				log.debug("Record {} with recNo {}", i, recordId);
 				publication = recordIdMap.get(recordId);
-				if (publication != null && publication.isKeptRecord()) {
-					enrichXmlOutput(xmlRecord, publication);
+				if (markMode) {
+					replaceLabel(xmlRecord, publication.getLabel());
 					marshaller.marshal(xmlRecord, writer);
 					numberWritten++;
 					log.error("Record {} saved", recordId);
 				} else {
-					log.error("Record {} skipped", recordId);
+					if (publication != null && publication.isKeptRecord()) {
+						enrichXmlOutput(xmlRecord, publication);
+						marshaller.marshal(xmlRecord, writer);
+						numberWritten++;
+						log.error("Record {} saved", recordId);
+					} else {
+						log.error("Record {} skipped", recordId);
+					}
 				}
-				
 				if (reader.getEventType() == CHARACTERS) {
 					reader.next(); // skip the whitespace between EndNoteXmlRecords
 				}
@@ -109,10 +129,42 @@ public class IOEndnoteXmlService extends IoXmlService {
 			writer.close();
 		} catch (JAXBException | FileNotFoundException | XMLStreamException e) {
 			e.printStackTrace();
-		} 
+		} finally {
+			try {
+				if (reader != null) {
+					// Frees any resources associated with this Reader. This method does not close the underlying input source.
+					reader.close();
+					fileReader.close();
+					log.error("File {} is closed", inputFileName);
+				}
+			} catch (XMLStreamException | IOException e) {
+				e.printStackTrace();
+			}
+		}
 		log.info("Finished with {} records", numberWritten);
 
 		return numberWritten;
+	}
+
+	private void replaceLabel(EndnoteXmlRecord xmlRecord, String publicationLabel) {
+		Style style;
+		if (publicationLabel == null) {
+			if (xmlRecord.getLabel() != null) {
+				style = xmlRecord.getLabel().getStyle().getFirst();
+				xmlRecord.setLabel(null);
+			}
+		} else {
+			if (xmlRecord.getLabel() != null) {
+				style = xmlRecord.getLabel().getStyle().getFirst(); 
+			} else {
+				Label label = objectFactory.createLabel();
+				xmlRecord.setLabel(label);
+				style = objectFactory.createStyle();
+				label.getStyle().add(style);
+			}
+			setDefaultAttributes(style);
+			style.setvalue(publicationLabel);
+		}
 	}
 
 	private void enrichXmlOutput(EndnoteXmlRecord xmlRecord, Publication publication) {
@@ -213,12 +265,6 @@ public class IOEndnoteXmlService extends IoXmlService {
 		style.setSize("100%");
 	}
 
-	@Override
-	public int writeMarkedRecords(List<Publication> publications, String inputFileName, String outputFileName) {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
 	/*
 	 * JAXB User Guide: 4.4. Dealing with large documents
 	 * https://eclipse-ee4j.github.io/jaxb-ri/4.0.5/docs/ch03.html#unmarshalling-dealing-with-large-documents
@@ -239,13 +285,16 @@ public class IOEndnoteXmlService extends IoXmlService {
 		List<EndnoteXmlRecord> xmlRecords = new ArrayList<>();
 		List<Publication> publications = new ArrayList<>();
 		int i = 0;
-
+		FileReader fileReader = null;
+		XMLStreamReader xsr = null;
+		
 		try {
 			JAXBContext jaxbContext = JAXBContext.newInstance(Xml.class);
 			Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
 			XMLInputFactory xif = XMLInputFactory.newInstance();
-			XMLStreamReader xsr = xif.createXMLStreamReader(new FileReader(inputFileName));
-	
+			fileReader = new FileReader(inputFileName);
+			xsr = xif.createXMLStreamReader(fileReader);
+		
 			xsr.nextTag();
 			xsr.require(START_ELEMENT, null, "xml");
 			xsr.nextTag();
@@ -271,7 +320,18 @@ public class IOEndnoteXmlService extends IoXmlService {
 			}
 		} catch (JAXBException | FileNotFoundException | XMLStreamException e) {
 			e.printStackTrace();
-		} 
+		} finally {
+			try {
+				if (xsr != null) {
+					// Frees any resources associated with this Reader. This method does not close the underlying input source.
+					xsr.close();
+					fileReader.close();
+					log.error("File {} is closed", inputFileName);
+				}
+			} catch (XMLStreamException | IOException e) {
+				e.printStackTrace();
+			}
+		}
 		log.info("Finished with {} records", i);
 		return new ParsedAndConvertedEndnote(xmlRecords, publications);
 	}

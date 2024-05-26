@@ -412,7 +412,7 @@ public class IORisService implements IoService {
 			throws IOException {
 		if (enhance) {
 			if (!publication.getDois().isEmpty()) {
-				map.put("DO", publication.getDois().stream().collect(Collectors.joining("\nhttps://doi.org/", "https://doi.org/", null)));
+				map.put("DO", publication.getDois().stream().collect(Collectors.joining("\nhttps://doi.org/", "https://doi.org/", "")));
 			}
 			if (publication.getPageStart() != null) {
 				if (publication.getPageEnd() != null && !publication.getPageEnd().equals(publication.getPageStart())) {
