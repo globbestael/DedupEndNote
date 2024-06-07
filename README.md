@@ -5,7 +5,7 @@ Deduplication of EndNote RIS files:
 - deduplicate two files (NEW-RECORDS and OLD-RECORDS): deduplicates both files and produces a RIS file with the unique records from NEW-RECORDS
 - mark the duplicates of one file: produces a RIS file with the Label field containing the ID of the duplicate record
 
-DedupEndNote is available at http://dedupendnote.nl
+DedupEndNote is available at http://dedupendnote.nl:9777 
 
 ### Actions
 * Export one or two EndNote databases as RIS file(s)
