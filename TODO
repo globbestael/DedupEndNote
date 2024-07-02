@@ -12,6 +12,12 @@ XML parsing
 - (additional reason to split the original DTD into 2 DTDs: writing to the same XML format as the input file is easier)
 - Zotero has no custom fields (?)  
 
+Results for XML and RIS parsing are different, but the files are exported from Rayyan.
+YF_serology_samen_mark.xml: DONE: DedupEndNote has deduplicated 14832 records, has removed 7109 duplicates, and has written 7723 records.
+YF_serology_samen_mark.txt: DONE: DedupEndNote has deduplicated 14832 records, has removed 6896 duplicates, and has written 7936 records.
+- the format of the author fields in XML: Franco-Paredes C, and in RIS: C, Franco-Paredes  
+
+
 Rayyan files
 ============
 [HOME]\dedupendnote_files\problems\articles_rayyan.ris has 9572 records from Rayyan

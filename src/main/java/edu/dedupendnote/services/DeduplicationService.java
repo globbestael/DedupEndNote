@@ -507,10 +507,35 @@ public class DeduplicationService {
 
 	public String deduplicateTwoFiles(String newInputFileName, String oldInputFileName, String outputFileName,
 			boolean markMode, String wssessionId) {
-		// read the old records and mark them as present, then add the new records
 		log.info("oldInputFileName: {}", oldInputFileName);
 		log.info("newInputFileName: {}", newInputFileName);
-		// FIXME: ioService not initialized (test for fileType first) 
+		
+		FileType oldFileType = getFileType(oldInputFileName);
+		if (oldFileType.equals(FileType.UNKNOWNXML)) {
+			String s = "ERROR: With XML files only EndNote and Zotero XML files are accepted. '%s' is not recognized as Endnote or Zotero XML".formatted(oldInputFileName);
+			wsMessage(wssessionId, s);
+			return s;
+		}
+
+		FileType newFileType = getFileType(newInputFileName);
+		if (newFileType.equals(FileType.UNKNOWNXML)) {
+			String s = "ERROR: With XML files only EndNote and Zotero XML files are accepted. '%s' is not recognized as Endnote or Zotero XML".formatted(newInputFileName);
+			wsMessage(wssessionId, s);
+			return s;
+		}
+
+		if (! oldFileType.equals(newFileType)) {
+			String s = "ERROR: The two files must have the same file type. Your files are of file type %s and %s".formatted(oldFileType, newFileType);	
+		}
+		
+		ioService = switch (oldFileType) {
+			case RIS ->  new IORisService();
+			case ENDNOTEXML -> new IOEndnoteXmlService();
+			case ZOTEROXML -> new IOZoteroXmlService();
+			case UNKNOWNXML -> throw new RuntimeException("XML file but not EndNote or Zotero format");
+		};
+
+		// read the old records and mark them as present, then add the new records
 		List<Publication> publications = ioService.readPublications(oldInputFileName);
 
 		String s = doSanityChecks(publications, oldInputFileName);
