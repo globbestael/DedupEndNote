@@ -2,7 +2,7 @@ package edu.dedupendnote;
 
 import java.io.File;
 import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
@@ -31,7 +31,7 @@ public class DedupEndNoteApplication {
 	CommandLineRunner init() {
 		return args -> {
 			FileSystemUtils.deleteRecursively(new File(uploadDir));
-			Files.createDirectory(Paths.get(uploadDir));
+			Files.createDirectory(Path.of(uploadDir));
 		};
 	}
 }

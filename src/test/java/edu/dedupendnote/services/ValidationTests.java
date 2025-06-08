@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assertions.fail;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -636,7 +635,7 @@ class ValidationTests {
 		System.err.println("Start");
 		List<String> lines = Collections.emptyList();
 		try {
-			lines = Files.readAllLines(Paths.get(asysdInputfileName));
+			lines = Files.readAllLines(Path.of(asysdInputfileName));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -682,7 +681,7 @@ class ValidationTests {
 	}
 
 	List<PublicationDB> readTruthFile(String fileName) throws IOException {
-	    Path path = Paths.get(fileName);
+	    Path path = Path.of(fileName);
 
 		CsvMapper mapper = new CsvMapper();
 		CsvSchema schema = mapper

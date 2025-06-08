@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -76,7 +75,7 @@ class AuthorsBaseTest extends BaseTest {
 	protected List<Triple> getValidatedAuthorsPairs() throws IOException {
 		String fileName = testdir + "/experiments/validated_authors_pairs.txt";
 		localTriples.clear();
-		Path path = Paths.get(fileName);
+		Path path = Path.of(fileName);
 		Stream<String> lines = Files.lines(path);
 		lines.forEach(l -> {
 			String[] parts = l.split("\t");

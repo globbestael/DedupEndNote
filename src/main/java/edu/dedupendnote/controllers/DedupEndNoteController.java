@@ -6,7 +6,6 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -80,7 +79,7 @@ public class DedupEndNoteController {
 			@RequestParam("markModeResultFile") boolean markMode, HttpServletResponse response) {
 		String outputFileName = createOutputFileName(fileName, markMode);
 
-		Path path = Paths.get(uploadDir, outputFileName);
+		Path path = Path.of(uploadDir, outputFileName);
 		response.setContentType("text/plain");
 		response.addHeader("Content-Disposition", "attachment; filename=\"" + outputFileName + "\"");
 		try {
@@ -157,7 +156,7 @@ public class DedupEndNoteController {
 					"{ \"result\": \"Failed to upload " + file.getOriginalFilename() + " because it was empty" + "\"}");
 		}
 		try {
-			Path path = Paths.get(uploadDir, file.getOriginalFilename());
+			Path path = Path.of(uploadDir, file.getOriginalFilename());
 			if (Files.exists(path, LinkOption.NOFOLLOW_LINKS)) {
 				Files.delete(path);
 			}

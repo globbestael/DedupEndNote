@@ -278,8 +278,8 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 	}
 
 	private String showTripleComparison(Triple t) {
-		return String.format("JWS %.2f vs %.2f (%.2f):\n- %s\n- %s", t.getJws(), t.getExpJws(),
-				t.getJws() - t.getExpJws(), t.getAuthors1(), t.getAuthors2());
+		return "JWS %.2f vs %.2f (%.2f):\n- %s\n- %s".formatted(t.getJws(), t.getExpJws(),
+			t.getJws() - t.getExpJws(), t.getAuthors1(), t.getAuthors2());
 	}
 
 	private void showTripleComparisonDetails(String nameExperiment, List<Triple> triples, boolean onlySummary) {

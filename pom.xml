@@ -13,7 +13,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.1.5</version>
+		<version>3.4.6</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 
@@ -138,17 +138,23 @@
 			<plugin>
 		        <groupId>org.openrewrite.maven</groupId>
 		        <artifactId>rewrite-maven-plugin</artifactId>
-		        <version>5.8.1</version>
-		        <configuration>
-		          <activeRecipes>
-		            <recipe>org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_0</recipe>
-		          </activeRecipes>
-		        </configuration>
+		        <version>6.11.0</version>
+				<configuration>
+					<exportDatatables>true</exportDatatables>
+					<activeRecipes>
+						<recipe>org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_4</recipe>
+						<!-- recipe for spring boot 3.5 errors out (because itis the first oe from io.moderne? -->
+						<!-- <recipe>io.moderne.java.spring.boot3.SpringBootProperties_3_5</recipe>-->
+					</activeRecipes>
+					<exclusions>
+						<exclusion>${project.basedir}/upload-dir/**</exclusion>
+					</exclusions>
+				</configuration>
 		        <dependencies>
 		          <dependency>
 		            <groupId>org.openrewrite.recipe</groupId>
 		            <artifactId>rewrite-spring</artifactId>
-		            <version>5.0.11</version>
+		            <version>6.8.2</version>
 		          </dependency>
 		        </dependencies>
 		      </plugin>
