@@ -560,7 +560,6 @@ public class Publication {
 		}
 
 		author = normalizeToBasicLatin(author);
-		author = author.replaceAll("-", " ");
 
 		String[] parts = author.split("\\s*,\\s+"); // see testfile Non_Latin_input.txt for " , "
 		if (parts.length < 2) {

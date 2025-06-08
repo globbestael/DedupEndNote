@@ -1,6 +1,7 @@
 package edu.dedupendnote;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -8,14 +9,13 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -117,17 +117,6 @@ class DedupEndNoteApplicationTests {
 			assertThat(resultString).isEqualTo(deduplicationService.formatResultString(total, totalWritten));
 	  }
 
-	@Disabled("File missing")
-	@Test
-	void file_without_IDs() {
-		String fileName = testdir + "Recurrance_rate_EndNote_Library_original_deduplicated.txt";
-		boolean markMode = false;
-		String outputFileName = DedupEndNoteController.createOutputFileName(fileName, markMode);
-
-		String resultString = deduplicationService.deduplicateOneFile(fileName, outputFileName, markMode, wssessionId);
-		assertThat(resultString).startsWith("ERROR: The input file contains records without IDs");
-	}
-
 	@Test
 	void deduplicate_withDuplicateIDs() {
 		String inputFileName = testdir + "Bestand_met_duplicate_IDs.txt";
@@ -213,4 +202,26 @@ class DedupEndNoteApplicationTests {
 
 	// FIXME: tests for markMode = true;
 
+	@SafeVarargs
+	public static <T> T coalesce(T... values) {
+		return Arrays.stream(values).filter(Objects::nonNull).findFirst().orElse(null);
+	}
+	
+	@Test
+	void checkCoalesce() {
+		// FIXME: make assertions comparing with Apache Commons lang3: ObjectUtils::firstNonNull 
+		assertThat(DedupEndNoteApplicationTests.coalesce((Object) null)).isNull();
+		assertThat(DedupEndNoteApplicationTests.coalesce((String) null, "One", (String) null)).isEqualTo("One");
+		
+		String[] arrayNulls = { null,  null };
+		assertThat(DedupEndNoteApplicationTests.coalesce(arrayNulls, "One")).isEqualTo(arrayNulls);
+
+		String[] arrayNullNonNull = { null,  "A" };
+		assertThat(DedupEndNoteApplicationTests.coalesce(arrayNullNonNull, "One")).isEqualTo(arrayNullNonNull);
+
+		String[] arrayNonNull = { null,  "A" };
+		assertThat(DedupEndNoteApplicationTests.coalesce(arrayNonNull, "One")).isEqualTo(arrayNonNull);
+		
+		fail("laatste 3 resultaten voor coalesce zijn NIET ok");
+	}
 }

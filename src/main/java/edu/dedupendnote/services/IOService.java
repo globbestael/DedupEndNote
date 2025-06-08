@@ -230,6 +230,9 @@ public class IOService {
 		} catch (NumberFormatException e) {
 			log.error("In field {} with content {}: Number could not be parsed", fieldName, fieldContent);
 			e.printStackTrace();
+		} catch (Exception e) {
+			log.error("In field {} with content {}: other exception: {}", fieldName, fieldContent, e.getMessage());
+			e.printStackTrace();
 		}
 		log.debug("Records read: {}", publications.size());
 		return publications;

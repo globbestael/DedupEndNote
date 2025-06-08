@@ -118,11 +118,19 @@ class JaroWinklerAuthorsTest {
 	// The 3rd argument is JWS score without transposed authors, the 4th argument with
 	// transposed authors
 	static Stream<Arguments> positiveAuthorsProvider() {
-		return Stream.of(arguments("Ram, S; Lewis, LA; Rice, PA", "Ram, S.; Lewis, L. A.; Rice, P. A.", 1.0, 1.0),
-				arguments("Okuda, K.", "Okuda, K.; et al.", 1.0, 1.0),
-				arguments("Cobos Mateos, J. M.", "Mateos, J. M. C", 0.70, 1.0), // double
-																				// last
-																				// names
+		return Stream.of(
+				arguments(
+						"Ram, S; Lewis, LA; Rice, PA", 
+						"Ram, S.; Lewis, L. A.; Rice, P. A.", 
+						1.0, 1.0),
+				arguments(
+						"Okuda, K.", 
+						"Okuda, K.; et al.", 
+						1.0, 1.0),
+				arguments( // double last names
+						"Cobos Mateos, J. M.", 
+						"Mateos, J. M. C", 
+						0.70, 1.0),
 				arguments(
 						"Cobos Mateos, J. M.; Aguinaga Manzanos, M. V.; Casas Pinillos, M. S.; Gonzalez Conde, R.; Gonzalez Sanchez, J. A.; De Miguel Velasco, J. E.; Soleto Saez, E.; Suarez Mier, M. P.",
 						"Mateos, J. M. C.; Manzanos, M. V. A.; Pinillos, M. S. C.; Conde, R. G.; Sanchez, J. A. G.; Velasco, J. E. D. M.; Saez, E. S.; Mier, M. P. S.",
@@ -244,7 +252,7 @@ class JaroWinklerAuthorsTest {
 				arguments(
 					"Lofving Gupta, S.; Wijk, K.; Warner, G.; Sarkadi, A.",
 					"Gupta, S. L.; Wijk, K.; Warner, G.; Sarkadi, A.",
-					0.8, 0.8),
+					0.8, 1.0),
 				arguments("", "", 1.0, 1.0));
 	}
 
