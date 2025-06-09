@@ -30,7 +30,6 @@ class TextNormalizerTest {
 	void textNormalizerTest(String input, String own, String commons) {
 		String ownResult = Publication.normalizeToBasicLatin(input);
 		String commonsResult = StringUtils.stripAccents(input);
-		// System.err.println(input);
 		try (AutoCloseableSoftAssertions softly = new AutoCloseableSoftAssertions()) {
 			softly.assertThat(ownResult).as("Own textnormalization differs").isEqualTo(own);
 			softly.assertThat(commonsResult).as("Apache Commons textnormalization differs").isEqualTo(commons);

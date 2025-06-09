@@ -125,7 +125,7 @@ class ValidationTests {
 			double precision = tp * 100.0 / (tp + fp);
 			double sensitivity = tp * 100.0 / (tp + fn); // == recall
 			double specificity = tn * 100.0 / (tn + fp);
-			double f1_score = 2 * precision * sensitivity / (precision + sensitivity);
+			double f1Score = 2 * precision * sensitivity / (precision + sensitivity);
 			if (v.equals(c)) {
 				System.out.println("\nResults: " + setName);
 				System.out.println(
@@ -136,11 +136,10 @@ class ValidationTests {
 				System.out.println(
 					"| %7d | %11.2f%% | %7d | %7d | %11.2f%% | %7d | %7d | %11.3f%% | %11.3f%% | %11.3f%% |".formatted(
 						tp + tn + fp + fn, (tp + fn) * 100.0 / (tp + tn + fp + fn), tp, fn, sensitivity, tn, fp,
-						specificity, precision, f1_score));
+						specificity, precision, f1Score));
 				System.out.println(
 						"------------------------------------------------------------------------------------------------------------------------------");
 				System.out.flush();
-				// errors.stream().forEach(System.err::println);
 			} else {
 				changed = true;
 				System.err.println("\nResults: " + setName + ": HAS DIFFERENT RESULTS (first new, second old");
@@ -149,18 +148,10 @@ class ValidationTests {
 				System.err.println("| %7s | %12s | %7s | %7s | %12s | %7s | %7s | %12s | %12s | %12s |".formatted(
 					"TOTAL", "% duplicates", "TP", "FN", "Sensitivity", "TN", "FP", "Specificity", "Precision",
 					"F1-score"));
-				// System.err.println(String.format("| %7d | %11.2f%% | %7d | %7d |
-				// %11.2f%% | %7d | %7d | %11.2f%% |",
-				// tp + tn + fp + fn, (tp + fn) * 100.0 / (tp + tn + fp + fn), tp, fn, (tp
-				// * 100.0/(tp + fn)), tn, fp, (tn * 100.0/(tn + fp))));
-				// System.err.println(String.format("| %7d | %11.2f%% | %7d | %7d |
-				// %11.2f%% | %7d | %7d | %11.2f%% |",
-				// tp + tn + fp + fn, (tp + fn) * 100.0 / (tp + tn + fp + fn), tp, fn, (tp
-				// * 100.0/(tp + fn)), tn, fp, (tn * 100.0/(tn + fp))));
 				System.err.println(
 					"| %7d | %11.2f%% | %7d | %7d | %11.2f%% | %7d | %7d | %11.3f%% | %11.3f%% | %11.3f%% |".formatted(
 						tp + tn + fp + fn, (tp + fn) * 100.0 / (tp + tn + fp + fn), tp, fn, sensitivity, tn, fp,
-						specificity, precision, f1_score));
+						specificity, precision, f1Score));
 				tp = v.getTp();
 				fn = v.getFn();
 				tn = v.getTn();
@@ -168,11 +159,11 @@ class ValidationTests {
 				precision = tp * 100.0 / (tp + fp);
 				sensitivity = tp * 100.0 / (tp + fn); // == recall
 				specificity = tn * 100.0 / (tn + fp);
-				f1_score = 2 * precision * sensitivity / (precision + sensitivity);
+				f1Score = 2 * precision * sensitivity / (precision + sensitivity);
 				System.err.println(
 					"| %7d | %11.2f%% | %7d | %7d | %11.2f%% | %7d | %7d | %11.3f%% | %11.3f%% | %11.3f%% |".formatted(
 						tp + tn + fp + fn, (tp + fn) * 100.0 / (tp + tn + fp + fn), tp, fn, sensitivity, tn, fp,
-						specificity, precision, f1_score));
+						specificity, precision, f1Score));
 				System.err.println(
 						"------------------------------------------------------------------------------------------------------------------------------");
 				System.err.flush();
@@ -234,22 +225,6 @@ class ValidationTests {
 					2 * precision * sensitivity / (precision + sensitivity)));
 			System.out.println(
 					"---------------------------------------------------------------------------------------------------------------------------------------------");
-
-			// Printing out the traditional way
-			// tp = v.getTp(); fn = v.getFn(); tn = v.getTn(); fp = v.getFp();
-			// precision = tp * 100.0 / (tp + fp);
-			// sensitivity = tp * 100.0 / (tp + fn);
-			// System.out.println("---------------------------------------------------------------------------------------------------------------------------------------------");
-			// System.out.println(String.format("| %7s | %12s | %7s | %7s | %12s | %7s |
-			// %7s | %12s | %12s | %12s | %12s |", "TOTAL", "% duplicates", "TP", "FN",
-			// "Sensitivity", "TN", "FP", "Specificity", "Precision", "Accuracy", "F1"));
-			// System.out.println(String.format("| %7d | %11.2f%% | %7d | %7d | %11.2f%% |
-			// %7d | %7d | %11.3f%% | %11.3f%% | %11.3f%% | %11.3f%% |",
-			// tp + tn + fp + fn, (tp + fn) * 100.0 / (tp + tn + fp + fn), tp, fn,
-			// sensitivity, tn, fp, tn * 100.0 / (tn + fp),
-			// precision, (tp + tn) * 100.0 / (tp + fn + tn + fp), 2 * precision *
-			// sensitivity / (precision + sensitivity)));
-			// System.out.println("---------------------------------------------------------------------------------------------------------------------------------------------");
 			System.out.flush();
 			assertThat(1*1).isEqualTo(1);
 		}
@@ -268,7 +243,7 @@ class ValidationTests {
 			.collect(Collectors.groupingBy(PublicationDB::getDedupid,
 					Collectors.mapping(PublicationDB::getId, Collectors.toSet())));
 		assertThat(trueDuplicateSets).hasSizeGreaterThan(10);
-		trueDuplicateSets.entrySet().stream().limit(10).forEach(l -> System.err.println(l));
+		trueDuplicateSets.entrySet().stream().limit(10).forEach(System.err::println);
 	}
 
 	// @formatter:off
@@ -604,11 +579,6 @@ class ValidationTests {
 	void createInitialTruthFile(String inputFileName, String asysdInputfileName, String outputFileName) {
 		Map<Integer, Set<Integer>> goldMap = readASySDGoldFile(asysdInputfileName);
 		List<PublicationDB> publicationDBs = getRecordDBs(inputFileName);
-//		Map<Integer,PublicationDB> recordDBMap = recordDBs.stream().collect(Collectors.toMap(PublicationDB::getId, Function.identity()));
-		
-//		goldMap.entrySet().stream().filter(e -> e.getValue().size() == 1).forEach(e -> {
-//			if (recordDBMap.get(key))
-//		});
 		
 		publicationDBs.forEach(r -> {
 			Integer id = r.getId();
@@ -675,9 +645,7 @@ class ValidationTests {
 		}
 
 		deduplicationService.searchYearOneFile(publications, wssessionId);
-		List<PublicationDB> publicationDBs = recordDBService.convertToRecordDB(publications, inputFileName);
-		
-		return publicationDBs;
+		return recordDBService.convertToRecordDB(publications, inputFileName);
 	}
 
 	List<PublicationDB> readTruthFile(String fileName) throws IOException {
@@ -694,9 +662,7 @@ class ValidationTests {
 				.with(schema)
 				.with(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT)
 				.readValues(path.toFile());
-		List<PublicationDB> records = it.readAll();
-		
-		return records;
+		return it.readAll();
 	}
 
 }

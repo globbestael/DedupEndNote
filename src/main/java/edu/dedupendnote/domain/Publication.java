@@ -158,7 +158,7 @@ public class Publication {
 	// The first group is non greedy (with 2 times ": " in string, first group captures before first ": ", second the rest of the string
 	private static Pattern titleAndSubtitlePattern = Pattern.compile("^(.{50,}?): (.{50,})$");
 
-
+	private static Pattern numbersWithinPattern = Pattern.compile(".*\\d+.*");
 	/*
 	 * FIXME: Why is normalizeToBasicLatin not used?
 	 */
@@ -697,7 +697,7 @@ public class Publication {
 	public List<String> addIssns(String issn) {
 		Matcher matcher = issnIsbnPattern.matcher(issn.toUpperCase());
 		while (matcher.find()) {
-			String group = matcher.group(1).replaceAll("-", "");
+			String group = matcher.group(1).replace("-", "");
 			switch (group.length()) {
 				case 8: 
 					issns.add(group);
@@ -766,14 +766,14 @@ public class Publication {
 		Set<String> additional = new HashSet<>();
 		for (String j : list) {
 			if (j.contains(":")) {
-				additional.add(j.replaceAll(":", " "));
+				additional.add(j.replace(":", " "));
 			}
 			if (j.contains("-")) {
-				additional.add(j.replaceAll("-", " "));
-				additional.add(j.replaceAll("-", ""));
+				additional.add(j.replace("-", " "));
+				additional.add(j.replace("-", ""));
 			}
 			if (j.contains("ae")) {
-				additional.add(j.replaceAll("ae", "e"));
+				additional.add(j.replace("ae", "e"));
 			}
 			if (journalSectionMarkers.matcher(journal).matches()) {
 				additional.add(journalSectionMarkers.matcher(journal).replaceAll("$1"));
@@ -891,11 +891,11 @@ public class Publication {
 		} else {
 			this.pageStart = pages;
 		}
-		if (! pageStart.matches(".*\\d+.*") && pageEnd != null && pageEnd.matches(".*\\d+.*")) {
+		if (! numbersWithinPattern.matcher(pageStart).matches() && pageEnd != null && numbersWithinPattern.matcher(pageEnd).matches()) {
 			pageStart = pageEnd;
 			pageEnd = null;
 		}
-		if (pageStart.matches(".*\\d+.*")) {
+		if (numbersWithinPattern.matcher(pageStart).matches()) {
 			/*
 			 * Books, reports, ... all start with page 1, therefore the ending page is
 			 * used if available. BUT: Because Publication type is not available, pages
