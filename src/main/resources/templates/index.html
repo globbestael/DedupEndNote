@@ -48,7 +48,6 @@
 	 	}
 	 	function showProgress(percentage) {
 	 		$("#progress").html(`<div class="progress-bar" role="progressbar" style="width: ${percentage}%;" aria-valuenow="${percentage}" aria-valuemin="0" aria-valuemax="100">${percentage}%</div>`);
-	 		// $('#progress-bar').css('width', percentage + '%').attr('aria-valuenow', percentage);
 	 	}
 	 	function disableButton(id) {
 	 		$(id).prop("disabled", true);
@@ -87,18 +86,16 @@
  			        // console.log("connected, session id: " + wssessionId);
  			        $("#wssessionId").val(wssessionId);
  		 	        stompClient.subscribe('/topic/messages-' + wssessionId, function (stompMessage) {
- 		 	        	message = JSON.parse(stompMessage.body).name
+ 		 	        	let message = JSON.parse(stompMessage.body).name
  	                    if (message.match("^DONE")) {
  	                    	showProgress(0);
  	                        $('#results').html(message);      
  							enableButton('#buttonResultFile');
  							markAsDone('#step2');
- 		   					// disconnect();
  	                    } else if (message.match("^ERROR")) {  
  	 		        		$('#results').removeClass('alert-warning');
  	 		        		$('#results').addClass('alert-danger');
  	                        $('#results').html(message);      
-		   					// disconnect();
  	                    } else if (message.match("^PROGRESS:")) {
  	                    	var found = message.match(/^PROGRESS: (.+)$/);
  	                    	var percentage = found[1]; 
@@ -119,7 +116,6 @@
 				if (match != null) {
 					fileName = match[2];
 				}
-				// alert("fileName: " + fileName);
  		    	$("#fileName_1").val(fileName);
 			});
 			
@@ -134,7 +130,6 @@
 	        	   checkFileSize(event, data);
 				},
 		 		done: function (e, data) {
- 		        	// console.log("done reached: %o", data);
 	    			$("#markModeResultFile").val($("input[name='markMode']").prop("checked"));
  		        	if (data.textStatus == "success") {
 						showProgress(0);
@@ -145,9 +140,6 @@
  		        	}
  		        },
  		        error: function (jqXHR, data, thrownError) {
- 		        	// console.log("error arg1 reached: %o", jqXHR.responseText);
- 		        	// console.log("error arg2 reached: %o", data.textStatus);
- 		        	// console.log("error arg3 reached: %o", thrownError);
  		        	var response = jQuery.parseJSON(jqXHR.responseText);
 	        		$('#results').html("<span>" + response.result + "</span>");
  	        		$('#results').addClass('alert-danger');
@@ -155,7 +147,6 @@
  		        },
   				progressall: function (e, data) {
  		            var percentage = parseInt(data.loaded / data.total * 100, 10);
- 		            // console.log("Progress: " + percentage);
                  	$("#progress").html(`<div class="progress-bar" role="progressbar" style="width: ${percentage}%;" aria-valuenow="${percentage}" aria-valuemin="0" aria-valuemax="100">${percentage}%</div>`);
  		        }
  		    });
@@ -911,11 +902,11 @@
 
 				<h3 id="citing">How to cite</h3>
 				<div>If you use this software, please cite it as:<br>
-				Lobbestael, G. (2023). DedupEndNote (Version 1.0.2) [Computer software]. https://github.com/globbestael/DedupEndNote</div> 
+				Lobbestael, G. (2025). DedupEndNote (Version 1.0.2) [Computer software]. https://github.com/globbestael/DedupEndNote</div> 
 
 				<h3 id="changes">Latest changes</h3>
 				<ul>
-					<li>2025-06-09: 1.0.2: Upgrade to Java 21, Spring Boot 3.5.0</li>
+					<li>2025-07-09: 1.0.2: Upgrade to Java 21, Spring Boot 3.5.0</li>
 					<li>2024-01-14: 1.0.1: BUG: Doesn't handle author last name starting with a hyphen</li>
 					<li>2023-09-02: ISBN-10 and ISBN-13 are compared correctly: 9024274214 = 9789024274215</li>
 					<li>2023-09-02: BUG: Publication years of form "1-1-1989" (instead of "1989") are parsed as years</li>
