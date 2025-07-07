@@ -54,8 +54,7 @@ class TextNormalizerTest {
 						"AAAAAACEEEEIIIINOOOOOUUUUY",
 						"AAAAAACEEEEIIIINOOOOOUUUUY"),
 				arguments(
-						"\u0104\u0141\u00D3\u015A\u017B\u0179\u0106\u0143 \u0105\u0142\u00F3\u015B\u017C\u017A\u0107\u0144", // ĄŁÓŚŻŹĆŃ
-																																// ąłóśżźćń
+						"\u0104\u0141\u00D3\u015A\u017B\u0179\u0106\u0143 \u0105\u0142\u00F3\u015B\u017C\u017A\u0107\u0144", // ĄŁÓŚŻŹĆŃ ąłóśżźćń
 						"AOSZZCN aoszzcn", // Ł and ł are removed
 						"ALOSZZCN aloszzcn"),
 				arguments( // CJK

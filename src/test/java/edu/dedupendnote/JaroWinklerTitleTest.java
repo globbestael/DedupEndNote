@@ -32,6 +32,7 @@ class JaroWinklerTitleTest {
 		System.err.println("- 1: %s\n- 2: %s\n- 3: %s\n- 4: %s\n".formatted(input1,
 			Publication.normalizeJava8(input1), input2, Publication.normalizeJava8(input2)));
 		assertThat(distance)
+			.as("\nTitle1: %s\nTitle2: %s", input1, input2)
 			.isEqualTo(expected, within(0.01))
 			.isGreaterThanOrEqualTo(DeduplicationService.TITLE_SIMILARITY_SUFFICIENT_STARTPAGES_OR_DOIS);
 	}

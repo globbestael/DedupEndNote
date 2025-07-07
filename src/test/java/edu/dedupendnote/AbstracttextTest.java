@@ -1,9 +1,10 @@
-package edu.dedupendnote;
+	package edu.dedupendnote;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
+import java.util.List;
 import java.util.stream.Stream;
 
 import org.apache.commons.text.similarity.JaroWinklerSimilarity;
@@ -11,6 +12,9 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.boot.test.context.TestConfiguration;
+
+import com.github.difflib.text.DiffRow;
+import com.github.difflib.text.DiffRowGenerator;
 
 import edu.dedupendnote.domain.Publication;
 import info.debatty.java.stringsimilarity.RatcliffObershelp;
@@ -48,8 +52,7 @@ class AbstracttextTest {
 
 	static Stream<Arguments> positiveArgumentProvider() {
 		return Stream.of(
-				// PubMed and Embase.com record for an ACP Journal Club article in Annals
-				// of Internal Medicine
+				// PubMed and Embase.com record for an ACP Journal Club article in Annals of Internal Medicine
 				arguments(
 						"Ashina M, Lanteri-Minet M, Pozo-Rosich P, et al. Safety and efficacy of eptinezumab for migraine prevention in patients with two-to-four previous preventive treatment failures (DELIVER): a multi-arm, randomised, double-blind, placebo-controlled, phase 3b trial. Lancet Neurol. 2022;21:597-607. 35716692.",
 						"SOURCE CITATION: Ashina M, Lanteri-Minet M, Pozo-Rosich P, et al. Safety and efficacy of eptinezumab for migraine prevention in patients with two-to-four previous preventive treatment failures (DELIVER): a multi-arm, randomised, double-blind, placebo-controlled, phase 3b trial. Lancet Neurol. 2022;21:597-607. 35716692.",
@@ -96,6 +99,9 @@ class AbstracttextTest {
 
 	private String cleanAbstracttext(String inputtext) {
 		String text = inputtext;
+		text = text.replaceAll("\\. Copyright.+$", "");
+		text = text.replaceAll("\\. ©.+$", "");
+		 
 		text = text.toLowerCase();
 		text = text.replaceAll("\\<[^>]*>", "");
 		// FIXME: replace with pattern
@@ -107,14 +113,17 @@ class AbstracttextTest {
 				"^(aim(s?)|background(s?)|context|importance|introduction|objective(s?)|purpose|question|study objective|synopsis|(\\w+(\\s\\w+)?:\\s?))",
 				"");
 		// FIXME: replace with pattern
+		text = text.replaceAll("\u2010", "\u002D");
+		text = text.replaceAll("\u2009", "");
+		text = text.replaceAll("\\p{Zs}+", " ");
 		// remove all characters which are not letters or numbers. Some databases use
-		// "\u2009" (THIN SPACE) within "30 mg", other no character
-		text = text.replaceAll("[^\\p{L}\\p{N}]+", ""); // use "\\p{Nd}" if you want "¼"
-														// treated as a number
+		// "\u2009" (THIN SPACE) within "30 mg", others use no character
+		text = text.replaceAll("[^\\p{L}\\p{N} ]+", ""); // use "\\p{Nd}" if you want "¼" treated as a number
+		text = text.strip();
 		text = Publication.normalizeToBasicLatin(text);
-		if (text.length() > 200) {
-			text = text.substring(0, 199);
-		}
+//		if (text.length() > 200) {
+//			text = text.substring(0, 199);
+//		}
 		return text;
 	}
 
@@ -132,15 +141,23 @@ class AbstracttextTest {
 	@ParameterizedTest(name = "{index}: jaroWinkler({0}, {1})={2}")
 	@MethodSource("positiveArgumentProvider")
 	void jwPositiveTest(String input1, String input2, double expected) {
-		showDiffs(input1, input2);
+		// String diffsOfRawInput = getDiffs(input1, input2);
 		String t1 = cleanAbstracttext(input1);
 		String t2 = cleanAbstracttext(input2);
 		Double distance = jws.apply(t1, t2);
-		System.err.println("- 1: %s\n- 2: %s\n- 3: %s\n- 4: %s\n".formatted(input1, t1, input2, t2));
-		showDiffs(t1, t2);
-		assertThat(distance)
-			.isEqualTo(expected, within(0.01))
-			.isGreaterThanOrEqualTo(expected);
+		
+		/*
+		 * Awful way to get and print the differences between 2 strings to the console (instead of the JUnit tab)
+		 */
+		if (distance >= (expected - 0.01d) && distance <= (expected + 0.01d)) {
+			assertThat(distance)
+				.isEqualTo(expected, within(0.01));
+		} else {
+			System.err.println("Diffs: " +  getDiffs(t1,t2));
+			assertThat(distance)
+				.as("JWS distance too big. String: %s ...", t1.substring(0, 25))
+				.isEqualTo(expected, within(0.01));
+		}
 		// assertThat(distance).isGreaterThanOrEqualTo(DeduplicationService.TITLE_SIMILARITY_SUFFICIENT_STARTPAGES_OR_DOIS);
 	}
 
@@ -164,13 +181,14 @@ class AbstracttextTest {
 		assertThat(1*1).isEqualTo(1);
 	}
 
+	// formatter::off
 	/*
-	 * Ratcliff-Obershelp: preliminary results - Too slow to be used in production
-	 * with the full abstract, but speed with first 200 characters maybe acceptable
-	 * - positive examples: except for couples with/without HTML, lowercased RO
-	 * looks very good - negative examples: looks good if full length is used, but
-	 * not with lowercased first 200 characters
+	 * Ratcliff-Obershelp: preliminary results 
+	 * - Too slow to be used in production with the full abstract, but speed with first 200 characters may be acceptable
+	 * - positive examples: except for couples with/without HTML, lowercased RO looks very good 
+	 * - negative examples: looks good if full length is used, but not with lowercased first 200 characters
 	 */
+	// formatter::on
 	@ParameterizedTest(name = "{index}: RatcliffObershelp({0}, {1})={2}")
 	@MethodSource("positiveArgumentProvider")
 	void ratcliffObershelpPositive(String input1, String input2, double expected) {
@@ -191,14 +209,18 @@ class AbstracttextTest {
 		assertThat(1*1).isEqualTo(1);
 	}
 
-	private void showDiffs(String text1, String text2) {
-		System.err.println("- " + text1 + "\n- " + text2);
-		for (int i = 0; i < Math.min(text1.length(), text2.length()) - 1; i++) {
-			if (text1.charAt(i) != text2.charAt(i)) {
-				System.err.println("Difference at %d: char'%s' (0x%04X),  char'%s' (0x%04X)".formatted(i,
-					text1.charAt(i), (int) text1.charAt(i), text2.charAt(i), (int) text2.charAt(i)));
-			}
-		}
-	}
+	//create a configured DiffRowGenerator
+	private static DiffRowGenerator generator = DiffRowGenerator.create()
+	                .showInlineDiffs(true)
+	                .mergeOriginalRevised(true)
+	                .inlineDiffByWord(true)
+	                .oldTag(f -> "~~")      //introduce markdown style for strikethrough
+	                .newTag(f -> "**")     //introduce markdown style for bold
+	                .build();
 
+	private String getDiffs(String text1, String text2) {
+		//compute the differences for two test texts.
+		List<DiffRow> rows = generator.generateDiffRows(List.of(text1), List.of(text2));
+		 return rows.get(0).getOldLine();
+	}
 }
