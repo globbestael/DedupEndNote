@@ -94,6 +94,10 @@
 			zie: https://springframework.guru/spring-boot-web-application-part-2-using-thymeleaf/
 		-->
 		<dependency>
+			<groupId>org.webjars</groupId>
+			<artifactId>webjars-locator-lite</artifactId>
+		</dependency>
+		<dependency>
 		    <groupId>org.webjars</groupId>
 		    <artifactId>bootstrap</artifactId>
 		    <version>4.5.3</version>
