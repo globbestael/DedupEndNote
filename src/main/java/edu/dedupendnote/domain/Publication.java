@@ -473,9 +473,10 @@ public class Publication {
 	 * characters.
 	 */
 	public static String normalizeToBasicLatin(String r) {
-		Matcher matcher = nonBasicLatinPattern.matcher(r);
-		if (matcher.find()) {
-			r = Normalizer.normalize(r, Normalizer.Form.NFD).replaceAll("[^\\p{InBasic_Latin}]", "");
+		if (nonBasicLatinPattern.matcher(r).find()) {
+			r = Normalizer.normalize(r, Normalizer.Form.NFD);
+			// you can't reuse the existing matcher because r might be changed 
+			r = nonBasicLatinPattern.matcher(r).replaceAll("");
 		}
 		return r;
 	}
@@ -579,6 +580,8 @@ public class Publication {
 	private static final Pattern lastNameAdditionsPattern = Pattern.compile("^(.+)\\b(jr|sr|1st|2nd|3rd|ii|iii)\\b(.*)$",
 			Pattern.CASE_INSENSITIVE);
 
+	private static final Pattern exceptCapitalsPattern = Pattern.compile("[^A-Z]");
+
 	// public because used in tests
 	// FIXME: add "No authorship, indicated"?
 	public static final Pattern anonymousOrGroupNamePattern = Pattern
@@ -635,10 +638,9 @@ public class Publication {
 		 */
 		// @formatter:on
 
-		// Reducing the first names to their initials, stripping everything but the
-		// initials, and leaving out the comma
+		// Reducing the first names to their initials, stripping everything but the initials, and leaving out the comma
 		// makes JWS higher for similar names and lower for different names.
-		String initials = firstNames.replaceAll("[^A-Z]", "");
+		String initials = exceptCapitalsPattern.matcher(firstNames).replaceAll("");
 		this.authors.add(lastName + " " + initials);
 
 		// @formatter:off
@@ -685,7 +687,6 @@ public class Publication {
 		}
 		// TODO: should illegal strings (java.lang.IllegalArgumentException) be treated differently?
 		try {
-//			doi = URLDecoder.decode(doi, Charset.forName("UTF8"));
 			doi = URLDecoder.decode(doi, "UTF8");
 			doi = StringEscapeUtils.unescapeHtml4(doi);
 		} catch (UnsupportedEncodingException e) {
@@ -787,13 +788,12 @@ public class Publication {
 		/*
 		 * Journals with a ":" will get 2 variants. e.g
 		 * "BJOG: An International Journal of Obstetrics and Gynaecology" or
-		 * "Clinical Medicine Insights: Circulatory, Respiratory and Pulmonary Medicine" -
-		 * one with the colon and all following characters removed ("BJOG" and
-		 * "Clinical Medicine Insights"). The removal of these characters does not happen
-		 * here, but later within normalizeJournalJava8() (journalAdditionPattern) - one
-		 * with the ":" replaced with a SPACE
-		 * ("BJOG: An International Journal of Obstetrics and Gynaecology" and
-		 * "Clinical Medicine Insights Circulatory, Respiratory and Pulmonary Medicine")
+		 * "Clinical Medicine Insights: Circulatory, Respiratory and Pulmonary Medicine"
+		 * - one with the colon and all following characters removed ("BJOG" and "Clinical Medicine Insights").
+		 *   The removal of these characters does not happen here, but later within normalizeJournalJava8() (journalAdditionPattern)
+		 * - one with the ":" replaced with a SPACE
+		 *   ("BJOG: An International Journal of Obstetrics and Gynaecology" and
+		 *    "Clinical Medicine Insights Circulatory, Respiratory and Pulmonary Medicine")
 		 */
 		Set<String> additional = new HashSet<>();
 		for (String j : list) {
@@ -859,6 +859,12 @@ public class Publication {
 		}
 	}
 
+	/** 
+	 * "UNSP ..." (and variants) should be cleaned from the C7 field (WoS). Import may have changed UNSP" Into "Unsp".
+	 * "author..." (reply etc): delete rest of string
+	 */
+	private static Pattern pagesAdditionsPattern = Pattern.compile("((UNSP|Unsp)\\s*|author.+$)");
+
 	private static Pattern pagesDatePattern = Pattern
 		.compile("\\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\\b");
 
@@ -870,17 +876,13 @@ public class Publication {
 	 * https://github.com/globbestael/DedupEndnote/issues/3
 	 */
 	public void parsePages(String pages) {
-		// "UNSP ..." should be cleaned from the C7 field (WoS). Import may have changed
-		// "UNSP" Into "Unsp"
-		pages = pages.replaceAll("(UNSP|Unsp)\\s*", "");
-		pages = pages.replaceAll("author.+$", "");
+		pages = pagesAdditionsPattern.matcher(pages).replaceAll("");
 		// if Pages contains a date string, omit the pages
 		Matcher matcher = pagesDatePattern.matcher(pages); 
 		while (matcher.find()) {
 			pages = null;
 		}
-		// Ovid Medline in RIS format puts author address in M2 field, which is exported
-		// as SP
+		// Ovid Medline in RIS format puts author address in M2 field, which is exported as SP
 		if (pages == null || pages.isEmpty() || pages.length() > 20) {
 			return;
 		}

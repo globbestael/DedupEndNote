@@ -83,7 +83,7 @@ class ValidationTests {
 		// previous results
 		Map<String, ValidationResult> validationResultsMap = List
 			.of(new ValidationResult("ASySD_Cardiac_human", 6745, 28, 2175, 0, 3_700L),
-					new ValidationResult("ASySD_Depression", 17394, 576, 61895, 15, 120_000L),
+					new ValidationResult("ASySD_Depression", 17394, 576, 61895, 15, 76_000L),
 					new ValidationResult("ASySD_Diabetes", 1816, 18, 11, 0, 1_000L),
 					new ValidationResult("ASySD_Neuroimaging", 2158, 43, 1235, 2, 1_250L),
 					new ValidationResult("ASySD_SRSR_Human", 27787, 212, 24988, 14, 68_000L),
