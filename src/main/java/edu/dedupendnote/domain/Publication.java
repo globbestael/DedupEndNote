@@ -38,12 +38,10 @@ public class Publication {
 	private Set<String> journals = new HashSet<>();
 
 	/*
-	 * The label field is used internally to mark the duplicate lists: the label of all
-	 * duplicate records in a set receive the ID of the first record of this list. If a
-	 * record has no duplicates, the label is not set. It is NOT the content of the Label
-	 * (EndNote field LB) of the EndNote input file. If markMode is set, this field is
-	 * exported. The original content of the Label field in the EndNote export file is
-	 * overwritten in this case!
+	 * The label field is used internally to mark the duplicate lists: the label of all duplicate records in a set receive the ID
+	 * of the first record of this list. If a record has no duplicates, the label is not set. 
+	 * It is NOT the content of the Label (EndNote field LB) of the EndNote input file. 
+	 * If markMode is set, this field is exported. The original content of the Label field in the EndNote export file is overwritten in this case!
 	 */
 	private String label;
 
@@ -63,26 +61,27 @@ public class Publication {
 
 	private List<String> titles = new ArrayList<>();
 
+	// @formatter:off
 	/*
-	 * Cochrane publications need a slightly different comparison. The starting page is
-	 * the Cochrane number of the review which doesn't change for different versions of
-	 * the review. Each version of the review has a unique DOI (e.g.
-	 * "10.1002/14651858.cd008759.pub2"), but the first version has no ".pub" part, AND
-	 * bibliographic databases sometimes use the common DOI / DOI of first version for all
-	 * versions. Therefore: - with other publications starting pages are compared BEFORE
-	 * the DOIs. For Cochrane publications if both have a DOI, then only the DOIs are
-	 * compared - publication year must be the same
+	 * Cochrane publications need a slightly different comparison. 
+	 * The starting page is the Cochrane number of the review which doesn't change for different versions of the review. 
+	 * Each version of the review has a unique DOI (e.g. "10.1002/14651858.cd008759.pub2"), but the first version has no ".pub" part, AND
+	 * bibliographic databases sometimes use the common DOI / DOI of first version for all versions. 
+	 * Therefore:
+	 * - with other publications starting pages are compared BEFORE the DOIs. For Cochrane publications if both have a DOI, then only the DOIs are compared 
+	 * - publication year must be the same
 	 */
+	// @formatter:off
 	private boolean isCochrane = false;
 
+	// @formatter:off
 	/*
-	 * Publications which are replies need special treatment. See the Pattern in the
-	 * IOService.replyPattern - record pairs where one of them is isReply == true, aren't
-	 * compared for title (always true) - journals are compared stricter (see
-	 * DeduplcationService.JOURNAL_SIMILARITY_NO_REPLY <
-	 * DeduplcationService.JOURNAL_SIMILARITY_NO_REPLY) - in enrich() the longest title of
-	 * a duplicate set is used
+	 * Publications which are replies need special treatment. See the Pattern in the IOService.replyPattern 
+	 * - record pairs where one of them is isReply == true, aren't compared for title (always true)
+	 * - journals are compared stricter (see DeduplicationService.JOURNAL_SIMILARITY_NO_REPLY < DeduplicationService.JOURNAL_SIMILARITY_NO_REPLY)
+	 * - in enrich() the longest title of a duplicate set is used
 	 */
+	// @formatter:off
 	private boolean isReply = false;
 
 	private boolean isPhase = false;
@@ -115,6 +114,38 @@ public class Publication {
 
 	/**
 	 * All characters between "<" and ">", including the pointy brackets
+	 * 
+	 * ASYSD removes the following html tags from titles and abstracts
+	 * see https://github.com/camaradesuk/ASySD/pull/67/commits/fe9c4d1b08eebe2fa7c369bf4ff80077576bb9df 2026-06-13
+	 * The list has been expanded based on tests in ValidationTest:
+	 *  
+	 * List<String> htmlList = List.of(
+	 * 			"<b>", "</b>",
+	 * 			"<bold>", "</bold>",
+	 * 			"<br />",				// not in ASYSD
+	 * 			"<del>", "</del>",
+	 * 			"<em>", "</em>",
+	 * 			"<i>", "</i>",
+	 * 			"<inf>", "</inf>",
+	 * 			"<ins>", "</ins>",
+	 * 			"<mark>", "</mark>",
+	 * 			"<small>", "</small>",
+	 * 			"<sub>", "</sub>", 
+	 * 			"<sup>", "</sup>", 
+	 * 			"<sup/>"				// not in ASYSD
+	 * );
+	 * 
+	 * The ValidationTest files showed 3 more examples:
+	 * 		<35 vs. =/>
+	 * 		<35 vs. >
+	 * 		<ORIGINAL>
+	 * 
+	 * e.g. in title
+	 * 		Comparison of liver transplant outcomes for recipients with MELD <35 Vs. >35
+	 * The "<ORIGINAL>" cases in the SRA2_Respiratory file with publications < 2000. Original database of publications unknown.
+	 *
+	 * Based on these results, the crude pointyBracketsPattern (regex "<[^>]+>") hasn't been changed.
+	 * The method normalizeJava8(...) has code (commented out) for comparing the crude and explicit version
 	 */
 	private static Pattern pointyBracketsPattern = Pattern.compile("<[^>]+>");
 
@@ -159,13 +190,16 @@ public class Publication {
 	private static Pattern titleAndSubtitlePattern = Pattern.compile("^(.{50,}?): (.{50,})$");
 
 	private static Pattern numbersWithinPattern = Pattern.compile(".*\\d+.*");
-	/*
-	 * FIXME: Why is normalizeToBasicLatin not used?
-	 */
+
 	public static String normalizeJava8(String s) {
+		// FIXME: Why starting with parameter s and later copying s to r?
 		s = normalizeToBasicLatin(s);
 		s = doubleQuotesPattern.matcher(s).replaceAll("");
-		s = s.replaceAll("(<<|>>)", "");				// assume "<<...>>" is not an addition, but variant of double quote 
+		/* 
+		 * Assume "<<...>>" is not an addition, but a variant of double quotes. This replacement before the pointyBracketsPattern replacement.
+		 * Skipped because later nonAsciiLowercasePattern will replace the pointy brackets with a space. 
+		 */
+		// s = s.replaceAll("(<<|>>)", ""); 
 		/*
 		 * FIXME: Do a thorough check of retractions (including "WITHDRAWN: ..." Cochrane
 		 * reviews). Cochrane: PubMed, Medline and EMBASE use format "WITHDRAWN: ...", Web
@@ -199,6 +233,26 @@ public class Publication {
 		String r = s.toLowerCase();
 		r = nonInitialSquareBracketsPattern.matcher(r).replaceAll("");
 		r = pointyBracketsPattern.matcher(r).replaceAll("");
+		// Checks for the pointyBracketsPattern (the path not chosen) 
+//		Matcher m = pointyBracketsPattern.matcher(r);
+//		StringBuffer sb = new StringBuffer();
+//		List<String> htmlList = List.of("<b>", "</b>", "<bold>", "</bold>", "<br />",
+//				"<del>", "</del>",
+//				"<em>", "</em>",
+//				"<i>", "</i>", 
+//				"<inf>", "</inf>",
+//				"<ins>", "</ins>",
+//				"<mark>", "</mark>",
+//				"<small>", "</small>",
+//				"<sub>", "</sub>", "<sup>", "</sup>", "<sup/>");
+//		while (m.find()) {
+//			if (! htmlList.contains(m.group())) {
+//				log.error("PointyBracketPattern fires for {}", m.group());
+//			}
+//			m.appendReplacement(sb, "");
+//		}
+//		m.appendTail(sb);
+//		r = sb.toString();
 		r = roundBracketsPattern.matcher(r).replaceAll("");
 		r = hyphenPattern.matcher(r).replaceAll("");
 		r = nonAsciiLowercasePattern.matcher(r).replaceAll(" ");
@@ -341,17 +395,16 @@ public class Publication {
 	private static Pattern journalSectionMarkers = Pattern.compile("^(.+)(\\b(Part|Section))?\\b([A-I]\\b.*)$");
 
 	/**
-	 * a number or ". Conference" and all following characters: The number and all
-	 * following characters will be removed. E.g. "Clinical neuropharmacology.12 Suppl 2
-	 * ()(pp v-xii; S1-105) 1989.Date of Publication: 1989." --> "Clinical
-	 * neuropharmacology" E.g.: "European Respiratory Journal. Conference: European
-	 * Respiratory Society Annual Congress" (Cochrane records)
+	 * A number or ". Conference" and all following characters: The number and all
+	 * following characters will be removed. 
+	 * E.g.:
+	 * - "Clinical neuropharmacology.12 Suppl 2 ()(pp v-xii; S1-105) 1989.Date of Publication: 1989." --> "Clinical neuropharmacology"
+	 * - "European Respiratory Journal. Conference: European Respiratory Society Annual Congress" (Cochrane records)
 	 */
 	private static Pattern journalExtraPattern = Pattern.compile("^(.+?)((\\d.*|\\. Conference.*))$");
 
 	/**
-	 * Some subtitles of journals ("Technical report", "Electronic resource", ...): will
-	 * be removed
+	 * Some subtitles of journals ("Technical report", "Electronic resource", ...): will be removed
 	 */
 	static List<String> excludedJournalsParts = Arrays.asList("electronic resource", "et al.", "technical report");
 
@@ -364,9 +417,9 @@ public class Publication {
 	public static String normalizeJournalJava8(String s) {
 		String r = s;
 		r = normalizeToBasicLatin(r);
-		r = ampersandPattern.matcher(r).replaceAll(" "); // we don't want "&" in the
-															// patterns
-		r = jpnPattern.matcher(r).replaceAll("Japanese"); // irregular abbreviations
+		r = ampersandPattern.matcher(r).replaceAll(" ");	// we don't want "&" in the patterns
+		// irregular abbreviations
+		r = jpnPattern.matcher(r).replaceAll("Japanese");
 		r = dtschPattern.matcher(r).replaceAll("Deutsch");
 		r = natlPattern.matcher(r).replaceAll("National");
 		r = geneeskdPattern.matcher(r).replaceAll("eneeskunde");
@@ -395,33 +448,12 @@ public class Publication {
 		// r = latinOPattern.matcher(r).replaceAll(m -> "o" + m.group(1).toLowerCase());
 		// // "Gastro-Enterology" -> "Gastroenterology"
 		r = hyphenOrDotPattern.matcher(r).replaceAll(" ");
-		r = journalStartingArticlePattern.matcher(r).replaceAll(""); // article at start
-		r = genitiveApostrophePattern.matcher(r).replaceAll("s"); // Langenbeck's /
-																	// Bailliere's /
-																	// Crohn's
-		r = nonGenitiveApostrophePattern.matcher(r).replaceAll(" "); // Annales d'Urologie
-																		// / Journal of
-																		// Xi'an Jiaotong
-																		// University
-																		// (Medical
-																		// Sciences)
-		r = journalEndingRoundBracketsPattern.matcher(r).replaceAll(""); // "Ann Med
-																			// Interne
-																			// (Paris)"
-																			// --> "Ann
-																			// Med
-																			// Interne",
-																			// or "J Med
-																			// Ultrason
-																			// (2001)"
-		r = journalOtherRoundBracketsPattern.matcher(r).replaceAll(" "); // Some journals
-																			// only have
-																			// "(" without
-																			// a ")",
-																			// which
-																			// causes
-																			// regex
-																			// problems
+		r = journalStartingArticlePattern.matcher(r).replaceAll(""); 		// article at start
+		r = genitiveApostrophePattern.matcher(r).replaceAll("s");	 		// Langenbeck's / Bailliere's / Crohn's
+		r = nonGenitiveApostrophePattern.matcher(r).replaceAll(" "); 		// Annales d'Urologie / Journal of Xi'an Jiaotong University (Medical Sciences)
+		r = journalEndingRoundBracketsPattern.matcher(r).replaceAll("");	// "Ann Med Interne (Paris)" --> "Ann Med Interne",
+																			// or "J Med Ultrason (2001)"
+		r = journalOtherRoundBracketsPattern.matcher(r).replaceAll(" ");	// Some journals only have "(" without a ")", which causes regex problems
 		if (r.toLowerCase().startsWith("http")) { 
 			// Cochrane library CENTRAL has journal  name of type:
 			// Https://clinicaltrials.gov/show/nct00969397
@@ -571,11 +603,11 @@ public class Publication {
 		String firstNames = parts[1];
 
 		/*
-		 * Normalize lastName: - normal capitalization Some databases (a.o. Web of
-		 * Science) can have complete author names in capitals. EndNote X9 shows them
-		 * capitalized ("Marchioli, R") but the export file has "MARCHIOLI, R"! -
-		 * additions (2nd, Jr, Sr, III) as part of LastName are removed. These additions
-		 * usually are the 3rd part of the EndNote names (and not used, see above)
+		 * Normalize lastName: 
+		 * - normal capitalization Some databases (a.o. Web of Science) can have complete author names in capitals. EndNote X9 shows them
+		 *   capitalized ("Marchioli, R") but the export file has "MARCHIOLI, R"! 
+		 * - additions (2nd, Jr, Sr, III) as part of LastName are removed. These additions usually are the 3rd part of the EndNote names 
+		 *   (and not used, see above)
 		 */
 		if (lastName.equals(lastName.toUpperCase())) {
 			String[] lastNameParts2 = lastName.toLowerCase().split(" ");
@@ -591,7 +623,7 @@ public class Publication {
 		// @formatter:off
 		/*
 		 * Possible enhancement: Switch firstNames and lastName for esp. Chinese author names IFF there is a full forName (Wei, Li ==> Li, Wei).
-		 * - as for transposed author names: we need a Boolean authorsAreSwitched and aList<String> authorsSwitched for the temporary results.
+		 * - as for transposed author names: we need a Boolean authorsAreSwitched and a List<String> authorsSwitched for the temporary results.
 		 *   fillAuthors() would add these authors IFF the Boolean is set
 		 * - should the transposition (see below) also be applied to these switched authors?
 		 * - this should be done before the reduction of firstNames to initials
@@ -613,7 +645,7 @@ public class Publication {
 		/*
 		 *  Transposed author names:
 		 *  If the last name contains a space:
-		 *  - create a transposed author with all parts of the last name except the last one left out and added as the last initials
+		 *  - create a transposed author with all parts of the last name except the last one left out and added as the last initial
 		 *  	- Cobos Mateos, J. M. 		==> Mateos JMC
 		 *  	- van Boxtel, M. P. J. 		==> Boxtel MPJV
 		 *  	- De Brouwer de Boer, A.	==> Boer ADBD

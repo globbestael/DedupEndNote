@@ -29,6 +29,14 @@ Retractions
 
 BIG SET: subject was chosen after reading https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0071838?
 
+Look into bib-dedupe
+--------------------
+- github: https://github.com/CoLRev-Environment/bib-dedupe
+- publication: https://joss.theoj.org/papers/10.21105/joss.06318
+- documentation: https://colrev-environment.github.io/bib-dedupe/index.html
+- results: https://github.com/CoLRev-Environment/bib-dedupe/blob/main/output/current_results.md
+- Authors are compared based on first letters (a.o. Chinese authors) 
+
 Compare with dedupe-sweep
 -------------------------
 Data files on https://github.com/IEBH/dedupe-sweep/tree/master/test

@@ -16,5 +16,7 @@ public class ValidationResult {
 	int tn;
 
 	int fp;
+	
+	long durationMilliseconds;
 
 }
