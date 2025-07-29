@@ -41,7 +41,8 @@ class MissedDuplicatesTests {
 	    @CsvSource({
 	        "'/own/missed_duplicates/9165.txt', 2, 2",
 	        "'/own/missed_duplicates/Rofo.txt', 3, 1",
-	        "'/ASySD/dedupendnote_files/missed_duplicates/SRSR_Human_52927.txt', 2, 1"	// Solved: authors in ALL CAPS are treated better
+	        "'/ASySD/dedupendnote_files/missed_duplicates/SRSR_Human_52927.txt', 2, 1",	// Solved: authors in ALL CAPS are treated better
+	        "'/problems/TIL_missed_duplicates.txt', 3, 1"
 	    })
 	  void deduplicateMissedDuplicates(String fileName, int total, int totalWritten) {
 		  setLoggerToDebug();

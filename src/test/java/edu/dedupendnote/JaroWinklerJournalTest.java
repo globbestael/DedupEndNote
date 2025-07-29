@@ -305,7 +305,10 @@ class JaroWinklerJournalTest {
 						"ADHD-ATTENTION DEFICIT AND HYPERACTIVITY DISORDERS", "Atten Defic Hyperact Disord"),
 				arguments(
 						"European Child and Adolescent Psychiatry",
-						"European Child & Adolescent Psychiatry")
+						"European Child & Adolescent Psychiatry"),
+				arguments(
+						"Bull Acad Natl Med",
+						"Bulletin de l'Académie nationale de médecine")
 			);
 	}
 

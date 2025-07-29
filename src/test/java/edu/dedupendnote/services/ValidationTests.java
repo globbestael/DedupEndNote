@@ -83,16 +83,16 @@ class ValidationTests {
 		// previous results
 		Map<String, ValidationResult> validationResultsMap = List
 			.of(new ValidationResult("ASySD_Cardiac_human", 6745, 28, 2175, 0, 3_700L),
-					new ValidationResult("ASySD_Depression", 17394, 576, 61895, 15, 76_000L),
-					new ValidationResult("ASySD_Diabetes", 1816, 18, 11, 0, 1_000L),
-					new ValidationResult("ASySD_Neuroimaging", 2158, 43, 1235, 2, 1_250L),
-					new ValidationResult("ASySD_SRSR_Human", 27787, 212, 24988, 14, 68_000L),
-					new ValidationResult("BIG_SET", 3692, 264, 966, 1, 24_000L),
-					new ValidationResult("McKeown_2021", 2010, 62, 1058, 0, 470L),
-					new ValidationResult("SRA2_Cytology_screening", 1359, 61, 436, 0, 400L),
-					new ValidationResult("SRA2_Haematology", 222, 14, 1179, 0, 300L),
-					new ValidationResult("SRA2_Respiratory", 766, 34, 1188, 0, 800L),
-					new ValidationResult("SRA2_Stroke", 503, 7, 782, 0, 320L))
+				new ValidationResult("ASySD_Depression", 17394, 576, 61895, 15, 76_000L),
+				new ValidationResult("ASySD_Diabetes", 1816, 18, 11, 0, 900L),
+				new ValidationResult("ASySD_Neuroimaging", 2158, 43, 1235, 2, 1_250L),
+				new ValidationResult("ASySD_SRSR_Human", 27793, 206, 24988, 14, 68_000L),
+				new ValidationResult("BIG_SET", 3692, 264, 966, 1, 24_000L),
+				new ValidationResult("McKeown_2021", 2010, 62, 1058, 0, 470L),
+				new ValidationResult("SRA2_Cytology_screening", 1359, 61, 436, 0, 400L),
+				new ValidationResult("SRA2_Haematology", 222, 14, 1179, 0, 300L),
+				new ValidationResult("SRA2_Respiratory", 769, 31, 1188, 0, 800L),
+				new ValidationResult("SRA2_Stroke", 503, 7, 782, 0, 320L))
 			.stream()
 			.collect(
 					Collectors.toMap(ValidationResult::getFileName, Function.identity(), (o1, o2) -> o1, TreeMap::new));
@@ -126,10 +126,9 @@ class ValidationTests {
 			double sensitivity = tp * 100.0 / (tp + fn); // == recall
 			double specificity = tn * 100.0 / (tn + fp);
 			double f1Score = 2 * precision * sensitivity / (precision + sensitivity);
-			if (v.getFn() == c.getFn() && v.getFp() == c.getFp() && v.getTn() == c.getTn() && v.getTp() == c.getTp()
-					&& (c.getDurationMilliseconds() >= (long) (v.getDurationMilliseconds() * 0.9))
-						&& c.getDurationMilliseconds() <= (long) (v.getDurationMilliseconds() * 1.1)) {
-			// if (v.equals(c)) {
+			if (	v.getFn() == c.getFn() && v.getFp() == c.getFp() && v.getTn() == c.getTn() && v.getTp() == c.getTp()
+				&& (c.getDurationMilliseconds() >= (long) (v.getDurationMilliseconds() * 0.9))
+				&& c.getDurationMilliseconds() <= (long) (v.getDurationMilliseconds() * 1.1)) {
 				System.out.println("\nResults: " + setName);
 				System.out.println(
 						"---------------------------------------------------------------------------------------------------------------------------------------------");

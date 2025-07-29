@@ -238,13 +238,14 @@ public class IOService {
 		return publications;
 	}
 
-	/*
-	 * PageStart (PG) and DOIs (DO) are replaced or inserted, but written at the
-	 * same place as in the input file to make comparisons between input file and
-	 * output file easier. Absent Publication year (PY) is replaced if there is one
-	 * found in a duplicate record. Author (AU) Anonymous is skipped. Title (TI) is
-	 * replaced with the longest duplicate title when it contains "Reply". Article
-	 * Number (C7) is skipped.
+	/**
+	 * - PageStart (PG) and DOIs (DO) are replaced or inserted, but written at the same place as in the input file to make comparisons between input file and
+	 *   output file easier. 
+	 * - Absent Publication year (PY) is replaced if there is one found in a duplicate record. 
+	 * - Author (AU) Anonymous is skipped. 
+	 * - Title (TI) is replaced with the longest duplicate title when it contains "Reply". 
+	 * - Article Number (C7) is skipped.
+	 * - Absent Journal Name (T2) is copied from J2 (or filed in based on DOI foor SSRN): for embase.com records (but no check on this origin!)
 	 *
 	 * Records are read into a TreeMap, with continuation lines added.
 	 * writeRecords(...) does the replacements, and writes to the output file.
@@ -283,36 +284,36 @@ public class IOService {
 					fieldContent = matcher.group(3);
 					previousFieldName = "XYZ";
 					switch (fieldName) {
-					case "ER":
-						map.put(fieldName, fieldContent);
-						phantomId++;
-						if (realId == null) {
-							publication = recordIdMap.get(phantomId.toString());
-							if (publication != null) {
-								publication.setId(phantomId.toString());
-								map.put("ID", phantomId.toString());
-							}
-						}
-						if (publication != null && publication.getKeptRecord()) {
-							writeRecord(map, publication, bw, true);
-							numberWritten++;
-						}
-						map.clear();
-						realId = null;
-						break;
-					case "ID": // EndNote Publication number
-						map.put(fieldName, fieldContent);
-						realId = line.substring(6);
-						publication = recordIdMap.get(realId);
-						break;
-					default:
-						if (map.containsKey(fieldName)) {
-							map.put(fieldName, map.get(fieldName) + "\n" + line);
-						} else {
+						case "ER":
 							map.put(fieldName, fieldContent);
-						}
-						previousFieldName = fieldName;
-						break;
+							phantomId++;
+							if (realId == null) {
+								publication = recordIdMap.get(phantomId.toString());
+								if (publication != null) {
+									publication.setId(phantomId.toString());
+									map.put("ID", phantomId.toString());
+								}
+							}
+							if (publication != null && publication.getKeptRecord()) {
+								writeRecord(map, publication, bw, true);
+								numberWritten++;
+							}
+							map.clear();
+							realId = null;
+							break;
+						case "ID": // EndNote Publication number
+							map.put(fieldName, fieldContent);
+							realId = line.substring(6);
+							publication = recordIdMap.get(realId);
+							break;
+						default:
+							if (map.containsKey(fieldName)) {
+								map.put(fieldName, map.get(fieldName) + "\n" + line);
+							} else {
+								map.put(fieldName, fieldContent);
+							}
+							previousFieldName = fieldName;
+							break;
 					}
 				} else { // continuation line
 					map.put(previousFieldName, map.get(previousFieldName) + "\n" + line);
@@ -432,9 +433,17 @@ public class IOService {
 			if (!map.containsKey("PY") && publication.getPublicationYear() != 0) {
 				map.put("PY", publication.getPublicationYear().toString());
 			}
+			if (!map.containsKey("T2")) {
+				if (map.containsKey("J2")) {
+					map.put("T2", map.get("J2"));
+				} else if (map.containsKey("DO") && map.get("DO").contains("https://doi.org/10.2139/ssrn")) {
+					// alternative test could be ISSN 1556-5068
+					map.put("T2", "Social Science Research Network");
+				}
+			}
+			
 		}
-		// in enhanced mode C7 (Article number) is skipped, in Mark mode C7 is NOT
-		// skipped
+		// in enhanced mode C7 (Article number) is skipped, in Mark mode C7 is NOT skipped
 		String skipFields = enhance ? "(C7|ER|ID|TY|XYZ)" : "(ER|ID|TY|XYZ)";
 		StringBuilder sb = new StringBuilder();
 		sb.append("TY  - ").append(map.get("TY")).append("\n");

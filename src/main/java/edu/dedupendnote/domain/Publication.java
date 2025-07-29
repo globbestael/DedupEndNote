@@ -31,9 +31,10 @@ public class Publication {
 	private boolean authorsAreTransposed = false;
 
 	private Set<String> dois = new HashSet<>();
+
 	private String id;
 
-	private List<String> issns = new ArrayList<>();
+	private Set<String> issns = new HashSet<>();
 
 	private Set<String> journals = new HashSet<>();
 
@@ -89,6 +90,7 @@ public class Publication {
 	private Boolean keptRecord = true;
 
 	// see: http://blog.crossref.org/2015/08/doi-regular-expressions.html
+	// see https://github.com/globbestael/DedupEndNote/issues/16 for shortDOIs
 	private static Pattern doiPattern = Pattern.compile("\\b(10.\\d{4,9}/[-._;()<>/:a-z0-9]+)\\b");
 
 	/**
@@ -200,18 +202,15 @@ public class Publication {
 		 * Skipped because later nonAsciiLowercasePattern will replace the pointy brackets with a space. 
 		 */
 		// s = s.replaceAll("(<<|>>)", ""); 
-		/*
-		 * FIXME: Do a thorough check of retractions (including "WITHDRAWN: ..." Cochrane
-		 * reviews). Cochrane: PubMed, Medline and EMBASE use format "WITHDRAWN: ...", Web
-		 * of Science the format "... (Withdrawn Paper, 2011, Art. No. CD001727)" See also
-		 * "Retraction note to: ..." (e.g. https://pubmed.ncbi.nlm.nih.gov/24577730/)
+		/**
+		 * FIXME: Do a thorough check of retractions (including "WITHDRAWN: ..." Cochrane reviews). 
+		 * Cochrane: PubMed, Medline and EMBASE use format "WITHDRAWN: ...", Web of Science the format "... (Withdrawn Paper, 2011, Art. No. CD001727)".
+		 * See also "Retraction note to: ..." (e.g. https://pubmed.ncbi.nlm.nih.gov/24577730/)
 		 */
-		/*
-		 * FIXME: Do a thorough check in the validation files to make sure that erratum
-		 * records do not remove the original records (erratum as first record
-		 * encountered). There are some test in {@link
-		 * edu.dedupendnote.JaroWinklerTitleTest} (and an incomplete method {@link
-		 * edu.dedupendnote.JaroWinklerTitleTest#testErrata()})
+		/**
+		 * FIXME: Do a thorough check in the validation files to make sure that erratum records do not remove the original records 
+		 * (erratum as first record encountered). There are some tests in {@link edu.dedupendnote.JaroWinklerTitleTest} (and an incomplete method
+		 * {@link edu.dedupendnote.JaroWinklerTitleTest#testErrata()})
 		 */
 		Matcher matcher = erratumPattern.matcher(s);
 		if (matcher.find()) {
@@ -710,6 +709,8 @@ public class Publication {
 	 * 
 	 * For ISBN-10 the check digit is removed, for ISBN-13 the new prefix and the check digit 
 	 *
+	 * ISSNs are unique.  
+	 * 
 	 * Paths not chosen:
 	 * - full validation 
 	 * - (ISBN) conversion to ISBN-13 
@@ -727,22 +728,26 @@ public class Publication {
 	 * large data files should prove its extra value.
 	 */
 	// @formatter:on
-	public List<String> addIssns(String issn) {
+	public Set<String> addIssns(String issn) {
 		Matcher matcher = issnIsbnPattern.matcher(issn.toUpperCase());
 		while (matcher.find()) {
 			String group = matcher.group(1).replace("-", "");
+			String issnToAdd = null;
 			switch (group.length()) {
-				case 8: 
-					issns.add(group);
+				case 8: // real ISSN
+					issnToAdd = group;
 					break;
-				case 10: 
-					issns.add(group.substring(0,9));
+				case 10: // ISBN-10
+					issnToAdd = group.substring(0,9);
 					break;
-				case 13: 
-					issns.add(group.substring(3,12));
+				case 13: // ISBN-13
+					issnToAdd = group.substring(3,12);
 					break;
 				default:
 					break;
+			}
+			if (issnToAdd != null && ! issns.contains(issnToAdd)) {
+				issns.add(issnToAdd);
 			}
 		}
 		return issns;
@@ -883,7 +888,7 @@ public class Publication {
 			pages = null;
 		}
 		// Ovid Medline in RIS format puts author address in M2 field, which is exported as SP
-		if (pages == null || pages.isEmpty() || pages.length() > 20) {
+		if (pages == null || pages.isEmpty() || pages.length() > 30) {
 			return;
 		}
 
@@ -930,20 +935,16 @@ public class Publication {
 			pageEnd = null;
 		}
 		if (numbersWithinPattern.matcher(pageStart).matches()) {
-			/*
-			 * Books, reports, ... all start with page 1, therefore the ending page is
-			 * used if available. BUT: Because Publication type is not available, pages
-			 * range >= 100 is used as a criterion.
+			/**
+			 * Books, reports, ... all start with page 1, therefore the ending page is used if available. 
+			 * BUT: Because Publication type is not available, pages range >= 100 is used as a criterion.
 			 */
 			this.pageForComparison = pageStart;
-			/*
-			 * normalize starting page: W22 --> 22, 22S --> 22 - Cochrane "page numbers"
-			 * (or really article number) in form "CD010546" can no longer be recognized
-			 * as Cochrane identifiers: "10546" - FIXME: arXiv page numbers
-			 * ("arXiv:2107.12817v1") will be reduced to publication year and month
-			 * ("2107"), which may result in False Positives. See
-			 * https://github.com/globbestael/DedupEndnote/issues/4 for preprint
-			 * publications.
+			/**
+			 * normalize starting page: W22 --> 22, 22S --> 22 
+			 * - Cochrane "page numbers" (or really article number) in form "CD010546" can no longer be recognized as Cochrane identifiers: "10546"
+			 * - FIXME: arXiv page numbers ("arXiv:2107.12817v1") will be reduced to publication year and month ("2107"), which may result in False Positives.
+			 * See https://github.com/globbestael/DedupEndnote/issues/4 for preprint publications.
 			 */
 			pageForComparison = pageForComparison.replaceAll("^(\\D*)([\\d]+)(.*)$", "$2");
 			// Use pageEnd instead of pageStart for books (criteria: start = 1, end >= 100)
@@ -953,6 +954,16 @@ public class Publication {
 				if (pageEndForComparison.length() > 2) {
 					this.pageForComparison = pageEndForComparison;
 				}
+			}
+			if (pageForComparison.length() < 11) {
+				try {
+					pageForComparison = Integer.valueOf(pageForComparison).toString();
+				} catch (NumberFormatException e) {
+					log.debug("Input {} could not be parsed as an Integer", pageForComparison);
+				}
+			}
+			if ("0".equals(pageForComparison)) {
+				pageForComparison = null;
 			}
 		}
 	}
