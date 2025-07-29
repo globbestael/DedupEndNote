@@ -184,21 +184,18 @@ public class DeduplicationService {
 	}
 
 	public boolean compareIssns(Publication r1, Publication r2) {
-		return listsContainSameString(r1.getIssns(), r2.getIssns());
+		return setsContainSameString(r1.getIssns(), r2.getIssns());
 	}
 
 	// @formatter:off
-	/*
+	/**
 	 * compareJournals
 	 *
 	 * Paths not chosen:
-	 * - Creation of sets of journalPatterns for the whole set of
-	 * records. This might be overkill, since the comparison by journal is the last
-	 * of all comparisons between any two records
-	 * - "AJR American Journal of Radiology": split into "AJR" and
-	 * "American Journal of Radiology"
-	 * compareJournals_FirstWithStartingInitialism(...) will create a pattern on A,
-	 * J en R which will find the second title.
+	 * - Creation of sets of journalPatterns for the whole set of records. This might be overkill, since the comparison by journal is the last
+	 *   of all comparisons between any two records
+	 * - "AJR American Journal of Radiology": split into "AJR" and "American Journal of Radiology"
+	 *   compareJournals_FirstWithStartingInitialism(...) will create a pattern on A, J en R which will find the second title.
 	 */
 	// @formatter:on
 	public boolean compareJournals(Publication r1, Publication r2) {
@@ -403,15 +400,7 @@ public class DeduplicationService {
 					return true;
 				}
 			}
-		} else /*
-				 * 20230220: Changed from 2 independent IFs to "IF(...) ELSE IF (!... AND ...)
-				 * FROM: Records with different starting pages were also compared for DOIs TO:
-				 * only 1 of (compare pages, compare DOIs)
-				 *
-				 * Results are higher FN (1169 --> 1311: +142 / 112%) , but (more importantly)
-				 * lower FP (41 --> 34: -7 / 83%)
-				 */
-		if (sufficientStartPages && r1.getPageForComparison().equals(r2.getPageForComparison())) {
+		} else if (sufficientStartPages && r1.getPageForComparison().equals(r2.getPageForComparison())) {
 			log.debug("Same starting pages");
 			return true;
 		} else if (!sufficientStartPages && sufficientDois && setsContainSameString(dois1, dois2)) {
@@ -421,7 +410,12 @@ public class DeduplicationService {
 		return false;
 	}
 
-	// All unique titles and their reverse are compared
+	/** 
+	 * All unique titles and their reverse are compared
+	 * 
+	 * Paths not chosen:
+	 * - start with setContainsSameString(titleSet1, titleSet2): @see <a href="https://github.com/globbestael/DedupEndNote/issues/20">GitHub issues</a>  
+	 */
 	public boolean compareTitles(Publication r1, Publication r2) {
 		log.debug("Comparing " + r1.getId() + ": " + r1.getTitles().get(0) + "\nto " + r2.getId() + ": "
 				+ r2.getTitles().get(0));
@@ -438,8 +432,7 @@ public class DeduplicationService {
 		for (String title1 : titles1) {
 			for (String title2 : titles2) {
 				similarity = jws.apply(title1, title2);
-				if (isPhase) { // return result of comparison of only the first title
-								// variant
+				if (isPhase) { // return result of comparison of only the first title variant
 					log.debug("{} and {}:\n- {}\n- {}", r1.getId(), r2.getId(), title1, title2);
 					return similarity > TITLE_SIMILARITY_PHASE;
 				}
@@ -590,8 +583,7 @@ public class DeduplicationService {
 				recordList = entry.getValue();
 				Publication recordToKeep = recordList.remove(0);
 				log.debug("Kept: {}: {}", recordToKeep.getId(), recordToKeep.getTitles().get(0));
-				// Don't set keptRecord in compareSet(): trouble when multiple duplicates
-				// and no publication year
+				// Don't set keptRecord in compareSet(): trouble when multiple duplicates and no publication year
 				recordList.stream().forEach(r -> r.setKeptRecord(false));
 
 				// Reply: replace the title with the longest title from the duplicates

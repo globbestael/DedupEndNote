@@ -152,17 +152,27 @@ class DedupEndNoteApplicationTests {
 	void addIssns_valid() {
 		String issn = "0002-9343 (Print) 00029342 (Electronic) 0-9752298-0-X (ISBN) xxxxXXXX (all X-es)";
 		Publication publication = new Publication();
-		List<String> issns = publication.addIssns(issn);
+		Set<String> issns = publication.addIssns(issn);
 
-		assertThat(issns).hasSize(4).containsAll(Arrays.asList("00029343", "00029342", "097522980", "XXXXXXXX"));
+		assertThat(issns).hasSize(4).containsAll(Set.of("00029343", "00029342", "097522980", "XXXXXXXX"));
 	}
+
+	@Test
+	void addIssns_valid2() {
+		String issn = "0001-4079 (Print) 0001-4079";
+		Publication publication = new Publication();
+		Set<String> issns = publication.addIssns(issn);
+
+		assertThat(issns).hasSize(1).containsAll(Set.of("00014079"));
+	}
+
 
 	@Test
 	void addIssns_nonvalid() {
 		String issn = "a002-9343 (with letter) 00029342X (11 characters) 0-12-34567890x (12 characters)";
 
 		Publication publication = new Publication();
-		List<String> issns = publication.addIssns(issn);
+		Set<String> issns = publication.addIssns(issn);
 
 		assertThat(issns).isEmpty();
 	}
