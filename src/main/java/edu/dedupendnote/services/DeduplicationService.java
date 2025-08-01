@@ -3,6 +3,7 @@ package edu.dedupendnote.services;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -204,14 +205,14 @@ public class DeduplicationService {
 		boolean isReply = r1.isReply() || r2.isReply();
 
 		if (set1.isEmpty() || set2.isEmpty()) {
-			log.debug("One of the records had no journal for '{}' and '{}'", set1, set2);
+			// log.debug("One of the records had no journal for '{}' and '{}'", set1, set2);
 			return false;
 		}
 
 		Set<String> commonJournals = new HashSet<>(set1);
 		commonJournals.retainAll(set2);
 		if (!commonJournals.isEmpty()) {
-			log.debug("Some journals are common: '{}' and '{}'", set1, set2);
+			// log.debug("Some journals are common: '{}' and '{}'", set1, set2);
 			return true;
 		}
 
@@ -224,7 +225,7 @@ public class DeduplicationService {
 					continue;
 				}
 				Double similarity = jws.apply(s1.toLowerCase(), s2.toLowerCase());
-				log.debug("Similarity: {} for '{}' and '{}'", similarity, s1, s2);
+				// log.debug("Similarity: {} for '{}' and '{}'", similarity, s1, s2);
 				// Make comparison stricter for Reply-titles because titles haven't been
 				// compared ("Annals of Hepatology" - "Annals of Oncology": 0.916)
 				if (isReply && similarity > JOURNAL_SIMILARITY_REPLY) {
@@ -240,7 +241,7 @@ public class DeduplicationService {
 				/*
 				 * "Hepatology" and "Hepatology International" are considered the same
 				 */
-				// FIXME: the 3 follwing functions should first compare s1 - s2 and, if false, then s2 - s1
+				// FIXME: the 3 following functions should first compare s1 - s2 and, if false, then s2 - s1
 				if (compareJournals_FirstAsAbbreviation(s1, s2)) {
 					return true;
 				}
@@ -266,17 +267,17 @@ public class DeduplicationService {
 				}
 			}
 		}
-		log.debug("No Success 5 for '{}' and '{}'", set1, set2);
+		// log.debug("No Success 5 for '{}' and '{}'", set1, set2);
 		return false;
 	}
 
 	// Searching 'Ann Fr Anesth Reanim' as "\bAnn.*\bFr.*\bAnesth.*\bReanim.*"
 	private boolean compareJournals_FirstAsAbbreviation(String j1, String j2) {
 		Pattern pattern = Pattern.compile("\\b" + j1.replaceAll("\\s", ".*\\\\b") + ".*", Pattern.CASE_INSENSITIVE);
-		log.debug("Pattern ABBREVIATION for '{}': {} for '{}'", j1, pattern.toString(), j2);
+		// log.debug("Pattern ABBREVIATION for '{}': {} for '{}'", j1, pattern.toString(), j2);
 		Matcher matcher = pattern.matcher(j2);
 		if (matcher.find()) {
-			log.debug("Pattern ABBREVIATION found for '{}': {} for '{}'", j1, pattern.toString(), j2);
+			// log.debug("Pattern ABBREVIATION found for '{}': {} for '{}'", j1, pattern.toString(), j2);
 			return true;
 		}
 		return false;
@@ -287,10 +288,10 @@ public class DeduplicationService {
 		String patternString = s1.chars().mapToObj(c -> String.valueOf((char) c))
 				.collect(Collectors.joining(".*\\b", "\\b", ".*"));
 		Pattern patternShort2 = Pattern.compile(patternString, Pattern.CASE_INSENSITIVE);
-		log.debug("Pattern INITIALISM for '{}': {} for '{}'", s1, patternShort2.toString(), s2);
+		// log.debug("Pattern INITIALISM for '{}': {} for '{}'", s1, patternShort2.toString(), s2);
 		Matcher matcher = patternShort2.matcher(s2);
 		if (matcher.find()) {
-			log.debug("Pattern INITIALISM found for '{}': {} for '{}'", s1, patternShort2.toString(), s2);
+			// log.debug("Pattern INITIALISM found for '{}': {} for '{}'", s1, patternShort2.toString(), s2);
 			return true;
 		}
 		return false;
@@ -316,10 +317,10 @@ public class DeduplicationService {
 			String patternString = words[0].chars().mapToObj(c -> String.valueOf((char) c))
 					.collect(Collectors.joining(".*\\b", "\\b", ".*"));
 			Pattern patternShort3 = Pattern.compile(patternString, Pattern.CASE_INSENSITIVE);
-			log.debug("Pattern STARTING_INITIALISM for '{}': {} for '{}'", s1, patternShort3.toString(), s2);
+			// log.debug("Pattern STARTING_INITIALISM for '{}': {} for '{}'", s1, patternShort3.toString(), s2);
 			Matcher matcher = patternShort3.matcher(s2);
 			if (matcher.find()) {
-				log.debug("Pattern STARTING_INITIALISM found for '{}': {} for '{}'", s1, patternShort3.toString(), s2);
+				// log.debug("Pattern STARTING_INITIALISM found for '{}': {} for '{}'", s1, patternShort3.toString(), s2);
 				return true;
 			}
 		}
@@ -329,8 +330,10 @@ public class DeduplicationService {
 	public void compareSet(List<Publication> publications, Integer year, boolean descending, String wssessionId) {
 		int noOfPublications = publications.size(); 
 		int noOfDuplicates = 0;
+		Map<String,Boolean> map = new HashMap<>(Map.of("sameDois", false));
 		
 		while (publications.size() > 1) {
+			// In log messages this publication is called the pivot
 			Publication publication = publications.remove(0);
 			/*
 			 * If descending / OneFile mode: only records of year1 should be compared to records of year1 and year2.
@@ -341,21 +344,45 @@ public class DeduplicationService {
 				|| (!descending && publication.getPublicationYear() != 0 && publication.getPublicationYear() > year)) {
 				break;
 			}
-			log.debug("Comparing {} publications to {}: {}", publications.size(), publication.getId(), publication.getTitles().get(0));
+			// log.debug("Comparing {} publications to pivot {}: {}", publications.size(), publication.getId(), publication.getTitles().get(0));
 			
 			for (Publication r : publications) {
-				if (   compareStartPageOrDoi(r, publication) 
+				map.put("sameDois", false);
+				if (   compareStartPageOrDoi(r, publication, map) 
 					&& authorsComparator.compare(r, publication)
 					&& compareTitles(r, publication)
-					&& (compareIssns(r, publication) || compareJournals(r, publication))) {
+					&& (map.get("sameDois") || compareIssns(r, publication) || compareJournals(r, publication))) {
 
 					noOfDuplicates++;
 					// set the label
 					if (publication.getLabel() != null) {
+						// log.debug("=== pub {} gets label {} from pivot {}", r.getId(), publication.getLabel(), publication.getId());
 						r.setLabel(publication.getLabel());
 					} else if (r.getLabel() != null) {
+						/** 
+						 * Labels can be promoted from a publication to the pivot without a label:
+						 * - in loop N with pivot V 
+						 *   - publication W is NOT seen as similar and gets no label
+						 *   - publication X is seen as similar and gets V as label
+						 * - in loop N + 1 with pivot W
+						 *   - publication X is seen as similar and its label V is promoted to label of pivot W
+						 * 
+						 *   	V		W			X			
+						 * SP	1-26	291-316		(None)		
+						 * DOI	+		+			+
+						 * 
+						 * Loop N (V)
+						 * - W.SP != V.SP	 -> W.label = NULL	
+						 * - X.DOI = V.DOI	 -> X.label = V
+						 * Loop N + 1 (W)
+						 * - W.DOi = X.DOI	 -> W.lavel = X
+						 * 
+						 * Another reason can be that pivot W has more journal name variants than pivot V 
+						 */
+						// log.debug("=== pub {} SETs label {} in pivot {}", r.getId(), r.getLabel(), publication.getId());
 						publication.setLabel(r.getLabel());
 					} else {
+						// log.debug("=== Both pivot {} and pub {} get label {} from the recordId of the pivot {}", publication.getId(), r.getId(), publication.getId(), publication.getId());
 						publication.setLabel(publication.getId());
 						r.setLabel(publication.getId());
 					}
@@ -375,38 +402,41 @@ public class DeduplicationService {
 	 * page MUST be compared before DOI, except for Cochrane Reviews.
 	 * See the comment at {@link edu.dedupendnote.domain.Publication#isCochrane}
 	 */
-	public boolean compareStartPageOrDoi(Publication r1, Publication r2) {
-		log.debug("Comparing " + r1.getId() + ": " + r1.getPageForComparison() + " to " + r2.getId() + ": "
-				+ r2.getPageForComparison());
+	public boolean compareStartPageOrDoi(Publication r1, Publication r2, Map<String, Boolean> map) {
+		// log.debug("Comparing {}: {} to {}: {}", r1.getId(), r1.getPageForComparison(), r2.getId(), r2.getPageForComparison());
 		Set<String> dois1 = r1.getDois();
 		Set<String> dois2 = r2.getDois();
 		boolean bothCochrane = r1.isCochrane() && r2.isCochrane();
 		boolean sufficientStartPages = r1.getPageForComparison() != null && r2.getPageForComparison() != null;
 		boolean sufficientDois = !dois1.isEmpty() && !dois2.isEmpty();
 
-		if (!sufficientStartPages && !sufficientDois) {
-			log.debug("At least one starting page AND at least one DOI are missing");
+		if (!bothCochrane && !sufficientStartPages && !sufficientDois) {
+			// log.debug("At least one starting page AND at least one DOI are missing");
 			return true; // no useful comparison possible
 		}
 
 		if (bothCochrane) {
 			if (r1.getPublicationYear().equals(r2.getPublicationYear())) {
 				if (sufficientDois) {
-					if (setsContainSameString(dois1, dois2)) {
-						return true;
-					}
+					return setsContainSameString(dois1, dois2);
 				} else if (sufficientStartPages && r1.getPageForComparison().equals(r2.getPageForComparison())) {
-					log.debug("Same starting pages");
+					// log.debug("Same starting pages");
 					return true;
 				}
 			}
-		} else if (sufficientStartPages && r1.getPageForComparison().equals(r2.getPageForComparison())) {
-			log.debug("Same starting pages");
+			return false;
+		}
+		if (sufficientDois && setsContainSameString(dois1, dois2)) {
+			map.put("sameDois", true);
+		}
+		if (sufficientStartPages && r1.getPageForComparison().equals(r2.getPageForComparison())) {
+			// log.debug("Same starting pages");
 			return true;
 		} else if (!sufficientStartPages && sufficientDois && setsContainSameString(dois1, dois2)) {
 			return true;
 		}
-		log.debug("Starting pages and DOIs are different");
+
+		// log.debug("Starting pages and DOIs are different");
 		return false;
 	}
 
@@ -417,8 +447,7 @@ public class DeduplicationService {
 	 * - start with setContainsSameString(titleSet1, titleSet2): @see <a href="https://github.com/globbestael/DedupEndNote/issues/20">GitHub issues</a>  
 	 */
 	public boolean compareTitles(Publication r1, Publication r2) {
-		log.debug("Comparing " + r1.getId() + ": " + r1.getTitles().get(0) + "\nto " + r2.getId() + ": "
-				+ r2.getTitles().get(0));
+		// log.debug("Comparing {}: {}\nto {}: {}", r1.getId(), r1.getTitles().get(0), r2.getId(), r2.getTitles().get(0));
 		if (r1.isReply() || r2.isReply()) {
 			return true;
 		}
@@ -433,13 +462,12 @@ public class DeduplicationService {
 			for (String title2 : titles2) {
 				similarity = jws.apply(title1, title2);
 				if (isPhase) { // return result of comparison of only the first title variant
-					log.debug("{} and {}:\n- {}\n- {}", r1.getId(), r2.getId(), title1, title2);
+					// log.debug("{} and {}:\n- {}\n- {}", r1.getId(), r2.getId(), title1, title2);
 					return similarity > TITLE_SIMILARITY_PHASE;
 				}
 				if ((sufficientStartPages || sufficientDois)
 						&& similarity > TITLE_SIMILARITY_SUFFICIENT_STARTPAGES_OR_DOIS) {
-					log.debug("Found comparable title (with pages or DOI) " + r1.getTitles().get(0) + " == "
-							+ r2.getTitles().get(0));
+					// log.debug("Found comparable title (with pages or DOI) {} == {}", r1.getTitles().get(0), r2.getTitles().get(0));
 					return true;
 				}
 				if (!(sufficientStartPages || sufficientDois)) {

@@ -99,3 +99,7 @@ Using DOI before starting page won't help in all cases:
   	- a shortDOI can never be equal to a real DOI. In DeduplicationService::compareStartPageOrDoi sufficientDois should be true only if 
   	  both are not empty AND (both are of the same type (shortDOI|realDOI))
 
+## Logback properties
+Logging configuration is spread over
+- logback-spring.xml
+- application(...).properties

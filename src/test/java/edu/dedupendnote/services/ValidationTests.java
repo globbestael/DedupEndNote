@@ -67,7 +67,7 @@ class ValidationTests {
 	@BeforeAll
 	static void beforeAll() {
 		LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
-		Logger rootLogger = loggerContext.getLogger("edu.dedupendnote");
+		Logger rootLogger = loggerContext.getLogger("edu.dedupendnote.services.DeduplicationService");
 		rootLogger.setLevel(Level.INFO);
 	}
 
@@ -82,17 +82,17 @@ class ValidationTests {
 	void checkAllTruthFiles() throws IOException {
 		// previous results
 		Map<String, ValidationResult> validationResultsMap = List
-			.of(new ValidationResult("ASySD_Cardiac_human", 6745, 28, 2175, 0, 3_700L),
-				new ValidationResult("ASySD_Depression", 17394, 576, 61895, 15, 76_000L),
+			.of(new ValidationResult("ASySD_Cardiac_human", 6748, 25, 2175, 0, 3_700L),
+				new ValidationResult("ASySD_Depression", 17389, 576, 61894, 21, 76_000L),
 				new ValidationResult("ASySD_Diabetes", 1816, 18, 11, 0, 900L),
-				new ValidationResult("ASySD_Neuroimaging", 2158, 43, 1235, 2, 1_250L),
-				new ValidationResult("ASySD_SRSR_Human", 27793, 206, 24988, 14, 68_000L),
-				new ValidationResult("BIG_SET", 3692, 264, 966, 1, 24_000L),
+				new ValidationResult("ASySD_Neuroimaging", 2169, 32, 1235, 2, 1_250L),
+				new ValidationResult("ASySD_SRSR_Human", 27816, 190, 24988, 7, 68_000L),
+				new ValidationResult("BIG_SET", 3721, 238, 962, 5, 24_000L),
 				new ValidationResult("McKeown_2021", 2010, 62, 1058, 0, 470L),
 				new ValidationResult("SRA2_Cytology_screening", 1359, 61, 436, 0, 400L),
 				new ValidationResult("SRA2_Haematology", 222, 14, 1179, 0, 300L),
-				new ValidationResult("SRA2_Respiratory", 769, 31, 1188, 0, 800L),
-				new ValidationResult("SRA2_Stroke", 503, 7, 782, 0, 320L))
+				new ValidationResult("SRA2_Respiratory", 761, 39, 1188, 0, 800L),
+				new ValidationResult("SRA2_Stroke", 497, 13, 782, 0, 320L))
 			.stream()
 			.collect(
 					Collectors.toMap(ValidationResult::getFileName, Function.identity(), (o1, o2) -> o1, TreeMap::new));
@@ -115,6 +115,7 @@ class ValidationTests {
 						TreeMap::new));
 
 		boolean changed = false;
+		String divider = "|---------|--------------|---------|---------|--------------|---------|---------|--------------|--------------|--------------|-------------|";
 		for (String setName : resultsMap.keySet()) {
 			ValidationResult v = validationResultsMap.get(setName);
 			ValidationResult c = resultsMap.get(setName);
@@ -130,24 +131,20 @@ class ValidationTests {
 				&& (c.getDurationMilliseconds() >= (long) (v.getDurationMilliseconds() * 0.9))
 				&& c.getDurationMilliseconds() <= (long) (v.getDurationMilliseconds() * 1.1)) {
 				System.out.println("\nResults: " + setName);
-				System.out.println(
-						"---------------------------------------------------------------------------------------------------------------------------------------------");
 				System.out.println("| %7s | %12s | %7s | %7s | %12s | %7s | %7s | %12s | %12s | %12s | %11s |".formatted(
 					"TOTAL", "% duplicates", "TP", "FN", "Sensitivity", "TN", "FP", "Specificity", "Precision", "F1-score", "Duration"));
+				System.out.println(divider);
 				System.out.println(
 					"| %7d | %11.2f%% | %7d | %7d | %11.2f%% | %7d | %7d | %11.3f%% | %11.3f%% | %11.3f%% | %11.2f |".formatted(
 						tp + tn + fp + fn, (tp + fn) * 100.0 / (tp + tn + fp + fn), tp, fn, sensitivity, tn, fp,
 						specificity, precision, f1Score, (double) (c.getDurationMilliseconds() / 1000.0)));
-				System.out.println(
-						"---------------------------------------------------------------------------------------------------------------------------------------------");
 				System.out.flush();
 			} else {
 				changed = true;
-				System.err.println("\nResults: " + setName + ": HAS DIFFERENT RESULTS (first new, second old");
-				System.err.println(
-						"---------------------------------------------------------------------------------------------------------------------------------------------");
+				System.err.println("\nResults: " + setName + ": HAS DIFFERENT RESULTS (first new, second old)");
 				System.err.println("| %7s | %12s | %7s | %7s | %12s | %7s | %7s | %12s | %12s | %12s | %11s |".formatted(
 					"TOTAL", "% duplicates", "TP", "FN", "Sensitivity", "TN", "FP", "Specificity", "Precision", "F1-score", "Duration"));
+				System.out.println(divider);
 				System.err.println(
 					"| %7d | %11.2f%% | %7d | %7d | %11.2f%% | %7d | %7d | %11.3f%% | %11.3f%% | %11.3f%% | %11.2f |".formatted(
 						tp + tn + fp + fn, (tp + fn) * 100.0 / (tp + tn + fp + fn), tp, fn, sensitivity, tn, fp,
@@ -164,13 +161,12 @@ class ValidationTests {
 					"| %7d | %11.2f%% | %7d | %7d | %11.2f%% | %7d | %7d | %11.3f%% | %11.3f%% | %11.3f%% | %11.2f |".formatted(
 						tp + tn + fp + fn, (tp + fn) * 100.0 / (tp + tn + fp + fn), tp, fn, sensitivity, tn, fp,
 						specificity, precision, f1Score, (double) (v.getDurationMilliseconds() / 1000.0)));
-				System.err.println(
-						"---------------------------------------------------------------------------------------------------------------------------------------------");
 				System.err.flush();
 			}
 		}
 		System.out.println("FP can be found with regex: \\ttrue\\tfalse\\tfalse\\ttrue\\tfalse\\t");
 		System.out.println("FN can be found with regex: \\d\\ttrue\\tfalse\\tfalse\\tfalse\\ttrue\\t");
+		System.out.println("FN solvable can be found with regex: ^\\d+\\t\\t\\d+\\ttrue\\tfalse\\tfalse\\tfalse\\ttrue\\tfalse");
 		System.out.println("TP which will be kept can be found with regex: ^(\\d+)\\t\\1\\t\\ttrue\\ttrue\\t");
 
 		assertThat(changed).isFalse();

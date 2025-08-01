@@ -367,6 +367,7 @@
 				    </li>
 	
 			        <li><strong>ISSN or Journal:</strong> Are they the same (ISSN) or similar (Journal)?<br/>
+						This rule is skipped if both records have the same DOI (that comparison was made in step 2).<br/>
 				        The fields Journal / Book Title (T2), Alternate Journal (J2) and sometimes Book section (T3, see below) are treated as journals, ISBNs are treated as ISSNs. All ISSns and journal titles (including abbreviations) in the records are used.<br/>
 				        If the ISSns are different or one or both records have no ISSN, the journals are compared.<br/>
 				        Abbreviated and full journal titles are compared in a sensible way (see examples below).<br/>

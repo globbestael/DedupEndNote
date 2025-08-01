@@ -63,7 +63,7 @@ public class Publication {
 	private List<String> titles = new ArrayList<>();
 
 	// @formatter:off
-	/*
+	/**
 	 * Cochrane publications need a slightly different comparison. 
 	 * The starting page is the Cochrane number of the review which doesn't change for different versions of the review. 
 	 * Each version of the review has a unique DOI (e.g. "10.1002/14651858.cd008759.pub2"), but the first version has no ".pub" part, AND
@@ -77,7 +77,7 @@ public class Publication {
 
 	// @formatter:off
 	/*
-	 * Publications which are replies need special treatment. See the Pattern in the IOService.replyPattern 
+	 * Publications which are replies need special treatment. See the Pattern in the {@link IOService.replyPattern} 
 	 * - record pairs where one of them is isReply == true, aren't compared for title (always true)
 	 * - journals are compared stricter (see DeduplicationService.JOURNAL_SIMILARITY_NO_REPLY < DeduplicationService.JOURNAL_SIMILARITY_NO_REPLY)
 	 * - in enrich() the longest title of a duplicate set is used
