@@ -404,6 +404,13 @@
 		        	 			<a href="https://www.crossref.org/education/metadata/persistent-identifiers/doi-display-guidelines/" target="_blank">prescribed form</a> "https://doi.org/10.1038/ctg.2014.12". DOIs of this form are clickable links in EndNote.</li>
 		        		</ul>
 		        	</li>
+					<li>Journal name (T2):
+						<ul>
+							<li>if the saved record has no value for the Journal name (T2) but has a value for the Alternate Journal (J2), 
+								this J2 value is copied to the T2 field. This is relevant for the ClinicalTrials.gov records in Embase.</li>
+							<li>missing Journal name (T2) for "Social Science Research Network" records from Embase.com are filled</li>
+						</ul>
+					</li>
 		        	<li>Publication year (PY):
 		        		<ul>
 		        			<li>if the saved record has no value for its Publication year but one of the removed duplicate records has,
@@ -907,7 +914,14 @@
 
 				<h3 id="changes">Latest changes</h3>
 				<ul>
-					<li>2025-07-09: 1.0.2: Upgrade to Java 21, Spring Boot 3.5.0</li>
+					<li>2025-08-01: 1.0.2:
+						<ul>
+							<li>Changed 5th comparison: this comparison is skipped if both publications have the same DOI</li>
+							<li>Enrich deduplicated records: missing journal titles added ("clinicaltrials.gov", and "Social Science Research Network" from Embase.com)</li>
+							<li>Upgrade to Java 21, Spring Boot 3.5.4</li>
+						</ul>
+						*: A next release will try to handle ClinicalTrials.gov records (from ClinicalTrials.gov, Cochrane, Embase (OVID en Embase.com)) better
+					</li>
 					<li>2024-01-14: 1.0.1: BUG: Doesn't handle author last name starting with a hyphen</li>
 					<li>2023-09-02: ISBN-10 and ISBN-13 are compared correctly: 9024274214 = 9789024274215</li>
 					<li>2023-09-02: BUG: Publication years of form "1-1-1989" (instead of "1989") are parsed as years</li>
