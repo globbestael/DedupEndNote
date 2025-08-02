@@ -6,19 +6,18 @@
 - bib-dedup: data files: https://github.com/CoLRev-Environment/bib-dedupe/tree/main/data These are files which are also used in our ValidationTest (ASYSD_*, SRA2_*)
 - dedupe-sweep: data files: https://github.com/IEBH/dedupe-sweep/tree/master/test
 
-## Upgrade to Spring Boot 3
-
-Used OpenRewrite
-1. Problem webjars-locator: why is this removed by OpenReWrite? 
-WARNING Cannot find template location: classpath:/templates/ (please add some templates, check your Thymeleaf configuration, 
-or set spring.thymeleaf.check-template-location=false)
-- WebConfig::addResourceHandlers
-with
-```
-  registry.addResourceHandler("/resources/**").addResourceLocations("/public", "classpath:/static/");
-```
-the application won't start (and there's a message that Thymeleaf cannot find its /templates directory
-
+## ClinicalTrials.gov records
+- Available from
+  - http://clinicaltrials.gov (has RIS export)
+  - Cochrane Library
+  - Embase OVID
+  - Embase.com
+- Deduplication will only work after preprocessing?
+  - add T2 from J2 in Embase.com
+  - alter Cochrane journal name of form "https://clinicaltrials.gov/show/NCT02821026" to "clinicaltrials.gov" (or should this be "https://clinicaltrials.gov")?
+  - extract the ClinicalTrials.gov ID from ??? and use it as article number / starting page?
+- some of the preprocessing will also be part of enrichment
+- what about WHO trials (from Cochrane): http://www.who.int/trialsearch/Trial2.aspx?TrialID=EUCTR2019-001806-40-DK
 
 ## Migraine False Positives
 
@@ -26,10 +25,15 @@ the application won't start (and there's a message that Thymeleaf cannot find it
 - find duplicates (with only field Label) 
 - there are false positives, a.o. Label 6288, 6368, 6460, 6616, 6810, ... Are they all conference proceedings?  
 
-## EndNote 20
+## EndNote 20, EndNote 21 and EndNote 2025
 
-- https://support.alfasoft.com/hc/en-us/articles/360018135798-De-duplication-of-references-in-EndNote-20
+- https://support.alfasoft.com/hc/en-us/articles/360018135798-De-duplication-of-references-in-EndNote (latest change 22-4-2025)
 - https://endnote.com/product-details/compare-previous-versions : Deduplication by DOI and/or PMCID
+
+## Zotero
+- better testing
+- change documentation
+- too late to change the application name to DedupRIS?
 
 ## Retractions
 

@@ -584,15 +584,15 @@ public class DeduplicationService {
 	public String doSanityChecks(List<Publication> publications, String fileName) {
 		if (containsRecordsWithoutId(publications)) {
 			return "ERROR: The input file " + fileName
-					+ " contains records without IDs. The input file is not a dump from an EndNote library!";
+					+ " contains records without IDs. The input file is not an Export as RIS-file from an EndNote library!";
 		}
 		if (containsOnlyRecordsWithoutPublicationYear(publications)) {
 			return "ERROR: All records of the input file " + fileName
-					+ " have no Publication Year. The input file is not a dump from an EndNote library!";
+					+ " have no Publication Year. The input file is not an Export as RIS-file from an EndNote library!";
 		}
 		if (containsDuplicateIds(publications)) {
 			return "ERROR: The IDs of the records of input file " + fileName
-					+ " are not unique. The input file is not a dump from 1 EndNote library!";
+					+ " are not unique. The input file is not an Export as RIS-file from 1 EndNote library!";
 		}
 		return null;
 	}
