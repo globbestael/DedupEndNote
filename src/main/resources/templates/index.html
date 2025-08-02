@@ -813,16 +813,16 @@
 					<tr>
 						<td>DedupEndNote</td>
 						<td></td>
-						<td class="text-right">38,407</td>
-						<td class="text-right">24,201</td>
-						<td class="text-right">28,627</td>
+						<td class="text-right">38,457</td>
+						<td class="text-right">24,239</td>
+						<td class="text-right">28,589</td>
 						<td class="text-right">54%</td>
 					</tr>
 				</table>
 
 				<h5>Validation</h5>
 
-				<p>A general subset of 4923 records was manually checked (150 records without an Author, 79 with Author "Anonymous",
+				<p>A general subset of 4926 records was manually checked (150 records without an Author, 79 with Author "Anonymous",
 				the 366 articles with "phase" in the title (because of "Phase I", Phase I/II", ...)
 				the rest: "Aagaard"  ... "Abbitt", "Anoob" ... "Axelrod",
 				"Liu", "v Koppenfels" ... "von Woellwarth", and some others). Because replies are treated in a special way, 130 records with "reply" in the title
@@ -852,12 +852,12 @@
 					<tbody>
 						<tr>
 							<td>General</td>
-							<td>3681</td>
-							<td>275</td>
-							<td>93.0%</td>
-							<td>966</td>
-							<td>1</td>
-							<td>99.9%</td>
+							<td>3721</td>
+							<td>238</td>
+							<td>94.0%</td>
+							<td>962</td>
+							<td>5</td>
+							<td>99.5%</td>
 						</tr>
 						<tr>
 							<td>Replies</td>
@@ -872,10 +872,32 @@
 				</table>
 				<p>The False Positives are all conference abstracts:</p>
 				<ul>
-					<li>Cool, J.; Rosenblatt, R.; Kumar, S.; Lucero, C.; Fortune, B.; Crawford, C. V.; Jesudian, A.: THE ASSOCIATION BETWEEN PORTAL VEIN THROMBOSIS AND OTHER VENOUS THROMBOEMBOLISM IN CIRRHOSIS: ANALYSIS OF A NATIONALLY REPRESENTATIVE INPATIENT COHORT<br/>
-						In: Gastroenterology 154 (6), 2018, p. S1178-S1179</li>
-					<li>Cool, J.; Rosenblatt, R.; Kumar, S.; Lucero, C.; Fortune, B.; Crawford, C. V.; Jesudian, A.: TRENDS IN THE PREVALENCE OF PORTAL VEIN THROMBOSIS AND ASSOCIATED MORTALITY IN CIRRHOSIS: ANALYSIS OF A NATIONALLY REPRESENTATIVE INPATIENT COHORT<br/>
-						In: Gastroenterology 154 (6 Supplement 1), 2018, p. S-1178 DOI: 10.1016/s0016-5085(18)33901-5</li>
+					<li>wrong DOI in second of 2 EMBASE (OVID) records: same authors, year, title, DOI, different starting page
+						<ul>
+					  		<li>Segovia, M. C., et al. (2019). "Combined multivisceral and renal transplant in a patient with JAK-2 mutation." 
+								Transplantation 103(7 Supplement 2): S143. DOI: 10.1097/01.tp.0000576288.84252.91</li>
+							<li>Segovia, M. C., et al. (2019). "Combined multivisceral and renal transplant in a patient with JAK-2 mutation." 
+								Neurology 92(15 Supplement 1). DOI: 10.1097/01.tp.0000576288.84252.91</li>
+						</ul>
+					</li>
+					<li>wrong DOI in second of 2 EMBASE (OVID) records: same authors, year, title, DOI, different starting page
+						<ul>
+							<li>Galvao, F. H., et al. (2019). "Intestinal and multivisceral transplantation at hospital dasclinicas da faculdade De medicina 
+								da universidade De Sao Paulo (HC-FMUSP)-Brazil." Transplantation 103(7 Supplement 2): S171. DOI: 10.1097/01.tp.0000576492.69414.80</li>
+						  	<li>Galvao, F. H., et al. (2019). "Intestinal and multivisceral transplantation at hospital dasclinicas da faculdade De medicina
+								da universidade De Sao Paulo (HC-FMUSP)-Brazil." Neurology 92(15 Supplement 1). DOI: 10.1097/01.tp.0000576492.69414.80</li>
+						</ul>
+					</li>
+					<li>reversed title 3 seen as similar to reversed title of 1 and 2: same authors, year, title, starting page
+						<ul>
+					  		<li>Cool, J., et al. (2018). "TRENDS IN THE PREVALENCE OF PORTAL VEIN THROMBOSIS AND ASSOCIATED MORTALITY IN CIRRHOSIS: ANALYSIS OF A NATIONALLY REPRESENTATIVE INPATIENT COHORT." 
+								Gastroenterology 154(6): S1178-S1178. [Web of Science]</li>
+					  		<li>Cool, J., et al. (2018). "TRENDS IN THE PREVALENCE OF PORTAL VEIN THROMBOSIS AND ASSOCIATED MORTALITY IN CIRRHOSIS: ANALYSIS OF A NATIONALLY REPRESENTATIVE INPATIENT COHORT." 
+								Gastroenterology 154(6 Supplement 1): S-1178. DOI: 10.1016/S0016-5085%2818%2933901-5 [Embase OVID]</li>
+					  		<li>Cool, J., et al. (2018). "THE ASSOCIATION BETWEEN PORTAL VEIN THROMBOSIS AND OTHER VENOUS THROMBOEMBOLISM IN CIRRHOSIS: ANALYSIS OF A NATIONALLY REPRESENTATIVE INPATIENT COHORT."
+								Gastroenterology 154(6): S1178-S1179. [Web of Science]</li>
+						</ul>
+					</li>
 				</ul>
 
 				<h3 id="limitations">Limitations</h3>

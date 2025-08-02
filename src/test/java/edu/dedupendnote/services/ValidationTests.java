@@ -185,18 +185,18 @@ class ValidationTests {
 		 */
 				
 		Map<String, ValidationResultASySD> validationResultsMap = List.of(
-				// new ValidationResult("Cytology_screening", 1360, 60, 436, 0),
-				// new ValidationResult("Haematology", 222, 14, 1179, 0),
-				// new ValidationResult("Respiratory", 765, 35, 1188, 0),
-				// new ValidationResult("Stroke", 504, 6, 782, 0),
-				new ValidationResultASySD("BIG_SET", 3685, 271, 966, 1, 1344), // 1347 unique
-				// new ValidationResult("McKeown_2021", 2014, 58, 1058, 0),
+				new ValidationResultASySD("Cytology_screening", 1359, 61, 436, 0, 622),
+				new ValidationResultASySD("Haematology", 222, 14, 1179, 0, 106),
+				new ValidationResultASySD("Respiratory", 761, 39, 1188, 0, 354),
+				new ValidationResultASySD("Stroke", 497, 13, 782, 0, 190),
+				new ValidationResultASySD("BIG_SET", 3721, 238, 962, 5, 1361), // 1347 unique
+				new ValidationResultASySD("McKeown_2021", 2010, 62, 1058, 0, 816),
 
-				new ValidationResultASySD("ASySD_Cardiac_human", 6752, 21, 2175, 0, 3234),
-				new ValidationResultASySD("ASySD_Depression", 17399, 571, 61895, 15, 7706),
-				new ValidationResultASySD("ASySD_Diabetes", 1818, 16, 11, 0, 566),
-				new ValidationResultASySD("ASySD_Neuroimaging", 2170, 31, 1234, 3, 886),
-				new ValidationResultASySD("ASySD_SRSR_Human", 27896, 101, 24986, 18, 11078))
+				new ValidationResultASySD("ASySD_Cardiac_human", 6748, 25, 2175, 0, 3234),
+				new ValidationResultASySD("ASySD_Depression", 17389, 576, 61894, 21, 7705),
+				new ValidationResultASySD("ASySD_Diabetes", 1816, 18, 11, 0, 566),
+				new ValidationResultASySD("ASySD_Neuroimaging", 2169, 32, 1235, 2, 890),
+				new ValidationResultASySD("ASySD_SRSR_Human", 27816, 190, 24988, 7, 11087))
 			.stream()
 			.collect(Collectors.toMap(ValidationResultASySD::getFileName, Function.identity(), (o1, o2) -> o1,
 					TreeMap::new));

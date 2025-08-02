@@ -170,7 +170,7 @@ Data are from:
 * [McKeown] McKeown, S., Mir, Z.M.
   Considerations for conducting systematic reviews: evaluating the performance of different methods for de-duplicating references.
   Syst Rev 10, 38 (2021). [https://doi.org/10.1186/s13643-021-01583-y](https://doi.org/10.1186/s13643-021-01583-y)
-* [BIG_SET] Own test database for DedupEndNote on portal vein thrombosis (52,828 records, with 4923 records validated)
+* [BIG_SET] Own test database for DedupEndNote on portal vein thrombosis (52,828 records, with 4926 records validated)
 
 <table border="1">
     <colgroup>
@@ -283,13 +283,13 @@ Data are from:
         </tr>  
         <tr>
             <td>DedupEndNote</td>
-            <td align="right">766</td>
-            <td align="right">34</td>
-            <td align="right"><strong>95.7%</strong></td>
+            <td align="right">761</td>
+            <td align="right">39</td>
+            <td align="right"><strong>95.2%</strong></td>
             <td align="right">1188</td>
             <td align="right">0</td>
             <td align="right"><strong>100.0%</strong></td>
-            <td align="right"><strong>97.8%</strong></td>
+            <td align="right"><strong>98.0%</strong></td>
         </tr>
         <tr>
             <td cellspan="9" style="height: 15px;"></td>
@@ -317,19 +317,19 @@ Data are from:
         </tr>
         <tr>
             <td>DedupEndNote</td>
-            <td align="right">503</td>
-            <td align="right">7</td>
-            <td align="right"><strong>98.6%</strong></td>
+            <td align="right">497</td>
+            <td align="right">13</td>
+            <td align="right"><strong>97.4%</strong></td>
             <td align="right">782</td>
             <td align="right">0</td>
             <td align="right"><strong>100.0%</strong></td>
-            <td align="right"><strong>99.5%</strong></td>
+            <td align="right"><strong>98.9%</strong></td>
         </tr> 
         <tr>
             <td cellspan="9" style="height: 15px;"></td>
         </tr>
         <tr>
-            <td rowspan="7">McKeown<br>3130 rec</td>
+            <td rowspan="7">McKeown<br>(3130 rec)</td>
             <td>OVID</td>
             <td align="right">1982</td>
             <td align="right">90</td>
@@ -403,18 +403,30 @@ Data are from:
             <td cellspan="9" style="height: 15px;"></td>
         </tr>
         <tr>
-            <td>BIG_SET<br>(4923 rec)</td>
+            <td>BIG_SET<br>(4926 rec)</td>
             <td>DedupEndNote</td>
-            <td align="right">3685</td>
-            <td align="right">271</td>
-            <td align="right">93.1%</td>
-            <td align="right">966</td>
-            <td align="right">1</td>
-            <td align="right">99.9%</td>
-            <td align="right">94.5%</td>
+            <td align="right">3721</td>
+            <td align="right">238</td>
+            <td align="right">94.0%</td>
+            <td align="right">962</td>
+            <td align="right">5</td>
+            <td align="right">99.5%</td>
+            <td align="right">95.0%</td>
         </tr>
 	</tbody>
 </table>
+
+### The false positive cases from BIG_SET:
+- wrong DOI and journal in second of 2 EMBASE (OVID) records: same authors, year, title, DOI, different journal and starting page
+  - Segovia, M. C., et al. (2019). "Combined multivisceral and renal transplant in a patient with JAK-2 mutation." Transplantation 103(7 Supplement 2): S143. DOI: 10.1097/01.tp.0000576288.84252.91
+  - Segovia, M. C., et al. (2019). "Combined multivisceral and renal transplant in a patient with JAK-2 mutation." Neurology 92(15 Supplement 1). DOI: 10.1097/01.tp.0000576288.84252.91
+- wrong DOI and journal in second of 2 EMBASE (OVID) records: same authors, year, title, DOI, different journal and starting page
+  - Galvao, F. H., et al. (2019). "Intestinal and multivisceral transplantation at hospital dasclinicas da faculdade De medicina da universidade De Sao Paulo (HC-FMUSP)-Brazil." Transplantation 103(7 Supplement 2): S171. DOI: 10.1097/01.tp.0000576492.69414.80
+  - Galvao, F. H., et al. (2019). "Intestinal and multivisceral transplantation at hospital dasclinicas da faculdade De medicina da universidade De Sao Paulo (HC-FMUSP)-Brazil." Neurology 92(15 Supplement 1). DOI: 10.1097/01.tp.0000576492.69414.80
+- reversed title 3 seen as similar to reversed title of 1 and 2: same authors, year, title, starting page
+  - Cool, J., et al. (2018). "TRENDS IN THE PREVALENCE OF PORTAL VEIN THROMBOSIS AND ASSOCIATED MORTALITY IN CIRRHOSIS: ANALYSIS OF A NATIONALLY REPRESENTATIVE INPATIENT COHORT." Gastroenterology 154(6): S1178-S1178. [Web of Science]
+  - Cool, J., et al. (2018). "TRENDS IN THE PREVALENCE OF PORTAL VEIN THROMBOSIS AND ASSOCIATED MORTALITY IN CIRRHOSIS: ANALYSIS OF A NATIONALLY REPRESENTATIVE INPATIENT COHORT." Gastroenterology 154(6 Supplement 1): S-1178. DOI: 10.1016/S0016-5085%2818%2933901-5 [Embase OVID]
+  - Cool, J., et al. (2018). "THE ASSOCIATION BETWEEN PORTAL VEIN THROMBOSIS AND OTHER VENOUS THROMBOEMBOLISM IN CIRRHOSIS: ANALYSIS OF A NATIONALLY REPRESENTATIVE INPATIENT COHORT." Gastroenterology 154(6): S1178-S1179. [Web of Science]
 
 
 ## Limitations
