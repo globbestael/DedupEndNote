@@ -25,7 +25,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @TestConfiguration
-public class AuthorComparisonThresholdTest extends AuthorsBaseTest {
+class AuthorComparisonThresholdTest extends AuthorsBaseTest {
 
 	List<Triple> triples = new ArrayList<>();
 

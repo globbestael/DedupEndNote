@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -24,7 +23,7 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class JournalsBaseTest extends BaseTest {
+class JournalsBaseTest extends BaseTest {
 
 	DeduplicationService deduplicationService = new DeduplicationService();
 
@@ -68,7 +67,7 @@ public class JournalsBaseTest extends BaseTest {
 	protected List<Triple> getValidatedJournalPairs() throws IOException {
 		String fileName = testdir + "/experiments/validated_journal_pairs.txt";
 		localTriples.clear();
-		Path path = Paths.get(fileName);
+		Path path = Path.of(fileName);
 		Stream<String> lines = Files.lines(path);
 		lines.forEach(l -> {
 			String[] parts = l.split("\t");
@@ -114,10 +113,9 @@ public class JournalsBaseTest extends BaseTest {
 		long numberMissed = triples.stream().filter(t -> t.getSimilar() == false).count();
 
 		// 20220528: started with 125 missed
-		assertThat(0L)
-			.as(numberMissed + " journal pairs (of " + triples.size()
-					+ ") were not seen as similar by comparison on journal names")
-			.isEqualTo(numberMissed);
+		assertThat(numberMissed)
+			.as(numberMissed + " journal pairs (of " + triples.size() + ") were not seen as similar by comparison on journal names")
+			.isZero();
 	}
 
 }

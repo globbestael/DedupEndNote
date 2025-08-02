@@ -24,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Service
 public class IOService {
+	private UtilitiesService utilities = new UtilitiesService();
 
 	/*
 	 * Patterns
@@ -31,29 +32,22 @@ public class IOService {
 	/**
 	 * Pattern to identify conferences in the T3 field
 	 */
-	// private static Pattern conferencePattern =
-	// Pattern.compile(".*(^[0-9]|\\d{4,4}|Annual|Conference|Congress|Meeting|Society|Symposium).*");
-	private static Pattern conferencePattern = Pattern
-			.compile("(^[0-9]|(.*(\\d{4,4}|Annual|Conference|Congress|Meeting|Society|Symposium))).*");
+	private static final Pattern conferencePattern = Pattern
+			.compile("((^\\d)|(.*(\\d{4}|Annual|Conference|Congress|Meeting|Society|Symposium))).*");
 
 	/** Pattern to identify clinical trials phase (1 ..4, i .. iv) */
-	private static Pattern phasePattern = Pattern.compile(".*phase\\s(\\d|i).*", Pattern.CASE_INSENSITIVE);
-
-	/*
-	 * FIXME Java 11ff: Switch to NIO2. See
-	 * https://horstmann.com/unblog/2023-04-09/index.html
-	 */
+	private static final Pattern phasePattern = Pattern.compile(".*phase\\s[\\di].*", Pattern.CASE_INSENSITIVE);
 
 	// Don't use "Response" as last word, e.g: Endothelial cell injury in
 	// cardiovascular surgery: the procoagulant response
-	private static Pattern replyPattern = Pattern.compile("(.*\\breply\\b.*|.*author(.+)respon.*|^response$)");
+	private static final Pattern replyPattern = Pattern.compile("(.*\\breply\\b.*|.*author(.+)respon.*|^response$)");
 
 	/*
 	 * If field content starts with a comma (",") EndNote exports "[Fieldname]  -,",
 	 * NOT "[Fieldname]  - ," (EndNote X9.3.3) This pattern skips that initial
 	 * comma, not the space which may come after that comma!
 	 */
-	public static Pattern risLinePattern = Pattern.compile("(^[A-Z][A-Z0-9])(  -[ ,\\u00A0])(.*)$");
+	public static final Pattern risLinePattern = Pattern.compile("(^[A-Z][A-Z0-9])( {2}-[ ,\\u00A0])(.*)$");
 
 	/**
 	 * All white space characters within input fields will replaced with a normal SPACE.
@@ -67,11 +61,8 @@ public class IOService {
 	 *  
 	 * Tested in TextNormalizerTest
 	 */
-//	public static Pattern unusualWhiteSpacePattern = Pattern.compile("[\\p{Zs}\\p{Cc}]");
-	public static Pattern unusualWhiteSpacePattern = Pattern.compile("[\\p{Zs}\\p{Zl}\\p{Zp}\\u0009\\u000A\\u000B\\u000C\\u000D&&[^ ]]");
+	public static final Pattern unusualWhiteSpacePattern = Pattern.compile("[\\p{Zs}\\p{Zl}\\p{Zp}\\u0009\\u000A\\u000B\\u000C\\u000D&&[^ ]]");
 	
-	private UtilitiesService utilities = new UtilitiesService();
-
 	public List<Publication> readPublications(String inputFileName) {
 		List<Publication> publications = new ArrayList<>();
 		String fieldContent = null;
@@ -122,7 +113,7 @@ public class IOService {
 						break;
 					case "ER":
 						if (publication.getId() == null) {
-							publication.setId(Integer.valueOf(missingId++).toString());
+							publication.setId(Integer.toString(missingId++));
 						}
 						publication.addReversedTitles();
 						publication.fillAllAuthors();
@@ -151,18 +142,18 @@ public class IOService {
 						publication.addIssns(fieldContent);
 						previousFieldName = fieldName;
 						break;
-					// Ovid Medline in RIS export has author address in repeatable M2
-					// field,
+					// Ovid Medline in RIS export has author address in repeatable M2 field,
 					// EndNote 20 shows the content in field with label "Start Page",
 					// but export file of such a record has this content in SE field!
-					case "SE": // pages (Embase (which provider?), Ovid PsycINFO:
-						// examples in some SRA datasets)
+					case "SE": // pages (Embase (which provider?), Ovid PsycINFO: examples in some SRA datasets)
 					case "SP": // pages
 						publication.parsePages(fieldContent);
 						break;
 					/*
-					 * original non-English titles: - PubMed: OP - Embase: continuation line of
-					 * title - Scopus: ST and TT?
+					 * original non-English titles:
+					 * - PubMed: OP 
+					 * - Embase: continuation line of title
+					 * - Scopus: ST and TT?
 					 */
 					case "ST": // Original Title in Scopus
 						publication.addTitles(fieldContent);
@@ -171,16 +162,18 @@ public class IOService {
 						publication.addJournals(fieldContent);
 						break;
 					/*
-					 * T3 (especially used in EMBASE (OVID)) has 3 types of content: - conference
-					 * name (majority of cases) - original title - alternative journal name
+					 * T3 (especially used in EMBASE (OVID)) has 3 types of content:
+					 * - conference name (majority of cases)
+					 * - original title 
+					 * - alternative journal name
 					 *
-					 * Present solution: - skip it if it contains a number or
-					 * "Annual|Conference|Congress|Meeting|Society"
-					 * ("Asian Pacific Digestive Week 2014. Bali Indonesia.",
-					 * "12th World Congress of the International Hepato-Pancreato-Biliary Association. Sao Paulo Brazil."
-					 * ,
-					 * "International Liver Transplantation Society 15th Annual International Congress. New York, NY United States."
-					 * ) - add it as Title - add it as Journal
+					 * Present solution:
+					 * - skip it if it contains a number or "Annual|Conference|Congress|Meeting|Society"
+					 *   ("Asian Pacific Digestive Week 2014. Bali Indonesia.",
+					 *    "12th World Congress of the International Hepato-Pancreato-Biliary Association. Sao Paulo Brazil.",
+					 *    "International Liver Transplantation Society 15th Annual International Congress. New York, NY United States.")
+					 * - add it as Title 
+					 * - add it as Journal
 					 */
 					case "T3": // Book section
 						if (!conferencePattern.matcher(fieldContent).matches()) {
@@ -211,21 +204,24 @@ public class IOService {
 						publication = new Publication();
 						publication.setReferenceType(fieldContent);
 						break;
+					// do not use UR to extract more DOI's: see https://github.com/globbestael/DedupEndNote/issues/14
 					default:
 						previousFieldName = fieldName;
 						break;
 					}
 				} else { // continuation line
 					switch (previousFieldName) {
-					case "DO":
-						publication.addDois(line);
-						break;
-					case "SN":
-						publication.addIssns(line);
-						break;
-					case "TI": // EMBASE original title
-						publication.addTitles(line);
-						break;
+						case "DO":
+							publication.addDois(line);
+							break;
+						case "SN":
+							publication.addIssns(line);
+							break;
+						case "TI": // EMBASE original title
+							publication.addTitles(line);
+							break;
+						default:
+							break;
 					}
 				}
 			}
@@ -235,28 +231,28 @@ public class IOService {
 			log.error("In field {} with content {}: Number could not be parsed", fieldName, fieldContent);
 			e.printStackTrace();
 		} catch (Exception e) {
-			e.printStackTrace();
 			log.error("In field {} with content {}: other exception: {}", fieldName, fieldContent, e.getMessage());
+			e.printStackTrace();
 		}
 		log.debug("Records read: {}", publications.size());
 		return publications;
 	}
 
-	/*
-	 * PageStart (PG) and DOIs (DO) are replaced or inserted, but written at the
-	 * same place as in the input file to make comparisons between input file and
-	 * output file easier. Absent Publication year (PY) is replaced if there is one
-	 * found in a duplicate record. Author (AU) Anonymous is skipped. Title (TI) is
-	 * replaced with the longest duplicate title when it contains "Reply". Article
-	 * Number (C7) is skipped.
+	/**
+	 * - PageStart (PG) and DOIs (DO) are replaced or inserted, but written at the same place as in the input file to make comparisons between input file and
+	 *   output file easier. 
+	 * - Absent Publication year (PY) is replaced if there is one found in a duplicate record. 
+	 * - Author (AU) Anonymous is skipped. 
+	 * - Title (TI) is replaced with the longest duplicate title when it contains "Reply". 
+	 * - Article Number (C7) is skipped.
+	 * - Absent Journal Name (T2) is copied from J2 (or filed in based on DOI foor SSRN): for embase.com records (but no check on this origin!)
 	 *
 	 * Records are read into a TreeMap, with continuation lines added.
 	 * writeRecords(...) does the replacements, and writes to the output file.
 	 */
 	public int writeDeduplicatedRecords(List<Publication> publications, String inputFileName, String outputFileName) {
 		log.debug("Start writing to file {}", outputFileName);
-		List<Publication> recordsToKeep = publications.stream().filter(Publication::getKeptRecord)
-				.collect(Collectors.toList());
+		List<Publication> recordsToKeep = publications.stream().filter(Publication::getKeptRecord).toList();
 		log.debug("Records to be kept: {}", recordsToKeep.size());
 
 		Map<String, Publication> recordIdMap = publications.stream().filter(r -> !r.getId().startsWith("-"))
@@ -288,36 +284,36 @@ public class IOService {
 					fieldContent = matcher.group(3);
 					previousFieldName = "XYZ";
 					switch (fieldName) {
-					case "ER":
-						map.put(fieldName, fieldContent);
-						phantomId++;
-						if (realId == null) {
-							publication = recordIdMap.get(phantomId.toString());
-							if (publication != null) {
-								publication.setId(phantomId.toString());
-								map.put("ID", phantomId.toString());
-							}
-						}
-						if (publication != null && publication.getKeptRecord() == true) {
-							writeRecord(map, publication, bw, true);
-							numberWritten++;
-						}
-						map.clear();
-						realId = null;
-						break;
-					case "ID": // EndNote Publication number
-						map.put(fieldName, fieldContent);
-						realId = line.substring(6);
-						publication = recordIdMap.get(realId);
-						break;
-					default:
-						if (map.containsKey(fieldName)) {
-							map.put(fieldName, map.get(fieldName) + "\n" + line);
-						} else {
+						case "ER":
 							map.put(fieldName, fieldContent);
-						}
-						previousFieldName = fieldName;
-						break;
+							phantomId++;
+							if (realId == null) {
+								publication = recordIdMap.get(phantomId.toString());
+								if (publication != null) {
+									publication.setId(phantomId.toString());
+									map.put("ID", phantomId.toString());
+								}
+							}
+							if (publication != null && publication.getKeptRecord()) {
+								writeRecord(map, publication, bw, true);
+								numberWritten++;
+							}
+							map.clear();
+							realId = null;
+							break;
+						case "ID": // EndNote Publication number
+							map.put(fieldName, fieldContent);
+							realId = line.substring(6);
+							publication = recordIdMap.get(realId);
+							break;
+						default:
+							if (map.containsKey(fieldName)) {
+								map.put(fieldName, map.get(fieldName) + "\n" + line);
+							} else {
+								map.put(fieldName, fieldContent);
+							}
+							previousFieldName = fieldName;
+							break;
 					}
 				} else { // continuation line
 					map.put(previousFieldName, map.get(previousFieldName) + "\n" + line);
@@ -332,8 +328,7 @@ public class IOService {
 
 	public int writeMarkedRecords(List<Publication> publications, String inputFileName, String outputFileName) {
 		log.debug("Start writing to file {}", outputFileName);
-		List<Publication> recordsToKeep = publications.stream().filter(Publication::getKeptRecord)
-				.collect(Collectors.toList());
+		List<Publication> recordsToKeep = publications.stream().filter(Publication::getKeptRecord).toList();
 		log.debug("Records to be kept: {}", recordsToKeep.size());
 
 		Map<String, Publication> recordIdMap = publications.stream().filter(r -> !r.getId().startsWith("-"))
@@ -372,7 +367,7 @@ public class IOService {
 							publication.setId(phantomId.toString());
 							map.put("ID", phantomId.toString());
 						}
-						if (publication != null && publication.getKeptRecord() == true) {
+						if (publication != null && publication.getKeptRecord()) {
 							map.put(fieldName, fieldContent);
 							if (publication.getLabel() != null) {
 								map.put("LB", publication.getLabel());
@@ -414,12 +409,12 @@ public class IOService {
 	 * Ordering of an EndNote export RIS file: the fields are ordered
 	 * alphabetically, except for TY (first), and ID and ER (last fields)
 	 */
-	private void writeRecord(Map<String, String> map, Publication publication, BufferedWriter bw, Boolean enhance)
+	private void writeRecord(Map<String, String> map, Publication publication, BufferedWriter bw, boolean enhance)
 			throws IOException {
 		if (enhance) {
 			if (!publication.getDois().isEmpty()) {
 				map.put("DO", "https://doi.org/"
-						+ publication.getDois().keySet().stream().collect(Collectors.joining("\nhttps://doi.org/")));
+						+ publication.getDois().stream().collect(Collectors.joining("\nhttps://doi.org/")));
 			}
 			if (publication.getPageStart() != null) {
 				if (publication.getPageEnd() != null && !publication.getPageEnd().equals(publication.getPageStart())) {
@@ -438,9 +433,17 @@ public class IOService {
 			if (!map.containsKey("PY") && publication.getPublicationYear() != 0) {
 				map.put("PY", publication.getPublicationYear().toString());
 			}
+			if (!map.containsKey("T2")) {
+				if (map.containsKey("J2")) {
+					map.put("T2", map.get("J2"));
+				} else if (map.containsKey("DO") && map.get("DO").contains("https://doi.org/10.2139/ssrn")) {
+					// alternative test could be ISSN 1556-5068
+					map.put("T2", "Social Science Research Network");
+				}
+			}
+			
 		}
-		// in enhanced mode C7 (Article number) is skipped, in Mark mode C7 is NOT
-		// skipped
+		// in enhanced mode C7 (Article number) is skipped, in Mark mode C7 is NOT skipped
 		String skipFields = enhance ? "(C7|ER|ID|TY|XYZ)" : "(ER|ID|TY|XYZ)";
 		StringBuilder sb = new StringBuilder();
 		sb.append("TY  - ").append(map.get("TY")).append("\n");
@@ -611,68 +614,4 @@ public class IOService {
 		}
 		log.debug("Finished writing to file. # records: {}", numberWritten);
 	}
-
-	// public int writeMarkedRecords_old(List<Publication> records, String
-	// inputFileName,
-	// String outputFileName) {
-	// log.debug("Start writing to file {}", outputFileName);
-	//
-	// Map<String, Publication> recordIdMap = records.stream()
-	// .filter(r -> ! r.getId().startsWith("-"))
-	// .collect(Collectors.toMap(Publication::getId, Function.identity()));
-	// StringBuffer sb = new StringBuffer();
-	// int numberWritten = 0;
-	// String fieldContent = null;
-	// String fieldName = null;
-	// boolean hasBom = utilities.detectBom(inputFileName);
-	//
-	// try (BufferedWriter bw = new BufferedWriter(new FileWriter(outputFileName));
-	// BufferedReader br = new BufferedReader(new FileReader(inputFileName))) {
-	// if (hasBom) {
-	// br.skip(1);
-	// }
-	// String line;
-	// Publication record = null;
-	// while ((line = br.readLine()) != null) {
-	// line = unusualPunctuationPattern.matcher(line).replaceAll(" ");
-	// Matcher matcher = risLinePattern.matcher(line);
-	// if (matcher.matches()) {
-	// fieldName = matcher.group(1);
-	// fieldContent = matcher.group(3);
-	// switch(fieldName) {
-	// case "ER":
-	// if (record != null) {
-	// if (record.getLabel() != null) {
-	// sb.append("LB - ").append(record.getLabel()).append("\n");
-	// }
-	// sb.append("C8 - ").append(record.getId()).append("\n");
-	// sb.append(line).append("\n\n");
-	// bw.write(sb.toString());
-	// numberWritten++;
-	// }
-	// sb.setLength(0);
-	// break;
-	// case "ID":
-	// String id = fieldContent;
-	// record = recordIdMap.get(id);
-	// // log.debug("Writing record with ID {}: {}", id, record);
-	// break;
-	// case "LB":
-	// ; // these fields will use content from the Publication (see above at
-	// ER-line)
-	// break;
-	// default:
-	// sb.append(line).append("\n");
-	// }
-	// } else {
-	// sb.append(line).append("\n");
-	// }
-	// }
-	// } catch (IOException e) {
-	// e.printStackTrace();
-	// }
-	// log.debug("Finished writing to file. # records: {}", numberWritten);
-	// return numberWritten;
-	// }
-
 }

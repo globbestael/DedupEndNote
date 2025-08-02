@@ -13,7 +13,7 @@ import org.springframework.boot.test.context.TestConfiguration;
 import edu.dedupendnote.domain.Publication;
 
 @TestConfiguration
-public class PagesTest {
+class PagesTest {
 
 	@ParameterizedTest(name = "{index}: parsePages({0})=({1},{2},{3})")
 	@MethodSource("argumentProvider")
@@ -57,7 +57,13 @@ public class PagesTest {
 				arguments("001-099", "1", "99", "1"),
 				// leading zeros
 				arguments("A1-A099", "A1", "A099", "1"),
-				arguments("i-A19", "A19", null, "19")
+				arguments("i-A19", "A19", null, "19"),
+				arguments("ED01-ED03", "ED01", "ED03", "1"),
+				arguments("0-3", "3", null, "3"),
+				arguments("000-003", "3", null, "3"),
+				arguments("000", "000", null, null),
+				arguments("1469-87; discussion 1487-9", "1469", "87; discussion 1487-9", "1469"),
+				arguments("1469-1487", "1469", "1487", "1469")
 				);
 	}
 

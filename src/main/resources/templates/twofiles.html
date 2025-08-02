@@ -1,14 +1,16 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
 <head>
     <title>DedupEndNote - Two files</title>
+    
 	<script th:src="@{/webjars/jquery/jquery.min.js}"></script>
 	<script th:src="@{/webjars/jquery-ui/jquery-ui.min.js}"></script>
 	<script th:src="@{/webjars/blueimp-file-upload/js/jquery.fileupload.js}"></script>
 	<script th:src="@{/webjars/blueimp-file-upload/js/jquery.fileupload-process.js}"></script>
 	<link rel="stylesheet" th:href="@{/webjars/bootstrap/css/bootstrap.min.css}">
-    <script th:src="@{/webjars/sockjs-client/sockjs.min.js}"></script>
-    <script th:src="@{/webjars/stomp-websocket/stomp.min.js}"></script>
+	<script th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}" type="text/javascript"></script>
+	<script th:src="@{/webjars/sockjs-client/dist/sockjs.min.js}"></script>
+	<script th:src="@{/webjars/stomp-websocket/stomp.min.js}"></script>
 
  	<script th:inline="javascript">
 	 	var stompClient = null;
@@ -209,8 +211,6 @@
 					</div>
 				</form>
 				<div class="row col-11 border border-primary rounded alert alert-secondary" id="step2">
-<!-- 				<div class="row" style="margin-top: 10px;"> -->
-<!-- 					<div class="col-11 border border-primary"> -->
 					<div class="col-3">
 						<h3>2. START</h3>
 					</div>
@@ -257,19 +257,6 @@
 					</div>
 				</div>
 				
-<!-- 				<div class="card bg-light mb-3"> -->
-<!-- 					<div class="card-body"> -->
-<!-- 						<p id="reportLink" class="alert-danger"></p> -->
-						
-<!-- 						<form class="form-horizontal" style="display: none;" id="getResultFile_form" method="post" th:action="@{|/getResultFile|}"> -->
-<!-- 							<input type="hidden" name="fileName" id="fileName" /> -->
-<!-- 							<input type="hidden" name="markModeResultFile" id="markModeResultFile" /> -->
-<!-- 	 						nodig om submit() voor IE te laten werken -->
-<!-- 							<button type="submit" class="btn btn-primary mb-2" onclick="this.form.submit()">Get the result</button> -->
-<!-- 						</form> -->
-<!-- 					</div> -->
-<!-- 				</div> -->
-
 	        	<h3 id="steps">Steps</h3>
 	   			<i>(The names of the EndNote databases and the RIS files are just examples)</i></p>
 	       		<ol>

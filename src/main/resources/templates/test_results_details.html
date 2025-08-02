@@ -1,18 +1,14 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
 <head>
-<!--     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/> -->
-<!--     <meta name="viewport" content="width=device-width, initial-scale=1.0"/> -->
-<!--     <meta name="description" content=""/> -->
-<!--     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/> -->
     <title>DedupEndNote</title>
 
 
-	<script th:src="@{/webjars/jquery/jquery.min.js}"></script>
-	<script th:src="@{/webjars/jquery-ui/jquery-ui.min.js}"></script>
+	<script th:src="@{/webjars/jquery/3.7.0/jquery.min.js}"></script>
+	<script th:src="@{/webjars/jquery-ui/1.13.2/jquery-ui.min.js}"></script>
 	<script th:src="@{/webjars/blueimp-file-upload/js/jquery.fileupload.js}"></script>
 	<script th:src="@{/webjars/blueimp-file-upload/js/jquery.fileupload-process.js}"></script>
-	<link rel="stylesheet" th:href="@{/webjars/bootstrap/css/bootstrap.min.css}">
+	<link rel="stylesheet" th:href="@{/webjars/bootstrap/4.5.3/css/bootstrap.min.css}">
     <style type="text/css">
     	td {
     		vertical-align: top;
@@ -44,6 +40,7 @@
 				<p>The following queries were executed in 8 bibliographic databases on May 30, 2020.</p>
 	
 				<table class="table table-sm">
+					<caption>Contents of the BIG SET testdatabase</caption>
 					<thead>
 						<tr>
 							<th>Database</th>
@@ -159,6 +156,7 @@
 				before the EMBASE OVID, ...</p>
 
 				<table class="table table-sm">
+					<caption>Performance further tests</caption>
 					<thead>
 						<tr>
 							<th>field</th>
@@ -251,6 +249,7 @@
 				<p>Fields cleared: Abstract, Accession number, Author address, Keywords, Notes</p> 
 
 				<table class="table table-sm">
+					<caption>Contents cannabis testdatabase</caption>
 					<thead>
 						<tr>
 							<th>field</th>

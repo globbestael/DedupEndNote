@@ -6,11 +6,8 @@
 		<resetJUL>true</resetJUL>
 	</contextListener>
 
-	<!-- To enable JMX Management -->
-	<jmxConfigurator />
 	<appender name="console" class="ch.qos.logback.core.ConsoleAppender">
 		<encoder>
-			<!-- pattern>%.-1level|%-40.40logger{0}|%msg%n</pattern -->
 			<pattern>%d{dd-MM-yyyy HH.mm.ss} %-5level %logger{30}:%line - %msg%n</pattern>
 		</encoder>
 		<filter class="ch.qos.logback.classic.filter.ThresholdFilter">
@@ -19,7 +16,6 @@
 	</appender>
 	<appender name="file" class="ch.qos.logback.core.rolling.RollingFileAppender">
 		<encoder>
-<!-- 			<pattern>%d{dd-MM-yyyy HH.mm.ss} %-5level %logger{30}:%line - %msg%n</pattern> -->
 			<pattern>%msg%n</pattern>
 		</encoder>
 		<filter class="ch.qos.logback.classic.filter.ThresholdFilter">
@@ -27,7 +23,7 @@
 		</filter>
 		<File>${user.home}/logs/dedupendnote.log</File>
 		<rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
-			<maxIndex>100</maxIndex>
+			<maxIndex>10</maxIndex>
 			<FileNamePattern>${user.home}/logs/dedupendnote.log.%i</FileNamePattern>
 		</rollingPolicy>
 		<triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">

@@ -4,31 +4,42 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
+import java.util.List;
 import java.util.stream.Stream;
 
 import org.apache.commons.text.similarity.JaroWinklerSimilarity;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.boot.test.context.TestConfiguration;
 
+import com.github.difflib.text.DiffRow;
+import com.github.difflib.text.DiffRowGenerator;
+
 import edu.dedupendnote.domain.Publication;
 import info.debatty.java.stringsimilarity.RatcliffObershelp;
 
-//@Slf4j
-//@ExtendWith(TimingExtension.class)
+/*
+ * This is a test class with nested classes which use parameterized tests.
+ * The same sources (@MethodSource) should be used in the nested tests --> the sources should be present in the outer class.
+ * See <a href="https://stackoverflow.com/questions/47933755/junit-5-methodsource-in-nested-class">Stack Overflow</a> for several solutions,
+ * and <a href="https://stackoverflow.com/questions/53975605/how-to-use-methodsource-defined-in-other-class-in-junit-5">here</a>
+ */
 @TestConfiguration
-public class AbstracttextTest {
+class AbstracttextTest {
 
+	// @formatter:off
 	/*
-	 * This test file tries to find a workable solution for comparing abstracts -
-	 * JaroWinkler - JaroWinkler with cleaning of text - JaroWinkler with cleaning
-	 * of text and limiting to first 200 characters
-	 *
+	 * This test file tries to find a workable solution for comparing abstracts
+	 * - JaroWinkler - JaroWinkler with cleaning of text
+	 * - JaroWinkler with cleaning of text and limiting to first 200 characters
 	 * - Ratcliff-Obershelp with the same kinds
 	 *
 	 * PRELIMINARY RESULTS: no good solution found.
 	 */
+	// @formatter:on
 
 	static Stream<Arguments> negativeArgumentProvider() {
 		return Stream.of(arguments(
@@ -47,8 +58,7 @@ public class AbstracttextTest {
 
 	static Stream<Arguments> positiveArgumentProvider() {
 		return Stream.of(
-				// PubMed and Embase.com record for an ACP Journal Club article in Annals
-				// of Internal Medicine
+				// PubMed and Embase.com record for an ACP Journal Club article in Annals of Internal Medicine
 				arguments(
 						"Ashina M, Lanteri-Minet M, Pozo-Rosich P, et al. Safety and efficacy of eptinezumab for migraine prevention in patients with two-to-four previous preventive treatment failures (DELIVER): a multi-arm, randomised, double-blind, placebo-controlled, phase 3b trial. Lancet Neurol. 2022;21:597-607. 35716692.",
 						"SOURCE CITATION: Ashina M, Lanteri-Minet M, Pozo-Rosich P, et al. Safety and efficacy of eptinezumab for migraine prevention in patients with two-to-four previous preventive treatment failures (DELIVER): a multi-arm, randomised, double-blind, placebo-controlled, phase 3b trial. Lancet Neurol. 2022;21:597-607. 35716692.",
@@ -60,8 +70,7 @@ public class AbstracttextTest {
 				/*
 				 * First string is from PubMed (PMID 34537006): char at position 149 is "\u2009"
 				 * (THIN SPACE) Second string is from Cochrane (CN-02321497): char at position
-				 * 149 is "\u0020" (SPACE), but 68 and 83 are "\u2010" (HYPHEN) not "\u002D"
-				 * (HYPHEN-MINUS)
+				 * 149 is "\u0020" (SPACE), but 68 and 83 are "\u2010" (HYPHEN) not "\u002D" (HYPHEN-MINUS)
 				 */
 				arguments(
 						"BACKGROUND: These subgroup analyses of a Phase 3, randomized, double-blind, placebo-controlled study evaluated the efficacy and safety of erenumab 70 mg in Japanese migraine patients with/without prior preventive treatment failure(s) (\"failed-yes\" and \"failed-no\" subgroups) and with/without concomitant preventive treatment (\"concomitant preventive-yes\" and \"concomitant preventive-no\" subgroups). METHODS: Overall, 261 patients were randomized; 130 and 131 patients to erenumab 70 mg and placebo, respectively. Subgroup analyses evaluated the change from baseline to Months 4-6 in mean monthly migraine days (MMD) (primary endpoint), achievement of a ≥50% reduction in mean MMD, and change from baseline in mean monthly acute migraine-specific medication (MSM) treatment days. Treatment-emergent adverse events were also evaluated. RESULTS: Of the 261 patients randomized, 117 (44.8%) and 92 (35.3%) patients were in the failed-yes and concomitant preventive-yes subgroups, respectively. Erenumab 70 mg demonstrated consistent efficacy across all subgroups, with greater reductions from baseline in mean MMD versus placebo at Months 4-6 (treatment difference versus placebo [95% CI], failed-yes: - 1.9 [- 3.3, - 0.4]; failed-no: - 1.4 [- 2.6, - 0.3]; concomitant preventive-yes: - 1.7 [- 3.3, 0.0]; concomitant preventive-no: - 1.6 [- 2.6, - 0.5]). Similar results were seen for achievement of ≥50% reduction in mean MMD and change from baseline in mean monthly acute MSM treatment days. The safety profile of erenumab 70 mg was similar across subgroups, and similar to placebo in each subgroup. CONCLUSION: Erenumab was associated with clinically relevant improvements in all efficacy endpoints and was well tolerated across all subgroups of Japanese migraine patients with/without prior preventive treatment failure(s) and with/without concomitant preventive treatment. TRIAL REGISTRATION: Clinicaltrials.gov . NCT03812224. Registered January 23, 2019.",
@@ -85,16 +94,139 @@ public class AbstracttextTest {
 						0.92));
 	}
 
-	static String revertString(String s) {
-		return new StringBuilder(s).reverse().toString();
-	}
-
 	JaroWinklerSimilarity jws = new JaroWinklerSimilarity();
 
 	RatcliffObershelp ro = new RatcliffObershelp();
 
+	@Nested
+	class JwsAbstracttextTest {
+		@ParameterizedTest(name = "{index}: jaroWinkler({0}, {1})={2}")
+		@MethodSource("edu.dedupendnote.AbstracttextTest#negativeArgumentProvider")
+		void jwNegativeTest(String input1, String input2, double expected) {
+			String t1 = cleanAbstracttext(input1);
+			String t2 = cleanAbstracttext(input2);
+			Double distance = jws.apply(t1, t2);
+//			System.err.println("- 1: %s\n- 2: %s\n- 3: %s\n- 4: %s\n".formatted(input1, t1, input2, t2));
+//			assertThat(distance).isLessThanOrEqualTo(expected);
+			/*
+			 * Awful way to get and print the differences between 2 strings to the console tab (instead of the JUnit tab)
+			 */
+			if (distance <= (expected - 0.01d)) {
+				assertThat(distance)
+					.isLessThanOrEqualTo(expected);
+			} else {
+				System.err.println("Diffs: " +  getDiffs(t1,t2));
+				assertThat(distance)
+					.as("JWS distance too small. String: %s ...", t1.substring(0, 25))
+					.isLessThanOrEqualTo(expected);
+			}
+			// assertThat(distance).isLessThan(DeduplicationService.TITLE_SIMILARITY_SUFFICIENT_STARTPAGES_OR_DOIS);
+		}
+	
+		@ParameterizedTest(name = "{index}: jaroWinkler({0}, {1})={2}")
+		@MethodSource("edu.dedupendnote.AbstracttextTest#positiveArgumentProvider")
+		void jwPositiveTest(String input1, String input2, double expected) {
+			// String diffsOfRawInput = getDiffs(input1, input2);
+			String t1 = cleanAbstracttext(input1);
+			String t2 = cleanAbstracttext(input2);
+			Double distance = jws.apply(t1, t2);
+			
+			/*
+			 * Awful way to get and print the differences between 2 strings to the console tab (instead of the JUnit tab)
+			 */
+			if (distance >= (expected - 0.01d) && distance <= (expected + 0.01d)) {
+				assertThat(distance)
+					.isEqualTo(expected, within(0.01));
+			} else {
+				System.err.println("Diffs: " +  getDiffs(t1,t2));
+				assertThat(distance)
+					.as("JWS distance too big. String: %s ...", t1.substring(0, 25))
+					.isEqualTo(expected, within(0.01));
+			}
+			// assertThat(distance).isGreaterThanOrEqualTo(DeduplicationService.TITLE_SIMILARITY_SUFFICIENT_STARTPAGES_OR_DOIS);
+		}
+	}
+	
+	// formatter::off
+	/*
+	 * Ratcliff-Obershelp: preliminary results 
+	 * - Too slow to be used in production with the full abstract, but speed with first 200 characters may be acceptable
+	 * - positive examples: except for couples with/without HTML, lowercased RO looks very good 
+	 * - negative examples: looks good if full length is used, but not with lowercased first 200 characters
+	 */
+	// formatter::on
+	@Disabled("Won't implement because of slowness")
+	@Nested
+	class RatcliffObershelpAbstracttextTest {
+		@ParameterizedTest(name = "{index}: RatcliffObershelp({0}, {1})={2}")
+		@MethodSource("edu.dedupendnote.AbstracttextTest#negativeArgumentProvider")
+		void ratcliffObershelpNegative(String input1, String input2, double expected) {
+			System.err
+					.println("RO: %.3f\tROlc: %.3f\tROclean: %.3f\tJWS: %.3f\tJWSclean: %.3f\texpected: %.3f".formatted(
+				ro.similarity(input1, input2), ro.similarity(input1.toLowerCase(), input2.toLowerCase()),
+				ro.similarity(cleanAbstracttext(input1), cleanAbstracttext(input2)), jws.apply(input1, input2),
+				jws.apply(cleanAbstracttext(input1), cleanAbstracttext(input2)), expected));
+			assertThat(1*1).isEqualTo(1);
+		}
+	
+		@ParameterizedTest(name = "{index}: RatcliffObershelp({0}, {1})={2}")
+		@MethodSource("edu.dedupendnote.AbstracttextTest#negativeArgumentProvider")
+		void ratcliffObershelpNegative200(String input1, String input2, double expected) {
+			input1 = input1.substring(0, 200);
+			input2 = input2.substring(0, 200);
+			System.err
+					.println("RO200: %.3f\tROlc: %.3f\tROclean: %.3f\tJWS: %.3f\tJWSclean: %.3f\texpected: %.3f".formatted(
+				ro.similarity(input1, input2), ro.similarity(input1.toLowerCase(), input2.toLowerCase()),
+				ro.similarity(cleanAbstracttext(input1), cleanAbstracttext(input2)), jws.apply(input1, input2),
+				jws.apply(cleanAbstracttext(input1), cleanAbstracttext(input2)), expected));
+			assertThat(1*1).isEqualTo(1);
+		}
+	
+		@ParameterizedTest(name = "{index}: RatcliffObershelp({0}, {1})={2}")
+		@MethodSource("edu.dedupendnote.AbstracttextTest#positiveArgumentProvider")
+		void ratcliffObershelpPositive(String input1, String input2, double expected) {
+			System.err
+					.println("RO: %.3f\tROlc: %.3f\tROclean: %.3f\tJWS: %.3f\tJWSclean: %.3f\texpected: %.3f".formatted(
+				ro.similarity(input1, input2), ro.similarity(input1.toLowerCase(), input2.toLowerCase()),
+				ro.similarity(cleanAbstracttext(input1), cleanAbstracttext(input2)), jws.apply(input1, input2),
+				jws.apply(cleanAbstracttext(input1), cleanAbstracttext(input2)), expected));
+			assertThat(1*1).isEqualTo(1);
+		}
+	
+		@ParameterizedTest(name = "{index}: RatcliffObershelp({0}, {1})={2}")
+		@MethodSource("edu.dedupendnote.AbstracttextTest#positiveArgumentProvider")
+		void ratcliffObershelpPositive200(String input1, String input2, double expected) {
+			input1 = input1.substring(0, 200);
+			input2 = input2.substring(0, 200);
+			System.err
+					.println("RO200: %.3f\tROlc: %.3f\tROclean: %.3f\tJWS: %.3f\tJWSclean: %.3f\texpected: %.3f".formatted(
+				ro.similarity(input1, input2), ro.similarity(input1.toLowerCase(), input2.toLowerCase()),
+				ro.similarity(cleanAbstracttext(input1), cleanAbstracttext(input2)), jws.apply(input1, input2),
+				jws.apply(cleanAbstracttext(input1), cleanAbstracttext(input2)), expected));
+			assertThat(1*1).isEqualTo(1);
+		}
+	}
+	
+	//create a configured DiffRowGenerator
+	private static DiffRowGenerator generator = DiffRowGenerator.create()
+	                .showInlineDiffs(true)
+	                .mergeOriginalRevised(true)
+	                .inlineDiffByWord(true)
+	                .oldTag(f -> "~~")      //introduce markdown style for strikethrough
+	                .newTag(f -> "**")     //introduce markdown style for bold
+	                .build();
+
+	private String getDiffs(String text1, String text2) {
+		//compute the differences for two test texts.
+		List<DiffRow> rows = generator.generateDiffRows(List.of(text1), List.of(text2));
+		 return rows.get(0).getOldLine();
+	}
+
 	private String cleanAbstracttext(String inputtext) {
 		String text = inputtext;
+		text = text.replaceAll("\\. Copyright.+$", "");
+		text = text.replaceAll("\\. ©.+$", "");
+		 
 		text = text.toLowerCase();
 		text = text.replaceAll("\\<[^>]*>", "");
 		// FIXME: replace with pattern
@@ -106,93 +238,14 @@ public class AbstracttextTest {
 				"^(aim(s?)|background(s?)|context|importance|introduction|objective(s?)|purpose|question|study objective|synopsis|(\\w+(\\s\\w+)?:\\s?))",
 				"");
 		// FIXME: replace with pattern
-		// remove all characters which are not letters or numbers. Some databases use
-		// "\u2009" (THIN SPACE) within "30 mg", other no character
-		text = text.replaceAll("[^\\p{L}\\p{N}]+", ""); // use "\\p{Nd}" if you want "¼"
-														// treated as a number
+		text = text.replaceAll("\u2010", "\u002D");		// replace HYPHEN with HYPHEN-MINUS
+		text = text.replaceAll("\u2009", "");			// remove THIN SPACE. Some databases use THIN SPACE within "30 mg", others use no character
+		text = text.replaceAll("\\p{Zs}+", " ");	 	// normalize white space
+		// remove all characters which are not letters or numbers or spaces
+		text = text.replaceAll("[^\\p{L}\\p{N} ]+", ""); // use "\\p{Nd}" if you want "¼" treated as a number
+		text = text.strip();
 		text = Publication.normalizeToBasicLatin(text);
-		if (text.length() > 200) {
-			text = text.substring(0, 199);
-		}
 		return text;
-	}
-
-	@ParameterizedTest(name = "{index}: jaroWinkler({0}, {1})={2}")
-	@MethodSource("negativeArgumentProvider")
-	void jwNegativeTest(String input1, String input2, double expected) {
-		String t1 = cleanAbstracttext(input1);
-		String t2 = cleanAbstracttext(input2);
-		Double distance = jws.apply(t1, t2);
-		System.err.println(String.format("- 1: %s\n- 2: %s\n- 3: %s\n- 4: %s\n", input1, t1, input2, t2));
-		assertThat(distance).isLessThanOrEqualTo(expected);
-		// assertThat(distance).isLessThan(DeduplicationService.TITLE_SIMILARITY_SUFFICIENT_STARTPAGES_OR_DOIS);
-	}
-
-	@ParameterizedTest(name = "{index}: jaroWinkler({0}, {1})={2}")
-	@MethodSource("positiveArgumentProvider")
-	void jwPositiveTest(String input1, String input2, double expected) {
-		showDiffs(input1, input2);
-		String t1 = cleanAbstracttext(input1);
-		String t2 = cleanAbstracttext(input2);
-		Double distance = jws.apply(t1, t2);
-		System.err.println(String.format("- 1: %s\n- 2: %s\n- 3: %s\n- 4: %s\n", input1, t1, input2, t2));
-		showDiffs(t1, t2);
-		assertThat(distance).isEqualTo(expected, within(0.01));
-		assertThat(distance).isGreaterThanOrEqualTo(expected);
-		// assertThat(distance).isGreaterThanOrEqualTo(DeduplicationService.TITLE_SIMILARITY_SUFFICIENT_STARTPAGES_OR_DOIS);
-	}
-
-	@ParameterizedTest(name = "{index}: RatcliffObershelp({0}, {1})={2}")
-	@MethodSource("negativeArgumentProvider")
-	void ratcliffObershelpNegative(String input1, String input2, double expected) {
-		System.err
-				.println(String.format("RO: %.3f\tROlc: %.3f\tROclean: %.3f\tJWS: %.3f\tJWSclean: %.3f\texpected: %.3f",
-						ro.similarity(input1, input2), ro.similarity(input1.toLowerCase(), input2.toLowerCase()),
-						ro.similarity(cleanAbstracttext(input1), cleanAbstracttext(input2)), jws.apply(input1, input2),
-						jws.apply(cleanAbstracttext(input1), cleanAbstracttext(input2)), expected));
-	}
-
-	@ParameterizedTest(name = "{index}: RatcliffObershelp({0}, {1})={2}")
-	@MethodSource("negativeArgumentProvider")
-	void ratcliffObershelpNegative200(String input1, String input2, double expected) {
-		System.err.println(String.format("RO200: %.3f\texpected: %.3f",
-				ro.similarity(input1.toLowerCase().substring(0, 200), input2.toLowerCase().substring(0, 200)),
-				expected));
-	}
-
-	/*
-	 * Ratcliff-Obershelp: preliminary results - Too slow to be used in production
-	 * with the full abstract, but speed with first 200 characters maybe acceptable
-	 * - positive examples: except for couples with/without HTML, lowercased RO
-	 * looks very good - negative examples: looks good if full length is used, but
-	 * not with lowercased first 200 characters
-	 */
-	@ParameterizedTest(name = "{index}: RatcliffObershelp({0}, {1})={2}")
-	@MethodSource("positiveArgumentProvider")
-	void ratcliffObershelpPositive(String input1, String input2, double expected) {
-		System.err
-				.println(String.format("RO: %.3f\tROlc: %.3f\tROclean: %.3f\tJWS: %.3f\tJWSclean: %.3f\texpected: %.3f",
-						ro.similarity(input1, input2), ro.similarity(input1.toLowerCase(), input2.toLowerCase()),
-						ro.similarity(cleanAbstracttext(input1), cleanAbstracttext(input2)), jws.apply(input1, input2),
-						jws.apply(cleanAbstracttext(input1), cleanAbstracttext(input2)), expected));
-	}
-
-	@ParameterizedTest(name = "{index}: RatcliffObershelp({0}, {1})={2}")
-	@MethodSource("positiveArgumentProvider")
-	void ratcliffObershelpPositive200(String input1, String input2, double expected) {
-		System.err.println(String.format("RO200: %.3f\texpected: %.3f",
-				ro.similarity(input1.toLowerCase().substring(0, 200), input2.toLowerCase().substring(0, 200)),
-				expected));
-	}
-
-	private void showDiffs(String text1, String text2) {
-		System.err.println("- " + text1 + "\n- " + text2);
-		for (int i = 0; i < Math.min(text1.length(), text2.length()) - 1; i++) {
-			if (text1.charAt(i) != text2.charAt(i)) {
-				System.err.println(String.format("Difference at %d: char'%s' (0x%04X),  char'%s' (0x%04X)", i,
-						text1.charAt(i), (int) text1.charAt(i), text2.charAt(i), (int) text2.charAt(i)));
-			}
-		}
 	}
 
 }

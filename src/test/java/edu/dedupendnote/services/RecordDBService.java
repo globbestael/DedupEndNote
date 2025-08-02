@@ -140,8 +140,7 @@ public class RecordDBService {
 							// previousFieldName = fieldName;
 							break;
 					}
-				}
-				else { // continuation line
+				} else { // continuation line
 					;
 				}
 			}

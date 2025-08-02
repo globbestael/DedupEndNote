@@ -34,7 +34,7 @@ public class TimingExtension
 	public void afterAll(ExtensionContext context) throws Exception {
 		long duration = System.currentTimeMillis() - allStartTime;
 
-		logger.info(() -> String.format("Whole test class took %s ms.", duration));
+		logger.info(() -> "Whole test class took %s ms.".formatted(duration));
 	}
 
 	@Override
@@ -43,7 +43,7 @@ public class TimingExtension
 		long startTime = getStore(context).remove(START_TIME, long.class);
 		long duration = System.currentTimeMillis() - startTime;
 
-		logger.info(() -> String.format("Method [%s] took %s ms.", testMethod.getName(), duration));
+		logger.info(() -> "Method [%s] took %s ms.".formatted(testMethod.getName(), duration));
 	}
 
 	private Store getStore(ExtensionContext context) {

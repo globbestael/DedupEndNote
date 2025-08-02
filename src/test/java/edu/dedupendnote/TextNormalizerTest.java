@@ -17,7 +17,7 @@ import edu.dedupendnote.domain.Publication;
 import edu.dedupendnote.services.IOService;
 
 @TestConfiguration
-public class TextNormalizerTest {
+class TextNormalizerTest {
 
 	/*
 	 * Comparison of different methods to remove accents and diacritics. See also
@@ -30,7 +30,6 @@ public class TextNormalizerTest {
 	void textNormalizerTest(String input, String own, String commons) {
 		String ownResult = Publication.normalizeToBasicLatin(input);
 		String commonsResult = StringUtils.stripAccents(input);
-		// System.err.println(input);
 		try (AutoCloseableSoftAssertions softly = new AutoCloseableSoftAssertions()) {
 			softly.assertThat(ownResult).as("Own textnormalization differs").isEqualTo(own);
 			softly.assertThat(commonsResult).as("Apache Commons textnormalization differs").isEqualTo(commons);
@@ -55,8 +54,7 @@ public class TextNormalizerTest {
 						"AAAAAACEEEEIIIINOOOOOUUUUY",
 						"AAAAAACEEEEIIIINOOOOOUUUUY"),
 				arguments(
-						"\u0104\u0141\u00D3\u015A\u017B\u0179\u0106\u0143 \u0105\u0142\u00F3\u015B\u017C\u017A\u0107\u0144", // ĄŁÓŚŻŹĆŃ
-																																// ąłóśżźćń
+						"\u0104\u0141\u00D3\u015A\u017B\u0179\u0106\u0143 \u0105\u0142\u00F3\u015B\u017C\u017A\u0107\u0144", // ĄŁÓŚŻŹĆŃ ąłóśżźćń
 						"AOSZZCN aoszzcn", // Ł and ł are removed
 						"ALOSZZCN aloszzcn"),
 				arguments( // CJK
@@ -90,7 +88,6 @@ public class TextNormalizerTest {
 	@Test
 	void whiteSpaceReplacement() {
 		String input = " a\u000Ca\u00A0a\u2000a";
-		input = "ST  - Total Pancreatectomy With Islet Cell Transplantation for the Treatment of Pancreatic Cancer";
 		String output = IOService.unusualWhiteSpacePattern.matcher(input).replaceAll("A");
 		
 		assertThat(output).isEqualTo(" aAaAaAa");

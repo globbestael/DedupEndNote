@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <title>DedupEndNote - FAQ</title>
 	<link rel="stylesheet" href="/webjars/bootstrap/css/bootstrap.min.css">
@@ -141,7 +141,8 @@
 				<p><strong>After deduplication by DedupEndNote, deduplication with EndNote itself (default setting: Author, Year, Title) could be worthwhile.</strong>
 				The case of different starting pages can only be solved by looking up the publication itself, the case of the missed similar journals by your brain.</p> 			
 				
-				<p>After deduplicating our test database of 52,828 records with DedupEndNote and importing the result file into a new EndNote database, deduplication
+				<p><u>The next results are for version 1.0.0 / these results should be updated for the latest version:</u><br/>
+					After deduplicating our test database of 52,828 records with DedupEndNote and importing the result file into a new EndNote database, deduplication
 				with EndNote itself (default setting: Author, Year, Title) found 260 duplicates. After manual inspection, we found 118 records which were true duplicates.
 				Some of the "reasons":</p>
 				<ul>
@@ -160,7 +161,9 @@
 							 <li>"Cardiovasc Surg" (PubMed) and "Vascular" (Scopus, continuation of "Cardiovasc Surg")</li>
 							 <li>"Int J Addict" (PubMed) and "Substance Use and Misuse" (Scopus, continuation of "Int J Addict")</li>
 							 <li>"Aust Paediatr J" (PubMed) and "Journal of Paediatrics and Child Health" (Scopus, continuation of "Aust Paediatr J")</li>
-						</ul>					 
+						</ul>
+						<p>2025-08-01: the change in version 1.0.2 (comparison 5 (ISSN and Journal names) is skipped when the DOIs are the same) solves some (a lot?) of these problems.
+						 	But: the journal name used in the deduplicated file is the one from the first record in the duplicate set.</p> 				 
 					 </li>
 					<li>DedupEndNote error in Journal name: 3, i.e. DedupEndNote would be expected to recognize these journals as similar
 						<ul>

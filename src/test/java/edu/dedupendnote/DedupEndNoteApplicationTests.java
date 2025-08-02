@@ -1,22 +1,23 @@
 package edu.dedupendnote;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.test.context.TestConfiguration;
 
@@ -31,7 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @TestConfiguration
-public class DedupEndNoteApplicationTests {
+class DedupEndNoteApplicationTests {
 
 	public DeduplicationService deduplicationService = new DeduplicationService();
 
@@ -96,58 +97,24 @@ public class DedupEndNoteApplicationTests {
 		// has written 1 records.");
 	}
 
-	@Test
-	void deduplicate_OK_test805() {
-		String inputFileName = testdir + "test805.txt";
-		boolean markMode = false;
-		String outputFileName = DedupEndNoteController.createOutputFileName(inputFileName, markMode);
-		assertThat(new File(inputFileName)).exists();
+	
+	  @ParameterizedTest
+	    @CsvSource({
+	        "'test805.txt', 805, 644",
+	        // "'DedupEndNote_portal_vein_thrombosis_37741.txt', 37741, 24382",	// Very slow test
+	        "'Non_Latin_input.txt', 2, 2",
+	        "'Dedup_PATIJ2_Possibly_missed.txt', 18, 12"
+	    })
+	  void deduplicateSmallFiles(String fileName, int total, int totalWritten) {
+			String inputFileName = testdir + fileName;
+			boolean markMode = false;
+			String outputFileName = DedupEndNoteController.createOutputFileName(inputFileName, markMode);
+			assertThat(new File(inputFileName)).exists();
 
-		String resultString = deduplicationService.deduplicateOneFile(inputFileName, outputFileName, markMode,
-				wssessionId);
+			String resultString = deduplicationService.deduplicateOneFile(inputFileName, outputFileName, markMode, wssessionId);
 
-		assertThat(resultString).isEqualTo(deduplicationService.formatResultString(805, 644));
-	}
-
-	@Disabled("Very slow test")
-	@Test
-	void deduplicate_BIG_FILE() {
-		String inputFileName = testdir + "DedupEndNote_portal_vein_thrombosis_37741.txt";
-		boolean markMode = false;
-		String outputFileName = DedupEndNoteController.createOutputFileName(inputFileName, markMode);
-		assertThat(new File(inputFileName)).exists();
-
-		String resultString = deduplicationService.deduplicateOneFile(inputFileName, outputFileName, markMode,
-				wssessionId);
-
-		assertThat(resultString).isEqualTo(deduplicationService.formatResultString(37741, 24382));
-	}
-
-	@Test
-	void deduplicate_NonLatinInput() {
-		String inputFileName = testdir + "Non_Latin_input.txt";
-		boolean markMode = false;
-		String outputFileName = DedupEndNoteController.createOutputFileName(inputFileName, markMode);
-		assertThat(new File(inputFileName)).exists();
-
-		String resultString = deduplicationService.deduplicateOneFile(inputFileName, outputFileName, markMode,
-				wssessionId);
-
-		assertThat(resultString).isEqualTo(deduplicationService.formatResultString(2, 2));
-	}
-
-	@Test
-	void deduplicate_Possibly_missed() {
-		String inputFileName = testdir + "Dedup_PATIJ2_Possibly_missed.txt";
-		boolean markMode = false;
-		String outputFileName = DedupEndNoteController.createOutputFileName(inputFileName, markMode);
-		assertThat(new File(inputFileName)).exists();
-
-		String resultString = deduplicationService.deduplicateOneFile(inputFileName, outputFileName, markMode,
-				wssessionId);
-
-		assertThat(resultString).isEqualTo(deduplicationService.formatResultString(18, 12));
-	}
+			assertThat(resultString).isEqualTo(deduplicationService.formatResultString(total, totalWritten));
+	  }
 
 	@Test
 	void deduplicate_withDuplicateIDs() {
@@ -166,38 +133,47 @@ public class DedupEndNoteApplicationTests {
 	void addDois() {
 		String doiString = "10.1371/journal.pone.11 onzin http://dx.doi.org/10.1371/journal%2EPONE.22. 10.1371/journal.pone";
 		Publication publication = new Publication();
-		Map<String, Integer> dois = publication.addDois(doiString);
+		Set<String> dois = publication.addDois(doiString);
 
-		assertThat(dois).containsOnlyKeys("10.1371/journal.pone.11", "10.1371/journal.pone.22", "10.1371/journal.pone");
+		assertThat(dois).containsOnly("10.1371/journal.pone.11", "10.1371/journal.pone.22", "10.1371/journal.pone");
 	}
 
 	@Test
 	void addDoisEscaped() {
 		String doiString = "10.1016/S0016-5085(18)34101-5 http://dx.doi.org/10.1016/S0016-5085%2818%2934101-5";
 		Publication publication = new Publication();
-		Map<String, Integer> dois = publication.addDois(doiString);
+		Set<String> dois = publication.addDois(doiString);
 
-		assertThat(dois).containsOnlyKeys("10.1016/s0016-5085(18)34101-5"); // is
-																			// lowercased!
+		assertThat(dois).containsOnly("10.1016/s0016-5085(18)34101-5"); // is lowercased!
 	}
 
 	@Test
 	void addIssns_valid() {
 		String issn = "0002-9343 (Print) 00029342 (Electronic) 0-9752298-0-X (ISBN) xxxxXXXX (all X-es)";
 		Publication publication = new Publication();
-		List<String> issns = publication.addIssns(issn);
+		Set<String> issns = publication.addIssns(issn);
 
-		assertThat(issns).hasSize(4).containsAll(Arrays.asList("00029343", "00029342", "097522980X", "XXXXXXXX"));
+		assertThat(issns).hasSize(4).containsAll(Set.of("00029343", "00029342", "097522980", "XXXXXXXX"));
 	}
+
+	@Test
+	void addIssns_valid2() {
+		String issn = "0001-4079 (Print) 0001-4079";
+		Publication publication = new Publication();
+		Set<String> issns = publication.addIssns(issn);
+
+		assertThat(issns).hasSize(1).containsAll(Set.of("00014079"));
+	}
+
 
 	@Test
 	void addIssns_nonvalid() {
 		String issn = "a002-9343 (with letter) 00029342X (11 characters) 0-12-34567890x (12 characters)";
 
 		Publication publication = new Publication();
-		List<String> issns = publication.addIssns(issn);
+		Set<String> issns = publication.addIssns(issn);
 
-		assertThat(issns).hasSize(0);
+		assertThat(issns).isEmpty();
 	}
 
 	@Test
@@ -247,11 +223,14 @@ public class DedupEndNoteApplicationTests {
 		assertThat(DedupEndNoteApplicationTests.coalesce((String) null, "One", (String) null)).isEqualTo("One");
 		
 		String[] arrayNulls = { null,  null };
-		assertThat(DedupEndNoteApplicationTests.coalesce(arrayNulls, "One")).isEqualTo("One");
+		assertThat(DedupEndNoteApplicationTests.coalesce(arrayNulls, "One")).isEqualTo(arrayNulls);
+
+		String[] arrayNullNonNull = { null,  "A" };
+		assertThat(DedupEndNoteApplicationTests.coalesce(arrayNullNonNull, "One")).isEqualTo(arrayNullNonNull);
 
 		String[] arrayNonNull = { null,  "A" };
-		assertThat(DedupEndNoteApplicationTests.coalesce(arrayNonNull, "One")).isEqualTo("A");
-
-		assertThat(DedupEndNoteApplicationTests.coalesce(List.of("A", "B").toArray(), "One")).isEqualTo("A");
+		assertThat(DedupEndNoteApplicationTests.coalesce(arrayNonNull, "One")).isEqualTo(arrayNonNull);
+		
+		fail("laatste 3 resultaten voor coalesce zijn NIET ok");
 	}
 }

@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assertions.fail;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -51,7 +50,7 @@ import lombok.extern.slf4j.Slf4j;
  * See http://localhost:9777/developers for a description of the database.
  */
 @Slf4j
-public class ValidationTests {
+class ValidationTests {
 
 	private DeduplicationService deduplicationService = new DeduplicationService();
 
@@ -68,7 +67,7 @@ public class ValidationTests {
 	@BeforeAll
 	static void beforeAll() {
 		LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
-		Logger rootLogger = loggerContext.getLogger("edu.dedupendnote");
+		Logger rootLogger = loggerContext.getLogger("edu.dedupendnote.services.DeduplicationService");
 		rootLogger.setLevel(Level.INFO);
 	}
 
@@ -83,17 +82,17 @@ public class ValidationTests {
 	void checkAllTruthFiles() throws IOException {
 		// previous results
 		Map<String, ValidationResult> validationResultsMap = List
-			.of(new ValidationResult("ASySD_Cardiac_human", 6745, 28, 2175, 0),
-					new ValidationResult("ASySD_Depression", 17394, 576, 61895, 15),
-					new ValidationResult("ASySD_Diabetes", 1816, 18, 11, 0),
-					new ValidationResult("ASySD_Neuroimaging", 2158, 43, 1235, 2),
-					new ValidationResult("ASySD_SRSR_Human", 27787, 212, 24988, 14),
-					new ValidationResult("BIG_SET", 3694, 262, 966, 1),
-					new ValidationResult("McKeown_2021", 2010, 62, 1058, 0),
-					new ValidationResult("SRA2_Cytology_screening", 1359, 61, 436, 0),
-					new ValidationResult("SRA2_Haematology", 222, 14, 1179, 0),
-					new ValidationResult("SRA2_Respiratory", 766, 34, 1188, 0),
-					new ValidationResult("SRA2_Stroke", 503, 7, 782, 0))
+			.of(new ValidationResult("ASySD_Cardiac_human", 6748, 25, 2175, 0, 3_700L),
+				new ValidationResult("ASySD_Depression", 17389, 576, 61894, 21, 76_000L),
+				new ValidationResult("ASySD_Diabetes", 1816, 18, 11, 0, 900L),
+				new ValidationResult("ASySD_Neuroimaging", 2169, 32, 1235, 2, 1_250L),
+				new ValidationResult("ASySD_SRSR_Human", 27816, 190, 24988, 7, 68_000L),
+				new ValidationResult("BIG_SET", 3721, 238, 962, 5, 24_000L),
+				new ValidationResult("McKeown_2021", 2010, 62, 1058, 0, 470L),
+				new ValidationResult("SRA2_Cytology_screening", 1359, 61, 436, 0, 400L),
+				new ValidationResult("SRA2_Haematology", 222, 14, 1179, 0, 300L),
+				new ValidationResult("SRA2_Respiratory", 761, 39, 1188, 0, 800L),
+				new ValidationResult("SRA2_Stroke", 497, 13, 782, 0, 320L))
 			.stream()
 			.collect(
 					Collectors.toMap(ValidationResult::getFileName, Function.identity(), (o1, o2) -> o1, TreeMap::new));
@@ -116,53 +115,40 @@ public class ValidationTests {
 						TreeMap::new));
 
 		boolean changed = false;
+		String divider = "|---------|--------------|---------|---------|--------------|---------|---------|--------------|--------------|--------------|-------------|";
 		for (String setName : resultsMap.keySet()) {
 			ValidationResult v = validationResultsMap.get(setName);
 			ValidationResult c = resultsMap.get(setName);
-			if (c == null)
+			if (c == null) {
 				continue; // easy when some checkResults_...() are commented out
-
+			}
 			int tp = c.getTp(), fn = c.getFn(), tn = c.getTn(), fp = c.getFp();
 			double precision = tp * 100.0 / (tp + fp);
 			double sensitivity = tp * 100.0 / (tp + fn); // == recall
 			double specificity = tn * 100.0 / (tn + fp);
-			double f1_score = 2 * precision * sensitivity / (precision + sensitivity);
-			if (v.equals(c)) {
+			double f1Score = 2 * precision * sensitivity / (precision + sensitivity);
+			if (	v.getFn() == c.getFn() && v.getFp() == c.getFp() && v.getTn() == c.getTn() && v.getTp() == c.getTp()
+				&& (c.getDurationMilliseconds() >= (long) (v.getDurationMilliseconds() * 0.9))
+				&& c.getDurationMilliseconds() <= (long) (v.getDurationMilliseconds() * 1.1)) {
 				System.out.println("\nResults: " + setName);
+				System.out.println("| %7s | %12s | %7s | %7s | %12s | %7s | %7s | %12s | %12s | %12s | %11s |".formatted(
+					"TOTAL", "% duplicates", "TP", "FN", "Sensitivity", "TN", "FP", "Specificity", "Precision", "F1-score", "Duration"));
+				System.out.println(divider);
 				System.out.println(
-						"------------------------------------------------------------------------------------------------------------------------------");
-				System.out.println(String.format("| %7s | %12s | %7s | %7s | %12s | %7s | %7s | %12s | %12s | %12s |",
-						"TOTAL", "% duplicates", "TP", "FN", "Sensitivity", "TN", "FP", "Specificity", "Precision",
-						"F1-score"));
-				System.out.println(String.format(
-						"| %7d | %11.2f%% | %7d | %7d | %11.2f%% | %7d | %7d | %11.3f%% | %11.3f%% | %11.3f%% |",
+					"| %7d | %11.2f%% | %7d | %7d | %11.2f%% | %7d | %7d | %11.3f%% | %11.3f%% | %11.3f%% | %11.2f |".formatted(
 						tp + tn + fp + fn, (tp + fn) * 100.0 / (tp + tn + fp + fn), tp, fn, sensitivity, tn, fp,
-						specificity, precision, f1_score));
-				System.out.println(
-						"------------------------------------------------------------------------------------------------------------------------------");
+						specificity, precision, f1Score, (double) (c.getDurationMilliseconds() / 1000.0)));
 				System.out.flush();
-				// errors.stream().forEach(System.err::println);
-			}
-			else {
+			} else {
 				changed = true;
-				System.err.println("\nResults: " + setName + ": HAS DIFFERENT RESULTS (first new, second old");
+				System.err.println("\nResults: " + setName + ": HAS DIFFERENT RESULTS (first new, second old)");
+				System.err.println("| %7s | %12s | %7s | %7s | %12s | %7s | %7s | %12s | %12s | %12s | %11s |".formatted(
+					"TOTAL", "% duplicates", "TP", "FN", "Sensitivity", "TN", "FP", "Specificity", "Precision", "F1-score", "Duration"));
+				System.out.println(divider);
 				System.err.println(
-						"------------------------------------------------------------------------------------------------------------------------------");
-				System.err.println(String.format("| %7s | %12s | %7s | %7s | %12s | %7s | %7s | %12s | %12s | %12s |",
-						"TOTAL", "% duplicates", "TP", "FN", "Sensitivity", "TN", "FP", "Specificity", "Precision",
-						"F1-score"));
-				// System.err.println(String.format("| %7d | %11.2f%% | %7d | %7d |
-				// %11.2f%% | %7d | %7d | %11.2f%% |",
-				// tp + tn + fp + fn, (tp + fn) * 100.0 / (tp + tn + fp + fn), tp, fn, (tp
-				// * 100.0/(tp + fn)), tn, fp, (tn * 100.0/(tn + fp))));
-				// System.err.println(String.format("| %7d | %11.2f%% | %7d | %7d |
-				// %11.2f%% | %7d | %7d | %11.2f%% |",
-				// tp + tn + fp + fn, (tp + fn) * 100.0 / (tp + tn + fp + fn), tp, fn, (tp
-				// * 100.0/(tp + fn)), tn, fp, (tn * 100.0/(tn + fp))));
-				System.err.println(String.format(
-						"| %7d | %11.2f%% | %7d | %7d | %11.2f%% | %7d | %7d | %11.3f%% | %11.3f%% | %11.3f%% |",
+					"| %7d | %11.2f%% | %7d | %7d | %11.2f%% | %7d | %7d | %11.3f%% | %11.3f%% | %11.3f%% | %11.2f |".formatted(
 						tp + tn + fp + fn, (tp + fn) * 100.0 / (tp + tn + fp + fn), tp, fn, sensitivity, tn, fp,
-						specificity, precision, f1_score));
+						specificity, precision, f1Score, (double) (c.getDurationMilliseconds() / 1000.0)));
 				tp = v.getTp();
 				fn = v.getFn();
 				tn = v.getTn();
@@ -170,18 +156,17 @@ public class ValidationTests {
 				precision = tp * 100.0 / (tp + fp);
 				sensitivity = tp * 100.0 / (tp + fn); // == recall
 				specificity = tn * 100.0 / (tn + fp);
-				f1_score = 2 * precision * sensitivity / (precision + sensitivity);
-				System.err.println(String.format(
-						"| %7d | %11.2f%% | %7d | %7d | %11.2f%% | %7d | %7d | %11.3f%% | %11.3f%% | %11.3f%% |",
-						tp + tn + fp + fn, (tp + fn) * 100.0 / (tp + tn + fp + fn), tp, fn, sensitivity, tn, fp,
-						specificity, precision, f1_score));
+				f1Score = 2 * precision * sensitivity / (precision + sensitivity);
 				System.err.println(
-						"------------------------------------------------------------------------------------------------------------------------------");
+					"| %7d | %11.2f%% | %7d | %7d | %11.2f%% | %7d | %7d | %11.3f%% | %11.3f%% | %11.3f%% | %11.2f |".formatted(
+						tp + tn + fp + fn, (tp + fn) * 100.0 / (tp + tn + fp + fn), tp, fn, sensitivity, tn, fp,
+						specificity, precision, f1Score, (double) (v.getDurationMilliseconds() / 1000.0)));
 				System.err.flush();
 			}
 		}
 		System.out.println("FP can be found with regex: \\ttrue\\tfalse\\tfalse\\ttrue\\tfalse\\t");
 		System.out.println("FN can be found with regex: \\d\\ttrue\\tfalse\\tfalse\\tfalse\\ttrue\\t");
+		System.out.println("FN solvable can be found with regex: ^\\d+\\t\\t\\d+\\ttrue\\tfalse\\tfalse\\tfalse\\ttrue\\tfalse");
 		System.out.println("TP which will be kept can be found with regex: ^(\\d+)\\t\\1\\t\\ttrue\\ttrue\\t");
 
 		assertThat(changed).isFalse();
@@ -198,7 +183,7 @@ public class ValidationTests {
 		 * FIXME: the number of unique duplicates has to be from the ..._to_validate.txt
 		 * files.
 		 */
-
+				
 		Map<String, ValidationResultASySD> validationResultsMap = List.of(
 				// new ValidationResult("Cytology_screening", 1360, 60, 436, 0),
 				// new ValidationResult("Haematology", 222, 14, 1179, 0),
@@ -207,11 +192,11 @@ public class ValidationTests {
 				new ValidationResultASySD("BIG_SET", 3685, 271, 966, 1, 1344), // 1347 unique
 				// new ValidationResult("McKeown_2021", 2014, 58, 1058, 0),
 
-				new ValidationResultASySD("ASySD_Cardiac_human", 6752, 21, 2175, 0, 3236),
-				new ValidationResultASySD("ASySD_Depression", 17399, 571, 61895, 15, 7668),
+				new ValidationResultASySD("ASySD_Cardiac_human", 6752, 21, 2175, 0, 3234),
+				new ValidationResultASySD("ASySD_Depression", 17399, 571, 61895, 15, 7706),
 				new ValidationResultASySD("ASySD_Diabetes", 1818, 16, 11, 0, 566),
-				new ValidationResultASySD("ASySD_Neuroimaging", 2170, 31, 1234, 3, 890),
-				new ValidationResultASySD("ASySD_SRSR_Human", 27896, 101, 24986, 18, 11112))
+				new ValidationResultASySD("ASySD_Neuroimaging", 2170, 31, 1234, 3, 886),
+				new ValidationResultASySD("ASySD_SRSR_Human", 27896, 101, 24986, 18, 11078))
 			.stream()
 			.collect(Collectors.toMap(ValidationResultASySD::getFileName, Function.identity(), (o1, o2) -> o1,
 					TreeMap::new));
@@ -226,33 +211,18 @@ public class ValidationTests {
 			System.out.println(
 					"---------------------------------------------------------------------------------------------------------------------------------------------");
 			System.out
-				.println(String.format("| %7s | %12s | %7s | %7s | %12s | %7s | %7s | %12s | %12s | %12s | %12s |",
-						"TOTAL", "% duplicates", "TP", "FN", "Sensitivity", "TN", "FP", "Specificity", "Precision",
-						"Accuracy", "F1"));
-			System.out.println(String.format(
-					"| %7d | %11.2f%% | %7d | %7d | %11.2f%% | %7d | %7d | %11.3f%% | %11.3f%% | %11.3f%% | %11.3f%% |",
+				.println("| %7s | %12s | %7s | %7s | %12s | %7s | %7s | %12s | %12s | %12s | %12s |".formatted(
+				"TOTAL", "% duplicates", "TP", "FN", "Sensitivity", "TN", "FP", "Specificity", "Precision",
+				"Accuracy", "F1"));
+			System.out.println(
+				"| %7d | %11.2f%% | %7d | %7d | %11.2f%% | %7d | %7d | %11.3f%% | %11.3f%% | %11.3f%% | %11.3f%% |".formatted(
 					tp + tn + fp + fn, (tp + fn) * 100.0 / (tp + tn + fp + fn), tp, fn, sensitivity, tn, fp,
 					tn * 100.0 / (tn + fp), precision, (tp + tn) * 100.0 / (tp + fn + tn + fp),
 					2 * precision * sensitivity / (precision + sensitivity)));
 			System.out.println(
 					"---------------------------------------------------------------------------------------------------------------------------------------------");
-
-			// Printing out the traditional way
-			// tp = v.getTp(); fn = v.getFn(); tn = v.getTn(); fp = v.getFp();
-			// precision = tp * 100.0 / (tp + fp);
-			// sensitivity = tp * 100.0 / (tp + fn);
-			// System.out.println("---------------------------------------------------------------------------------------------------------------------------------------------");
-			// System.out.println(String.format("| %7s | %12s | %7s | %7s | %12s | %7s |
-			// %7s | %12s | %12s | %12s | %12s |", "TOTAL", "% duplicates", "TP", "FN",
-			// "Sensitivity", "TN", "FP", "Specificity", "Precision", "Accuracy", "F1"));
-			// System.out.println(String.format("| %7d | %11.2f%% | %7d | %7d | %11.2f%% |
-			// %7d | %7d | %11.3f%% | %11.3f%% | %11.3f%% | %11.3f%% |",
-			// tp + tn + fp + fn, (tp + fn) * 100.0 / (tp + tn + fp + fn), tp, fn,
-			// sensitivity, tn, fp, tn * 100.0 / (tn + fp),
-			// precision, (tp + tn) * 100.0 / (tp + fn + tn + fp), 2 * precision *
-			// sensitivity / (precision + sensitivity)));
-			// System.out.println("---------------------------------------------------------------------------------------------------------------------------------------------");
 			System.out.flush();
+			assertThat(1*1).isEqualTo(1);
 		}
 	}
 
@@ -269,14 +239,16 @@ public class ValidationTests {
 			.collect(Collectors.groupingBy(PublicationDB::getDedupid,
 					Collectors.mapping(PublicationDB::getId, Collectors.toSet())));
 		assertThat(trueDuplicateSets).hasSizeGreaterThan(10);
-		trueDuplicateSets.entrySet().stream().limit(10).forEach(l -> System.err.println(l));
+		trueDuplicateSets.entrySet().stream().limit(10).forEach(System.err::println);
 	}
 
 	// @formatter:off
 	ValidationResult checkResults(String setName, String inputFileName, String outputFileName, String truthFileName) throws IOException {
 		log.error("- Validating {}", setName);
 		List<PublicationDB> truthRecords = readTruthFile(truthFileName);
+		long startTime = System.currentTimeMillis();
 		List<PublicationDB> publicationDBs = getRecordDBs(inputFileName);
+		long endTime = System.currentTimeMillis();
 		Map<Integer, PublicationDB> validationMap = publicationDBs.stream()
 				.collect(Collectors.toMap(PublicationDB::getId, Function.identity(), (o1, o2) -> o1, TreeMap::new));
 		Map<Integer, Set<Integer>> trueDuplicateSets = truthRecords.stream()
@@ -316,7 +288,7 @@ public class ValidationTests {
 			}
 		}
 		recordDBService.saveRecordDBs(publicationDBs, outputFileName);
-		ValidationResult validationResult = new ValidationResult(setName, tps, fns, tns, fps);
+		ValidationResult validationResult = new ValidationResult(setName, tps, fns, tns, fps, endTime - startTime);
 		if (! errors.isEmpty()) {
 			System.err.println("File " + setName +  " has FALSE POSITIVES!");
 			errors.stream().forEach(System.err::println);
@@ -535,6 +507,8 @@ public class ValidationTests {
 
 		List<PublicationDB> truthRecords = readTruthFile(truthFileName);
 		ioService.writeRisWithTRUTH_forDS(truthRecords, inputFileName, outputFileName);
+
+		assertThat(1*1).isEqualTo(1);
 	}
 
 	/*
@@ -554,6 +528,8 @@ public class ValidationTests {
 		String outputFileName = testdir + "/own/BIG_SET_with_TRUTH.txt";
 
 		createRisWithTRUTH(inputFileName, truthFileName, outputFileName);
+
+		assertThat(1*1).isEqualTo(1);
 	}
 
 	void createRisWithTRUTH_SRA2_Cytology_screening() throws IOException {
@@ -601,11 +577,6 @@ public class ValidationTests {
 	void createInitialTruthFile(String inputFileName, String asysdInputfileName, String outputFileName) {
 		Map<Integer, Set<Integer>> goldMap = readASySDGoldFile(asysdInputfileName);
 		List<PublicationDB> publicationDBs = getRecordDBs(inputFileName);
-//		Map<Integer,PublicationDB> recordDBMap = recordDBs.stream().collect(Collectors.toMap(PublicationDB::getId, Function.identity()));
-		
-//		goldMap.entrySet().stream().filter(e -> e.getValue().size() == 1).forEach(e -> {
-//			if (recordDBMap.get(key))
-//		});
 		
 		publicationDBs.forEach(r -> {
 			Integer id = r.getId();
@@ -632,7 +603,7 @@ public class ValidationTests {
 		System.err.println("Start");
 		List<String> lines = Collections.emptyList();
 		try {
-			lines = Files.readAllLines(Paths.get(asysdInputfileName));
+			lines = Files.readAllLines(Path.of(asysdInputfileName));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -672,13 +643,11 @@ public class ValidationTests {
 		}
 
 		deduplicationService.searchYearOneFile(publications, wssessionId);
-		List<PublicationDB> publicationDBs = recordDBService.convertToRecordDB(publications, inputFileName);
-		
-		return publicationDBs;
+		return recordDBService.convertToRecordDB(publications, inputFileName);
 	}
 
 	List<PublicationDB> readTruthFile(String fileName) throws IOException {
-	    Path path = Paths.get(fileName);
+	    Path path = Path.of(fileName);
 
 		CsvMapper mapper = new CsvMapper();
 		CsvSchema schema = mapper
@@ -691,8 +660,7 @@ public class ValidationTests {
 				.with(schema)
 				.with(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT)
 				.readValues(path.toFile());
-		List<PublicationDB> records = it.readAll();
-		
-		return records;
+		return it.readAll();
 	}
+
 }

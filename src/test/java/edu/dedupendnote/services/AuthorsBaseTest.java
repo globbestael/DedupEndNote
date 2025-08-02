@@ -5,11 +5,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import org.junit.jupiter.api.Test;
 
 import edu.dedupendnote.BaseTest;
 import edu.dedupendnote.domain.Publication;
@@ -17,13 +18,18 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class AuthorsBaseTest extends BaseTest {
+class AuthorsBaseTest extends BaseTest {
 
 	String homeDir = System.getProperty("user.home");
 
 	String testdir = homeDir + "/dedupendnote_files";
 
 	List<Triple> localTriples = new ArrayList<>();
+	
+	@Test
+	void fillerTest() {
+		assertThat(1*1).isEqualTo(1);
+	}
 
 	@Data
 	public class Triple {
@@ -69,7 +75,7 @@ public class AuthorsBaseTest extends BaseTest {
 	protected List<Triple> getValidatedAuthorsPairs() throws IOException {
 		String fileName = testdir + "/experiments/validated_authors_pairs.txt";
 		localTriples.clear();
-		Path path = Paths.get(fileName);
+		Path path = Path.of(fileName);
 		Stream<String> lines = Files.lines(path);
 		lines.forEach(l -> {
 			String[] parts = l.split("\t");
