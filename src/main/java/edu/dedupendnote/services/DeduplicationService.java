@@ -723,15 +723,16 @@ public class DeduplicationService {
 	}
 
 	// FIXME: is Apache Commons CollectionUtils better?
-	private boolean listsContainSameString(List<String> list1, List<String> list2) {
-		if (list1.isEmpty() || list2.isEmpty()) {
-			return false;
-		}
-		List<String> common = new ArrayList<>(list1);
-		common.retainAll(list2);
-		return !common.isEmpty();
-	}
+//	private boolean listsContainSameString(List<String> list1, List<String> list2) {
+//		if (list1.isEmpty() || list2.isEmpty()) {
+//			return false;
+//		}
+//		List<String> common = new ArrayList<>(list1);
+//		common.retainAll(list2);
+//		return !common.isEmpty();
+//	}
 
+	// FIXME: is Apache Commons CollectionUtils or Spring CollectionUtils better?
 	private boolean setsContainSameString(Set<String> set1, Set<String> set2) {
 		if (set1.isEmpty() || set2.isEmpty()) {
 			return false;
