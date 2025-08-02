@@ -15,7 +15,7 @@ DedupEndNote is available at http://dedupendnote.nl:9777
 * Import the result file into a new EndNote database
 
 ### Building your own version
-DedupEndNote is a Java web application (Java 17, Spring Boot 2.7, fat jar). It can be started locally with:
+DedupEndNote is a Java web application (Java 21, Spring Boot 3.5.4, fat jar). It can be started locally with:
 ```
     java -jar DedupEndNote-[VERSION].jar
 ```
