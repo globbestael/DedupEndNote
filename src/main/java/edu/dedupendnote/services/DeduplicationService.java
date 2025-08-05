@@ -165,7 +165,7 @@ public class DeduplicationService {
 	 *  If the label starts with "-", it is a duplicate from a record from the OLD input file.
 	 */
 	// @formatter:on
-//	@Autowired
+	//	@Autowired
 	private SimpMessagingTemplate simpMessagingTemplate;
 
 	public DeduplicationService() {
@@ -218,7 +218,7 @@ public class DeduplicationService {
 
 		for (String s1 : set1) {
 			for (String s2 : set2) {
-				if (s1.startsWith("http") && s2.startsWith("http") && ! s1.equals(s2)) {
+				if (s1.startsWith("http") && s2.startsWith("http") && !s1.equals(s2)) {
 					// JaroWinkler 0.9670930232558139 for
 					// 'Https://clinicaltrials.gov/show/nct00830466'
 					// and 'Https://clinicaltrials.gov/show/nct00667472'
@@ -328,10 +328,10 @@ public class DeduplicationService {
 	}
 
 	public void compareSet(List<Publication> publications, Integer year, boolean descending, String wssessionId) {
-		int noOfPublications = publications.size(); 
+		int noOfPublications = publications.size();
 		int noOfDuplicates = 0;
-		Map<String,Boolean> map = new HashMap<>(Map.of("sameDois", false));
-		
+		Map<String, Boolean> map = new HashMap<>(Map.of("sameDois", false));
+
 		while (publications.size() > 1) {
 			// In log messages this publication is called the pivot
 			Publication publication = publications.remove(0);
@@ -340,18 +340,17 @@ public class DeduplicationService {
 			 * The records of year2 will be compared in the next pair of years.
 			 * If ascending / TwoFile mode: publicationYear 0 records are at the head of the publicationList!
 			 */
-			if ((descending && publication.getPublicationYear() < year)
-				|| (!descending && publication.getPublicationYear() != 0 && publication.getPublicationYear() > year)) {
+			if ((descending && publication.getPublicationYear() < year) || (!descending
+					&& publication.getPublicationYear() != 0 && publication.getPublicationYear() > year)) {
 				break;
 			}
 			// log.debug("Comparing {} publications to pivot {}: {}", publications.size(), publication.getId(), publication.getTitles().get(0));
-			
+
 			for (Publication r : publications) {
 				map.put("sameDois", false);
-				if (   compareStartPageOrDoi(r, publication, map) 
-					&& authorsComparator.compare(r, publication)
-					&& compareTitles(r, publication)
-					&& (map.get("sameDois") || compareIssns(r, publication) || compareJournals(r, publication))) {
+				if (compareStartPageOrDoi(r, publication, map) && authorsComparator.compare(r, publication)
+						&& compareTitles(r, publication)
+						&& (map.get("sameDois") || compareIssns(r, publication) || compareJournals(r, publication))) {
 
 					noOfDuplicates++;
 					// set the label
@@ -392,7 +391,8 @@ public class DeduplicationService {
 					}
 				}
 			}
-			wsMessage(wssessionId, "Working on %d for %d records (marked %d duplicates)".formatted(year, noOfPublications, noOfDuplicates));
+			wsMessage(wssessionId, "Working on %d for %d records (marked %d duplicates)".formatted(year,
+					noOfPublications, noOfDuplicates));
 		}
 	}
 
@@ -490,7 +490,8 @@ public class DeduplicationService {
 		return publications.stream().filter(r -> r.getId() == null).count() > 0L;
 	}
 
-	public String deduplicateOneFile(String inputFileName, String outputFileName, boolean markMode, String wssessionId) {
+	public String deduplicateOneFile(String inputFileName, String outputFileName, boolean markMode,
+			String wssessionId) {
 		wsMessage(wssessionId, "Reading file " + inputFileName);
 		List<Publication> publications = ioService.readPublications(inputFileName);
 
@@ -560,8 +561,7 @@ public class DeduplicationService {
 		if (markMode) { // no enrich(), and add / overwrite LB (label) field
 			int numberWritten = ioService.writeMarkedRecords(publications, newInputFileName, outputFileName);
 			long numberLabeledRecords = publications.stream()
-					.filter(r -> r.getLabel() != null && !r.isPresentInOldFile())
-					.count();
+					.filter(r -> r.getLabel() != null && !r.isPresentInOldFile()).count();
 			s = "DONE: DedupEndNote has written %s records with %d duplicates marked in the Label field."
 					.formatted(numberWritten, numberLabeledRecords);
 			wsMessage(wssessionId, s);
@@ -607,7 +607,7 @@ public class DeduplicationService {
 		log.debug("Number of duplicate lists {}, and IDs of kept records: {}", labelMap.size(), labelMap.keySet());
 		List<Publication> recordList;
 		if (labelMap.size() > 0) {
-			for (Map.Entry<String,List<Publication>> entry : labelMap.entrySet()) {
+			for (Map.Entry<String, List<Publication>> entry : labelMap.entrySet()) {
 				recordList = entry.getValue();
 				Publication recordToKeep = recordList.remove(0);
 				log.debug("Kept: {}: {}", recordToKeep.getId(), recordToKeep.getTitles().get(0));
@@ -686,20 +686,22 @@ public class DeduplicationService {
 		if (pageStart != null) {
 			pageStart = pageStart.toUpperCase();
 			// C: cochrane reviews nd protocols, E: editorials, M: ???
-			if ( ! (pageStart.startsWith("C") || pageStart.startsWith("E") || pageStart.startsWith("M"))) {
+			if (!(pageStart.startsWith("C") || pageStart.startsWith("E") || pageStart.startsWith("M"))) {
 				pageStart = null;
 			}
 		}
 
 		if (pageStart == null) {
-			log.debug("Reached Cochrane record without pageStart, getting it from pageStart of the duplicates: {}", recordToKeep.getAuthors());
+			log.debug("Reached Cochrane record without pageStart, getting it from pageStart of the duplicates: {}",
+					recordToKeep.getAuthors());
 			for (Publication r : duplicates) {
 				if (r.getPageStart() != null && r.getPageStart().toUpperCase().matches("^[CEM].+")) {
 					recordToKeep.setPageStart(r.getPageStart().toUpperCase());
 					return;
 				}
 			}
-			log.debug("Reached Cochrane record without pageStart, getting it from the DOIs: {}", recordToKeep.getAuthors());
+			log.debug("Reached Cochrane record without pageStart, getting it from the DOIs: {}",
+					recordToKeep.getAuthors());
 			for (String doi : recordToKeep.getDois()) {
 				Matcher matcher = cochraneIdentifierPattern.matcher(doi);
 				if (matcher.matches()) {
@@ -723,14 +725,14 @@ public class DeduplicationService {
 	}
 
 	// FIXME: is Apache Commons CollectionUtils better?
-//	private boolean listsContainSameString(List<String> list1, List<String> list2) {
-//		if (list1.isEmpty() || list2.isEmpty()) {
-//			return false;
-//		}
-//		List<String> common = new ArrayList<>(list1);
-//		common.retainAll(list2);
-//		return !common.isEmpty();
-//	}
+	//	private boolean listsContainSameString(List<String> list1, List<String> list2) {
+	//		if (list1.isEmpty() || list2.isEmpty()) {
+	//			return false;
+	//		}
+	//		List<String> common = new ArrayList<>(list1);
+	//		common.retainAll(list2);
+	//		return !common.isEmpty();
+	//	}
 
 	// FIXME: is Apache Commons CollectionUtils or Spring CollectionUtils better?
 	private boolean setsContainSameString(Set<String> set1, Set<String> set2) {
@@ -803,14 +805,15 @@ public class DeduplicationService {
 		});
 	}
 
-	private Map<Integer, Integer> getCumulativePercentages(List<Publication> publications, Map<Integer, List<Publication>> yearSets) {
+	private Map<Integer, Integer> getCumulativePercentages(List<Publication> publications,
+			Map<Integer, List<Publication>> yearSets) {
 		Map<Integer, Integer> cumulativePercentages = new LinkedHashMap<>();
 		int current = 0;
 		Integer total = publications.size();
 		for (Map.Entry<Integer, List<Publication>> year : yearSets.entrySet()) {
 			int simple = year.getValue().size();
 			cumulativePercentages.put(year.getKey(), 100 * (simple + current) / total);
-			current += simple;		
+			current += simple;
 		}
 		log.debug("cumulativePercentages: " + cumulativePercentages);
 		return cumulativePercentages;

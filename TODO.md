@@ -35,6 +35,13 @@
 - change documentation
 - too late to change the application name to DedupRIS?
 
+## SRA: Systematic Review Accelerator / TERA /dedupe-sweep
+- https://sr-accelerator.com/#/deduplicator
+- code: https://github.com/IEBH/dedupe-sweep
+- data files: https://github.com/IEBH/dedupe-sweep/tree/master/test
+- publication: Forbes, C., Greenwood, H., Carter, M. et al. Automation of duplicate record detection for systematic reviews: Deduplicator. Syst Rev 13, 206 (2024). https://doi.org/10.1186/s13643-024-02619-9 https://systematicreviewsjournal.biomedcentral.com/articles/10.1186/s13643-024-02619-9#availability-of-data-and-materials 
+- Upgraded in TERA: https://tera-tools.com/ Has th deupliator been changed in TERA?
+
 ## Retractions
 
 - Retracted publications: BIG_SET 7921 set and 42247
@@ -56,11 +63,6 @@ subject (portal vein thrombosis) was chosen after reading https://journals.plos.
 - data files: https://github.com/CoLRev-Environment/bib-dedupe/tree/main/data These are files which are also used in our ValidationTest (ASYSD_*, SRA2_*)
 - results: https://github.com/CoLRev-Environment/bib-dedupe/blob/main/output/current_results.md
 - Authors are compared based on first letters (a.o. Chinese authors) 
-
-### dedupe-sweep
-
-- data files: https://github.com/IEBH/dedupe-sweep/tree/master/test
-- publication: Forbes, C., Greenwood, H., Carter, M. et al. Automation of duplicate record detection for systematic reviews: Deduplicator. Syst Rev 13, 206 (2024). https://doi.org/10.1186/s13643-024-02619-9 https://systematicreviewsjournal.biomedcentral.com/articles/10.1186/s13643-024-02619-9#availability-of-data-and-materials 
 
 ## Make a command line version
 
