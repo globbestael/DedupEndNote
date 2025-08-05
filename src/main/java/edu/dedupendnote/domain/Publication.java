@@ -57,7 +57,7 @@ public class Publication {
 	private Integer publicationYear = 0;
 
 	private String referenceType;
-	
+
 	private String title; // only set for Reply-titles
 
 	private List<String> titles = new ArrayList<>();
@@ -576,15 +576,15 @@ public class Publication {
 	 */
 	// @formatter:on
 
-	private static final Pattern lastNameAdditionsPattern = Pattern.compile("^(.+)\\b(jr|sr|1st|2nd|3rd|ii|iii)\\b(.*)$",
-			Pattern.CASE_INSENSITIVE);
+	private static final Pattern lastNameAdditionsPattern = Pattern
+			.compile("^(.+)\\b(jr|sr|1st|2nd|3rd|ii|iii)\\b(.*)$", Pattern.CASE_INSENSITIVE);
 
 	private static final Pattern exceptCapitalsPattern = Pattern.compile("[^A-Z]");
 
 	// public because used in tests
 	// FIXME: add "No authorship, indicated"?
 	public static final Pattern anonymousOrGroupNamePattern = Pattern
-		.compile("\\b(anonymous|consortium|et al|grp|group|nct|study)\\b", Pattern.CASE_INSENSITIVE);
+			.compile("\\b(anonymous|consortium|et al|grp|group|nct|study)\\b", Pattern.CASE_INSENSITIVE);
 
 	public void addAuthors(String author) {
 		// skip "Anonymous", "et al" and group authors
@@ -734,19 +734,19 @@ public class Publication {
 			String group = matcher.group(1).replace("-", "");
 			String issnToAdd = null;
 			switch (group.length()) {
-				case 8: // real ISSN
-					issnToAdd = group;
-					break;
-				case 10: // ISBN-10
-					issnToAdd = group.substring(0,9);
-					break;
-				case 13: // ISBN-13
-					issnToAdd = group.substring(3,12);
-					break;
-				default:
-					break;
+			case 8: // real ISSN
+				issnToAdd = group;
+				break;
+			case 10: // ISBN-10
+				issnToAdd = group.substring(0, 9);
+				break;
+			case 13: // ISBN-13
+				issnToAdd = group.substring(3, 12);
+				break;
+			default:
+				break;
 			}
-			if (issnToAdd != null && ! issns.contains(issnToAdd)) {
+			if (issnToAdd != null && !issns.contains(issnToAdd)) {
 				issns.add(issnToAdd);
 			}
 		}
@@ -871,7 +871,7 @@ public class Publication {
 	private static Pattern pagesAdditionsPattern = Pattern.compile("((UNSP|Unsp)\\s*|author.+$)");
 
 	private static Pattern pagesDatePattern = Pattern
-		.compile("\\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\\b");
+			.compile("\\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\\b");
 
 	/**
 	 * parsePages: parses the different input strings with page numbers / article numbers
@@ -883,7 +883,7 @@ public class Publication {
 	public void parsePages(String pages) {
 		pages = pagesAdditionsPattern.matcher(pages).replaceAll("");
 		// if Pages contains a date string, omit the pages
-		Matcher matcher = pagesDatePattern.matcher(pages); 
+		Matcher matcher = pagesDatePattern.matcher(pages);
 		while (matcher.find()) {
 			pages = null;
 		}
@@ -909,7 +909,7 @@ public class Publication {
 		 */
 		// @formatter:on
 		// Cochrane uses hyphen characters instead of minus
-		pages = pages.replaceAll("[\\u2010\\u00ad]", "-"); 
+		pages = pages.replaceAll("[\\u2010\\u00ad]", "-");
 
 		if (pageForComparison != null && !pages.contains("-")) {
 			return;
@@ -930,7 +930,8 @@ public class Publication {
 		} else {
 			this.pageStart = pages;
 		}
-		if (! numbersWithinPattern.matcher(pageStart).matches() && pageEnd != null && numbersWithinPattern.matcher(pageEnd).matches()) {
+		if (!numbersWithinPattern.matcher(pageStart).matches() && pageEnd != null
+				&& numbersWithinPattern.matcher(pageEnd).matches()) {
 			pageStart = pageEnd;
 			pageEnd = null;
 		}
@@ -967,9 +968,9 @@ public class Publication {
 			}
 		}
 	}
-	
+
 	private static Pattern publicationYearPattern = Pattern.compile("(^|\\D)(\\d{4})(\\D|$)");
-	
+
 	public void parsePublicationYear(String input) {
 		Matcher matcher = publicationYearPattern.matcher(input);
 		if (matcher.find()) {
@@ -980,11 +981,11 @@ public class Publication {
 	public void addReversedTitles() {
 		List<String> reversed = new ArrayList<>();
 		boolean hasId = this.id != null;
-		
+
 		if (titles.isEmpty() && hasId) {
 			titles.add(this.id);
 		}
-		if (! titles.isEmpty()) {
+		if (!titles.isEmpty()) {
 			for (String t : titles) {
 				reversed.add(new StringBuilder(t).reverse().toString());
 			}

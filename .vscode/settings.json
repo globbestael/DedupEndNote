@@ -1,0 +1,6 @@
+{
+    "java.format.enabled": true,
+    "java.format.settings.url": "settings/org.eclipse.jdt.core.prefs",
+    "editor.formatOnSave": true,
+    "java.format.comments.enabled": false
+}
