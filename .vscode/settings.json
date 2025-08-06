@@ -2,6 +2,11 @@
     "java.format.enabled": true,
     "java.format.settings.url": ".settings/org.eclipse.jdt.core.prefs",
     "editor.formatOnSave": true,
-    "java.format.comments.enabled": false,
-    "java.format.settings.profile": "MyEclipseProfile"
+    "java.format.comments.enabled": true,
+    "java.format.settings.profile": "",
+    "[java]": {
+        "editor.insertSpaces": false,
+        "editor.detectIndentation": false,
+        "editor.tabSize": 4
+    }
 }

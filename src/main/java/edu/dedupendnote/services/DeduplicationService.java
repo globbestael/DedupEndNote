@@ -23,7 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 // @Service
-//@SessionScope
+// @SessionScope
 public class DeduplicationService {
 
 	public static class DefaultAuthorsComparator implements AuthorsComparator {
@@ -165,7 +165,7 @@ public class DeduplicationService {
 	 *  If the label starts with "-", it is a duplicate from a record from the OLD input file.
 	 */
 	// @formatter:on
-	//	@Autowired
+	// @Autowired
 	private SimpMessagingTemplate simpMessagingTemplate;
 
 	public DeduplicationService() {
@@ -320,7 +320,8 @@ public class DeduplicationService {
 			// log.debug("Pattern STARTING_INITIALISM for '{}': {} for '{}'", s1, patternShort3.toString(), s2);
 			Matcher matcher = patternShort3.matcher(s2);
 			if (matcher.find()) {
-				// log.debug("Pattern STARTING_INITIALISM found for '{}': {} for '{}'", s1, patternShort3.toString(), s2);
+				// log.debug("Pattern STARTING_INITIALISM found for '{}': {} for '{}'", s1, patternShort3.toString(),
+				// s2);
 				return true;
 			}
 		}
@@ -344,7 +345,8 @@ public class DeduplicationService {
 					&& publication.getPublicationYear() != 0 && publication.getPublicationYear() > year)) {
 				break;
 			}
-			// log.debug("Comparing {} publications to pivot {}: {}", publications.size(), publication.getId(), publication.getTitles().get(0));
+			// log.debug("Comparing {} publications to pivot {}: {}", publications.size(), publication.getId(),
+			// publication.getTitles().get(0));
 
 			for (Publication r : publications) {
 				map.put("sameDois", false);
@@ -355,7 +357,8 @@ public class DeduplicationService {
 					noOfDuplicates++;
 					// set the label
 					if (publication.getLabel() != null) {
-						// log.debug("=== pub {} gets label {} from pivot {}", r.getId(), publication.getLabel(), publication.getId());
+						// log.debug("=== pub {} gets label {} from pivot {}", r.getId(), publication.getLabel(),
+						// publication.getId());
 						r.setLabel(publication.getLabel());
 					} else if (r.getLabel() != null) {
 						/** 
@@ -378,10 +381,12 @@ public class DeduplicationService {
 						 * 
 						 * Another reason can be that pivot W has more journal name variants than pivot V 
 						 */
-						// log.debug("=== pub {} SETs label {} in pivot {}", r.getId(), r.getLabel(), publication.getId());
+						// log.debug("=== pub {} SETs label {} in pivot {}", r.getId(), r.getLabel(),
+						// publication.getId());
 						publication.setLabel(r.getLabel());
 					} else {
-						// log.debug("=== Both pivot {} and pub {} get label {} from the recordId of the pivot {}", publication.getId(), r.getId(), publication.getId(), publication.getId());
+						// log.debug("=== Both pivot {} and pub {} get label {} from the recordId of the pivot {}",
+						// publication.getId(), r.getId(), publication.getId(), publication.getId());
 						publication.setLabel(publication.getId());
 						r.setLabel(publication.getId());
 					}
@@ -403,7 +408,8 @@ public class DeduplicationService {
 	 * See the comment at {@link edu.dedupendnote.domain.Publication#isCochrane}
 	 */
 	public boolean compareStartPageOrDoi(Publication r1, Publication r2, Map<String, Boolean> map) {
-		// log.debug("Comparing {}: {} to {}: {}", r1.getId(), r1.getPageForComparison(), r2.getId(), r2.getPageForComparison());
+		// log.debug("Comparing {}: {} to {}: {}", r1.getId(), r1.getPageForComparison(), r2.getId(),
+		// r2.getPageForComparison());
 		Set<String> dois1 = r1.getDois();
 		Set<String> dois2 = r2.getDois();
 		boolean bothCochrane = r1.isCochrane() && r2.isCochrane();
@@ -447,7 +453,8 @@ public class DeduplicationService {
 	 * - start with setContainsSameString(titleSet1, titleSet2): @see <a href="https://github.com/globbestael/DedupEndNote/issues/20">GitHub issues</a>  
 	 */
 	public boolean compareTitles(Publication r1, Publication r2) {
-		// log.debug("Comparing {}: {}\nto {}: {}", r1.getId(), r1.getTitles().get(0), r2.getId(), r2.getTitles().get(0));
+		// log.debug("Comparing {}: {}\nto {}: {}", r1.getId(), r1.getTitles().get(0), r2.getId(),
+		// r2.getTitles().get(0));
 		if (r1.isReply() || r2.isReply()) {
 			return true;
 		}
@@ -467,7 +474,8 @@ public class DeduplicationService {
 				}
 				if ((sufficientStartPages || sufficientDois)
 						&& similarity > TITLE_SIMILARITY_SUFFICIENT_STARTPAGES_OR_DOIS) {
-					// log.debug("Found comparable title (with pages or DOI) {} == {}", r1.getTitles().get(0), r2.getTitles().get(0));
+					// log.debug("Found comparable title (with pages or DOI) {} == {}", r1.getTitles().get(0),
+					// r2.getTitles().get(0));
 					return true;
 				}
 				if (!(sufficientStartPages || sufficientDois)) {
@@ -535,11 +543,11 @@ public class DeduplicationService {
 			return s;
 		}
 
-		// Put "-" before the IDs of the old records. In this way the labels of the records (used for 
+		// Put "-" before the IDs of the old records. In this way the labels of the records (used for
 		// identifying duplicate records) will be unique over both lists.
-		// When writing the deduplicated records for the second list, records with label "-..." can 
+		// When writing the deduplicated records for the second list, records with label "-..." can
 		// be skipped because they are duplicates of records from the first list.
-		// When markMode is set, these records are written. 
+		// When markMode is set, these records are written.
 		// Because of this "-", the records which have duplicates in the first file (label = "-...")
 		// can be distinguished from records which have duplicates in the second file.
 		publications.forEach(r -> {
@@ -725,14 +733,14 @@ public class DeduplicationService {
 	}
 
 	// FIXME: is Apache Commons CollectionUtils better?
-	//	private boolean listsContainSameString(List<String> list1, List<String> list2) {
-	//		if (list1.isEmpty() || list2.isEmpty()) {
-	//			return false;
-	//		}
-	//		List<String> common = new ArrayList<>(list1);
-	//		common.retainAll(list2);
-	//		return !common.isEmpty();
-	//	}
+	// private boolean listsContainSameString(List<String> list1, List<String> list2) {
+	// if (list1.isEmpty() || list2.isEmpty()) {
+	// return false;
+	// }
+	// List<String> common = new ArrayList<>(list1);
+	// common.retainAll(list2);
+	// return !common.isEmpty();
+	// }
 
 	// FIXME: is Apache Commons CollectionUtils or Spring CollectionUtils better?
 	private boolean setsContainSameString(Set<String> set1, Set<String> set2) {

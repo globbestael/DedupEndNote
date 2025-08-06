@@ -864,7 +864,7 @@ public class Publication {
 		}
 	}
 
-	/** 
+	/**
 	 * "UNSP ..." (and variants) should be cleaned from the C7 field (WoS). Import may have changed UNSP" Into "Unsp".
 	 * "author..." (reply etc): delete rest of string
 	 */
@@ -874,8 +874,8 @@ public class Publication {
 			.compile("\\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\\b");
 
 	/**
-	 * parsePages: parses the different input strings with page numbers / article numbers
-	 * to the fields pageStart, pageEnd and pageStartForComparison.
+	 * parsePages: parses the different input strings with page numbers / article numbers to the fields pageStart,
+	 * pageEnd and pageStartForComparison.
 	 *
 	 * See also issues https://github.com/globbestael/DedupEndnote/issues/2 and
 	 * https://github.com/globbestael/DedupEndnote/issues/3
@@ -937,15 +937,15 @@ public class Publication {
 		}
 		if (numbersWithinPattern.matcher(pageStart).matches()) {
 			/**
-			 * Books, reports, ... all start with page 1, therefore the ending page is used if available. 
-			 * BUT: Because Publication type is not available, pages range >= 100 is used as a criterion.
+			 * Books, reports, ... all start with page 1, therefore the ending page is used if available. BUT: Because
+			 * Publication type is not available, pages range >= 100 is used as a criterion.
 			 */
 			this.pageForComparison = pageStart;
 			/**
-			 * normalize starting page: W22 --> 22, 22S --> 22 
-			 * - Cochrane "page numbers" (or really article number) in form "CD010546" can no longer be recognized as Cochrane identifiers: "10546"
-			 * - FIXME: arXiv page numbers ("arXiv:2107.12817v1") will be reduced to publication year and month ("2107"), which may result in False Positives.
-			 * See https://github.com/globbestael/DedupEndnote/issues/4 for preprint publications.
+			 * normalize starting page: W22 --> 22, 22S --> 22 - Cochrane "page numbers" (or really article number) in
+			 * form "CD010546" can no longer be recognized as Cochrane identifiers: "10546" - FIXME: arXiv page numbers
+			 * ("arXiv:2107.12817v1") will be reduced to publication year and month ("2107"), which may result in False
+			 * Positives. See https://github.com/globbestael/DedupEndnote/issues/4 for preprint publications.
 			 */
 			pageForComparison = pageForComparison.replaceAll("^(\\D*)([\\d]+)(.*)$", "$2");
 			// Use pageEnd instead of pageStart for books (criteria: start = 1, end >= 100)
