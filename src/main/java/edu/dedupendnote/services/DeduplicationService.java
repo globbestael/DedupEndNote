@@ -58,6 +58,8 @@ public class DeduplicationService {
 				if (isReply || (!sufficientStartPages && !sufficientDois)) {
 					return false;
 				}
+				log.atDebug().setMessage("{}").addArgument(() -> r2.addLogLine("- 2. One or both authors are empty"))
+						.log();
 				return true;
 			}
 
@@ -75,10 +77,14 @@ public class DeduplicationService {
 							return true;
 						}
 					} else if (similarity > AUTHOR_SIMILARITY_NO_REPLY) {
+						log.atDebug().setMessage("{}")
+								.addArgument(() -> r2.addLogLine("- 2. Author similarity is above threshold")).log();
 						return true;
 					}
 				}
 			}
+			log.atDebug().setMessage("{}").addArgument(() -> r2.addLogLine("- 2. Author similarity is below threshold"))
+					.log();
 			return false;
 		}
 
@@ -185,7 +191,13 @@ public class DeduplicationService {
 	}
 
 	public boolean compareIssns(Publication r1, Publication r2) {
-		return setsContainSameString(r1.getIssns(), r2.getIssns());
+		if (setsContainSameString(r1.getIssns(), r2.getIssns())) {
+			log.atDebug().setMessage("{}").addArgument(() -> r2.addLogLine("- 4. ISSNs are the same")).log();
+			return true;
+		} else {
+			log.atDebug().setMessage("{}").addArgument(() -> r2.addLogLine("- 4. ISSNs are NOT the same")).log();
+			return false;
+		}
 	}
 
 	// @formatter:off
@@ -205,19 +217,22 @@ public class DeduplicationService {
 		boolean isReply = r1.isReply() || r2.isReply();
 
 		if (set1.isEmpty() || set2.isEmpty()) {
-			// log.debug("One of the records had no journal for '{}' and '{}'", set1, set2);
+			log.atDebug().setMessage("{}")
+					.addArgument(() -> r2.addLogLine("- 4. At least 1 of the records has no journal")).log();
 			return false;
 		}
 
 		Set<String> commonJournals = new HashSet<>(set1);
 		commonJournals.retainAll(set2);
 		if (!commonJournals.isEmpty()) {
-			// log.debug("Some journals are common: '{}' and '{}'", set1, set2);
+			log.atDebug().setMessage("{}").addArgument(() -> r2.addLogLine("- 4. Some journals are the same")).log();
 			return true;
 		}
 
 		for (String s1 : set1) {
 			for (String s2 : set2) {
+				// FIXME: journals with URLs as name should be preprocessed and journal name should be compared
+				// in a normal way (or only exactly the same?)
 				if (s1.startsWith("http") && s2.startsWith("http") && !s1.equals(s2)) {
 					// JaroWinkler 0.9670930232558139 for
 					// 'Https://clinicaltrials.gov/show/nct00830466'
@@ -225,13 +240,17 @@ public class DeduplicationService {
 					continue;
 				}
 				Double similarity = jws.apply(s1.toLowerCase(), s2.toLowerCase());
-				// log.debug("Similarity: {} for '{}' and '{}'", similarity, s1, s2);
 				// Make comparison stricter for Reply-titles because titles haven't been
 				// compared ("Annals of Hepatology" - "Annals of Oncology": 0.916)
 				if (isReply && similarity > JOURNAL_SIMILARITY_REPLY) {
+					log.atDebug().setMessage("{}")
+							.addArgument(() -> r2.addLogLine("- 4. Journal similarity above treshold (reply)")).log();
 					return true;
 				}
 				if (!isReply && similarity > JOURNAL_SIMILARITY_NO_REPLY) {
+					log.atDebug().setMessage("{}")
+							.addArgument(() -> r2.addLogLine("- 4. Journal similarity above treshold (not reply)"))
+							.log();
 					return true;
 				}
 
@@ -243,9 +262,15 @@ public class DeduplicationService {
 				 */
 				// FIXME: the 3 following functions should first compare s1 - s2 and, if false, then s2 - s1
 				if (compareJournals_FirstAsAbbreviation(s1, s2)) {
+					log.atDebug().setMessage("{}")
+							.addArgument(() -> r2.addLogLine("- 4. compareJournals_FirstAsAbbreviation(1,2) is true"))
+							.log();
 					return true;
 				}
 				if (compareJournals_FirstAsAbbreviation(s2, s1)) {
+					log.atDebug().setMessage("{}")
+							.addArgument(() -> r2.addLogLine("- 4. compareJournals_FirstAsAbbreviation(2,1) is true"))
+							.log();
 					return true;
 				}
 				/*
@@ -253,21 +278,32 @@ public class DeduplicationService {
 				 * to short journal names. ASySD SRS_Human has journal names in uppercase
 				 */
 				if (s1.length() < 10 && s1.toUpperCase().equals(s1) && compareJournals_FirstAsInitialism(s1, s2)) {
+					log.atDebug().setMessage("{}")
+							.addArgument(() -> r2.addLogLine("- 4. compareJournals_FirstAsInitialism(1,2) is true"))
+							.log();
 					return true;
 				}
 				if (s2.length() < 10 && s2.toUpperCase().equals(s2) && compareJournals_FirstAsInitialism(s2, s1)) {
+					log.atDebug().setMessage("{}")
+							.addArgument(() -> r2.addLogLine("- 4. compareJournals_FirstAsInitialism(2,1) is true"))
+							.log();
 					return true;
 				}
 
 				if (compareJournals_FirstWithStartingInitialism(s1, s2)) {
+					log.atDebug().setMessage("{}").addArgument(
+							() -> r2.addLogLine("- 4. compareJournals_FirstWithStartingInitialism(1,2) is true")).log();
 					return true;
 				}
 				if (compareJournals_FirstWithStartingInitialism(s2, s1)) {
+					log.atDebug().setMessage("{}").addArgument(
+							() -> r2.addLogLine("- 4. compareJournals_FirstWithStartingInitialism(2,1) is true")).log();
 					return true;
 				}
 			}
 		}
 		// log.debug("No Success 5 for '{}' and '{}'", set1, set2);
+		log.atDebug().setMessage("{}").addArgument(() -> r2.addLogLine("- 4. Journals are NOT the same")).log();
 		return false;
 	}
 
@@ -345,11 +381,14 @@ public class DeduplicationService {
 					&& publication.getPublicationYear() != 0 && publication.getPublicationYear() > year)) {
 				break;
 			}
-			// log.debug("Comparing {} publications to pivot {}: {}", publications.size(), publication.getId(),
-			// publication.getTitles().get(0));
 
 			for (Publication r : publications) {
 				map.put("sameDois", false);
+				log.atDebug().setMessage("Clear results previous comparison {}")
+						.addArgument(() -> publication.getLogLines().removeAll(publication.getLogLines())).log();
+				if (log.isDebugEnabled()) {
+					log.debug("\nStarting comparison {} - {}", publication.getId(), r.getId());
+				}
 				if (compareStartPageOrDoi(r, publication, map) && authorsComparator.compare(r, publication)
 						&& compareTitles(r, publication)
 						&& (map.get("sameDois") || compareIssns(r, publication) || compareJournals(r, publication))) {
@@ -361,7 +400,8 @@ public class DeduplicationService {
 						// publication.getId());
 						r.setLabel(publication.getLabel());
 					} else if (r.getLabel() != null) {
-						/** 
+						// @formatter:off
+						/**
 						 * Labels can be promoted from a publication to the pivot without a label:
 						 * - in loop N with pivot V 
 						 *   - publication W is NOT seen as similar and gets no label
@@ -369,18 +409,14 @@ public class DeduplicationService {
 						 * - in loop N + 1 with pivot W
 						 *   - publication X is seen as similar and its label V is promoted to label of pivot W
 						 * 
-						 *   	V		W			X			
-						 * SP	1-26	291-316		(None)		
-						 * DOI	+		+			+
+						 * V W X SP 1-26 291-316 (None) DOI + + +
 						 * 
-						 * Loop N (V)
-						 * - W.SP != V.SP	 -> W.label = NULL	
-						 * - X.DOI = V.DOI	 -> X.label = V
-						 * Loop N + 1 (W)
-						 * - W.DOi = X.DOI	 -> W.lavel = X
+						 * Loop N (V) - W.SP != V.SP -> W.label = NULL - X.DOI = V.DOI -> X.label = V Loop N + 1 (W) -
+						 * W.DOi = X.DOI -> W.lavel = X
 						 * 
-						 * Another reason can be that pivot W has more journal name variants than pivot V 
+						 * Another reason can be that pivot W has more journal name variants than pivot V
 						 */
+						// @formatter:on
 						// log.debug("=== pub {} SETs label {} in pivot {}", r.getId(), r.getLabel(),
 						// publication.getId());
 						publication.setLabel(r.getLabel());
@@ -393,6 +429,13 @@ public class DeduplicationService {
 
 					if (r.isReply()) {
 						publication.setReply(true);
+					}
+					log.atDebug().setMessage("{} - {} ARE DUPLICATES").addArgument(publication.getId())
+							.addArgument(r.getId()).log();
+				} else {
+					if (log.isDebugEnabled()) {
+						log.debug("PUBLICATIONS ARE NOT THE SAME:\n"
+								+ publication.getLogLines().stream().collect(Collectors.joining("\n- ")));
 					}
 				}
 			}
@@ -416,41 +459,55 @@ public class DeduplicationService {
 		boolean sufficientStartPages = r1.getPageForComparison() != null && r2.getPageForComparison() != null;
 		boolean sufficientDois = !dois1.isEmpty() && !dois2.isEmpty();
 
-		if (!bothCochrane && !sufficientStartPages && !sufficientDois) {
-			// log.debug("At least one starting page AND at least one DOI are missing");
-			return true; // no useful comparison possible
-		}
-
 		if (bothCochrane) {
 			if (r1.getPublicationYear().equals(r2.getPublicationYear())) {
 				if (sufficientDois) {
-					return setsContainSameString(dois1, dois2);
+					if (setsContainSameString(dois1, dois2)) {
+						log.atDebug().setMessage("{}").addArgument(() -> r2.addLogLine("- 1. DOIs are the same")).log();
+						return true;
+					} else {
+						log.atDebug().setMessage("{}").addArgument(() -> r2.addLogLine("- 1. DOIs are NOT the same"))
+								.log();
+						return false;
+					}
 				} else if (sufficientStartPages && r1.getPageForComparison().equals(r2.getPageForComparison())) {
-					// log.debug("Same starting pages");
+					log.atDebug().setMessage("{}").addArgument(() -> r2.addLogLine("- 1. Starting pages are the same"))
+							.log();
 					return true;
 				}
 			}
+			log.atDebug().setMessage("{}")
+					.addArgument(() -> r2.addLogLine("- 1. NOT the same startPage or DOI for Cochrane")).log();
 			return false;
 		}
+		if (!sufficientStartPages && !sufficientDois) {
+			log.atDebug().setMessage("{}").addArgument(() -> r2
+					.addLogLine("- 1. At least one starting page AND at least one DOI are missing, therefore Same"))
+					.log();
+			return true; // no useful comparison possible
+		}
+
 		if (sufficientDois && setsContainSameString(dois1, dois2)) {
 			map.put("sameDois", true);
 		}
 		if (sufficientStartPages && r1.getPageForComparison().equals(r2.getPageForComparison())) {
-			// log.debug("Same starting pages");
+			log.atDebug().setMessage("{}").addArgument(() -> r2.addLogLine("- 1. Starting pages are the same")).log();
 			return true;
 		} else if (!sufficientStartPages && sufficientDois && setsContainSameString(dois1, dois2)) {
+			log.atDebug().setMessage("{}").addArgument(() -> r2.addLogLine("- 1. DOIs are the same")).log();
 			return true;
 		}
 
-		// log.debug("Starting pages and DOIs are different");
+		log.atDebug().setMessage("{}")
+				.addArgument(() -> r2.addLogLine("- 1. Both starting pages and DOIs are NOT the same")).log();
 		return false;
 	}
 
-	/** 
+	/**
 	 * All unique titles and their reverse are compared
 	 * 
-	 * Paths not chosen:
-	 * - start with setContainsSameString(titleSet1, titleSet2): @see <a href="https://github.com/globbestael/DedupEndNote/issues/20">GitHub issues</a>  
+	 * Paths not chosen: - start with setContainsSameString(titleSet1, titleSet2): @see
+	 * <a href="https://github.com/globbestael/DedupEndNote/issues/20">GitHub issues</a>
 	 */
 	public boolean compareTitles(Publication r1, Publication r2) {
 		// log.debug("Comparing {}: {}\nto {}: {}", r1.getId(), r1.getTitles().get(0), r2.getId(),
@@ -458,7 +515,7 @@ public class DeduplicationService {
 		if (r1.isReply() || r2.isReply()) {
 			return true;
 		}
-		Double similarity;
+		Double similarity = 0.0;
 		List<String> titles1 = r1.getTitles();
 		List<String> titles2 = r2.getTitles();
 		boolean sufficientStartPages = r1.getPageForComparison() != null && r2.getPageForComparison() != null;
@@ -470,19 +527,50 @@ public class DeduplicationService {
 				similarity = jws.apply(title1, title2);
 				if (isPhase) { // return result of comparison of only the first title variant
 					// log.debug("{} and {}:\n- {}\n- {}", r1.getId(), r2.getId(), title1, title2);
-					return similarity > TITLE_SIMILARITY_PHASE;
+					if (similarity > TITLE_SIMILARITY_PHASE) {
+						log.atDebug().setMessage("{}")
+								.addArgument(
+										() -> r2.addLogLine("- 3. Title similarity (for Phase) is above threshold"))
+								.log();
+						return true;
+					} else {
+						log.atDebug().setMessage("{}")
+								.addArgument(
+										() -> r2.addLogLine("- 3. Title similarity (for Phase) is below threshold"))
+								.log();
+						return false;
+					}
 				}
 				if ((sufficientStartPages || sufficientDois)
 						&& similarity > TITLE_SIMILARITY_SUFFICIENT_STARTPAGES_OR_DOIS) {
-					// log.debug("Found comparable title (with pages or DOI) {} == {}", r1.getTitles().get(0),
-					// r2.getTitles().get(0));
+					// @formatter:off
+					log.atDebug()
+						.setMessage("{}")
+						.addArgument(
+							() -> r2.addLogLine("- 3. Title similarity (with pages or DOIs) is above threshold"))
+							.log();
+					// @formatter:on
 					return true;
 				}
 				if (!(sufficientStartPages || sufficientDois)) {
-					return similarity > TITLE_SIMILARITY_INSUFFICIENT_STARTPAGES_AND_DOIS;
+					if (similarity > TITLE_SIMILARITY_INSUFFICIENT_STARTPAGES_AND_DOIS) {
+						log.atDebug().setMessage("{}")
+								.addArgument(() -> r2.addLogLine(
+										"- 3. Title similarity (without sufficient pages or DOIs) is above threshold"))
+								.log();
+						return true;
+					} else {
+						log.atDebug().setMessage("{}")
+								.addArgument(() -> r2.addLogLine(
+										"- 3. Title similarity (without sufficient pages or DOIs) is below threshold"))
+								.log();
+						return false;
+					}
 				}
 			}
 		}
+		log.atDebug().setMessage("{}").addArgument(() -> r2.addLogLine("- 3. Title similarity is below threshold"))
+				.log();
 		return false;
 	}
 
@@ -770,7 +858,7 @@ public class DeduplicationService {
 		Map<Integer, Integer> cumulativePercentages = getCumulativePercentages(publications, yearSets);
 
 		List<Publication> emptyYearlist = yearSets.remove(0);
-		log.debug("YearSets: {}", yearSets.keySet().stream().sorted().toList());
+		// log.debug("YearSets: {}", yearSets.keySet().stream().sorted().toList());
 		yearSets.keySet().stream().forEach(year -> {
 			List<Publication> yearSet = yearSets.get(year);
 			if (emptyYearlist != null) {
@@ -823,7 +911,7 @@ public class DeduplicationService {
 			cumulativePercentages.put(year.getKey(), 100 * (simple + current) / total);
 			current += simple;
 		}
-		log.debug("cumulativePercentages: " + cumulativePercentages);
+		// log.debug("cumulativePercentages: " + cumulativePercentages);
 		return cumulativePercentages;
 	}
 

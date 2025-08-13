@@ -21,7 +21,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Data
 public class Publication {
-
 	private List<String> allAuthors = new ArrayList<>();
 
 	protected List<String> authors = new ArrayList<>();
@@ -45,6 +44,8 @@ public class Publication {
 	 * If markMode is set, this field is exported. The original content of the Label field in the EndNote export file is overwritten in this case!
 	 */
 	private String label;
+
+	private List<String> logLines = new ArrayList<>();
 
 	private String pageEnd;
 
@@ -847,7 +848,15 @@ public class Publication {
 		return journals;
 	}
 
+	public String addLogLine(String l) {
+		logLines.addLast(l);
+		return l;
+	}
+
 	public void addTitles(String title) {
+		if (title.toLowerCase().equals("not available") || title.toLowerCase().equals("[not available]")) {
+			return;
+		}
 		String normalized = normalizeJava8(title);
 		String[] parts = normalized.split("=");
 		List<String> list = new ArrayList<>(Arrays.asList(parts));

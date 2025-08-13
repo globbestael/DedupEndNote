@@ -30,11 +30,6 @@
 - https://support.alfasoft.com/hc/en-us/articles/360018135798-De-duplication-of-references-in-EndNote (latest change 22-4-2025)
 - https://endnote.com/product-details/compare-previous-versions : Deduplication by DOI and/or PMCID
 
-## Zotero
-- better testing
-- change documentation
-- too late to change the application name to DedupRIS?
-
 ## SRA: Systematic Review Accelerator / TERA /dedupe-sweep
 - https://sr-accelerator.com/#/deduplicator
 - code: https://github.com/IEBH/dedupe-sweep

@@ -50,19 +50,20 @@ public class IOService {
 	public static final Pattern risLinePattern = Pattern.compile("(^[A-Z][A-Z0-9])( {2}-[ ,\\u00A0])(.*)$");
 
 	/**
-	 * All white space characters within input fields will replaced with a normal SPACE.
-	 * LINE SEPARATOR and NO-BREAK SPACE have been observed in the test files. 
-	 * The pattern uses a maximum view:
-	 * - all white space / "Separator, space" characters (class Zs): https://www.fileformat.info/info/unicode/category/Zs/list.htm
-	 * - all "Separator, Line" (Zl)  and "Separator, Paragraph" (Zp) characters
-	 * - some "Control, other" characters (class Cc), but not all: https://www.fileformat.info/info/unicode/category/Cc/list.htm
+	 * All white space characters within input fields will replaced with a normal SPACE. LINE SEPARATOR and NO-BREAK
+	 * SPACE have been observed in the test files. The pattern uses a maximum view: - all white space / "Separator,
+	 * space" characters (class Zs): https://www.fileformat.info/info/unicode/category/Zs/list.htm - all "Separator,
+	 * Line" (Zl) and "Separator, Paragraph" (Zp) characters - some "Control, other" characters (class Cc), but not all:
+	 * https://www.fileformat.info/info/unicode/category/Cc/list.htm
 	 * 
-	 * Pattern excludes SPACE from class Zs for performance reason by making an intersection (&&) with the negation ([^ ]).
-	 *  
+	 * Pattern excludes SPACE from class Zs for performance reason by making an intersection (&&) with the negation ([^
+	 * ]).
+	 * 
 	 * Tested in TextNormalizerTest
 	 */
-	public static final Pattern unusualWhiteSpacePattern = Pattern.compile("[\\p{Zs}\\p{Zl}\\p{Zp}\\u0009\\u000A\\u000B\\u000C\\u000D&&[^ ]]");
-	
+	public static final Pattern unusualWhiteSpacePattern = Pattern
+			.compile("[\\p{Zs}\\p{Zl}\\p{Zp}\\u0009\\u000A\\u000B\\u000C\\u000D&&[^ ]]");
+
 	public List<Publication> readPublications(String inputFileName) {
 		List<Publication> publications = new ArrayList<>();
 		String fieldContent = null;
@@ -72,7 +73,7 @@ public class IOService {
 
 		boolean hasBom = utilities.detectBom(inputFileName);
 		int missingId = 1;
-		
+
 		// Line starting with "TY - " triggers creation of record, line starting with
 		// "ER - " signals end of record
 		try (BufferedReader br = new BufferedReader(new FileReader(inputFileName))) {
@@ -87,7 +88,7 @@ public class IOService {
 					fieldName = matcher.group(1);
 					fieldContent = matcher.group(3).strip();
 					// "NA" added for the ASySD Depression set (R artifact)
-					if ((fieldContent.isEmpty() && ! "ER".equals(fieldName)) || "NA".equals(fieldContent)) {
+					if ((fieldContent.isEmpty() && !"ER".equals(fieldName)) || "NA".equals(fieldContent)) {
 						continue;
 					}
 					previousFieldName = "XYZ";
@@ -118,19 +119,20 @@ public class IOService {
 						publication.addReversedTitles();
 						publication.fillAllAuthors();
 						publications.add(publication);
-						log.debug("Publication read with id {} and title: {}", publication.getId(),
-								publication.getTitles().get(0));
+						// log.debug("Publication read with id {} and title: {}", publication.getId(),
+						// publication.getTitles().get(0));
 						break;
 					case "ID": // EndNote Publication number
 						publication.setId(fieldContent);
-						log.debug("Read ID {}", fieldContent);
+						// log.debug("Read ID {}", fieldContent);
 						break;
 					case "J2": // Alternate journal
 						publication.addJournals(fieldContent);
 						break;
-					case "OP": // in PubMed: original title, in Web of Science (at least for conference papaers): conference title
+					case "OP": // in PubMed: original title, in Web of Science (at least for conference papaers):
+								// conference title
 						if ("CONF".equals(publication.getReferenceType())) {
-							publication.addJournals(fieldContent); 
+							publication.addJournals(fieldContent);
 						} else {
 							publication.addTitles(fieldContent);
 						}
@@ -211,17 +213,17 @@ public class IOService {
 					}
 				} else { // continuation line
 					switch (previousFieldName) {
-						case "DO":
-							publication.addDois(line);
-							break;
-						case "SN":
-							publication.addIssns(line);
-							break;
-						case "TI": // EMBASE original title
-							publication.addTitles(line);
-							break;
-						default:
-							break;
+					case "DO":
+						publication.addDois(line);
+						break;
+					case "SN":
+						publication.addIssns(line);
+						break;
+					case "TI": // EMBASE original title
+						publication.addTitles(line);
+						break;
+					default:
+						break;
 					}
 				}
 			}
@@ -234,21 +236,19 @@ public class IOService {
 			log.error("In field {} with content {}: other exception: {}", fieldName, fieldContent, e.getMessage());
 			e.printStackTrace();
 		}
-		log.debug("Records read: {}", publications.size());
+		// log.debug("Records read: {}", publications.size());
 		return publications;
 	}
 
 	/**
-	 * - PageStart (PG) and DOIs (DO) are replaced or inserted, but written at the same place as in the input file to make comparisons between input file and
-	 *   output file easier. 
-	 * - Absent Publication year (PY) is replaced if there is one found in a duplicate record. 
-	 * - Author (AU) Anonymous is skipped. 
-	 * - Title (TI) is replaced with the longest duplicate title when it contains "Reply". 
-	 * - Article Number (C7) is skipped.
-	 * - Absent Journal Name (T2) is copied from J2 (or filed in based on DOI foor SSRN): for embase.com records (but no check on this origin!)
+	 * - PageStart (PG) and DOIs (DO) are replaced or inserted, but written at the same place as in the input file to
+	 * make comparisons between input file and output file easier. - Absent Publication year (PY) is replaced if there
+	 * is one found in a duplicate record. - Author (AU) Anonymous is skipped. - Title (TI) is replaced with the longest
+	 * duplicate title when it contains "Reply". - Article Number (C7) is skipped. - Absent Journal Name (T2) is copied
+	 * from J2 (or filed in based on DOI foor SSRN): for embase.com records (but no check on this origin!)
 	 *
-	 * Records are read into a TreeMap, with continuation lines added.
-	 * writeRecords(...) does the replacements, and writes to the output file.
+	 * Records are read into a TreeMap, with continuation lines added. writeRecords(...) does the replacements, and
+	 * writes to the output file.
 	 */
 	public int writeDeduplicatedRecords(List<Publication> publications, String inputFileName, String outputFileName) {
 		log.debug("Start writing to file {}", outputFileName);
@@ -275,7 +275,7 @@ public class IOService {
 			Publication publication = null;
 			Integer phantomId = 0;
 			String realId = null;
-			
+
 			while ((line = br.readLine()) != null) {
 				line = unusualWhiteSpacePattern.matcher(line).replaceAll(" ");
 				Matcher matcher = risLinePattern.matcher(line);
@@ -284,36 +284,36 @@ public class IOService {
 					fieldContent = matcher.group(3);
 					previousFieldName = "XYZ";
 					switch (fieldName) {
-						case "ER":
+					case "ER":
+						map.put(fieldName, fieldContent);
+						phantomId++;
+						if (realId == null) {
+							publication = recordIdMap.get(phantomId.toString());
+							if (publication != null) {
+								publication.setId(phantomId.toString());
+								map.put("ID", phantomId.toString());
+							}
+						}
+						if (publication != null && publication.getKeptRecord()) {
+							writeRecord(map, publication, bw, true);
+							numberWritten++;
+						}
+						map.clear();
+						realId = null;
+						break;
+					case "ID": // EndNote Publication number
+						map.put(fieldName, fieldContent);
+						realId = line.substring(6);
+						publication = recordIdMap.get(realId);
+						break;
+					default:
+						if (map.containsKey(fieldName)) {
+							map.put(fieldName, map.get(fieldName) + "\n" + line);
+						} else {
 							map.put(fieldName, fieldContent);
-							phantomId++;
-							if (realId == null) {
-								publication = recordIdMap.get(phantomId.toString());
-								if (publication != null) {
-									publication.setId(phantomId.toString());
-									map.put("ID", phantomId.toString());
-								}
-							}
-							if (publication != null && publication.getKeptRecord()) {
-								writeRecord(map, publication, bw, true);
-								numberWritten++;
-							}
-							map.clear();
-							realId = null;
-							break;
-						case "ID": // EndNote Publication number
-							map.put(fieldName, fieldContent);
-							realId = line.substring(6);
-							publication = recordIdMap.get(realId);
-							break;
-						default:
-							if (map.containsKey(fieldName)) {
-								map.put(fieldName, map.get(fieldName) + "\n" + line);
-							} else {
-								map.put(fieldName, fieldContent);
-							}
-							previousFieldName = fieldName;
-							break;
+						}
+						previousFieldName = fieldName;
+						break;
 					}
 				} else { // continuation line
 					map.put(previousFieldName, map.get(previousFieldName) + "\n" + line);
@@ -384,7 +384,7 @@ public class IOService {
 						publication = recordIdMap.get(realId);
 						break;
 					case "LB":
-						break;	// to ensure that the present Label is not used.
+						break; // to ensure that the present Label is not used.
 					default:
 						if (map.containsKey(fieldName)) {
 							map.put(fieldName, map.get(fieldName) + "\n" + line);
@@ -441,7 +441,7 @@ public class IOService {
 					map.put("T2", "Social Science Research Network");
 				}
 			}
-			
+
 		}
 		// in enhanced mode C7 (Article number) is skipped, in Mark mode C7 is NOT skipped
 		String skipFields = enhance ? "(C7|ER|ID|TY|XYZ)" : "(ER|ID|TY|XYZ)";
@@ -458,22 +458,20 @@ public class IOService {
 	}
 
 	/**
-	 * writeRisWithTRUTH(...): writes a RIS file with Caption field ['Duplicate',
-	 * 'Unknown', empty] and, in case of true duplicates, with Label field the ID if
-	 * the record which will be kept.
+	 * writeRisWithTRUTH(...): writes a RIS file with Caption field ['Duplicate', 'Unknown', empty] and, in case of true
+	 * duplicates, with Label field the ID if the record which will be kept.
 	 *
 	 * <p>
-	 * Caption field: - Duplicate: validated and True Positive - empty: validated
-	 * and True Negative - Unknown: not validated
+	 * Caption field: - Duplicate: validated and True Positive - empty: validated and True Negative - Unknown: not
+	 * validated
 	 *
 	 * <p>
-	 * All records which are duplicates have the same ID in Label field, so this ID
-	 * could be considered as the ID of a duplicate group. DedupEndNote in non-Mark
-	 * mode would write only the record where the record ID is the same as Label.
+	 * All records which are duplicates have the same ID in Label field, so this ID could be considered as the ID of a
+	 * duplicate group. DedupEndNote in non-Mark mode would write only the record where the record ID is the same as
+	 * Label.
 	 *
 	 * @param inputFileName  filename of a RIS export file
-	 * @param truthRecords   List<PublicationDB> of validated records (TAB delimited
-	 *                       export file from validation DB)
+	 * @param truthRecords   List<PublicationDB> of validated records (TAB delimited export file from validation DB)
 	 * @param outputFileName filename of a RIS file
 	 */
 	public void writeRisWithTRUTH(List<PublicationDB> truthRecords, String inputFileName, String outputFileName) {

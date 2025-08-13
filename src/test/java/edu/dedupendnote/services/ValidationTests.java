@@ -37,15 +37,13 @@ import edu.dedupendnote.domain.ValidationResultASySD;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * The validation tests compare the current results to validated results (TRUTH files):
- * see checkResults(...)
+ * The validation tests compare the current results to validated results (TRUTH files): see checkResults(...)
  *
- * TRUTH files are the tab delimited output of a (Microsoft Access) database where
- * validated records are marked as TP or TN, and TP records have a non empty dedupid.
+ * TRUTH files are the tab delimited output of a (Microsoft Access) database where validated records are marked as TP or
+ * TN, and TP records have a non empty dedupid.
  *
- * An unvalidated TRUTH file can be created with createInitialTruthFile(). Import the file
- * into the database, validate some or all of the records, export the validated records as
- * a tab delimited file (the TRUTH file).
+ * An unvalidated TRUTH file can be created with createInitialTruthFile(). Import the file into the database, validate
+ * some or all of the records, export the validated records as a tab delimited file (the TRUTH file).
  *
  * See http://localhost:9777/developers for a description of the database.
  */
@@ -64,55 +62,67 @@ class ValidationTests {
 
 	String wssessionId = "";
 
+	private static Logger rootLogger;
+
 	@BeforeAll
 	static void beforeAll() {
+		/*
+		 * Be sure to not have the log level at Debug. VS Code hangs.
+		 * 
+		 * The reason why the extensive log.debug messaging in DeduplicationService.compareSet causes this problem is not clear.
+		 */
 		LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
-		Logger rootLogger = loggerContext.getLogger("edu.dedupendnote.services.DeduplicationService");
+		rootLogger = loggerContext.getLogger("edu.dedupendnote.services.DeduplicationService");
 		rootLogger.setLevel(Level.INFO);
 	}
 
+	// @formatter:off
 	/*
-	 * Executes the deduplication in Mark mode, compares the results with the truth files
-	 * and with the previous results. Prints the scores in the traditional way (TP = all
-	 * records marked as duplicates, ...). See printValdationResultsASySD() for scores
-	 * where TP = all records marked as duplicates except for the duplicate kept (i.e. all
-	 * duplicate rightly removed)
+	 * - Executes the deduplication in Mark mode. 
+	 * - Compares the results with the truth files and with the previous results.
+	 * - Prints the scores in the traditional way (TP = all records marked as duplicates, ...). 
+	 * 
+	 * See  printValdationResultsASySD() for scores where TP = all records marked as duplicates except for the duplicate kept
+	 * (i.e. all duplicate rightly removed)
 	 */
+	// @formatter:on
 	@Test
 	void checkAllTruthFiles() throws IOException {
+		// rootLogger.setLevel(Level.DEBUG);
+
 		// previous results
 		Map<String, ValidationResult> validationResultsMap = List
-			.of(new ValidationResult("ASySD_Cardiac_human", 6748, 25, 2175, 0, 3_700L),
-				new ValidationResult("ASySD_Depression", 17389, 576, 61894, 21, 76_000L),
-				new ValidationResult("ASySD_Diabetes", 1816, 18, 11, 0, 900L),
-				new ValidationResult("ASySD_Neuroimaging", 2169, 32, 1235, 2, 1_250L),
-				new ValidationResult("ASySD_SRSR_Human", 27816, 190, 24988, 7, 68_000L),
-				new ValidationResult("BIG_SET", 3721, 238, 962, 5, 24_000L),
-				new ValidationResult("McKeown_2021", 2010, 62, 1058, 0, 470L),
-				new ValidationResult("SRA2_Cytology_screening", 1359, 61, 436, 0, 400L),
-				new ValidationResult("SRA2_Haematology", 222, 14, 1179, 0, 300L),
-				new ValidationResult("SRA2_Respiratory", 761, 39, 1188, 0, 800L),
-				new ValidationResult("SRA2_Stroke", 497, 13, 782, 0, 320L))
-			.stream()
-			.collect(
-					Collectors.toMap(ValidationResult::getFileName, Function.identity(), (o1, o2) -> o1, TreeMap::new));
-
-		Map<String, ValidationResult> resultsMap = List
-				.of(
-						checkResults_ASySD_Cardiac_human()
-						, checkResults_ASySD_Depression()
-						, checkResults_ASySD_Diabetes()
-						, checkResults_ASySD_Neuroimaging()
-						, checkResults_ASySD_SRSR_Human()
-						, checkResults_BIG_SET()
-						, checkResults_McKeown_2021()
-						, checkResults_SRA2_Cytology_screening()
-						, checkResults_SRA2_Haematology()
-						, checkResults_SRA2_Respiratory()
-						, checkResults_SRA2_Stroke()
-						)
+				.of(new ValidationResult("ASySD_Cardiac_human", 6748, 25, 2175, 0, 3_700L),
+						new ValidationResult("ASySD_Depression", 17389, 576, 61894, 21, 76_000L),
+						new ValidationResult("ASySD_Diabetes", 1816, 18, 11, 0, 900L),
+						new ValidationResult("ASySD_Neuroimaging", 2169, 32, 1235, 2, 1_250L),
+						new ValidationResult("ASySD_SRSR_Human", 27816, 190, 24988, 7, 68_000L),
+						new ValidationResult("BIG_SET", 3721, 238, 962, 5, 24_000L),
+						new ValidationResult("McKeown_2021", 2010, 62, 1058, 0, 470L),
+						new ValidationResult("SRA2_Cytology_screening", 1359, 61, 436, 0, 400L),
+						new ValidationResult("SRA2_Haematology", 222, 14, 1179, 0, 300L),
+						new ValidationResult("SRA2_Respiratory", 761, 39, 1188, 0, 800L),
+						new ValidationResult("SRA2_Stroke", 497, 13, 782, 0, 320L))
 				.stream().collect(Collectors.toMap(ValidationResult::getFileName, Function.identity(), (o1, o2) -> o1,
 						TreeMap::new));
+
+		// @formatter:off
+		Map<String, ValidationResult> resultsMap = List
+				.of(
+					checkResults_ASySD_Cardiac_human(),				// checkResults_ASySD_Depression(), 
+					checkResults_ASySD_Diabetes(),
+					checkResults_ASySD_Neuroimaging(), 
+					checkResults_ASySD_SRSR_Human(), 
+					checkResults_BIG_SET(),
+					checkResults_McKeown_2021(), 
+					checkResults_SRA2_Cytology_screening(),
+					checkResults_SRA2_Haematology(), 
+					checkResults_SRA2_Respiratory(), 
+					checkResults_SRA2_Stroke()
+				)
+				.stream().collect(Collectors.toMap(ValidationResult::getFileName, Function.identity(), (o1, o2) -> o1,
+						TreeMap::new));
+		// @formatter:on
 
 		boolean changed = false;
 		String divider = "|---------|--------------|---------|---------|--------------|---------|---------|--------------|--------------|--------------|-------------|";
@@ -127,28 +137,32 @@ class ValidationTests {
 			double sensitivity = tp * 100.0 / (tp + fn); // == recall
 			double specificity = tn * 100.0 / (tn + fp);
 			double f1Score = 2 * precision * sensitivity / (precision + sensitivity);
-			if (	v.getFn() == c.getFn() && v.getFp() == c.getFp() && v.getTn() == c.getTn() && v.getTp() == c.getTp()
-				&& (c.getDurationMilliseconds() >= (long) (v.getDurationMilliseconds() * 0.9))
-				&& c.getDurationMilliseconds() <= (long) (v.getDurationMilliseconds() * 1.1)) {
+			if (v.getFn() == c.getFn() && v.getFp() == c.getFp() && v.getTn() == c.getTn() && v.getTp() == c.getTp()
+					&& (c.getDurationMilliseconds() >= (long) (v.getDurationMilliseconds() * 0.9))
+					&& c.getDurationMilliseconds() <= (long) (v.getDurationMilliseconds() * 1.1)) {
 				System.out.println("\nResults: " + setName);
-				System.out.println("| %7s | %12s | %7s | %7s | %12s | %7s | %7s | %12s | %12s | %12s | %11s |".formatted(
-					"TOTAL", "% duplicates", "TP", "FN", "Sensitivity", "TN", "FP", "Specificity", "Precision", "F1-score", "Duration"));
+				System.out.println("| %7s | %12s | %7s | %7s | %12s | %7s | %7s | %12s | %12s | %12s | %11s |"
+						.formatted("TOTAL", "% duplicates", "TP", "FN", "Sensitivity", "TN", "FP", "Specificity",
+								"Precision", "F1-score", "Duration"));
 				System.out.println(divider);
 				System.out.println(
-					"| %7d | %11.2f%% | %7d | %7d | %11.2f%% | %7d | %7d | %11.3f%% | %11.3f%% | %11.3f%% | %11.2f |".formatted(
-						tp + tn + fp + fn, (tp + fn) * 100.0 / (tp + tn + fp + fn), tp, fn, sensitivity, tn, fp,
-						specificity, precision, f1Score, (double) (c.getDurationMilliseconds() / 1000.0)));
+						"| %7d | %11.2f%% | %7d | %7d | %11.2f%% | %7d | %7d | %11.3f%% | %11.3f%% | %11.3f%% | %11.2f |"
+								.formatted(tp + tn + fp + fn, (tp + fn) * 100.0 / (tp + tn + fp + fn), tp, fn,
+										sensitivity, tn, fp, specificity, precision, f1Score,
+										(double) (c.getDurationMilliseconds() / 1000.0)));
 				System.out.flush();
 			} else {
 				changed = true;
 				System.err.println("\nResults: " + setName + ": HAS DIFFERENT RESULTS (first new, second old)");
-				System.err.println("| %7s | %12s | %7s | %7s | %12s | %7s | %7s | %12s | %12s | %12s | %11s |".formatted(
-					"TOTAL", "% duplicates", "TP", "FN", "Sensitivity", "TN", "FP", "Specificity", "Precision", "F1-score", "Duration"));
+				System.err.println("| %7s | %12s | %7s | %7s | %12s | %7s | %7s | %12s | %12s | %12s | %11s |"
+						.formatted("TOTAL", "% duplicates", "TP", "FN", "Sensitivity", "TN", "FP", "Specificity",
+								"Precision", "F1-score", "Duration"));
 				System.out.println(divider);
 				System.err.println(
-					"| %7d | %11.2f%% | %7d | %7d | %11.2f%% | %7d | %7d | %11.3f%% | %11.3f%% | %11.3f%% | %11.2f |".formatted(
-						tp + tn + fp + fn, (tp + fn) * 100.0 / (tp + tn + fp + fn), tp, fn, sensitivity, tn, fp,
-						specificity, precision, f1Score, (double) (c.getDurationMilliseconds() / 1000.0)));
+						"| %7d | %11.2f%% | %7d | %7d | %11.2f%% | %7d | %7d | %11.3f%% | %11.3f%% | %11.3f%% | %11.2f |"
+								.formatted(tp + tn + fp + fn, (tp + fn) * 100.0 / (tp + tn + fp + fn), tp, fn,
+										sensitivity, tn, fp, specificity, precision, f1Score,
+										(double) (c.getDurationMilliseconds() / 1000.0)));
 				tp = v.getTp();
 				fn = v.getFn();
 				tn = v.getTn();
@@ -158,15 +172,17 @@ class ValidationTests {
 				specificity = tn * 100.0 / (tn + fp);
 				f1Score = 2 * precision * sensitivity / (precision + sensitivity);
 				System.err.println(
-					"| %7d | %11.2f%% | %7d | %7d | %11.2f%% | %7d | %7d | %11.3f%% | %11.3f%% | %11.3f%% | %11.2f |".formatted(
-						tp + tn + fp + fn, (tp + fn) * 100.0 / (tp + tn + fp + fn), tp, fn, sensitivity, tn, fp,
-						specificity, precision, f1Score, (double) (v.getDurationMilliseconds() / 1000.0)));
+						"| %7d | %11.2f%% | %7d | %7d | %11.2f%% | %7d | %7d | %11.3f%% | %11.3f%% | %11.3f%% | %11.2f |"
+								.formatted(tp + tn + fp + fn, (tp + fn) * 100.0 / (tp + tn + fp + fn), tp, fn,
+										sensitivity, tn, fp, specificity, precision, f1Score,
+										(double) (v.getDurationMilliseconds() / 1000.0)));
 				System.err.flush();
 			}
 		}
 		System.out.println("FP can be found with regex: \\ttrue\\tfalse\\tfalse\\ttrue\\tfalse\\t");
 		System.out.println("FN can be found with regex: \\d\\ttrue\\tfalse\\tfalse\\tfalse\\ttrue\\t");
-		System.out.println("FN solvable can be found with regex: ^\\d+\\t\\t\\d+\\ttrue\\tfalse\\tfalse\\tfalse\\ttrue\\tfalse");
+		System.out.println(
+				"FN solvable can be found with regex: ^\\d+\\t\\t\\d+\\ttrue\\tfalse\\tfalse\\tfalse\\ttrue\\tfalse");
 		System.out.println("TP which will be kept can be found with regex: ^(\\d+)\\t\\1\\t\\ttrue\\ttrue\\t");
 
 		assertThat(changed).isFalse();
@@ -183,23 +199,22 @@ class ValidationTests {
 		 * FIXME: the number of unique duplicates has to be from the ..._to_validate.txt
 		 * files.
 		 */
-				
-		Map<String, ValidationResultASySD> validationResultsMap = List.of(
-				new ValidationResultASySD("Cytology_screening", 1359, 61, 436, 0, 622),
-				new ValidationResultASySD("Haematology", 222, 14, 1179, 0, 106),
-				new ValidationResultASySD("Respiratory", 761, 39, 1188, 0, 354),
-				new ValidationResultASySD("Stroke", 497, 13, 782, 0, 190),
-				new ValidationResultASySD("BIG_SET", 3721, 238, 962, 5, 1361), // 1347 unique
-				new ValidationResultASySD("McKeown_2021", 2010, 62, 1058, 0, 816),
 
-				new ValidationResultASySD("ASySD_Cardiac_human", 6748, 25, 2175, 0, 3234),
-				new ValidationResultASySD("ASySD_Depression", 17389, 576, 61894, 21, 7705),
-				new ValidationResultASySD("ASySD_Diabetes", 1816, 18, 11, 0, 566),
-				new ValidationResultASySD("ASySD_Neuroimaging", 2169, 32, 1235, 2, 890),
-				new ValidationResultASySD("ASySD_SRSR_Human", 27816, 190, 24988, 7, 11087))
-			.stream()
-			.collect(Collectors.toMap(ValidationResultASySD::getFileName, Function.identity(), (o1, o2) -> o1,
-					TreeMap::new));
+		Map<String, ValidationResultASySD> validationResultsMap = List
+				.of(new ValidationResultASySD("Cytology_screening", 1359, 61, 436, 0, 622),
+						new ValidationResultASySD("Haematology", 222, 14, 1179, 0, 106),
+						new ValidationResultASySD("Respiratory", 761, 39, 1188, 0, 354),
+						new ValidationResultASySD("Stroke", 497, 13, 782, 0, 190),
+						new ValidationResultASySD("BIG_SET", 3721, 238, 962, 5, 1361), // 1347 unique
+						new ValidationResultASySD("McKeown_2021", 2010, 62, 1058, 0, 816),
+
+						new ValidationResultASySD("ASySD_Cardiac_human", 6748, 25, 2175, 0, 3234),
+						new ValidationResultASySD("ASySD_Depression", 17389, 576, 61894, 21, 7705),
+						new ValidationResultASySD("ASySD_Diabetes", 1816, 18, 11, 0, 566),
+						new ValidationResultASySD("ASySD_Neuroimaging", 2169, 32, 1235, 2, 890),
+						new ValidationResultASySD("ASySD_SRSR_Human", 27816, 190, 24988, 7, 11087))
+				.stream().collect(Collectors.toMap(ValidationResultASySD::getFileName, Function.identity(),
+						(o1, o2) -> o1, TreeMap::new));
 
 		for (String setName : validationResultsMap.keySet()) {
 			ValidationResultASySD v = validationResultsMap.get(setName);
@@ -210,19 +225,18 @@ class ValidationTests {
 			System.out.println("\nResults: " + setName);
 			System.out.println(
 					"---------------------------------------------------------------------------------------------------------------------------------------------");
-			System.out
-				.println("| %7s | %12s | %7s | %7s | %12s | %7s | %7s | %12s | %12s | %12s | %12s |".formatted(
-				"TOTAL", "% duplicates", "TP", "FN", "Sensitivity", "TN", "FP", "Specificity", "Precision",
-				"Accuracy", "F1"));
+			System.out.println("| %7s | %12s | %7s | %7s | %12s | %7s | %7s | %12s | %12s | %12s | %12s |".formatted(
+					"TOTAL", "% duplicates", "TP", "FN", "Sensitivity", "TN", "FP", "Specificity", "Precision",
+					"Accuracy", "F1"));
 			System.out.println(
-				"| %7d | %11.2f%% | %7d | %7d | %11.2f%% | %7d | %7d | %11.3f%% | %11.3f%% | %11.3f%% | %11.3f%% |".formatted(
-					tp + tn + fp + fn, (tp + fn) * 100.0 / (tp + tn + fp + fn), tp, fn, sensitivity, tn, fp,
-					tn * 100.0 / (tn + fp), precision, (tp + tn) * 100.0 / (tp + fn + tn + fp),
-					2 * precision * sensitivity / (precision + sensitivity)));
+					"| %7d | %11.2f%% | %7d | %7d | %11.2f%% | %7d | %7d | %11.3f%% | %11.3f%% | %11.3f%% | %11.3f%% |"
+							.formatted(tp + tn + fp + fn, (tp + fn) * 100.0 / (tp + tn + fp + fn), tp, fn, sensitivity,
+									tn, fp, tn * 100.0 / (tn + fp), precision, (tp + tn) * 100.0 / (tp + fn + tn + fp),
+									2 * precision * sensitivity / (precision + sensitivity)));
 			System.out.println(
 					"---------------------------------------------------------------------------------------------------------------------------------------------");
 			System.out.flush();
-			assertThat(1*1).isEqualTo(1);
+			assertThat(1 * 1).isEqualTo(1);
 		}
 	}
 
@@ -233,11 +247,10 @@ class ValidationTests {
 
 		assertThat(truthRecords).hasSizeGreaterThan(10);
 
-		Map<Integer, Set<Integer>> trueDuplicateSets = truthRecords.stream()
-			.filter(r -> r.getDedupid() != null)
-			// .map(PublicationDB::getDedupid)
-			.collect(Collectors.groupingBy(PublicationDB::getDedupid,
-					Collectors.mapping(PublicationDB::getId, Collectors.toSet())));
+		Map<Integer, Set<Integer>> trueDuplicateSets = truthRecords.stream().filter(r -> r.getDedupid() != null)
+				// .map(PublicationDB::getDedupid)
+				.collect(Collectors.groupingBy(PublicationDB::getDedupid,
+						Collectors.mapping(PublicationDB::getId, Collectors.toSet())));
 		assertThat(trueDuplicateSets).hasSizeGreaterThan(10);
 		trueDuplicateSets.entrySet().stream().limit(10).forEach(System.err::println);
 	}
