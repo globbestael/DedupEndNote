@@ -34,17 +34,18 @@ public class BaseTest {
 		return highestSimilarity;
 	}
 
-	protected void setLoggerToDebug(String loggerName) {
+	protected Logger setLoggerToDebug(String loggerName) {
 		LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
 		Logger logger = loggerContext.getLogger(loggerName);
 		logger.setLevel(Level.DEBUG);
 		// log.debug("Logging level set to DEBUG for {}", loggerName);
 		// logger.debug("Logging level set to DEBUG for logger {}", loggerName);
-
+		return logger;
 		/*
 		 * Programmatically change logback configuration:
 		 * - https://stackoverflow.com/questions/16910955/programmatically-configure-logback-appender
 		 * - https://akhikhl.wordpress.com/2013/07/11/programmatic-configuration-of-slf4jlogback/
+		 * - https://www.baeldung.com/junit-asserting-logs
 		 */
 	}
 

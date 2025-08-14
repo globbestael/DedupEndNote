@@ -1,0 +1,82 @@
+package edu.dedupendnote.utils;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
+
+/*
+ * Based on https://www.baeldung.com/junit-asserting-logs
+ */
+public class MemoryAppender extends ListAppender<ILoggingEvent> {
+	public void reset() {
+		this.list.clear();
+	}
+
+	public boolean contains(String string, Level level) {
+		return this.list.stream()
+				.anyMatch(event -> event.toString().contains(string) && event.getLevel().equals(level));
+	}
+
+	public int countEventsForLogger(String loggerName) {
+		return (int) this.list.stream().filter(event -> event.getLoggerName().contains(loggerName)).count();
+	}
+
+	public List<ILoggingEvent> search(String string) {
+		return this.list.stream().filter(event -> event.toString().contains(string)).collect(Collectors.toList());
+	}
+
+	public List<ILoggingEvent> search(String string, Level level) {
+		return this.list.stream().filter(event -> event.toString().contains(string) && event.getLevel().equals(level))
+				.collect(Collectors.toList());
+	}
+
+	public int getSize() {
+		return this.list.size();
+	}
+
+	public List<ILoggingEvent> getLoggedEvents() {
+		return Collections.unmodifiableList(this.list);
+	}
+
+	public boolean containsPattern(Pattern pattern, Level level) {
+		return this.list.stream().filter(event -> event.getLevel().equals(level))
+				.anyMatch(event -> pattern.matcher(event.getFormattedMessage()).matches());
+	}
+
+	public boolean containsPatterns(List<Pattern> patternList, Level level) {
+		return patternList.stream().allMatch(pattern -> containsPattern(pattern, level));
+	}
+
+	public String showMessages() {
+		return this.list.stream().map(event -> event.getFormattedMessage()).collect(Collectors.joining(" \n- "));
+	}
+
+	public List<String> filterByPattern(Pattern pattern, Level level) {
+		List<String> results = new ArrayList<>();
+		for (ILoggingEvent e : this.list) {
+			if (e.getLevel().equals(level)) {
+				String message = e.getFormattedMessage();
+				if (pattern.matcher(message).matches()) {
+					// System.err.println("Found a message: " + message);
+					results.add(message);
+				}
+			}
+		}
+		return results;
+		// return this.list.stream().filter(event -> event.getLevel().equals(level))
+		// .filter(event -> pattern.matcher(event.getFormattedMessage()).matches())
+		// .map(event -> event.getFormattedMessage()).toList();
+	}
+
+	public List<String> filterByPatterns(List<Pattern> patternList, Level level) {
+		return patternList.stream().map(pattern -> filterByPattern(pattern, level)).flatMap(list -> list.stream())
+				.toList();
+	}
+
+}

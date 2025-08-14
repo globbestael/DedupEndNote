@@ -430,11 +430,13 @@ public class DeduplicationService {
 					if (r.isReply()) {
 						publication.setReply(true);
 					}
-					log.atDebug().setMessage("{} - {} ARE DUPLICATES").addArgument(publication.getId())
-							.addArgument(r.getId()).log();
+					if (log.isDebugEnabled()) {
+						log.debug("{} - {} ARE DUPLICATES", publication.getId(), r.getId());
+					}
 				} else {
 					if (log.isDebugEnabled()) {
-						log.debug("PUBLICATIONS ARE NOT THE SAME:\n"
+						log.debug("{} - {} ARE NOT DUPLICATES", publication.getId(), r.getId());
+						log.debug("Comparisons:\n"
 								+ publication.getLogLines().stream().collect(Collectors.joining("\n- ")));
 					}
 				}
