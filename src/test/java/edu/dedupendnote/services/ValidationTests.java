@@ -109,7 +109,8 @@ class ValidationTests {
 		// @formatter:off
 		Map<String, ValidationResult> resultsMap = List
 				.of(
-					checkResults_ASySD_Cardiac_human(),				// checkResults_ASySD_Depression(), 
+					checkResults_ASySD_Cardiac_human(),
+					checkResults_ASySD_Depression(), 
 					checkResults_ASySD_Diabetes(),
 					checkResults_ASySD_Neuroimaging(), 
 					checkResults_ASySD_SRSR_Human(), 

@@ -24,10 +24,10 @@ import org.springframework.boot.test.context.TestConfiguration;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
-import edu.dedupendnote.controllers.DedupEndNoteController;
 import edu.dedupendnote.domain.Publication;
 import edu.dedupendnote.services.DeduplicationService;
 import edu.dedupendnote.services.IOService;
+import edu.dedupendnote.services.UtilitiesService;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -65,8 +65,7 @@ class DedupEndNoteApplicationTests {
 				BufferedReader bufferedReader = new BufferedReader(stringReader)) {
 			Stream<String> lines = bufferedReader.lines();
 			assertThat(lines.count()).as("LINE SEPARATOR is not an end of line character").isEqualTo(1);
-		}
-		catch (IOException e) {
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
 
@@ -87,7 +86,7 @@ class DedupEndNoteApplicationTests {
 	void deduplicate_OK() {
 		String inputFileName = testdir + "t1.txt";
 		boolean markMode = false;
-		String outputFileName = DedupEndNoteController.createOutputFileName(inputFileName, markMode);
+		String outputFileName = UtilitiesService.createOutputFileName(inputFileName, markMode);
 
 		String resultString = deduplicationService.deduplicateOneFile(inputFileName, outputFileName, markMode,
 				wssessionId);
@@ -97,36 +96,33 @@ class DedupEndNoteApplicationTests {
 		// has written 1 records.");
 	}
 
-	
-	  @ParameterizedTest
-	    @CsvSource({
-	        "'test805.txt', 805, 644",
-	        // "'DedupEndNote_portal_vein_thrombosis_37741.txt', 37741, 24382",	// Very slow test
-	        "'Non_Latin_input.txt', 2, 2",
-	        "'Dedup_PATIJ2_Possibly_missed.txt', 18, 12"
-	    })
-	  void deduplicateSmallFiles(String fileName, int total, int totalWritten) {
-			String inputFileName = testdir + fileName;
-			boolean markMode = false;
-			String outputFileName = DedupEndNoteController.createOutputFileName(inputFileName, markMode);
-			assertThat(new File(inputFileName)).exists();
+	@ParameterizedTest
+	@CsvSource({ "'test805.txt', 805, 644",
+			// "'DedupEndNote_portal_vein_thrombosis_37741.txt', 37741, 24382", // Very slow test
+			"'Non_Latin_input.txt', 2, 2", "'Dedup_PATIJ2_Possibly_missed.txt', 18, 12" })
+	void deduplicateSmallFiles(String fileName, int total, int totalWritten) {
+		String inputFileName = testdir + fileName;
+		boolean markMode = false;
+		String outputFileName = UtilitiesService.createOutputFileName(inputFileName, markMode);
+		assertThat(new File(inputFileName)).exists();
 
-			String resultString = deduplicationService.deduplicateOneFile(inputFileName, outputFileName, markMode, wssessionId);
+		String resultString = deduplicationService.deduplicateOneFile(inputFileName, outputFileName, markMode,
+				wssessionId);
 
-			assertThat(resultString).isEqualTo(deduplicationService.formatResultString(total, totalWritten));
-	  }
+		assertThat(resultString).isEqualTo(deduplicationService.formatResultString(total, totalWritten));
+	}
 
 	@Test
 	void deduplicate_withDuplicateIDs() {
 		String inputFileName = testdir + "Bestand_met_duplicate_IDs.txt";
 		boolean markMode = false;
-		String outputFileName = DedupEndNoteController.createOutputFileName(inputFileName, markMode);
+		String outputFileName = UtilitiesService.createOutputFileName(inputFileName, markMode);
 
 		String resultString = deduplicationService.deduplicateOneFile(inputFileName, outputFileName, markMode,
 				wssessionId);
 
 		assertThat(resultString)
-			.startsWith("ERROR: The IDs of the records of input file " + inputFileName + " are not unique");
+				.startsWith("ERROR: The IDs of the records of input file " + inputFileName + " are not unique");
 	}
 
 	@Test
@@ -164,7 +160,6 @@ class DedupEndNoteApplicationTests {
 
 		assertThat(issns).hasSize(1).containsAll(Set.of("00014079"));
 	}
-
 
 	@Test
 	void addIssns_nonvalid() {
@@ -204,7 +199,7 @@ class DedupEndNoteApplicationTests {
 	void checkReply() {
 		Pattern replyPattern = Pattern.compile("(.*\\breply\\b.*|.*author(.+)respon.*|^response$)");
 		Stream<String> titles = Stream
-			.of("Could TIPS be Applied in All Kinds of Portal Vein Thrombosis: We are not Sure! Reply", "Reply");
+				.of("Could TIPS be Applied in All Kinds of Portal Vein Thrombosis: We are not Sure! Reply", "Reply");
 
 		titles.forEach(t -> assertThat(replyPattern.matcher(t.toLowerCase()).matches()).isTrue());
 	}
@@ -215,22 +210,22 @@ class DedupEndNoteApplicationTests {
 	public static <T> T coalesce(T... values) {
 		return Arrays.stream(values).filter(Objects::nonNull).findFirst().orElse(null);
 	}
-	
+
 	@Test
 	void checkCoalesce() {
-		// FIXME: make assertions comparing with Apache Commons lang3: ObjectUtils::firstNonNull 
+		// FIXME: make assertions comparing with Apache Commons lang3: ObjectUtils::firstNonNull
 		assertThat(DedupEndNoteApplicationTests.coalesce((Object) null)).isNull();
 		assertThat(DedupEndNoteApplicationTests.coalesce((String) null, "One", (String) null)).isEqualTo("One");
-		
-		String[] arrayNulls = { null,  null };
+
+		String[] arrayNulls = { null, null };
 		assertThat(DedupEndNoteApplicationTests.coalesce(arrayNulls, "One")).isEqualTo(arrayNulls);
 
-		String[] arrayNullNonNull = { null,  "A" };
+		String[] arrayNullNonNull = { null, "A" };
 		assertThat(DedupEndNoteApplicationTests.coalesce(arrayNullNonNull, "One")).isEqualTo(arrayNullNonNull);
 
-		String[] arrayNonNull = { null,  "A" };
+		String[] arrayNonNull = { null, "A" };
 		assertThat(DedupEndNoteApplicationTests.coalesce(arrayNonNull, "One")).isEqualTo(arrayNonNull);
-		
+
 		fail("laatste 3 resultaten voor coalesce zijn NIET ok");
 	}
 }

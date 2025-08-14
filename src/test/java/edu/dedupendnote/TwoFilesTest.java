@@ -6,8 +6,8 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.TestConfiguration;
 
-import edu.dedupendnote.controllers.DedupEndNoteController;
 import edu.dedupendnote.services.DeduplicationService;
+import edu.dedupendnote.services.UtilitiesService;
 
 @TestConfiguration
 class TwoFilesTest {
@@ -25,13 +25,13 @@ class TwoFilesTest {
 		String oldFileName = testdir + "TwoFiles_1.txt";
 		String newFileName = testdir + "TwoFiles_2.txt";
 		boolean markMode = false;
-		String outputFileName = DedupEndNoteController.createOutputFileName(newFileName, markMode);
+		String outputFileName = UtilitiesService.createOutputFileName(newFileName, markMode);
 
 		String resultString = deduplicationService.deduplicateTwoFiles(newFileName, oldFileName, outputFileName,
 				markMode, wssessionId);
 		System.err.println(resultString);
 		assertThat(resultString)
-			.startsWith("DONE: DedupEndNote removed 552 records from the new set, and has written 113 records.");
+				.startsWith("DONE: DedupEndNote removed 552 records from the new set, and has written 113 records.");
 	}
 
 	@Disabled("TODO: Why was this disabled")
@@ -40,7 +40,7 @@ class TwoFilesTest {
 		String oldFileName = testdir + "Recurrance_rate_EndNote_Library_original_deduplicated.txt";
 		String newFileName = testdir + "Recurrence_rate_search_updated_sept_18_deduplicated.txt";
 		boolean markMode = false;
-		String outputFileName = DedupEndNoteController.createOutputFileName(newFileName, markMode);
+		String outputFileName = UtilitiesService.createOutputFileName(newFileName, markMode);
 
 		String resultString = deduplicationService.deduplicateTwoFiles(newFileName, oldFileName, outputFileName,
 				markMode, wssessionId);

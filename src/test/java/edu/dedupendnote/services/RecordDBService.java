@@ -55,8 +55,7 @@ public class RecordDBService {
 			for (PublicationDB r : publicationDBs) {
 				writeRecordForDB(r, bw);
 			}
-		}
-		catch (IOException e) {
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
 		log.debug("Finished writing {} records to file {}", publicationDBs.size(), outputFileName);
@@ -64,11 +63,10 @@ public class RecordDBService {
 	}
 
 	public List<PublicationDB> convertToRecordDB(List<Publication> publications, String inputFileName) {
-		boolean hasBom = utilities.detectBom(inputFileName);
+		boolean hasBom = UtilitiesService.detectBom(inputFileName);
 
-		Map<String, Publication> recordIdMap = publications.stream()
-			.filter(r -> !r.getId().startsWith("-"))
-			.collect(Collectors.toMap(Publication::getId, Function.identity()));
+		Map<String, Publication> recordIdMap = publications.stream().filter(r -> !r.getId().startsWith("-"))
+				.collect(Collectors.toMap(Publication::getId, Function.identity()));
 
 		List<PublicationDB> publicationDBs = new ArrayList<>();
 		String fieldContent = null;
@@ -88,64 +86,63 @@ public class RecordDBService {
 					fieldName = matcher.group(1);
 					fieldContent = matcher.group(3);
 					switch (fieldName) {
-						case "AU":
-							publicationDB.getAuthorsList().add(fieldContent);
-							break;
-						case "C7":
-							publicationDB.setArticleNumber(fieldContent);
-							break;
-						case "DO":
-							publicationDB.getDoisList().add(fieldContent);
-							break;
-						case "DP":
-							publicationDB.setDatabase(fieldContent);
-							break;
-						case "ER":
-							publication = recordIdMap.get(String.valueOf(publicationDB.getId()));
-							if (publication != null) {
-								if (publication.getLabel() != null) {
-									publicationDB.setDedupid(Integer.valueOf(publication.getLabel()));
-								}
-								publicationDBs.add(publicationDB);
+					case "AU":
+						publicationDB.getAuthorsList().add(fieldContent);
+						break;
+					case "C7":
+						publicationDB.setArticleNumber(fieldContent);
+						break;
+					case "DO":
+						publicationDB.getDoisList().add(fieldContent);
+						break;
+					case "DP":
+						publicationDB.setDatabase(fieldContent);
+						break;
+					case "ER":
+						publication = recordIdMap.get(String.valueOf(publicationDB.getId()));
+						if (publication != null) {
+							if (publication.getLabel() != null) {
+								publicationDB.setDedupid(Integer.valueOf(publication.getLabel()));
 							}
-							publicationDB = new PublicationDB();
-							break;
-						case "ID": // EndNote Publication number
-							publicationDB.setId(Integer.valueOf(fieldContent));
-							break;
-						case "IS":
-							publicationDB.setIssue(fieldContent);
-							break;
-						case "PY":
-							publicationDB.setPublYear(Integer.valueOf(fieldContent.trim()));
-							break;
-						case "SP":
-							publicationDB.setPages(fieldContent);
-							break;
-						case "T2": // truncated at 254 characters
-							publicationDB.setTitle2(fieldContent.substring(0, Math.min(fieldContent.length(), 254)));
-							break;
-						case "TI":
-							publicationDB
+							publicationDBs.add(publicationDB);
+						}
+						publicationDB = new PublicationDB();
+						break;
+					case "ID": // EndNote Publication number
+						publicationDB.setId(Integer.valueOf(fieldContent));
+						break;
+					case "IS":
+						publicationDB.setIssue(fieldContent);
+						break;
+					case "PY":
+						publicationDB.setPublYear(Integer.valueOf(fieldContent.trim()));
+						break;
+					case "SP":
+						publicationDB.setPages(fieldContent);
+						break;
+					case "T2": // truncated at 254 characters
+						publicationDB.setTitle2(fieldContent.substring(0, Math.min(fieldContent.length(), 254)));
+						break;
+					case "TI":
+						publicationDB
 								.setTitleTruncated(fieldContent.substring(0, Math.min(fieldContent.length(), 254)));
-							publicationDB.setTitle(fieldContent);
-							break;
-						case "TY":
-							publicationDB.setPublType(fieldContent);
-							break;
-						case "VL":
-							publicationDB.setVolume(fieldContent);
-							break;
-						default:
-							// previousFieldName = fieldName;
-							break;
+						publicationDB.setTitle(fieldContent);
+						break;
+					case "TY":
+						publicationDB.setPublType(fieldContent);
+						break;
+					case "VL":
+						publicationDB.setVolume(fieldContent);
+						break;
+					default:
+						// previousFieldName = fieldName;
+						break;
 					}
 				} else { // continuation line
 					;
 				}
 			}
-		}
-		catch (IOException e) {
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
 

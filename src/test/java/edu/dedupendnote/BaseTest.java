@@ -6,8 +6,15 @@ import java.util.List;
 
 import org.apache.commons.text.similarity.JaroWinklerSimilarity;
 import org.junit.jupiter.api.Test;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.test.context.TestConfiguration;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.LoggerContext;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @TestConfiguration
 public class BaseTest {
 
@@ -27,13 +34,18 @@ public class BaseTest {
 		return highestSimilarity;
 	}
 
-	@Test
-	void fillerBaseTest() {
-		assertThat(1*1).isEqualTo(1);
+	protected void setLoggerToDebug(String loggerName) {
+		LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
+		Logger logger = loggerContext.getLogger(loggerName);
+		logger.setLevel(Level.DEBUG);
+		// log.debug("Logging level set to DEBUG for {}", loggerName);
+		// logger.debug("Logging level set to DEBUG for logger {}", loggerName);
+
+		/*
+		 * Programmatically change logback configuration:
+		 * - https://stackoverflow.com/questions/16910955/programmatically-configure-logback-appender
+		 * - https://akhikhl.wordpress.com/2013/07/11/programmatic-configuration-of-slf4jlogback/
+		 */
 	}
-	
-	@Test
-	void testReplace() {
-		assertThat("abababa".replace("a", "b")).isEqualTo("bbbbbbb");
-	}
+
 }

@@ -5,6 +5,7 @@ import java.io.FileReader;
 import java.io.IOException;
 
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 @Service
 public class UtilitiesService {
@@ -20,7 +21,7 @@ public class UtilitiesService {
 	 * See also:
 	 * https://mkyong.com/java/java-how-to-add-and-remove-bom-from-utf-8-file/
 	 */
-	public boolean detectBom(String inputFileName) {
+	public static boolean detectBom(String inputFileName) {
 		boolean hasBom = false;
 		try (BufferedReader br = new BufferedReader(new FileReader(inputFileName))) {
 			String line = br.readLine();
@@ -29,5 +30,11 @@ public class UtilitiesService {
 			e.printStackTrace();
 		}
 		return hasBom;
+	}
+
+	public static String createOutputFileName(String fileName, Boolean markMode) {
+		String extension = StringUtils.getFilenameExtension(fileName);
+		return fileName.replaceAll("." + extension + "$",
+				(Boolean.TRUE.equals(markMode) ? "_mark." : "_deduplicated.") + extension);
 	}
 }

@@ -16,13 +16,13 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
-import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
 import edu.dedupendnote.services.DeduplicationService;
+import edu.dedupendnote.services.UtilitiesService;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import lombok.extern.slf4j.Slf4j;
@@ -39,7 +39,7 @@ public class DedupEndNoteController {
 	public DedupEndNoteController(SimpMessagingTemplate simpMessagingTemplate) {
 		this.simpMessagingTemplate = simpMessagingTemplate;
 	}
-	
+
 	// @formatter:off
 	/*
 	 * Communication between client / browser uses different techniques
@@ -68,16 +68,10 @@ public class DedupEndNoteController {
 	 */
 	// @formatter:on
 
-	public static String createOutputFileName(String fileName, Boolean markMode) {
-		String extension = StringUtils.getFilenameExtension(fileName);
-		return fileName.replaceAll("." + extension + "$",
-				(Boolean.TRUE.equals(markMode) ? "_mark." : "_deduplicated.") + extension);
-	}
-
 	@PostMapping(value = "/getResultFile", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
 	public void getResultFile(@RequestParam("fileNameResultFile") String fileName,
 			@RequestParam("markModeResultFile") boolean markMode, HttpServletResponse response) {
-		String outputFileName = createOutputFileName(fileName, markMode);
+		String outputFileName = UtilitiesService.createOutputFileName(fileName, markMode);
 
 		Path path = Path.of(uploadDir, outputFileName);
 		response.setContentType("text/plain");
@@ -102,38 +96,35 @@ public class DedupEndNoteController {
 
 	@PostMapping(value = "/startOneFile", produces = "application/json")
 	public ResponseEntity<String> startOneFile(@RequestParam("fileName_1") String inputFileName,
-			@RequestParam(required = false, defaultValue = "false") Boolean markMode,
-			@RequestParam String wssessionId) throws Exception {
-		String outputFileName = createOutputFileName(inputFileName, markMode);
+			@RequestParam(required = false, defaultValue = "false") Boolean markMode, @RequestParam String wssessionId)
+			throws Exception {
+		String outputFileName = UtilitiesService.createOutputFileName(inputFileName, markMode);
 		String logPrefix = "1F" + (Boolean.TRUE.equals(markMode) ? "M" : "D");
 		DeduplicationService deduplicationService = new DeduplicationService(simpMessagingTemplate);
 
 		try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
-			Future<String> future = executor.submit(() -> 
-				deduplicationService.deduplicateOneFile(
-						uploadDir + File.separator + inputFileName, uploadDir + File.separator + outputFileName, markMode,
-						wssessionId)
-			);
+			Future<String> future = executor
+					.submit(() -> deduplicationService.deduplicateOneFile(uploadDir + File.separator + inputFileName,
+							uploadDir + File.separator + outputFileName, markMode, wssessionId));
 			log.info("Writing to result: {}: {}", logPrefix, future.get());
 			return ResponseEntity.ok("{ \"result\": " + future.get());
 		}
 	}
 
 	@PostMapping(value = "/startTwoFiles", produces = "application/json")
-	public ResponseEntity<String> startTwoFiles(@RequestParam String oldFile,
-			@RequestParam String newFile,
-			@RequestParam(required = false, defaultValue = "false") Boolean markMode,
-			@RequestParam String wssessionId) throws InterruptedException, ExecutionException {
+	public ResponseEntity<String> startTwoFiles(@RequestParam String oldFile, @RequestParam String newFile,
+			@RequestParam(required = false, defaultValue = "false") Boolean markMode, @RequestParam String wssessionId)
+			throws InterruptedException, ExecutionException {
 
 		String logPrefix = "2F" + (Boolean.TRUE.equals(markMode) ? "M" : "D");
 		DeduplicationService deduplicationService = new DeduplicationService(simpMessagingTemplate);
-		
+
 		try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
-			Future<String> future = executor.submit(() -> 
-				deduplicationService.deduplicateTwoFiles(
-					uploadDir + File.separator + newFile, uploadDir + File.separator + oldFile,
-					uploadDir + File.separator + createOutputFileName(newFile, markMode), markMode, wssessionId)
-				);
+			Future<String> future = executor
+					.submit(() -> deduplicationService.deduplicateTwoFiles(uploadDir + File.separator + newFile,
+							uploadDir + File.separator + oldFile,
+							uploadDir + File.separator + UtilitiesService.createOutputFileName(newFile, markMode),
+							markMode, wssessionId));
 			log.info("Writing to result: {}: {}", logPrefix, future.get());
 			return ResponseEntity.ok("{ \"result\": " + future.get());
 		}
@@ -162,16 +153,17 @@ public class DedupEndNoteController {
 			}
 			try (InputStream inputStream = file.getInputStream()) {
 				Files.copy(inputStream, path);
-				return ResponseEntity.ok("{ \"result\": \"You successfully uploaded " + file.getOriginalFilename() + "\"}");
+				return ResponseEntity
+						.ok("{ \"result\": \"You successfully uploaded " + file.getOriginalFilename() + "\"}");
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
 					"{ \"result\": \"Failed to upload " + file.getOriginalFilename() + " => " + e.getClass() + "\"}");
 		} catch (RuntimeException e) {
-			log.error( "RuntimeException met cause: {}", e.getCause());
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
-					"{ \"result\": \"RuntimeException with cause " + e.getCause() + "\"}");
+			log.error("RuntimeException met cause: {}", e.getCause());
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+					.body("{ \"result\": \"RuntimeException with cause " + e.getCause() + "\"}");
 		}
 	}
 }

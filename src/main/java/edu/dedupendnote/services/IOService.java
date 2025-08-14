@@ -24,8 +24,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Service
 public class IOService {
-	private UtilitiesService utilities = new UtilitiesService();
-
 	/*
 	 * Patterns
 	 */
@@ -71,7 +69,7 @@ public class IOService {
 		String previousFieldName = "XYZ";
 		Publication publication = new Publication();
 
-		boolean hasBom = utilities.detectBom(inputFileName);
+		boolean hasBom = UtilitiesService.detectBom(inputFileName);
 		int missingId = 1;
 
 		// Line starting with "TY - " triggers creation of record, line starting with
@@ -264,7 +262,7 @@ public class IOService {
 		String previousFieldName = "XYZ";
 		Map<String, String> map = new TreeMap<>();
 
-		boolean hasBom = utilities.detectBom(inputFileName);
+		boolean hasBom = UtilitiesService.detectBom(inputFileName);
 
 		try (BufferedWriter bw = new BufferedWriter(new FileWriter(outputFileName));
 				BufferedReader br = new BufferedReader(new FileReader(inputFileName))) {
@@ -340,7 +338,7 @@ public class IOService {
 		String previousFieldName = "XYZ";
 		Map<String, String> map = new TreeMap<>();
 
-		boolean hasBom = utilities.detectBom(inputFileName);
+		boolean hasBom = UtilitiesService.detectBom(inputFileName);
 
 		try (BufferedWriter bw = new BufferedWriter(new FileWriter(outputFileName));
 				BufferedReader br = new BufferedReader(new FileReader(inputFileName))) {
@@ -484,7 +482,7 @@ public class IOService {
 		Map<Integer, PublicationDB> truthMap = truthRecords.stream()
 				.collect(Collectors.toMap(PublicationDB::getId, Function.identity()));
 
-		boolean hasBom = utilities.detectBom(inputFileName);
+		boolean hasBom = UtilitiesService.detectBom(inputFileName);
 
 		try (BufferedWriter bw = new BufferedWriter(new FileWriter(outputFileName));
 				BufferedReader br = new BufferedReader(new FileReader(inputFileName))) {
@@ -554,7 +552,7 @@ public class IOService {
 		Map<Integer, PublicationDB> truthMap = truthRecords.stream()
 				.collect(Collectors.toMap(PublicationDB::getId, Function.identity()));
 
-		boolean hasBom = utilities.detectBom(inputFileName);
+		boolean hasBom = UtilitiesService.detectBom(inputFileName);
 
 		try (BufferedWriter bw = new BufferedWriter(new FileWriter(outputFileName));
 				BufferedReader br = new BufferedReader(new FileReader(inputFileName))) {
