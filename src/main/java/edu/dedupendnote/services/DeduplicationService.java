@@ -58,7 +58,7 @@ public class DeduplicationService {
 				if (isReply || (!sufficientStartPages && !sufficientDois)) {
 					return false;
 				}
-				log.debug("- 2. One or both authors are empty");
+				log.trace("- 2. One or both authors are empty");
 				return true;
 			}
 
@@ -76,12 +76,12 @@ public class DeduplicationService {
 							return true;
 						}
 					} else if (similarity > AUTHOR_SIMILARITY_NO_REPLY) {
-						log.debug("- 2. Author similarity is above threshold");
+						log.trace("- 2. Author similarity is above threshold");
 						return true;
 					}
 				}
 			}
-			log.debug("- 2. Author similarity is below threshold");
+			log.trace("- 2. Author similarity is below threshold");
 			return false;
 		}
 
@@ -189,10 +189,10 @@ public class DeduplicationService {
 
 	public boolean compareIssns(Publication r1, Publication r2) {
 		if (setsContainSameString(r1.getIssns(), r2.getIssns())) {
-			log.debug("- 4. ISSNs are the same");
+			log.trace("- 4. ISSNs are the same");
 			return true;
 		} else {
-			log.debug("- 4. ISSNs are NOT the same");
+			log.trace("- 4. ISSNs are NOT the same");
 			return false;
 		}
 	}
@@ -214,14 +214,14 @@ public class DeduplicationService {
 		boolean isReply = r1.isReply() || r2.isReply();
 
 		if (set1.isEmpty() || set2.isEmpty()) {
-			log.debug("- 4. At least 1 of the records has no journal");
+			log.trace("- 4. At least 1 of the records has no journal");
 			return false;
 		}
 
 		Set<String> commonJournals = new HashSet<>(set1);
 		commonJournals.retainAll(set2);
 		if (!commonJournals.isEmpty()) {
-			log.debug("- 4. Some journals are the same");
+			log.trace("- 4. Some journals are the same");
 			return true;
 		}
 
@@ -239,11 +239,11 @@ public class DeduplicationService {
 				// Make comparison stricter for Reply-titles because titles haven't been
 				// compared ("Annals of Hepatology" - "Annals of Oncology": 0.916)
 				if (isReply && similarity > JOURNAL_SIMILARITY_REPLY) {
-					log.debug("- 4. Journal similarity above treshold (reply)");
+					log.trace("- 4. Journal similarity above treshold (reply)");
 					return true;
 				}
 				if (!isReply && similarity > JOURNAL_SIMILARITY_NO_REPLY) {
-					log.debug("- 4. Journal similarity ({}) above treshold (not reply)", similarity);
+					log.trace("- 4. Journal similarity ({}) above treshold (not reply)", similarity);
 					return true;
 				}
 
@@ -255,11 +255,11 @@ public class DeduplicationService {
 				 */
 				// FIXME: the 3 following functions should first compare s1 - s2 and, if false, then s2 - s1
 				if (compareJournals_FirstAsAbbreviation(s1, s2)) {
-					log.debug("- 4. compareJournals_FirstAsAbbreviation(1,2) is true");
+					log.trace("- 4. compareJournals_FirstAsAbbreviation(1,2) is true");
 					return true;
 				}
 				if (compareJournals_FirstAsAbbreviation(s2, s1)) {
-					log.debug("- 4. compareJournals_FirstAsAbbreviation(2,2) is true");
+					log.trace("- 4. compareJournals_FirstAsAbbreviation(2,2) is true");
 					return true;
 				}
 				/*
@@ -267,25 +267,25 @@ public class DeduplicationService {
 				 * to short journal names. ASySD SRS_Human has journal names in uppercase
 				 */
 				if (s1.length() < 10 && s1.toUpperCase().equals(s1) && compareJournals_FirstAsInitialism(s1, s2)) {
-					log.debug("- 4. compareJournals_FirstAsInitialism(1,2) is true");
+					log.trace("- 4. compareJournals_FirstAsInitialism(1,2) is true");
 					return true;
 				}
 				if (s2.length() < 10 && s2.toUpperCase().equals(s2) && compareJournals_FirstAsInitialism(s2, s1)) {
-					log.debug("- 4. compareJournals_FirstAsInitialism(2,1) is true");
+					log.trace("- 4. compareJournals_FirstAsInitialism(2,1) is true");
 					return true;
 				}
 
 				if (compareJournals_FirstWithStartingInitialism(s1, s2)) {
-					log.debug("- 4. compareJournals_FirstWithStartingInitialism(1,2) is true");
+					log.trace("- 4. compareJournals_FirstWithStartingInitialism(1,2) is true");
 					return true;
 				}
 				if (compareJournals_FirstWithStartingInitialism(s2, s1)) {
-					log.debug("- 4. compareJournals_FirstWithStartingInitialism(2,1) is true");
+					log.trace("- 4. compareJournals_FirstWithStartingInitialism(2,1) is true");
 					return true;
 				}
 			}
 		}
-		log.debug("- 4. Journals are NOT the same");
+		log.trace("- 4. Journals are NOT the same");
 		return false;
 	}
 
@@ -368,8 +368,8 @@ public class DeduplicationService {
 				map.put("sameDois", false);
 				// log.atDebug().setMessage("Clear results previous comparison {}")
 				// .addArgument(() -> publication.getLogLines().removeAll(publication.getLogLines())).log();
-				if (log.isDebugEnabled()) {
-					log.debug("\nStarting comparison {} - {}", publication.getId(), r.getId());
+				if (log.isTraceEnabled()) {
+					log.trace("\nStarting comparison {} - {}", publication.getId(), r.getId());
 				}
 				if (compareStartPageOrDoi(r, publication, map) && authorsComparator.compare(r, publication)
 						&& compareTitles(r, publication)
@@ -412,13 +412,13 @@ public class DeduplicationService {
 					if (r.isReply()) {
 						publication.setReply(true);
 					}
-					if (log.isDebugEnabled()) {
-						log.debug("{} - {} ARE DUPLICATES", publication.getId(), r.getId());
+					if (log.isTraceEnabled()) {
+						log.trace("{} - {} ARE DUPLICATES", publication.getId(), r.getId());
 					}
 				} else {
-					if (log.isDebugEnabled()) {
-						log.debug("{} - {} ARE NOT DUPLICATES", publication.getId(), r.getId());
-						// log.debug("Comparisons:\n"
+					if (log.isTraceEnabled()) {
+						log.trace("{} - {} ARE NOT DUPLICATES", publication.getId(), r.getId());
+						// log.trace("Comparisons:\n"
 						// + publication.getLogLines().stream().collect(Collectors.joining("\n- ")));
 					}
 				}
@@ -447,22 +447,22 @@ public class DeduplicationService {
 			if (r1.getPublicationYear().equals(r2.getPublicationYear())) {
 				if (sufficientDois) {
 					if (setsContainSameString(dois1, dois2)) {
-						log.debug("- 1. DOIs are the same");
+						log.trace("- 1. DOIs are the same");
 						return true;
 					} else {
-						log.debug("- 1. DOIs are NOT the same");
+						log.trace("- 1. DOIs are NOT the same");
 						return false;
 					}
 				} else if (sufficientStartPages && r1.getPageForComparison().equals(r2.getPageForComparison())) {
-					log.debug("- 1. Starting pages are the same");
+					log.trace("- 1. Starting pages are the same");
 					return true;
 				}
 			}
-			log.debug("- 1. NOT the same startPage or DOI for Cochrane");
+			log.trace("- 1. NOT the same startPage or DOI for Cochrane");
 			return false;
 		}
 		if (!sufficientStartPages && !sufficientDois) {
-			log.debug("- 1. At least one starting page AND at least one DOI are missing, therefore Same");
+			log.trace("- 1. At least one starting page AND at least one DOI are missing, therefore Same");
 			return true; // no useful comparison possible
 		}
 
@@ -470,14 +470,14 @@ public class DeduplicationService {
 			map.put("sameDois", true);
 		}
 		if (sufficientStartPages && r1.getPageForComparison().equals(r2.getPageForComparison())) {
-			log.debug("- 1. Starting pages are the same");
+			log.trace("- 1. Starting pages are the same");
 			return true;
 		} else if (!sufficientStartPages && sufficientDois && setsContainSameString(dois1, dois2)) {
-			log.debug("- 1. DOIs are the same");
+			log.trace("- 1. DOIs are the same");
 			return true;
 		}
 
-		log.debug("- 1. Both starting pages and DOIs are NOT the same");
+		log.trace("- 1. Both starting pages and DOIs are NOT the same");
 		return false;
 	}
 
@@ -506,30 +506,30 @@ public class DeduplicationService {
 				if (isPhase) { // return result of comparison of only the first title variant
 					// log.debug("{} and {}:\n- {}\n- {}", r1.getId(), r2.getId(), title1, title2);
 					if (similarity > TITLE_SIMILARITY_PHASE) {
-						log.debug("- 3. Title similarity (for Phase) is above threshold");
+						log.trace("- 3. Title similarity (for Phase) is above threshold");
 						return true;
 					} else {
-						log.debug("- 3. Title similarity (for Phase) is below threshold");
+						log.trace("- 3. Title similarity (for Phase) is below threshold");
 						return false;
 					}
 				}
 				if ((sufficientStartPages || sufficientDois)
 						&& similarity > TITLE_SIMILARITY_SUFFICIENT_STARTPAGES_OR_DOIS) {
-					log.debug("- 3. Title similarity (with pages or DOIs) is above threshold");
+					log.trace("- 3. Title similarity (with pages or DOIs) is above threshold");
 					return true;
 				}
 				if (!(sufficientStartPages || sufficientDois)) {
 					if (similarity > TITLE_SIMILARITY_INSUFFICIENT_STARTPAGES_AND_DOIS) {
-						log.debug("- 3. Title similarity (without sufficient pages or DOIs) is above threshold");
+						log.trace("- 3. Title similarity (without sufficient pages or DOIs) is above threshold");
 						return true;
 					} else {
-						log.debug("- 3. Title similarity (without sufficient pages or DOIs) is below threshold");
+						log.trace("- 3. Title similarity (without sufficient pages or DOIs) is below threshold");
 						return false;
 					}
 				}
 			}
 		}
-		log.debug("- 3. Title similarity is below threshold");
+		log.trace("- 3. Title similarity is below threshold");
 		return false;
 	}
 

@@ -40,7 +40,7 @@ class MissedDuplicatesTests extends BaseTest {
 	@BeforeAll
 	static void setup() {
 		logger = (Logger) LoggerFactory.getLogger("edu.dedupendnote.services.DeduplicationService");
-		logger.setLevel(Level.DEBUG);
+		logger.setLevel(Level.TRACE);
 	}
 
 	/*
@@ -88,8 +88,8 @@ class MissedDuplicatesTests extends BaseTest {
 		// .isGreaterThan(0);
 		// assertThat(memoryAppender.containsPattern(Pattern.compile(".+ (1|2|3|4). .+"), Level.DEBUG)).isTrue();
 
-		System.err.println("Messages: " + memoryAppender.filterByPatterns(patterns, Level.DEBUG));
-		assertThat(memoryAppender.filterByPatterns(patterns, Level.DEBUG).size()).isGreaterThan(0);
+		System.err.println("Messages: " + memoryAppender.filterByPatterns(patterns, Level.TRACE));
+		assertThat(memoryAppender.filterByPatterns(patterns, Level.TRACE).size()).isGreaterThan(0);
 		assertThat(resultString).isEqualTo(deduplicationService.formatResultString(total, totalWritten));
 	}
 
