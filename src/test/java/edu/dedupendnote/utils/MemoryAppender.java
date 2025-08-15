@@ -1,6 +1,5 @@
 package edu.dedupendnote.utils;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -58,20 +57,20 @@ public class MemoryAppender extends ListAppender<ILoggingEvent> {
 	}
 
 	public List<String> filterByPattern(Pattern pattern, Level level) {
-		List<String> results = new ArrayList<>();
-		for (ILoggingEvent e : this.list) {
-			if (e.getLevel().equals(level)) {
-				String message = e.getFormattedMessage();
-				if (pattern.matcher(message).matches()) {
-					// System.err.println("Found a message: " + message);
-					results.add(message);
-				}
-			}
-		}
-		return results;
-		// return this.list.stream().filter(event -> event.getLevel().equals(level))
-		// .filter(event -> pattern.matcher(event.getFormattedMessage()).matches())
-		// .map(event -> event.getFormattedMessage()).toList();
+		// List<String> results = new ArrayList<>();
+		// for (ILoggingEvent e : this.list) {
+		// if (e.getLevel().equals(level)) {
+		// String message = e.getFormattedMessage();
+		// if (pattern.matcher(message).matches()) {
+		// // System.err.println("Found a message: " + message);
+		// results.add(message);
+		// }
+		// }
+		// }
+		// return results;
+		return this.list.stream().filter(event -> event.getLevel().equals(level))
+				.filter(event -> pattern.matcher(event.getFormattedMessage()).matches())
+				.map(event -> event.getFormattedMessage()).toList();
 	}
 
 	public List<String> filterByPatterns(List<Pattern> patternList, Level level) {

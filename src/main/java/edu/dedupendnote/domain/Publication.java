@@ -45,8 +45,6 @@ public class Publication {
 	 */
 	private String label;
 
-	private List<String> logLines = new ArrayList<>();
-
 	private String pageEnd;
 
 	private String pageStart;
@@ -846,11 +844,6 @@ public class Publication {
 		}
 		log.debug("Result for {}: {}", journal, journals);
 		return journals;
-	}
-
-	public String addLogLine(String l) {
-		logLines.addLast(l);
-		return l;
 	}
 
 	public void addTitles(String title) {
