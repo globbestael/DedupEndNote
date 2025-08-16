@@ -117,8 +117,8 @@ public class IOService {
 						publication.addReversedTitles();
 						publication.fillAllAuthors();
 						publications.add(publication);
-						// log.debug("Publication read with id {} and title: {}", publication.getId(),
-						// publication.getTitles().get(0));
+						log.debug("Publication read with id {} and title: {}", publication.getId(),
+								publication.getTitles().get(0));
 						break;
 					case "ID": // EndNote Publication number
 						publication.setId(fieldContent);
@@ -234,7 +234,7 @@ public class IOService {
 			log.error("In field {} with content {}: other exception: {}", fieldName, fieldContent, e.getMessage());
 			e.printStackTrace();
 		}
-		// log.debug("Records read: {}", publications.size());
+		log.debug("Publications read: {}", publications.size());
 		return publications;
 	}
 
