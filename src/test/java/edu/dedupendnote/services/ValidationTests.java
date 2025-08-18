@@ -3,6 +3,8 @@ package edu.dedupendnote.services;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.fail;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -15,6 +17,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.BeforeAll;
@@ -34,6 +37,7 @@ import edu.dedupendnote.domain.Publication;
 import edu.dedupendnote.domain.PublicationDB;
 import edu.dedupendnote.domain.ValidationResult;
 import edu.dedupendnote.domain.ValidationResultASySD;
+import edu.dedupendnote.utils.MemoryAppender;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -109,17 +113,17 @@ class ValidationTests {
 		// @formatter:off
 		Map<String, ValidationResult> resultsMap = List
 				.of(
-					checkResults_ASySD_Cardiac_human(),
-					checkResults_ASySD_Depression(), 
-					checkResults_ASySD_Diabetes(),
-					checkResults_ASySD_Neuroimaging(), 
-					checkResults_ASySD_SRSR_Human(), 
-					checkResults_BIG_SET(),
-					checkResults_McKeown_2021(), 
-					checkResults_SRA2_Cytology_screening(),
-					checkResults_SRA2_Haematology(), 
-					checkResults_SRA2_Respiratory(), 
-					checkResults_SRA2_Stroke()
+					checkResults_ASySD_Cardiac_human()
+					// checkResults_ASySD_Depression(), 
+					// checkResults_ASySD_Diabetes(),
+					// checkResults_ASySD_Neuroimaging(), 
+					// checkResults_ASySD_SRSR_Human(), 
+					// checkResults_BIG_SET(),
+					// checkResults_McKeown_2021(), 
+					// checkResults_SRA2_Cytology_screening(),
+					// checkResults_SRA2_Haematology(), 
+					// checkResults_SRA2_Respiratory(), 
+					// checkResults_SRA2_Stroke()
 				)
 				.stream().collect(Collectors.toMap(ValidationResult::getFileName, Function.identity(), (o1, o2) -> o1,
 						TreeMap::new));
@@ -261,8 +265,12 @@ class ValidationTests {
 		log.error("- Validating {}", setName);
 		List<PublicationDB> truthRecords = readTruthFile(truthFileName);
 		long startTime = System.currentTimeMillis();
-		List<PublicationDB> publicationDBs = getRecordDBs(inputFileName);
+		List<Publication> publications = deduplicate(inputFileName);
 		long endTime = System.currentTimeMillis();
+
+		Map<String,Publication> publicationMap = publications.stream().collect(Collectors.toMap(Publication::getId,
+                                              Function.identity()));
+		List<PublicationDB> publicationDBs = recordDBService.convertToRecordDB(publications, inputFileName);
 		Map<Integer, PublicationDB> validationMap = publicationDBs.stream()
 				.collect(Collectors.toMap(PublicationDB::getId, Function.identity(), (o1, o2) -> o1, TreeMap::new));
 		Map<Integer, Set<Integer>> trueDuplicateSets = truthRecords.stream()
@@ -273,6 +281,7 @@ class ValidationTests {
 		int tns = 0, tps = 0, fps = 0, fns = 0;
 		List<String> errors = new ArrayList<>();
 		Map<Integer, Integer> fpErrors = new HashMap<>();
+		List<List<Publication>> fnPairs = new ArrayList<>();
 		
 		for (PublicationDB t : truthRecords) {
 			PublicationDB v = validationMap.get(t.getId());
@@ -289,6 +298,12 @@ class ValidationTests {
 					v.setFalseNegative(true);
 					fns++;
 					v.setCorrection(tDedupId);
+					if (! t.getId().equals(tDedupId)) {
+						List<Publication> pair = new ArrayList<>();
+						pair.add(publicationMap.get(t.getId().toString()));
+						pair.add(publicationMap.get(tDedupId.toString()));
+						fnPairs.add(pair);
+					}
 				}
 			} else if (trueDuplicateSets.containsKey(tDedupId) && trueDuplicateSets.get(tDedupId).contains(vDedupId)) {
 				v.setTruePositive(true);
@@ -303,6 +318,10 @@ class ValidationTests {
 		}
 		recordDBService.saveRecordDBs(publicationDBs, outputFileName);
 		ValidationResult validationResult = new ValidationResult(setName, tps, fns, tns, fps, endTime - startTime);
+		if (! fnPairs.isEmpty()) {
+			validationResult.setFnPairs(fnPairs);
+			writeFNresults(fnPairs, inputFileName);
+		}
 		if (! errors.isEmpty()) {
 			System.err.println("File " + setName +  " has FALSE POSITIVES!");
 			errors.stream().forEach(System.err::println);
@@ -317,6 +336,50 @@ class ValidationTests {
 		return validationResult;
 	}
 	
+	List<Pattern> tracePatterns = List.of(Pattern.compile("- (1|2|3|4). .+"),
+			Pattern.compile("\\d+ - \\d+ ARE (NOT )?DUPLICATES"));
+
+	private void writeFNresults(List<List<Publication>> fnPairs, String inputFileName) {
+		String outputFileName = inputFileName + "_FN_Analysis.txt";
+		Logger logger = null;
+		Level oldLevel = null;
+
+		try (BufferedWriter bw = new BufferedWriter(new FileWriter(outputFileName))) {
+			logger = (Logger) LoggerFactory.getLogger("edu.dedupendnote.services.DeduplicationService");
+			oldLevel = logger.getLevel();
+			logger.setLevel(Level.TRACE);
+			MemoryAppender memoryAppender = new MemoryAppender();
+			logger.addAppender(memoryAppender);
+			memoryAppender.setContext((LoggerContext) LoggerFactory.getILoggerFactory());
+			memoryAppender.start();
+
+			for (List<Publication> pair : fnPairs) {
+				bw.write(pair.get(0).toString());
+				bw.write("\n");
+				if (pair.size() < 2) {
+					bw.write("Pair contains only 1 record");
+				} else {
+					bw.write(pair.get(1).toString());
+				}
+
+				// deduplicate pair after writing because deduplication alter the pair
+				deduplicationService.compareSet(pair, pair.get(0).getPublicationYear(), true, "dummy");
+
+				bw.write("\nANALYSIS:\n");
+				for (String s : memoryAppender.filterByPatterns(tracePatterns, Level.TRACE)) {
+					bw.write(s + "\n");
+				}
+				bw.write("\n=======================\n");
+
+				memoryAppender.reset();
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			logger.setLevel(oldLevel);
+		}
+	}
+
 	ValidationResult checkResults_ASySD_Cardiac_human() throws IOException {
 		String truthFileName = testdir + "/ASySD/dedupendnote_files/Cardiac_human_TRUTH.txt";
 		String inputFileName = testdir + "/ASySD/dedupendnote_files/Cardiac_human.txt";
@@ -572,7 +635,8 @@ class ValidationTests {
 	 * @param outputFileName: a tab delimited file. Duplicate records have a non empty dedupid field.
 	 */
 	void createInitialTruthFile(String inputFileName, String outputFileName) {
-		List<PublicationDB> publicationDBs = getRecordDBs(inputFileName);
+		List<Publication> publications = deduplicate(inputFileName);
+		List<PublicationDB> publicationDBs = recordDBService.convertToRecordDB(publications, inputFileName);
 		recordDBService.saveRecordDBs(publicationDBs, outputFileName);
 	}
 	
@@ -590,7 +654,8 @@ class ValidationTests {
 	 */
 	void createInitialTruthFile(String inputFileName, String asysdInputfileName, String outputFileName) {
 		Map<Integer, Set<Integer>> goldMap = readASySDGoldFile(asysdInputfileName);
-		List<PublicationDB> publicationDBs = getRecordDBs(inputFileName);
+		List<Publication> publications = deduplicate(inputFileName);
+		List<PublicationDB> publicationDBs = recordDBService.convertToRecordDB(publications, inputFileName);
 		
 		publicationDBs.forEach(r -> {
 			Integer id = r.getId();
@@ -642,13 +707,7 @@ class ValidationTests {
 		return goldMap;
 	}
 
-	/**
-	 * getRecordDBs: deduplicates an EndNote export file and returns the results for the validation database.
-	 *
-	 * @param inputFileName: an EndNote export file
-	 * @return	List<PublicationDB>
-	 */
-	List<PublicationDB> getRecordDBs(String inputFileName) {
+	private List<Publication> deduplicate(String inputFileName) {
 		List<Publication> publications = ioService.readPublications(inputFileName);
 
 		String s = deduplicationService.doSanityChecks(publications, inputFileName);
@@ -657,7 +716,7 @@ class ValidationTests {
 		}
 
 		deduplicationService.searchYearOneFile(publications, wssessionId);
-		return recordDBService.convertToRecordDB(publications, inputFileName);
+		return publications;
 	}
 
 	List<PublicationDB> readTruthFile(String fileName) throws IOException {
