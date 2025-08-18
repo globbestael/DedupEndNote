@@ -492,7 +492,7 @@ public class DeduplicationService {
 			return true;
 		} else {
 			log.trace("- 1. DOIs are NOT the same");
-			return true;
+			return false;
 		}
 		// }
 		// if (sufficientStartPages && r1.getPageForComparison().equals(r2.getPageForComparison())) {
