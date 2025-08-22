@@ -9,6 +9,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import org.apache.commons.text.similarity.JaroWinklerSimilarity;
+import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -31,8 +32,14 @@ class JaroWinklerTitleTest {
 		Double distance = jws.apply(Publication.normalizeJava8(input1), Publication.normalizeJava8(input2));
 		System.err.println("- 1: %s\n- 2: %s\n- 3: %s\n- 4: %s\n".formatted(input1, Publication.normalizeJava8(input1),
 				input2, Publication.normalizeJava8(input2)));
-		assertThat(distance).as("\nTitle1: %s\nTitle2: %s", input1, input2).isEqualTo(expected, within(0.01))
+
+		SoftAssertions softAssertions = new SoftAssertions();
+		softAssertions.assertThat(distance).as("\nTitle1: %s\nTitle2: %s", input1, input2).isEqualTo(expected,
+				within(0.01));
+		softAssertions.assertThat(distance)
+				.as("\nTitle1: %s\nTitle2: %s\nGreaterThanOrEqualTo threshold", input1, input2)
 				.isGreaterThanOrEqualTo(DeduplicationService.TITLE_SIMILARITY_SUFFICIENT_STARTPAGES_OR_DOIS);
+		softAssertions.assertAll();
 	}
 
 	@ParameterizedTest(name = "{index}: jaroWinkler({0}, {1})={2}")
@@ -54,10 +61,17 @@ class JaroWinklerTitleTest {
 			}
 		}
 
-		assertThat(highestDistance).as("\nTitle1: %s\nTitle2: %s", p1.getTitles().get(0), p2.getTitles().get(0))
-				.isEqualTo(highestDistance, within(0.01))
-				// .isGreaterThanOrEqualTo(DeduplicationService.TITLE_SIMILARITY_PHASE);
+		SoftAssertions softAssertions = new SoftAssertions();
+		softAssertions.assertThat(highestDistance)
+				.as("\nTitle1: %s\nTitle2: %s", p1.getTitles().get(0), p2.getTitles().get(0))
+				.isEqualTo(expected, within(0.01));
+		// .isGreaterThanOrEqualTo(DeduplicationService.TITLE_SIMILARITY_PHASE);
+		softAssertions.assertThat(highestDistance)
+				// .as("\nTitle1: %s\nTitle2: %s\nGreaterThanOrEqualTo threshold", p1.getTitles().get(0),
+				// p2.getTitles().get(0))
+				.as("\nTitle1: %s\nTitle2: %s\nGreaterThanOrEqualTo threshold", p1.getTitles(), p2.getTitles())
 				.isGreaterThanOrEqualTo(DeduplicationService.TITLE_SIMILARITY_SUFFICIENT_STARTPAGES_OR_DOIS);
+		softAssertions.assertAll();
 	}
 
 	@ParameterizedTest(name = "{index}: jaroWinkler({0}, {1})={2}")
@@ -74,11 +88,17 @@ class JaroWinklerTitleTest {
 		return new StringBuilder(s).reverse().toString();
 	}
 
+	/*
+	 * FIXME: Should ther be 2 similarity scores, one for the first title (jwPositiveTest) and one for all titles (jwFullPositiveTest).
+	 * FIXME: tests for Phase titles compare to nrmal threshold
+	 */
+	// @formatter:off
 	static Stream<Arguments> positiveArgumentProvider() {
 		return Stream.of(
-				arguments("Comments about Glisson's capsule phleboliths and portal vein thrombosis [1]",
-						"COMMENTS ABOUT GLISSON CAPSULE PHLEBOLITHS AND PORTAL-VEIN THROMBOSIS", 0.93), // error
-																										// "'s"
+				arguments(
+						"Comments about Glisson's capsule phleboliths and portal vein thrombosis [1]",
+						"COMMENTS ABOUT GLISSON CAPSULE PHLEBOLITHS AND PORTAL-VEIN THROMBOSIS", 
+						0.93), // error "'s"
 				arguments(
 						"PORTAL VENOUS THROMBOSIS FOLLOWING SPELENECTOMY IN PORTAL-HYPERTENSION - RISKS AND MANAGEMENT",
 						"PORTAL VENOUS THROMBOSIS FOLLOWING SPELENECTOMY IN PORTAL-HYPERTENSION - RISKS AND MANAGEMENT - REPLY",
@@ -106,7 +126,8 @@ class JaroWinklerTitleTest {
 						"90Y radioembolization using resin microspheres in patients with hepatocellular carcinoma and portal vein thrombosis",
 						"90Y RADIOEMBOLIZATION USING RESIN MICROSPHERES IN PATIENTS WITH HEPATOCELLULAR CARCINOMA AND PORTAL VEIN THROMBOSIS",
 						1.0), // case difference
-				arguments("Post Splenectomy Outcome in beta-Thalassemia", "Post Splenectomy Outcome in β-Thalassemia",
+				arguments("Post Splenectomy Outcome in beta-Thalassemia", 
+						"Post Splenectomy Outcome in β-Thalassemia",
 						0.96), // Greek characters vs transcription
 				arguments(
 						"Epidemiology and diagnosis profile of digestive cancer in teaching hospital campus of lome: About 250 cases. [French]",
@@ -116,8 +137,8 @@ class JaroWinklerTitleTest {
 						"Increased risk of asthma attacks and emergency visits among asthma patients with allergic rhinitis: a subgroup analysis of the investigation of montelukast as a partner agent for complementary therapy [corrected].[Erratum appears in Clin Exp Allergy. 2006 Feb;36(2):249]",
 						"Increased risk of asthma attacks and emergency visits among asthma patients with allergic rhinitis: A subgroup analysis of the improving asthma control trial",
 						0.94), // unexpected!
-				// several bibliographic additions in "[...]", but still many differences
-				// at the end
+				// several bibliographic additions in "[...]", but still many differences at the end
+				// FIXME: Is the first one an erratum and the second not a erratum?
 				arguments(
 						"[The efficacy of half of the Global Initiative for Asthma recommended dose of inhaled corticosteroids in the management of Chinese asthmatics]",
 						"The efficacy of half of the Global Initiative for Asthma recommended dose of inhaled corticosteroids in the management of Chinese asthmatics. [Chinese]",
@@ -132,17 +153,18 @@ class JaroWinklerTitleTest {
 								"NF kappa B inhibition decreases hepatocyte proliferation but does not alter apoptosis in obstructive jaundice"),
 						0.996),
 				arguments(revertString("Case report. Duplication of the portal vein: a rare congenital anomaly"),
-						revertString("Duplication of the portal vein - A rare congenital anomaly"), 0.96),
+						revertString("Duplication of the portal vein - A rare congenital anomaly"), 
+						0.96),
 				arguments(revertString(
 						"La sémantique de l'image radiologique. Intérêt du procédé de soustraction électronique en couleurs d'Oosterkamp en angiographie abdominale"),
 						revertString(
 								"INTERET DU PROCEDE DE SOUSTRACTION ELECTRONIQUE EN COULEURS D'OOSTERKAMP EN ANGIOGRAPHIE ABDOMINALE"),
-						0.91),
+						0.94),
 				arguments(revertString(
 						"La sémantique de l'image radiologique. Intérêt du procédé de soustraction électronique en couleurs d'Oosterkamp en angiographie abdominale"),
 						revertString(
 								"INTERET DU PROCEDE DE SOUSTRACTION ELECTRONIQUE EN COULEURS D'OOSTERKAMP EN ANGIOGRAPHIE ABDOMINALE"),
-						0.91),
+						0.94),
 				arguments(
 						", the Italian survival calculator to optimize donor to recipient matching and to identify the unsustainable matches in liver transplantation",
 						"The Italian survival calculator to optimize donor to recipient matching and to identify the unsustainable matches in liver transplantation",
@@ -180,7 +202,8 @@ class JaroWinklerTitleTest {
 						"Erratum to: Low Alpha-Fetoprotein Levels Are Associated with Improved Survival in Hepatocellular Carcinoma Patients with Portal Vein Thrombosis",
 						1.0),
 				arguments("Is homozygous a-thalassaemia a lethal condition in the 1990s?",
-						"Is homozygous alpha-thalassaemia a lethal condition in the 1990s?", 0.93),
+						"Is homozygous alpha-thalassaemia a lethal condition in the 1990s?", 
+						0.93),
 				arguments(
 						"¹⁸F-FDG PET metabolic parameters and MRI perfusion and diffusion parameters in hepatocellular carcinoma: a preliminary study",
 						"18F-FDG PET Metabolic Parameters and MRI Perfusion and Diffusion Parameters in Hepatocellular Carcinoma: A Preliminary Study",
@@ -194,12 +217,11 @@ class JaroWinklerTitleTest {
 						"Y-90 Radioembolization for Locally Advanced Hepatocellular Carcinoma with Portal Vein Thrombosis: Long-Term Outcomes in a 185-Patient Cohort",
 						1.0), // variant chemical notations
 				arguments("Isolated portal vein thrombosis: An exceptional complication of chronic pancreatitis",
-						"ISOLATED PORTAL-VEIN THROMBOSIS - AN EXCEPTIONAL COMPLICATION OF CHRONIC-PANCREATITIS", 0.94),
+						"ISOLATED PORTAL-VEIN THROMBOSIS - AN EXCEPTIONAL COMPLICATION OF CHRONIC-PANCREATITIS", 
+						0.94),
 				arguments(revertString("Complication-based learning curve in laparoscopic sleeve gastrectomy"),
-						revertString("Complications of laparoscopic sleeve gastrectomy"), 0.90), // example
-																									// of
-																									// False
-																									// Positive
+						revertString("Complications of laparoscopic sleeve gastrectomy"), 
+						0.90), // example of FP
 				arguments(revertString(
 						"Case records of the Massachusetts General Hospital. Case 35-2007. A 30-year-old man with inflammatory bowel disease and recent onset of fever and bloody diarrhea"),
 						revertString(
@@ -209,9 +231,11 @@ class JaroWinklerTitleTest {
 						"\"Timing of chest tube removal after coronary artery bypass surgery.[Erratum appears in J Card Surg. 2011 Mar;26(2):244 Note: Yeshaaiahu, Michal [corrected to Yeshayahu, Michal]]\"",
 						1.0),
 				arguments("Psilocybin for the Treatment of Cluster Headache",
-						"Psilocybin for the Treatment of Migraine Headache", 0.9454),
+						"Psilocybin for the Treatment of Migraine Headache", 
+						0.9454),
 				arguments(revertString("Psilocybin for the Treatment of Cluster Headache"),
-						revertString("Psilocybin for the Treatment of Migraine Headache"), 0.91),
+						revertString("Psilocybin for the Treatment of Migraine Headache"), 
+						0.91),
 				/*
 				 * Example 1 of a False Positive: Phase I and Phase I/II trial
 				 */
@@ -292,26 +316,34 @@ class JaroWinklerTitleTest {
 				// (MBC)"),
 				// 0.9684), // example of False Positive, with "I" and "II" translated and
 				// quadrupled as 1 word
-				arguments(revertString(
-						"Six-year (yr) follow-up of patients (pts) with imatinib-resistant or -intolerant chronic-phase chronic myeloid leukemia (CML-CP) receiving dasatinib"),
-						revertString(
-								"Five-year follow-up of patients with imatinib-resistant or -intolerant chronic-phase chronic myeloid leukemia (CML-CP) receiving dasatinib"),
+				arguments(
+						revertString("Six-year (yr) follow-up of patients (pts) with imatinib-resistant or -intolerant chronic-phase chronic myeloid leukemia (CML-CP) receiving dasatinib"),
+						revertString("Five-year follow-up of patients with imatinib-resistant or -intolerant chronic-phase chronic myeloid leukemia (CML-CP) receiving dasatinib"),
 						0.9656), // example of False Positive: difference at the start
 				arguments(
 						"A phase 3 study of durvalumab with or without bevacizumab as adjuvant therapy in patients with hepatocellular carcinoma at high risk of recurrence after curative hepatic resection or ablation: EMERALD-2",
 						"A phase 3 study of durvalumab with or without bevacizumab as adjuvant therapy in patients with hepatocellular carcinoma (HCC) who are at high risk of recurrence after curative hepatic resection",
 						0.9474), // example of False Positive: difference at the end
-				arguments("<<Except for the war's laws>>. Psychic trauma in soldiers murderers. French",
-						"Except for the war's laws. Psychic trauma in soldiers murderers. French", 1.0),
+				arguments(
+						"<<Except for the war's laws>>. Psychic trauma in soldiers murderers. French",
+						"Except for the war's laws. Psychic trauma in soldiers murderers. French", 
+						0.72),
+				arguments(
+						revertString("<<Except for the war's laws>>. Psychic trauma in soldiers murderers. French"),
+						revertString("Except for the war's laws. Psychic trauma in soldiers murderers. French"), 
+						1.0),
 				arguments(
 						"What can psychoanalysis contribute to the current refugee crisis?: Preliminary reports from STEP-BY-STEP: A psychoanalytic pilot project for supporting refugees in a \"first reception camp\" and crisis interventions with traumatized refugees",
-						"What can psychoanalysis contribute to the current refugee crisis?", 0.9),
+						"What can psychoanalysis contribute to the current refugee crisis?", 
+						0.86),
 				arguments(
 						"Phase 2 open-label study of single-agent sorafenib in treating advanced hepatocellular carcinoma in a hepatitis B-endemic Asian population: presence of lung metastasis predicts poor response",
 						"Phase 2 open-label study of single-agent sorafenib in treating advanced hepatocellular carcinoma in a hepatitis B-endemic Asian population",
-						0.60));
+						0.95));
 	}
+	// @formatter:on
 
+	// @formatter:off
 	static Stream<Arguments> negativeArgumentProvider() {
 		return Stream.of(
 				// not usable for some journal abbreviations
@@ -404,6 +436,7 @@ class JaroWinklerTitleTest {
 						0.81) // example of False Positive
 		);
 	}
+	// @formatter:on
 
 	@Test
 	void testErrata() {

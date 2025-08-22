@@ -5,6 +5,7 @@ import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 import java.util.stream.Stream;
 
+import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -21,10 +22,12 @@ class PagesTest {
 		Publication r = new Publication();
 		r.parsePages(pages, "DUMMY");
 
-		assertThat(start).as("PageStart comparison").isEqualTo(r.getPageStart());
-		assertThat(end).as("PageEnd comparison").isEqualTo(r.getPageEnd());
-		assertThat(pageForComparison).as("Input '%s' has wrong pageForComparison", pages)
-				.isEqualTo(r.getPageForComparison());
+		SoftAssertions.assertSoftly(softAssertions -> {
+			softAssertions.assertThat(r.getPageStart()).as("PageStart comparison").isEqualTo(start);
+			softAssertions.assertThat(r.getPageEnd()).as("PageEnd comparison").isEqualTo(end);
+			softAssertions.assertThat(r.getPageForComparison()).as("Input '%s' has wrong pageForComparison", pages)
+					.isEqualTo(pageForComparison);
+		});
 	}
 
 	// @formatter:off
@@ -35,8 +38,8 @@ class PagesTest {
 			arguments("12-4", "12", "14", "12"), 
 			arguments("1251-4", "1251", "1254", "1251"),
 			arguments("12-14", "12", "14", "12"), 
-			arguments("12-4; author reply 15", "12", "4; ", "12"),
-			arguments("12; author reply 15", "12; ", null, "12"),
+			arguments("12-4; author reply 15", "12", "4;", "12"),
+			arguments("12; author reply 15", "12;", null, "12"),
 			arguments("12-14, 17-18", "12", "14, 17-18", "12"), 
 			arguments("S12-14", "S12", "S14", "12"),
 			arguments("S12-S14", "S12", "S14", "12"), 

@@ -132,8 +132,10 @@ public class Publication {
 	 *
 	 * Based on these results, the crude pointyBracketsPattern (regex "<[^>]+>") hasn't been changed. The method
 	 * normalizeJava8(...) has code (commented out) for comparing the crude and explicit version
+	 * 
+	 * Last ">+" because "<<...>>" also occurs
 	 */
-	private static Pattern pointyBracketsPattern = Pattern.compile("<[^>]+>");
+	private static Pattern pointyBracketsPattern = Pattern.compile("<[^>]+>+");
 
 	/**
 	 * "(" and ")"
@@ -896,7 +898,7 @@ public class Publication {
 	 * https://github.com/globbestael/DedupEndnote/issues/3
 	 */
 	public void parsePages(String pages, String fieldName) {
-		pages = pagesAdditionsPattern.matcher(pages).replaceAll("");
+		pages = pagesAdditionsPattern.matcher(pages).replaceAll("").strip();
 		// if Pages contains a date string, omit the pages
 		Matcher matcher = pagesDatePattern.matcher(pages);
 		while (matcher.find()) {
@@ -909,7 +911,8 @@ public class Publication {
 		 *   with a space can be skipped
 		 */
 		// @formatter:on
-		if (pages == null || pages.isEmpty() || pages.length() > 30 || pages.contains(" ")) {
+		if (pages == null || pages.isEmpty() || pages.length() > 30
+				|| (fieldName.equals("C7") && pages.contains(" "))) {
 			return;
 		}
 
