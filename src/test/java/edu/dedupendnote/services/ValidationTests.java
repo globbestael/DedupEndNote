@@ -68,6 +68,8 @@ class ValidationTests {
 
 	private static Logger rootLogger;
 
+	private boolean withTracing = false;
+
 	@BeforeAll
 	static void beforeAll() {
 		/*
@@ -88,16 +90,20 @@ class ValidationTests {
 	 * 
 	 * See  printValdationResultsASySD() for scores where TP = all records marked as duplicates except for the duplicate kept
 	 * (i.e. all duplicate rightly removed)
+	 * 
+	 * "ASySD_Depression" removed because of bad format input file
+	 * 		new ValidationResult("ASySD_Depression", 17389, 576, 61894, 21, 76_000L),
 	 */
 	// @formatter:on
 	@Test
 	void checkAllTruthFiles() throws IOException {
 		// rootLogger.setLevel(Level.DEBUG);
 
+		withTracing = true;
+
 		// previous results
 		Map<String, ValidationResult> validationResultsMap = List
 				.of(new ValidationResult("ASySD_Cardiac_human", 6748, 25, 2175, 0, 3_700L),
-						new ValidationResult("ASySD_Depression", 17389, 576, 61894, 21, 76_000L),
 						new ValidationResult("ASySD_Diabetes", 1816, 18, 11, 0, 900L),
 						new ValidationResult("ASySD_Neuroimaging", 2169, 32, 1235, 2, 1_250L),
 						new ValidationResult("ASySD_SRSR_Human", 27816, 190, 24988, 7, 68_000L),
@@ -113,17 +119,16 @@ class ValidationTests {
 		// @formatter:off
 		Map<String, ValidationResult> resultsMap = List
 				.of(
-					checkResults_ASySD_Cardiac_human()
-					// checkResults_ASySD_Depression(), 
-					// checkResults_ASySD_Diabetes(),
-					// checkResults_ASySD_Neuroimaging(), 
-					// checkResults_ASySD_SRSR_Human(), 
-					// checkResults_BIG_SET(),
-					// checkResults_McKeown_2021(), 
-					// checkResults_SRA2_Cytology_screening(),
-					// checkResults_SRA2_Haematology(), 
-					// checkResults_SRA2_Respiratory(), 
-					// checkResults_SRA2_Stroke()
+					checkResults_ASySD_Cardiac_human(),
+					checkResults_ASySD_Diabetes(),
+					checkResults_ASySD_Neuroimaging(), 
+					checkResults_ASySD_SRSR_Human(), 
+					checkResults_BIG_SET(),
+					checkResults_McKeown_2021(), 
+					checkResults_SRA2_Cytology_screening(),
+					checkResults_SRA2_Haematology(), 
+					checkResults_SRA2_Respiratory(), 
+					checkResults_SRA2_Stroke()
 				)
 				.stream().collect(Collectors.toMap(ValidationResult::getFileName, Function.identity(), (o1, o2) -> o1,
 						TreeMap::new));
@@ -214,7 +219,7 @@ class ValidationTests {
 						new ValidationResultASySD("McKeown_2021", 2010, 62, 1058, 0, 816),
 
 						new ValidationResultASySD("ASySD_Cardiac_human", 6748, 25, 2175, 0, 3234),
-						new ValidationResultASySD("ASySD_Depression", 17389, 576, 61894, 21, 7705),
+						// new ValidationResultASySD("ASySD_Depression", 17389, 576, 61894, 21, 7705),
 						new ValidationResultASySD("ASySD_Diabetes", 1816, 18, 11, 0, 566),
 						new ValidationResultASySD("ASySD_Neuroimaging", 2169, 32, 1235, 2, 890),
 						new ValidationResultASySD("ASySD_SRSR_Human", 27816, 190, 24988, 7, 11087))
@@ -282,6 +287,7 @@ class ValidationTests {
 		List<String> errors = new ArrayList<>();
 		Map<Integer, Integer> fpErrors = new HashMap<>();
 		List<List<Publication>> fnPairs = new ArrayList<>();
+		List<List<Publication>> fpPairs = new ArrayList<>();
 		
 		for (PublicationDB t : truthRecords) {
 			PublicationDB v = validationMap.get(t.getId());
@@ -314,13 +320,25 @@ class ValidationTests {
 				v.setCorrection(tDedupId);
 				errors.add("FALSE POSITIVES: \n- TRUTH " + t + "\n- CURRENT " + v + "\n");
 				fpErrors.put(v.getId(), vDedupId);
+				if (! v.getId().equals(vDedupId)) {
+					List<Publication> pair = new ArrayList<>();
+					pair.add(publicationMap.get(v.getId().toString()));
+					pair.add(publicationMap.get(vDedupId.toString()));
+					fpPairs.add(pair);
+				}
 			}
 		}
 		recordDBService.saveRecordDBs(publicationDBs, outputFileName);
 		ValidationResult validationResult = new ValidationResult(setName, tps, fns, tns, fps, endTime - startTime);
-		if (! fnPairs.isEmpty()) {
-			validationResult.setFnPairs(fnPairs);
-			writeFNresults(fnPairs, inputFileName);
+		if (withTracing) {
+			if (! fnPairs.isEmpty()) {
+				validationResult.setFnPairs(fnPairs);
+				writeFNandFPresults(fnPairs, inputFileName + "_FN_Analysis.txt");
+			}
+			if (! fpPairs.isEmpty()) {
+				validationResult.setFpPairs(fpPairs);
+				writeFNandFPresults(fpPairs, inputFileName + "_FP_Analysis.txt");
+			}
 		}
 		if (! errors.isEmpty()) {
 			System.err.println("File " + setName +  " has FALSE POSITIVES!");
@@ -339,8 +357,7 @@ class ValidationTests {
 	List<Pattern> tracePatterns = List.of(Pattern.compile("- (1|2|3|4). .+"),
 			Pattern.compile("\\d+ - \\d+ ARE (NOT )?DUPLICATES"));
 
-	private void writeFNresults(List<List<Publication>> fnPairs, String inputFileName) {
-		String outputFileName = inputFileName + "_FN_Analysis.txt";
+	private void writeFNandFPresults(List<List<Publication>> pairs, String outputFileName) {
 		Logger logger = null;
 		Level oldLevel = null;
 
@@ -353,7 +370,7 @@ class ValidationTests {
 			memoryAppender.setContext((LoggerContext) LoggerFactory.getILoggerFactory());
 			memoryAppender.start();
 
-			for (List<Publication> pair : fnPairs) {
+			for (List<Publication> pair : pairs) {
 				bw.write(pair.get(0).toString());
 				bw.write("\n");
 				if (pair.size() < 2) {
@@ -388,13 +405,13 @@ class ValidationTests {
 		return checkResults("ASySD_Cardiac_human", inputFileName, outputFileName, truthFileName);
 	}
 	
-	ValidationResult checkResults_ASySD_Depression() throws IOException {
-		String truthFileName = testdir + "/ASySD/dedupendnote_files/Depression_TRUTH.txt";
-		String inputFileName = testdir + "/ASySD/dedupendnote_files/Depression.txt";
-		String outputFileName = testdir + "/ASySD/dedupendnote_files/Depression_to_validate.txt";
+	// ValidationResult checkResults_ASySD_Depression() throws IOException {
+	// 	String truthFileName = testdir + "/ASySD/dedupendnote_files/Depression_TRUTH.txt";
+	// 	String inputFileName = testdir + "/ASySD/dedupendnote_files/Depression.txt";
+	// 	String outputFileName = testdir + "/ASySD/dedupendnote_files/Depression_to_validate.txt";
 
-		return checkResults("ASySD_Depression", inputFileName, outputFileName, truthFileName);
-	}
+	// 	return checkResults("ASySD_Depression", inputFileName, outputFileName, truthFileName);
+	// }
 	
 	ValidationResult checkResults_ASySD_Diabetes() throws IOException {
 		String truthFileName = testdir + "/ASySD/dedupendnote_files/Diabetes_TRUTH.txt";
@@ -486,15 +503,15 @@ class ValidationTests {
 		createInitialTruthFile(inputFileName, asysdInputfileName, outputFileName);
 	}
 	
-	@Disabled("Only needed for initialisation of TRUTH file")
-	@Test
-	void createInitialTruthFile_ASySD_Depression() {
-		String dir = testdir + "/ASySD/dedupendnote_files";
-		String inputFileName = dir + "/Depression.txt";
-		String asysdInputfileName = dir + "/Depression_asysd_gold.txt";
-		String outputFileName = dir + "/Depression_for_truth.txt";
-		createInitialTruthFile(inputFileName, asysdInputfileName, outputFileName);
-	}
+	// @Disabled("Only needed for initialisation of TRUTH file")
+	// @Test
+	// void createInitialTruthFile_ASySD_Depression() {
+	// 	String dir = testdir + "/ASySD/dedupendnote_files";
+	// 	String inputFileName = dir + "/Depression.txt";
+	// 	String asysdInputfileName = dir + "/Depression_asysd_gold.txt";
+	// 	String outputFileName = dir + "/Depression_for_truth.txt";
+	// 	createInitialTruthFile(inputFileName, asysdInputfileName, outputFileName);
+	// }
 	
 	@Disabled("Only needed for initialisation of TRUTH file")
 	@Test
