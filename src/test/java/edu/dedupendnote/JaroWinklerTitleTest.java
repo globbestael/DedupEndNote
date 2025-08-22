@@ -29,19 +29,19 @@ class JaroWinklerTitleTest {
 	@MethodSource("positiveArgumentProvider")
 	void jwPositiveTest(String input1, String input2, double expected) {
 		Double distance = jws.apply(Publication.normalizeJava8(input1), Publication.normalizeJava8(input2));
-		System.err.println("- 1: %s\n- 2: %s\n- 3: %s\n- 4: %s\n".formatted(input1,
-			Publication.normalizeJava8(input1), input2, Publication.normalizeJava8(input2)));
-		assertThat(distance)
-			.as("\nTitle1: %s\nTitle2: %s", input1, input2)
-			.isEqualTo(expected, within(0.01))
-			.isGreaterThanOrEqualTo(DeduplicationService.TITLE_SIMILARITY_SUFFICIENT_STARTPAGES_OR_DOIS);
+		System.err.println("- 1: %s\n- 2: %s\n- 3: %s\n- 4: %s\n".formatted(input1, Publication.normalizeJava8(input1),
+				input2, Publication.normalizeJava8(input2)));
+		assertThat(distance).as("\nTitle1: %s\nTitle2: %s", input1, input2).isEqualTo(expected, within(0.01))
+				.isGreaterThanOrEqualTo(DeduplicationService.TITLE_SIMILARITY_SUFFICIENT_STARTPAGES_OR_DOIS);
 	}
 
 	@ParameterizedTest(name = "{index}: jaroWinkler({0}, {1})={2}")
 	@MethodSource("positiveArgumentProvider")
 	void jwFullPositiveTest(String input1, String input2, double expected) {
-		Publication p1 = new Publication(); p1.addTitles(input1);
-		Publication p2 = new Publication(); p2.addTitles(input2);
+		Publication p1 = new Publication();
+		p1.addTitles(input1);
+		Publication p2 = new Publication();
+		p2.addTitles(input2);
 
 		Double highestDistance = 0.0;
 
@@ -54,21 +54,20 @@ class JaroWinklerTitleTest {
 			}
 		}
 
-		assertThat(highestDistance)
-			.as("\nTitle1: %s\nTitle2: %s", p1.getTitles().get(0), p2.getTitles().get(0))
-			.isEqualTo(highestDistance, within(0.01))
-			.isGreaterThanOrEqualTo(DeduplicationService.TITLE_SIMILARITY_SUFFICIENT_STARTPAGES_OR_DOIS);
+		assertThat(highestDistance).as("\nTitle1: %s\nTitle2: %s", p1.getTitles().get(0), p2.getTitles().get(0))
+				.isEqualTo(highestDistance, within(0.01))
+				// .isGreaterThanOrEqualTo(DeduplicationService.TITLE_SIMILARITY_PHASE);
+				.isGreaterThanOrEqualTo(DeduplicationService.TITLE_SIMILARITY_SUFFICIENT_STARTPAGES_OR_DOIS);
 	}
 
 	@ParameterizedTest(name = "{index}: jaroWinkler({0}, {1})={2}")
 	@MethodSource("negativeArgumentProvider")
 	void jwNegativeTest(String input1, String input2, double expected) {
 		Double distance = jws.apply(Publication.normalizeJava8(input1), Publication.normalizeJava8(input2));
-		System.err.println("- 1: %s\n- 2: %s\n- 3: %s\n- 4: %s\n".formatted(input1,
-			Publication.normalizeJava8(input1), input2, Publication.normalizeJava8(input2)));
-		assertThat(distance)
-			.isEqualTo(expected, within(0.01))
-			.isLessThan(DeduplicationService.TITLE_SIMILARITY_SUFFICIENT_STARTPAGES_OR_DOIS);
+		System.err.println("- 1: %s\n- 2: %s\n- 3: %s\n- 4: %s\n".formatted(input1, Publication.normalizeJava8(input1),
+				input2, Publication.normalizeJava8(input2)));
+		assertThat(distance).isEqualTo(expected, within(0.01))
+				.isLessThan(DeduplicationService.TITLE_SIMILARITY_SUFFICIENT_STARTPAGES_OR_DOIS);
 	}
 
 	static String revertString(String s) {
@@ -302,24 +301,21 @@ class JaroWinklerTitleTest {
 						"A phase 3 study of durvalumab with or without bevacizumab as adjuvant therapy in patients with hepatocellular carcinoma at high risk of recurrence after curative hepatic resection or ablation: EMERALD-2",
 						"A phase 3 study of durvalumab with or without bevacizumab as adjuvant therapy in patients with hepatocellular carcinoma (HCC) who are at high risk of recurrence after curative hepatic resection",
 						0.9474), // example of False Positive: difference at the end
-				arguments(
-						"<<Except for the war's laws>>. Psychic trauma in soldiers murderers. French",
-						"Except for the war's laws. Psychic trauma in soldiers murderers. French",
-						1.0),
+				arguments("<<Except for the war's laws>>. Psychic trauma in soldiers murderers. French",
+						"Except for the war's laws. Psychic trauma in soldiers murderers. French", 1.0),
 				arguments(
 						"What can psychoanalysis contribute to the current refugee crisis?: Preliminary reports from STEP-BY-STEP: A psychoanalytic pilot project for supporting refugees in a \"first reception camp\" and crisis interventions with traumatized refugees",
-						"What can psychoanalysis contribute to the current refugee crisis?",
-						0.9)
-				);
+						"What can psychoanalysis contribute to the current refugee crisis?", 0.9),
+				arguments(
+						"Phase 2 open-label study of single-agent sorafenib in treating advanced hepatocellular carcinoma in a hepatitis B-endemic Asian population: presence of lung metastasis predicts poor response",
+						"Phase 2 open-label study of single-agent sorafenib in treating advanced hepatocellular carcinoma in a hepatitis B-endemic Asian population",
+						0.60));
 	}
 
 	static Stream<Arguments> negativeArgumentProvider() {
-		return Stream.of(arguments("British journal of surgery", "Br J Surg", 0.6), // not
-																					// usable
-																					// for
-																					// some
-																					// journal
-																					// abbreviations
+		return Stream.of(
+				// not usable for some journal abbreviations
+				arguments("British journal of surgery", "Br J Surg", 0.6),
 				arguments(
 						"The use of TIPS should be cautious in noncirrhotic patients with obliterative portal vein thrombosis",
 						"The significance of nonobstructive sinusoidal dilatation of the liver: Impaired portal perfusion or inflammatory reaction syndrome",
@@ -420,7 +416,7 @@ class JaroWinklerTitleTest {
 			System.err.println("Found: " + matcher.group(0) + "\t ends at " + matcher.end(0) + " in string with length "
 					+ s.length());
 		}
-		assertThat(1*1).isEqualTo(1);
+		assertThat(1 * 1).isEqualTo(1);
 	}
 
 }

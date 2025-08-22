@@ -449,23 +449,70 @@ public class DeduplicationService {
 		boolean bothCochrane = r1.isCochrane() && r2.isCochrane();
 		boolean sufficientStartPages = r1.getPageForComparison() != null && r2.getPageForComparison() != null;
 		boolean sufficientDois = !dois1.isEmpty() && !dois2.isEmpty();
+		// Using OR has less FNs, but also more FPs!
+		boolean bothSeveralPages = r1.isSeveralPages() && r2.isSeveralPages();
+
+		if (sufficientDois && setsContainSameString(dois1, dois2)) {
+			map.put("sameDois", true);
+		}
 
 		if (bothCochrane) {
 			if (r1.getPublicationYear().equals(r2.getPublicationYear())) {
 				if (sufficientDois) {
 					if (setsContainSameString(dois1, dois2)) {
-						log.trace("- 1. DOIs are the same");
+						log.trace("- 1. DOIs are the same for Cochrane");
 						return true;
 					} else {
-						log.trace("- 1. DOIs are NOT the same");
+						log.trace("- 1. DOIs are NOT the same for Cochrane");
 						return false;
 					}
 				} else if (sufficientStartPages && r1.getPageForComparison().equals(r2.getPageForComparison())) {
-					log.trace("- 1. Starting pages are the same");
+					log.trace("- 1. Starting pages are the same for Cochrane");
 					return true;
 				}
 			}
 			log.trace("- 1. NOT the same startPage or DOI for Cochrane");
+			return false;
+		}
+		// if (sufficientDois) {
+		// if (setsContainSameString(dois1, dois2)) {
+		// log.trace("- 1. DOIs are the same for severalPages");
+		// return true;
+		// // } else {
+		// // log.trace("- 1. DOIs are NOT the same");
+		// // return false;
+		// }
+		// }
+		// if (sufficientStartPages) {
+		// if (r1.getPageForComparison().equals(r2.getPageForComparison())) {
+		// log.trace("- 1. Starting pages are the same for severalPages");
+		// return true;
+		// }
+		// log.trace("- 1. NOT the same startPage or DOI for severalPages");
+		// return false;
+		// }
+		// if (sufficientDois) {
+		// log.trace("- 1. DOIs are NOT the same");
+		// return false;
+		// }
+		// log.trace("- 1. At least one starting page AND at least one DOI are missing, therefore Same");
+		// return true; // no useful comparison possible
+
+		if (bothSeveralPages) {
+			if (sufficientDois) {
+				if (setsContainSameString(dois1, dois2)) {
+					log.trace("- 1. DOIs are the same for severalPages");
+					return true;
+					// } else {
+					// log.trace("- 1. DOIs are NOT the same");
+					// return false;
+				}
+			}
+			if (sufficientStartPages && r1.getPageForComparison().equals(r2.getPageForComparison())) {
+				log.trace("- 1. Starting pages are the same for severalPages");
+				return true;
+			}
+			log.trace("- 1. NOT the same startPage or DOI for severalPages");
 			return false;
 		}
 		if (!sufficientStartPages && !sufficientDois) {
@@ -473,9 +520,6 @@ public class DeduplicationService {
 			return true; // no useful comparison possible
 		}
 
-		if (sufficientDois && setsContainSameString(dois1, dois2)) {
-			map.put("sameDois", true);
-		}
 		// suboptimal structure to make tracing messages clearer
 		if (sufficientStartPages) {
 			if (r1.getPageForComparison().equals(r2.getPageForComparison())) {
@@ -490,10 +534,13 @@ public class DeduplicationService {
 		if (setsContainSameString(dois1, dois2)) {
 			log.trace("- 1. DOIs are the same");
 			return true;
-		} else {
-			log.trace("- 1. DOIs are NOT the same");
-			return false;
+			// } else {
+			// log.trace("- 1. DOIs are NOT the same");
+			// return false;
 		}
+		log.trace("- 1. DOIs and starting pages are NOT the same");
+		return false;
+
 		// }
 		// if (sufficientStartPages && r1.getPageForComparison().equals(r2.getPageForComparison())) {
 		// log.trace("- 1. Starting pages are the same");
@@ -535,9 +582,6 @@ public class DeduplicationService {
 					if (similarity > TITLE_SIMILARITY_PHASE) {
 						log.trace("- 3. Title similarity (for Phase) is above threshold");
 						return true;
-					} else {
-						log.trace("- 3. Title similarity (for Phase) is below threshold");
-						return false;
 					}
 				}
 				if ((sufficientStartPages || sufficientDois)
@@ -549,16 +593,16 @@ public class DeduplicationService {
 					if (similarity > TITLE_SIMILARITY_INSUFFICIENT_STARTPAGES_AND_DOIS) {
 						log.trace("- 3. Title similarity (without sufficient pages or DOIs) is above threshold");
 						return true;
-					} else {
-						log.trace("- 3. Title similarity (without sufficient pages or DOIs) is below threshold");
-						return false;
 					}
 				}
 			}
 		}
 		if (log.isTraceEnabled()) {
-			log.trace("- 3. Title similarity {} is below threshold: [{}] and [{}]", similarity, r1.getTitles().get(0),
-					r2.getTitles().get(0));
+			log.trace("- 3. Title similarity {} is below threshold: [{}] and [{}], subtype {}", similarity,
+					r1.getTitles().get(0), r2.getTitles().get(0),
+					(isPhase ? "Phase"
+							: (sufficientStartPages || sufficientDois) ? "sufficient startPages or DOIs"
+									: "not sufficient startPages or DOIs"));
 		}
 		return false;
 	}

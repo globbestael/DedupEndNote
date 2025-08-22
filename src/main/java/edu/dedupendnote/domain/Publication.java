@@ -57,6 +57,8 @@ public class Publication {
 
 	private String referenceType;
 
+	public boolean severalPages;
+
 	private String title; // only set for Reply-titles
 
 	private List<String> titles = new ArrayList<>();
@@ -71,7 +73,7 @@ public class Publication {
 	 * - with other publications starting pages are compared BEFORE the DOIs. For Cochrane publications if both have a DOI, then only the DOIs are compared 
 	 * - publication year must be the same
 	 */
-	// @formatter:off
+	// @formatter:on
 	private boolean isCochrane = false;
 
 	// @formatter:off
@@ -81,7 +83,7 @@ public class Publication {
 	 * - journals are compared stricter (see DeduplicationService.JOURNAL_SIMILARITY_NO_REPLY < DeduplicationService.JOURNAL_SIMILARITY_NO_REPLY)
 	 * - in enrich() the longest title of a duplicate set is used
 	 */
-	// @formatter:off
+	// @formatter:on
 	private boolean isReply = false;
 
 	private boolean isPhase = false;
@@ -93,8 +95,8 @@ public class Publication {
 	private static Pattern doiPattern = Pattern.compile("\\b(10.\\d{4,9}/[-._;()<>/:a-z0-9]+)\\b");
 
 	/**
-	 * ISSN/ISBN pattern: very crude pattern for ISSN, ISBN-10 and ISBN-13. Will accept
-	 * invalid input: 1234-x567, "-1-2-30x4", ISBN-13 with a "X" check digit
+	 * ISSN/ISBN pattern: very crude pattern for ISSN, ISBN-10 and ISBN-13. Will accept invalid input: 1234-x567,
+	 * "-1-2-30x4", ISBN-13 with a "X" check digit
 	 */
 	private static Pattern issnIsbnPattern = Pattern.compile("\\b([-\\dxX]{8,17})\\b");
 
@@ -108,45 +110,28 @@ public class Publication {
 	private static Pattern doubleQuotesPattern = Pattern.compile("\"");
 
 	/**
-	 * All characters between a non-initial "[" and "]", including the square brackets and
-	 * the preceding character
+	 * All characters between a non-initial "[" and "]", including the square brackets and the preceding character
 	 */
 	private static Pattern nonInitialSquareBracketsPattern = Pattern.compile(".\\[[^\\\\]+\\]$");
 
 	/**
 	 * All characters between "<" and ">", including the pointy brackets
 	 * 
-	 * ASYSD removes the following html tags from titles and abstracts
-	 * see https://github.com/camaradesuk/ASySD/pull/67/commits/fe9c4d1b08eebe2fa7c369bf4ff80077576bb9df 2026-06-13
-	 * The list has been expanded based on tests in ValidationTest:
-	 *  
-	 * List<String> htmlList = List.of(
-	 * 			"<b>", "</b>",
-	 * 			"<bold>", "</bold>",
-	 * 			"<br />",				// not in ASYSD
-	 * 			"<del>", "</del>",
-	 * 			"<em>", "</em>",
-	 * 			"<i>", "</i>",
-	 * 			"<inf>", "</inf>",
-	 * 			"<ins>", "</ins>",
-	 * 			"<mark>", "</mark>",
-	 * 			"<small>", "</small>",
-	 * 			"<sub>", "</sub>", 
-	 * 			"<sup>", "</sup>", 
-	 * 			"<sup/>"				// not in ASYSD
-	 * );
+	 * ASYSD removes the following html tags from titles and abstracts see
+	 * https://github.com/camaradesuk/ASySD/pull/67/commits/fe9c4d1b08eebe2fa7c369bf4ff80077576bb9df 2026-06-13 The list
+	 * has been expanded based on tests in ValidationTest:
 	 * 
-	 * The ValidationTest files showed 3 more examples:
-	 * 		<35 vs. =/>
-	 * 		<35 vs. >
-	 * 		<ORIGINAL>
+	 * List<String> htmlList = List.of( "<b>", "</b>", "<bold>", "</bold>", "<br />
+	 * ", // not in ASYSD "<del>", "</del>", "<em>", "</em>", "<i>", "</i>", "<inf>", "</inf>", "<ins>", "</ins>",
+	 * "<mark>", "</mark>", "<small>", "</small>", "<sub>", "</sub>", "<sup>", "</sup>", "<sup/>" // not in ASYSD );
 	 * 
-	 * e.g. in title
-	 * 		Comparison of liver transplant outcomes for recipients with MELD <35 Vs. >35
-	 * The "<ORIGINAL>" cases in the SRA2_Respiratory file with publications < 2000. Original database of publications unknown.
+	 * The ValidationTest files showed 3 more examples: <35 vs. =/> <35 vs. > <ORIGINAL>
+	 * 
+	 * e.g. in title Comparison of liver transplant outcomes for recipients with MELD <35 Vs. >35 The "<ORIGINAL>" cases
+	 * in the SRA2_Respiratory file with publications < 2000. Original database of publications unknown.
 	 *
-	 * Based on these results, the crude pointyBracketsPattern (regex "<[^>]+>") hasn't been changed.
-	 * The method normalizeJava8(...) has code (commented out) for comparing the crude and explicit version
+	 * Based on these results, the crude pointyBracketsPattern (regex "<[^>]+>") hasn't been changed. The method
+	 * normalizeJava8(...) has code (commented out) for comparing the crude and explicit version
 	 */
 	private static Pattern pointyBracketsPattern = Pattern.compile("<[^>]+>");
 
@@ -154,7 +139,7 @@ public class Publication {
 	 * "(" and ")"
 	 */
 	private static Pattern roundBracketsPattern = Pattern.compile("[\\(\\)]");
-	
+
 	/**
 	 * "-"
 	 */
@@ -181,13 +166,35 @@ public class Publication {
 	private static Pattern startingArticlePattern = Pattern.compile("^(the|a|an) ");
 
 	// FIXME: check last characters in pattern (space or punctuation?)
+	/*
+	 * Starting patterns:
+	 * "Correction to " + [A-Z]...
+	 * "Correction to '" + ...'
+	 * "Correction to: "
+	 * "Correction: "
+	 * "Corrections:  "
+	 *
+	 * "Corrigendum to "
+	 * "Corrigendum to '"
+	 * "Corrigendum to: "
+	 * "Corrigendum: "
+	
+	 * "Erratum to "  [A-Z]...
+	 * "Erratum: "
+	 * 
+	 * Ending patterns:
+	 * (especially 'correction' should be the last word. Can there be one or more words after "correction"?)
+	 */
 	private static Pattern erratumPattern = Pattern.compile("^(Erratum: |Erratum to|Correction to )(.*)$");
 
 	// https://stackoverflow.com/questions/47162098/is-it-possible-to-match-nested-brackets-with-a-regex-without-using-recursion-or/47162099#47162099
-	private static Pattern balancedBracespattern = Pattern
-		.compile("(?=\\()(?:(?=.*?\\((?!.*?\\1)(.*\\)(?!.*\\2).*))(?=.*?\\)(?!.*?\\2)(.*)).)+?.*?(?=\\1)[^(]*(?=\\2$)");
+	private static Pattern balancedBracespattern = Pattern.compile(
+			"(?=\\()(?:(?=.*?\\((?!.*?\\1)(.*\\)(?!.*\\2).*))(?=.*?\\)(?!.*?\\2)(.*)).)+?.*?(?=\\1)[^(]*(?=\\2$)");
 
-	// The first group is non greedy (with 2 times ": " in string, first group captures before first ": ", second the rest of the string
+	/**
+	 * The first group is non greedy (with 2 times ": " in string, first group captures before first ": ", second the
+	 * rest of the string
+	 */
 	private static Pattern titleAndSubtitlePattern = Pattern.compile("^(.{50,}?): (.{50,})$");
 
 	private static Pattern numbersWithinPattern = Pattern.compile(".*\\d+.*");
@@ -200,16 +207,20 @@ public class Publication {
 		 * Assume "<<...>>" is not an addition, but a variant of double quotes. This replacement before the pointyBracketsPattern replacement.
 		 * Skipped because later nonAsciiLowercasePattern will replace the pointy brackets with a space. 
 		 */
-		// s = s.replaceAll("(<<|>>)", ""); 
+		// s = s.replaceAll("(<<|>>)", "");
 		/**
-		 * FIXME: Do a thorough check of retractions (including "WITHDRAWN: ..." Cochrane reviews). 
-		 * Cochrane: PubMed, Medline and EMBASE use format "WITHDRAWN: ...", Web of Science the format "... (Withdrawn Paper, 2011, Art. No. CD001727)".
-		 * See also "Retraction note to: ..." (e.g. https://pubmed.ncbi.nlm.nih.gov/24577730/)
+		 * FIXME: Do a thorough check of retractions (including "WITHDRAWN: ..." Cochrane reviews). Cochrane: PubMed,
+		 * Medline and EMBASE use format "WITHDRAWN: ...", Web of Science the format "... (Withdrawn Paper, 2011, Art.
+		 * No. CD001727)". See also "Retraction note to: ..." (e.g. https://pubmed.ncbi.nlm.nih.gov/24577730/)
 		 */
 		/**
-		 * FIXME: Do a thorough check in the validation files to make sure that erratum records do not remove the original records 
-		 * (erratum as first record encountered). There are some tests in {@link edu.dedupendnote.JaroWinklerTitleTest} (and an incomplete method
+		 * FIXME: Do a thorough check in the validation files to make sure that erratum records do not remove the
+		 * original records (erratum as first record encountered). There are some tests in
+		 * {@link edu.dedupendnote.JaroWinklerTitleTest} (and an incomplete method
 		 * {@link edu.dedupendnote.JaroWinklerTitleTest#testErrata()})
+		 * 
+		 * FIXME: Is it necessary to mark publications as erratum, and only compare pairs of records of both are erratum
+		 * publcations or both are non erratum publications?
 		 */
 		Matcher matcher = erratumPattern.matcher(s);
 		if (matcher.find()) {
@@ -231,26 +242,26 @@ public class Publication {
 		String r = s.toLowerCase();
 		r = nonInitialSquareBracketsPattern.matcher(r).replaceAll("");
 		r = pointyBracketsPattern.matcher(r).replaceAll("");
-		// Checks for the pointyBracketsPattern (the path not chosen) 
-//		Matcher m = pointyBracketsPattern.matcher(r);
-//		StringBuffer sb = new StringBuffer();
-//		List<String> htmlList = List.of("<b>", "</b>", "<bold>", "</bold>", "<br />",
-//				"<del>", "</del>",
-//				"<em>", "</em>",
-//				"<i>", "</i>", 
-//				"<inf>", "</inf>",
-//				"<ins>", "</ins>",
-//				"<mark>", "</mark>",
-//				"<small>", "</small>",
-//				"<sub>", "</sub>", "<sup>", "</sup>", "<sup/>");
-//		while (m.find()) {
-//			if (! htmlList.contains(m.group())) {
-//				log.error("PointyBracketPattern fires for {}", m.group());
-//			}
-//			m.appendReplacement(sb, "");
-//		}
-//		m.appendTail(sb);
-//		r = sb.toString();
+		// Checks for the pointyBracketsPattern (the path not chosen)
+		// Matcher m = pointyBracketsPattern.matcher(r);
+		// StringBuffer sb = new StringBuffer();
+		// List<String> htmlList = List.of("<b>", "</b>", "<bold>", "</bold>", "<br />",
+		// "<del>", "</del>",
+		// "<em>", "</em>",
+		// "<i>", "</i>",
+		// "<inf>", "</inf>",
+		// "<ins>", "</ins>",
+		// "<mark>", "</mark>",
+		// "<small>", "</small>",
+		// "<sub>", "</sub>", "<sup>", "</sup>", "<sup/>");
+		// while (m.find()) {
+		// if (! htmlList.contains(m.group())) {
+		// log.error("PointyBracketPattern fires for {}", m.group());
+		// }
+		// m.appendReplacement(sb, "");
+		// }
+		// m.appendTail(sb);
+		// r = sb.toString();
 		r = roundBracketsPattern.matcher(r).replaceAll("");
 		r = hyphenPattern.matcher(r).replaceAll("");
 		r = nonAsciiLowercasePattern.matcher(r).replaceAll(" ");
@@ -261,16 +272,14 @@ public class Publication {
 	}
 
 	/**
-	 * All characters outside the BasicLatin Unicode block (\u0000 – \u007F). After
-	 * Normalization with canonical decomposition (Normalizer.Form.NFD) all combining
-	 * accents and diacritics, supplemental characters (e.g. "£") and all characters in
-	 * other scripts will be removed
+	 * All characters outside the BasicLatin Unicode block (\u0000 – \u007F). After Normalization with canonical
+	 * decomposition (Normalizer.Form.NFD) all combining accents and diacritics, supplemental characters (e.g. "£") and
+	 * all characters in other scripts will be removed
 	 */
 	private static Pattern nonBasicLatinPattern = Pattern.compile("[^\\p{InBasic_Latin}]");
 
 	/**
-	 * "&": will be replaced by SPACE because an anmpersand is problem in some of the
-	 * following patterns
+	 * "&": will be replaced by SPACE because an anmpersand is problem in some of the following patterns
 	 */
 	private static Pattern ampersandPattern = Pattern.compile("&");
 
@@ -320,8 +329,7 @@ public class Publication {
 	private static Pattern jbrPattern = Pattern.compile("Jbr-btr", Pattern.CASE_INSENSITIVE);
 
 	/**
-	 * "^(Rofo|Fortschritte .* Gebiet.* R.ntgenstrahlen)" (case insensitive): will be
-	 * replaced by "Rofo". Cheater!
+	 * "^(Rofo|Fortschritte .* Gebiet.* R.ntgenstrahlen)" (case insensitive): will be replaced by "Rofo". Cheater!
 	 *
 	 * Must be used BEFORE the latinOPattern
 	 *
@@ -330,8 +338,8 @@ public class Publication {
 			Pattern.CASE_INSENSITIVE);
 
 	/**
-	 * "o-[NON-WHITE-SPACE]": the hyphen will be removed. E.g. "gastro-enterology" -->
-	 * "gastroenterology". Must be used BEFORE the minusOrDotPattern
+	 * "o-[NON-WHITE-SPACE]": the hyphen will be removed. E.g. "gastro-enterology" --> "gastroenterology". Must be used
+	 * BEFORE the minusOrDotPattern
 	 */
 	private static Pattern latinOPattern = Pattern.compile("o\\-(\\S)");
 
@@ -344,46 +352,43 @@ public class Publication {
 	 * Initial "(The |Le |La |Les |L'|Der |Die |Das |Il |Het )": will be removed
 	 */
 	private static Pattern journalStartingArticlePattern = Pattern
-		.compile("^(The |Le |La |Les |L'|Der |Die |Das |Il |Het )");
+			.compile("^(The |Le |La |Les |L'|Der |Die |Das |Il |Het )");
 
 	/**
-	 * "'s" at the end of a word: the apostrophe will be removed. E.g. Langenbeck's /
-	 * Bailliere's / Crohn's. Must be called BEFORE the nonGenitiveApostrophePattern
+	 * "'s" at the end of a word: the apostrophe will be removed. E.g. Langenbeck's / Bailliere's / Crohn's. Must be
+	 * called BEFORE the nonGenitiveApostrophePattern
 	 */
 	private static Pattern genitiveApostrophePattern = Pattern.compile("'s\\b");
 
 	/**
-	 * All other apostrophes (compare genitiveApostrophePattern): will be replaced by
-	 * SPACE. E.g. "Annales d'Urologie", "Journal of Xi'an Jiaotong University (Medical
-	 * Sciences)". Must be called AFTER genitiveApostrophePattern
+	 * All other apostrophes (compare genitiveApostrophePattern): will be replaced by SPACE. E.g. "Annales d'Urologie",
+	 * "Journal of Xi'an Jiaotong University (Medical Sciences)". Must be called AFTER genitiveApostrophePattern
 	 */
 	private static Pattern nonGenitiveApostrophePattern = Pattern.compile("'");
 
 	/**
-	 * All characters between "(" and ")" at the end of a string, including the round
-	 * brackets: will be removed
+	 * All characters between "(" and ")" at the end of a string, including the round brackets: will be removed
 	 */
 	private static Pattern journalEndingRoundBracketsPattern = Pattern.compile("\\([^\\)]+\\)$");
 
 	/**
-	 * "(" and ")": will be replaced by SPACE. See also journalEndingRoundBracketsPattern.
-	 * Some journals only have "(" without a ")", which causes regex problems
+	 * "(" and ")": will be replaced by SPACE. See also journalEndingRoundBracketsPattern. Some journals only have "("
+	 * without a ")", which causes regex problems
 	 */
 	private static Pattern journalOtherRoundBracketsPattern = Pattern.compile("[\\)\\(]");
 
 	/**
-	 * ":" or "/" and all following characters: will be removed. E.g. "BJOG: An
-	 * International Journal of Obstetrics and Gynaecology" --> "BJOG"
+	 * ":" or "/" and all following characters: will be removed. E.g. "BJOG: An International Journal of Obstetrics and
+	 * Gynaecology" --> "BJOG"
 	 */
 	private static Pattern journalAdditionPattern = Pattern.compile("[:/].*$");
 
 	/**
-	 * "/" not preceded and followed by white space: will be replaced by a space. E.g.
-	 * "Hematology/Oncology" --> "Hematology Oncology" This replacement before the
-	 * treatment of " / ".
+	 * "/" not preceded and followed by white space: will be replaced by a space. E.g. "Hematology/Oncology" -->
+	 * "Hematology Oncology" This replacement before the treatment of " / ".
 	 *
-	 * Imcomplete: "Chung-Kuo Hsiu Fu Chung Chien Wai Ko Tsa Chih/Chinese Journal of
-	 * Reparative & Reconstructive Surgery" will NOT be split into 2 journals!
+	 * Imcomplete: "Chung-Kuo Hsiu Fu Chung Chien Wai Ko Tsa Chih/Chinese Journal of Reparative & Reconstructive
+	 * Surgery" will NOT be split into 2 journals!
 	 */
 	private static Pattern journalSlashPattern = Pattern.compile("^(.+\\S)/(\\S.+)");
 
@@ -393,11 +398,10 @@ public class Publication {
 	private static Pattern journalSectionMarkers = Pattern.compile("^(.+)(\\b(Part|Section))?\\b([A-I]\\b.*)$");
 
 	/**
-	 * A number or ". Conference" and all following characters: The number and all
-	 * following characters will be removed. 
-	 * E.g.:
-	 * - "Clinical neuropharmacology.12 Suppl 2 ()(pp v-xii; S1-105) 1989.Date of Publication: 1989." --> "Clinical neuropharmacology"
-	 * - "European Respiratory Journal. Conference: European Respiratory Society Annual Congress" (Cochrane records)
+	 * A number or ". Conference" and all following characters: The number and all following characters will be removed.
+	 * E.g.: - "Clinical neuropharmacology.12 Suppl 2 ()(pp v-xii; S1-105) 1989.Date of Publication: 1989." -->
+	 * "Clinical neuropharmacology" - "European Respiratory Journal. Conference: European Respiratory Society Annual
+	 * Congress" (Cochrane records)
 	 */
 	private static Pattern journalExtraPattern = Pattern.compile("^(.+?)((\\d.*|\\. Conference.*))$");
 
@@ -415,7 +419,7 @@ public class Publication {
 	public static String normalizeJournalJava8(String s) {
 		String r = s;
 		r = normalizeToBasicLatin(r);
-		r = ampersandPattern.matcher(r).replaceAll(" ");	// we don't want "&" in the patterns
+		r = ampersandPattern.matcher(r).replaceAll(" "); // we don't want "&" in the patterns
 		// irregular abbreviations
 		r = jpnPattern.matcher(r).replaceAll("Japanese");
 		r = dtschPattern.matcher(r).replaceAll("Deutsch");
@@ -446,14 +450,17 @@ public class Publication {
 		// r = latinOPattern.matcher(r).replaceAll(m -> "o" + m.group(1).toLowerCase());
 		// // "Gastro-Enterology" -> "Gastroenterology"
 		r = hyphenOrDotPattern.matcher(r).replaceAll(" ");
-		r = journalStartingArticlePattern.matcher(r).replaceAll(""); 		// article at start
-		r = genitiveApostrophePattern.matcher(r).replaceAll("s");	 		// Langenbeck's / Bailliere's / Crohn's
-		r = nonGenitiveApostrophePattern.matcher(r).replaceAll(" "); 		// Annales d'Urologie / Journal of Xi'an Jiaotong University (Medical Sciences)
-		r = journalEndingRoundBracketsPattern.matcher(r).replaceAll("");	// "Ann Med Interne (Paris)" --> "Ann Med Interne",
+		r = journalStartingArticlePattern.matcher(r).replaceAll(""); // article at start
+		r = genitiveApostrophePattern.matcher(r).replaceAll("s"); // Langenbeck's / Bailliere's / Crohn's
+		r = nonGenitiveApostrophePattern.matcher(r).replaceAll(" "); // Annales d'Urologie / Journal of Xi'an Jiaotong
+																		// University (Medical Sciences)
+		r = journalEndingRoundBracketsPattern.matcher(r).replaceAll(""); // "Ann Med Interne (Paris)" --> "Ann Med
+																			// Interne",
 																			// or "J Med Ultrason (2001)"
-		r = journalOtherRoundBracketsPattern.matcher(r).replaceAll(" ");	// Some journals only have "(" without a ")", which causes regex problems
-		if (r.toLowerCase().startsWith("http")) { 
-			// Cochrane library CENTRAL has journal  name of type:
+		r = journalOtherRoundBracketsPattern.matcher(r).replaceAll(" "); // Some journals only have "(" without a ")",
+																			// which causes regex problems
+		if (r.toLowerCase().startsWith("http")) {
+			// Cochrane library CENTRAL has journal name of type:
 			// Https://clinicaltrials.gov/show/nct00969397
 			r = r.toLowerCase();
 		} else {
@@ -466,14 +473,13 @@ public class Publication {
 	}
 
 	/**
-	 * normalizeToBasicLatin: removes accents and diacritics when the base character
-	 * belongs to the BasicLatin Unicode block (U+0000–U+007F) and removes all other
-	 * characters.
+	 * normalizeToBasicLatin: removes accents and diacritics when the base character belongs to the BasicLatin Unicode
+	 * block (U+0000–U+007F) and removes all other characters.
 	 */
 	public static String normalizeToBasicLatin(String r) {
 		if (nonBasicLatinPattern.matcher(r).find()) {
 			r = Normalizer.normalize(r, Normalizer.Form.NFD);
-			// you can't reuse the existing matcher because r might be changed 
+			// you can't reuse the existing matcher because r might be changed
 			r = nonBasicLatinPattern.matcher(r).replaceAll("");
 		}
 		return r;
@@ -850,6 +856,18 @@ public class Publication {
 		if (title.toLowerCase().equals("not available") || title.toLowerCase().equals("[not available]")) {
 			return;
 		}
+		addTitleWithNormalization(title);
+
+		Matcher matcher = titleAndSubtitlePattern.matcher(title);
+		while (matcher.find()) {
+			// titles.add(matcher.group(1)); // add only the first part (min 50 characters)
+			String firstPart = matcher.group(1); // add only the first part (min 50 characters)
+			addTitleWithNormalization(firstPart);
+			// do not add the subtitle: titles.add(matcher.group(2));
+		}
+	}
+
+	private void addTitleWithNormalization(String title) {
 		String normalized = normalizeJava8(title);
 		String[] parts = normalized.split("=");
 		List<String> list = new ArrayList<>(Arrays.asList(parts));
@@ -858,11 +876,6 @@ public class Publication {
 			if (!titles.contains(t.strip())) {
 				titles.add(normalized);
 			}
-		}
-		Matcher matcher = titleAndSubtitlePattern.matcher(title);
-		while (matcher.find()) {
-			titles.add(matcher.group(1)); // add only the first part (min 50 characters)
-			// do not add the subtitle: titles.add(matcher.group(2));
 		}
 	}
 
@@ -882,15 +895,21 @@ public class Publication {
 	 * See also issues https://github.com/globbestael/DedupEndnote/issues/2 and
 	 * https://github.com/globbestael/DedupEndnote/issues/3
 	 */
-	public void parsePages(String pages) {
+	public void parsePages(String pages, String fieldName) {
 		pages = pagesAdditionsPattern.matcher(pages).replaceAll("");
 		// if Pages contains a date string, omit the pages
 		Matcher matcher = pagesDatePattern.matcher(pages);
 		while (matcher.find()) {
 			pages = null;
 		}
-		// Ovid Medline in RIS format puts author address in M2 field, which is exported as SP
-		if (pages == null || pages.isEmpty() || pages.length() > 30) {
+		// @formatter:off
+		/*
+		 * - Ovid Medline in RIS format puts author address in M2 field, which is exported as SP
+		 * - WoS has in Article Number field (AR) cases as 'Pmid 29451177' and 'Pii s0016-5107(03)01975-8'. These article numbers
+		 *   with a space can be skipped
+		 */
+		// @formatter:on
+		if (pages == null || pages.isEmpty() || pages.length() > 30 || pages.contains(" ")) {
 			return;
 		}
 
@@ -905,21 +924,32 @@ public class Publication {
 		 *
 		 *  Solution:
 		 *  - treat C7 as pages
-		 *  - if C7 has already been called AND SE is a range of pages, then SE can overwrite the C7 data.
-		 *  - if C7 or SE has already been called AND SP is a range of pages (e.g. C7: Pmid 29451177, and SP: 3-4)
-		 *    then SP can overwrite the C7 data.
+		 *  - if C7 has already been called AND SE is a range of pages (except "1-..."), then SE can overwrite the C7 data.
+		 *  - if C7 or SE has already been called AND SP is a range of pages (except "1-...") 
+		 * 	  (e.g. C7: Pmid 29451177, and SP: 3-4) then SP can overwrite the C7 data.
+		 * 
+		 * FIXME: Wouldn't it be simpler if parsePages had 2 parameters (fieldContent, fieldName)?
 		 */
 		// @formatter:on
 		// Cochrane uses hyphen characters instead of minus
 		pages = pages.replaceAll("[\\u2010\\u00ad]", "-");
 
-		if (pageForComparison != null && !pages.contains("-")) {
+		if (fieldName.equals("C7")) {
+			severalPages = true;
+		} else {
+			if ((pages.startsWith("e") || pages.startsWith("E")) && !pages.contains("-")) {
+				severalPages = true;
+			}
+		}
+
+		if (pageForComparison != null && (!pages.contains("-") || pages.startsWith("1-"))) {
 			return;
 		}
 
 		// normalize starting page: W-22 --> 22
 		pages = pages.replaceAll("^([^\\d]+)\\-(\\d+)", "$1$2");
 		if (pages.contains("-")) {
+			severalPages = true;
 			int indexOf = pages.indexOf("-");
 			this.pageStart = pages.substring(0, indexOf);
 			pageStart = pageStart.replaceAll("^0+", "");
@@ -943,13 +973,18 @@ public class Publication {
 			 * Publication type is not available, pages range >= 100 is used as a criterion.
 			 */
 			this.pageForComparison = pageStart;
+			// @formatter:off
 			/**
-			 * normalize starting page: W22 --> 22, 22S --> 22 - Cochrane "page numbers" (or really article number) in
-			 * form "CD010546" can no longer be recognized as Cochrane identifiers: "10546" - FIXME: arXiv page numbers
-			 * ("arXiv:2107.12817v1") will be reduced to publication year and month ("2107"), which may result in False
-			 * Positives. See https://github.com/globbestael/DedupEndnote/issues/4 for preprint publications.
+			 * normalize starting page: W22 --> 22, 22S --> 22 
+			 * 
+			 * - Cochrane "page numbers" (or really article number) in form "CD010546" can no longer be recognized 
+			 *   as Cochrane identifiers: "10546"
+			 * - FIXME: arXiv page numbers ("arXiv:2107.12817v1") will be reduced to publication year and month ("2107"), 
+			 *   which may result in False Positives. 
+			 * See https://github.com/globbestael/DedupEndnote/issues/4 for preprint publications.
 			 */
-			pageForComparison = pageForComparison.replaceAll("^(\\D*)([\\d]+)(.*)$", "$2");
+			// @formatter:on
+			pageForComparison = pageForComparison.replaceAll("^([\\D0]*)([\\d]+)(.*)$", "$2");
 			// Use pageEnd instead of pageStart for books (criteria: start = 1, end >= 100)
 			if ("1".equals(pageForComparison) && pageEnd != null && pageEnd.length() > 2) {
 				log.debug("Long pageEnd used for pageForComparison {}", pageEnd);
@@ -958,9 +993,12 @@ public class Publication {
 					this.pageForComparison = pageEndForComparison;
 				}
 			}
-			if (pageForComparison.length() < 11) {
+			if (pageForComparison.length() < 11 && pageEnd != null) {
 				try {
-					pageForComparison = Integer.valueOf(pageForComparison).toString();
+					int pageStartInt = Integer.valueOf(pageForComparison);
+					int pageEndInt = Integer.valueOf(pageEnd);
+					int pageRange = pageEndInt - pageStartInt;
+					severalPages = pageRange > 1;
 				} catch (NumberFormatException e) {
 					log.debug("Input {} could not be parsed as an Integer", pageForComparison);
 				}

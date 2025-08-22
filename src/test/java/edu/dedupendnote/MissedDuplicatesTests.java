@@ -60,15 +60,16 @@ class MissedDuplicatesTests extends BaseTest {
 
 	@ParameterizedTest
 	@CsvSource({ "'/own/missed_duplicates/9165.txt', 2, 2", "'/own/missed_duplicates/Rofo.txt', 3, 1",
+			"'/ASySD/dedupendnote_files/missed_duplicates/Cardiac_Human_missed_duplicates_1.txt', 2, 2",
 			// Solved: authors in ALL are treated better
 			"'/ASySD/dedupendnote_files/missed_duplicates/SRSR_Human_52927.txt', 2, 1",
-	// "'/ASySD/dedupendnote_files/missed_duplicates/SRSR_Human_missed_1.txt', 6, 2", // Cochrane
-	// "'/ASySD/dedupendnote_files/missed_duplicates/SRSR_Human_missed_2.txt', 4, 2", // Cochrane
-	// "'/problems/BIG_SET_missed_1.txt', 3, 1", "'/problems/BIG_SET_missed_2.txt', 3, 1",
-	// "'/problems/BIG_SET_missed_3.txt', 3, 1", "'/problems/TIL_missed_duplicates.txt', 3, 1",
-	// "'/problems/TIL_missed_duplicates_2.txt', 3, 1", // different pages, same DOI
-	// "'/problems/TIL_missed_duplicates_3.txt', 4, 1", // SOLVED: same pages and DOI, different journal
-	// "'/problems/TIL_missed_duplicates_3.txt', 4, 1", // SOLVED: same pages and DOI, different journal
+			"'/ASySD/dedupendnote_files/missed_duplicates/SRSR_Human_missed_1.txt', 6, 2", // Cochrane
+			"'/ASySD/dedupendnote_files/missed_duplicates/SRSR_Human_missed_2.txt', 4, 2", // Cochrane
+			"'/problems/BIG_SET_missed_1.txt', 3, 1", "'/problems/BIG_SET_missed_2.txt', 3, 1",
+			"'/problems/BIG_SET_missed_3.txt', 3, 1", "'/problems/TIL_missed_duplicates.txt', 3, 1",
+			"'/problems/TIL_missed_duplicates_2.txt', 3, 1", // different pages, same DOI
+			"'/problems/TIL_missed_duplicates_3.txt', 4, 1", // SOLVED: same pages and DOI, different journal
+			"'/problems/TIL_missed_duplicates_3.txt', 4, 1", // SOLVED: same pages and DOI, different journal
 	})
 	void deduplicateMissedDuplicates(String fileName, int total, int totalWritten) {
 		log.debug("Log level should be debug");

@@ -102,9 +102,8 @@ public class IOService {
 							publication.addAuthors(fieldContent);
 						}
 						break;
-					case "C7": // article number (Scopus and WoS when imported as RIS
-						// format)
-						publication.parsePages(fieldContent);
+					case "C7": // article number (Scopus and WoS when imported as RIS format)
+						publication.parsePages(fieldContent, fieldName);
 						break;
 					case "DO": // DOI
 						publication.addDois(fieldContent);
@@ -147,7 +146,7 @@ public class IOService {
 					// but export file of such a record has this content in SE field!
 					case "SE": // pages (Embase (which provider?), Ovid PsycINFO: examples in some SRA datasets)
 					case "SP": // pages
-						publication.parsePages(fieldContent);
+						publication.parsePages(fieldContent, fieldName);
 						break;
 					/*
 					 * original non-English titles:
