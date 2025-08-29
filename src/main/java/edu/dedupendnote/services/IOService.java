@@ -117,7 +117,7 @@ public class IOService {
 						publication.fillAllAuthors();
 						publications.add(publication);
 						log.debug("Publication read with id {} and title: {}", publication.getId(),
-								publication.getTitles().get(0));
+								(publication.getTitles().isEmpty() ? "(none)" : publication.getTitles().get(0)));
 						break;
 					case "ID": // EndNote Publication number
 						publication.setId(fieldContent);
@@ -160,12 +160,16 @@ public class IOService {
 					case "T2": // Journal title / Book title
 						publication.addJournals(fieldContent);
 						break;
+					// @formatter:off
 					/*
 					 * T3 (especially used in EMBASE (OVID)) has 3 types of content:
 					 * - conference name (majority of cases)
 					 * - original title 
 					 * - alternative journal name
-					 *
+					 * T3 for PsycINFO (OVID) also puts alternative journal names in this field, sometimes more than one separated with a comma:
+					 * 		T2  - Archives of Neurology
+					 * 		T3  - A.M.A. Archives of Neurology, JAMA Neurology
+					 * 
 					 * Present solution:
 					 * - skip it if it contains a number or "Annual|Conference|Congress|Meeting|Society"
 					 *   ("Asian Pacific Digestive Week 2014. Bali Indonesia.",
@@ -174,6 +178,7 @@ public class IOService {
 					 * - add it as Title 
 					 * - add it as Journal
 					 */
+					// @formatter:on
 					case "T3": // Book section
 						if (!conferencePattern.matcher(fieldContent).matches()) {
 							publication.addJournals(fieldContent);
@@ -185,10 +190,8 @@ public class IOService {
 					// pijn". Not found in test set!
 					case "TI": // Title
 						publication.addTitles(fieldContent);
-						// Don't do this in IOService::readRecords because these 2
-						// patterns are only applied to TI field,
-						// not to the other fields which are added to List<String>
-						// titles
+						// Don't do this in IOService::readRecords because these 2 patterns are only applied to TI
+						// field, not to the other fields which are added to List<String> titles
 						if (replyPattern.matcher(fieldContent.toLowerCase()).matches()) {
 							publication.setReply(true);
 							publication.setTitle(fieldContent);
@@ -237,16 +240,21 @@ public class IOService {
 		return publications;
 	}
 
+	// @formatter:off
 	/**
 	 * - PageStart (PG) and DOIs (DO) are replaced or inserted, but written at the same place as in the input file to
-	 * make comparisons between input file and output file easier. - Absent Publication year (PY) is replaced if there
-	 * is one found in a duplicate record. - Author (AU) Anonymous is skipped. - Title (TI) is replaced with the longest
-	 * duplicate title when it contains "Reply". - Article Number (C7) is skipped. - Absent Journal Name (T2) is copied
-	 * from J2 (or filed in based on DOI foor SSRN): for embase.com records (but no check on this origin!)
+	 *   make comparisons between input file and output file easier.
+	 * - Absent Publication year (PY) is replaced if there is one found in a duplicate record.
+	 * - Author (AU) Anonymous is skipped.
+	 * - Title (TI) is replaced with the longest duplicate title when it contains "Reply".
+	 * - Article Number (C7) is skipped.
+	 * - Absent Journal Name (T2) is copied from J2 (or filed in based on DOI foor SSRN): for embase.com records
+	 *   (but no check on this origin!)
 	 *
-	 * Records are read into a TreeMap, with continuation lines added. writeRecords(...) does the replacements, and
-	 * writes to the output file.
+	 * Records are read into a TreeMap, with continuation lines added. 
+	 * writeRecords(...) does the replacements, and writes to the output file.
 	 */
+	// @formatter:off
 	public int writeDeduplicatedRecords(List<Publication> publications, String inputFileName, String outputFileName) {
 		log.debug("Start writing to file {}", outputFileName);
 		List<Publication> recordsToKeep = publications.stream().filter(Publication::getKeptRecord).toList();

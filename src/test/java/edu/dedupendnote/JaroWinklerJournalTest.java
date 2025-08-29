@@ -55,7 +55,7 @@ class JaroWinklerJournalTest {
 		Double distance = jws.apply(Publication.normalizeJournalJava8(input1),
 				Publication.normalizeJournalJava8(input2));
 		System.err.println("- 1: %s\n- 2: %s\n- 3: %s\n- 4: %s\n".formatted(input1,
-			Publication.normalizeJava8(input1), input2, Publication.normalizeJava8(input2)));
+				Publication.normalizeTitleJava8(input1), input2, Publication.normalizeTitleJava8(input2)));
 		assertThat(distance).isLessThanOrEqualTo(DeduplicationService.JOURNAL_SIMILARITY_REPLY);
 	}
 
@@ -73,8 +73,7 @@ class JaroWinklerJournalTest {
 		r2.addJournals(input2);
 
 		assertThat(deduplicationService.compareJournals(r1, r2))
-			.as("Journals are NOT similar: " + r1.getJournals() + " versus " + r2.getJournals())
-			.isTrue();
+				.as("Journals are NOT similar: " + r1.getJournals() + " versus " + r2.getJournals()).isTrue();
 	}
 
 	/*
@@ -90,8 +89,7 @@ class JaroWinklerJournalTest {
 
 		log.debug("Result: {}", deduplicationService.compareJournals(r1, r2));
 		assertThat(deduplicationService.compareJournals(r1, r2))
-			.as("Journals are similar: %s versus %s", r1.getJournals(), r2.getJournals())
-			.isFalse();
+				.as("Journals are similar: %s versus %s", r1.getJournals(), r2.getJournals()).isFalse();
 	}
 
 	/*
@@ -111,8 +109,7 @@ class JaroWinklerJournalTest {
 
 		log.debug("Result: {}", deduplicationService.compareJournals(r1, r2));
 		assertThat(deduplicationService.compareJournals(r1, r2))
-			.as("Journals are similar: %s versus %s", r1.getJournals(), r2.getJournals())
-			.isTrue();
+				.as("Journals are similar: %s versus %s", r1.getJournals(), r2.getJournals()).isTrue();
 	}
 
 	/*
@@ -303,13 +300,8 @@ class JaroWinklerJournalTest {
 						"Journal of Thoracic Oncology", "Journal of Clinical Oncology"),
 				arguments( // see issue #1
 						"ADHD-ATTENTION DEFICIT AND HYPERACTIVITY DISORDERS", "Atten Defic Hyperact Disord"),
-				arguments(
-						"European Child and Adolescent Psychiatry",
-						"European Child & Adolescent Psychiatry"),
-				arguments(
-						"Bull Acad Natl Med",
-						"Bulletin de l'Académie nationale de médecine")
-			);
+				arguments("European Child and Adolescent Psychiatry", "European Child & Adolescent Psychiatry"),
+				arguments("Bull Acad Natl Med", "Bulletin de l'Académie nationale de médecine"));
 	}
 
 	static Stream<Arguments> fullNegativeArgumentProvider() {

@@ -190,6 +190,19 @@ public class DeduplicationService {
 		this.ioService = new IOService();
 	}
 
+	public boolean compareSameDois(Publication r1, Publication r2, boolean sameDois) {
+		if (sameDois) {
+			if (log.isTraceEnabled()) {
+				log.trace("- 4. DOIs are the same (ISSNs and Journals are NOT compared)");
+			}
+			return true;
+		}
+		if (log.isTraceEnabled()) {
+			log.trace("- 4. DOIs are NOT the same: {} and {}", r1.getDois(), r2.getDois());
+		}
+		return false;
+	}
+
 	public boolean compareIssns(Publication r1, Publication r2) {
 		if (setsContainSameString(r1.getIssns(), r2.getIssns())) {
 			log.trace("- 4. ISSNs are the same");
@@ -379,8 +392,8 @@ public class DeduplicationService {
 					log.trace("\nStarting comparison {} - {}", publication.getId(), r.getId());
 				}
 				if (compareStartPageOrDoi(r, publication, map) && authorsComparator.compare(r, publication)
-						&& compareTitles(r, publication)
-						&& (map.get("sameDois") || compareIssns(r, publication) || compareJournals(r, publication))) {
+						&& compareTitles(r, publication) && (compareSameDois(r, publication, map.get("sameDois"))
+								|| compareIssns(r, publication) || compareJournals(r, publication))) {
 
 					noOfDuplicates++;
 					// set the label
@@ -574,9 +587,26 @@ public class DeduplicationService {
 		boolean sufficientDois = !r1.getDois().isEmpty() && !r2.getDois().isEmpty();
 		boolean isPhase = r1.isPhase() || r2.isPhase();
 
+		if (titles1.isEmpty() || titles2.isEmpty()) {
+			log.trace("- 3. No comparison of titles because no titles for at least one publication");
+			return true;
+		}
+		/*
+		 * These 3 used when log.isTraceEnabled()
+		 */
+		Double highestSimilarity = 0.0;
+		String highestTitle1 = "";
+		String highestTitle2 = "";
+
 		for (String title1 : titles1) {
 			for (String title2 : titles2) {
 				similarity = jws.apply(title1, title2);
+				if (log.isTraceEnabled() && similarity > highestSimilarity) {
+					highestSimilarity = similarity;
+					highestTitle1 = title1;
+					highestTitle2 = title2;
+				}
+
 				if (isPhase) { // return result of comparison of only the first title variant
 					// log.debug("{} and {}:\n- {}\n- {}", r1.getId(), r2.getId(), title1, title2);
 					if (similarity > TITLE_SIMILARITY_PHASE) {
@@ -584,22 +614,33 @@ public class DeduplicationService {
 						return true;
 					}
 				}
-				if ((sufficientStartPages || sufficientDois)
-						&& similarity > TITLE_SIMILARITY_SUFFICIENT_STARTPAGES_OR_DOIS) {
-					log.trace("- 3. Title similarity (with pages or DOIs) is above threshold");
-					return true;
+				if (sufficientStartPages || sufficientDois) {
+					if (similarity > TITLE_SIMILARITY_SUFFICIENT_STARTPAGES_OR_DOIS) {
+						if (log.isTraceEnabled()) {
+							log.trace("- 3. Title similarity (with pages or DOIs) is above threshold: '{}' and '{}'",
+									title1, title2);
+						}
+						return true;
+					}
 				}
 				if (!(sufficientStartPages || sufficientDois)) {
 					if (similarity > TITLE_SIMILARITY_INSUFFICIENT_STARTPAGES_AND_DOIS) {
-						log.trace("- 3. Title similarity (without sufficient pages or DOIs) is above threshold");
+						if (log.isTraceEnabled()) {
+							log.trace(
+									"- 3. Title similarity (without sufficient pages or DOIs) is above threshold: '{}' and '{}'",
+									title1, title2);
+						}
 						return true;
 					}
 				}
 			}
 		}
+		/*
+		 * This message gives the LAST similarity of the whole set, NOT the highest similarity with the 2 titles from both sets
+		 */
 		if (log.isTraceEnabled()) {
-			log.trace("- 3. Title similarity {} is below threshold: [{}] and [{}], subtype {}", similarity,
-					r1.getTitles().get(0), r2.getTitles().get(0),
+			log.trace("- 3. Title similarity {} is below threshold: '{}' and '{}'], subtype {}", highestSimilarity,
+					highestTitle1, highestTitle2,
 					(isPhase ? "Phase"
 							: (sufficientStartPages || sufficientDois) ? "sufficient startPages or DOIs"
 									: "not sufficient startPages or DOIs"));

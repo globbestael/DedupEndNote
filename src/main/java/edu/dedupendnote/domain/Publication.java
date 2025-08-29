@@ -21,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Data
 public class Publication {
+
 	private List<String> allAuthors = new ArrayList<>();
 
 	protected List<String> authors = new ArrayList<>();
@@ -168,6 +169,7 @@ public class Publication {
 	private static Pattern startingArticlePattern = Pattern.compile("^(the|a|an) ");
 
 	// FIXME: check last characters in pattern (space or punctuation?)
+	// @formatter:off
 	/*
 	 * Starting patterns:
 	 * "Correction to " + [A-Z]...
@@ -187,7 +189,17 @@ public class Publication {
 	 * Ending patterns:
 	 * (especially 'correction' should be the last word. Can there be one or more words after "correction"?)
 	 */
+	// @formatter:on
 	private static Pattern erratumPattern = Pattern.compile("^(Erratum: |Erratum to|Correction to )(.*)$");
+
+	/**
+	 * Esp. Scopus uses "(Japanese)" (or "(Japanese text)") at the end of the title.
+	 * 
+	 * The pattern is used on the lowercased title. The languages are not complete: based on the 200 most frequent
+	 * (sub)titles in the testfiles
+	 */
+	private static Pattern languagePattern = Pattern
+			.compile("(\\(?(chinese|dutch|french|german|italian|japanese|polish|russian|spanish)( text)?\\)?)$");
 
 	// https://stackoverflow.com/questions/47162098/is-it-possible-to-match-nested-brackets-with-a-regex-without-using-recursion-or/47162099#47162099
 	private static Pattern balancedBracespattern = Pattern.compile(
@@ -197,11 +209,12 @@ public class Publication {
 	 * The first group is non greedy (with 2 times ": " in string, first group captures before first ": ", second the
 	 * rest of the string
 	 */
-	private static Pattern titleAndSubtitlePattern = Pattern.compile("^(.{50,}?): (.{50,})$");
+	private static Pattern titleAndSubtitlePattern = Pattern.compile("^(.{50,}?)[:.?] (.{50,})$");
+	// private static Pattern titleAndSubtitlePattern = Pattern.compile("^(.+)[:.?] (.+)$");
 
 	private static Pattern numbersWithinPattern = Pattern.compile(".*\\d+.*");
 
-	public static String normalizeJava8(String s) {
+	public static String normalizeTitleJava8(String s) {
 		// FIXME: Why starting with parameter s and later copying s to r?
 		s = normalizeToBasicLatin(s);
 		s = doubleQuotesPattern.matcher(s).replaceAll("");
@@ -242,6 +255,7 @@ public class Publication {
 			log.debug("Title IS2: {}", s);
 		}
 		String r = s.toLowerCase();
+		r = languagePattern.matcher(r).replaceAll("");
 		r = nonInitialSquareBracketsPattern.matcher(r).replaceAll("");
 		r = pointyBracketsPattern.matcher(r).replaceAll("");
 		// Checks for the pointyBracketsPattern (the path not chosen)
@@ -600,6 +614,10 @@ public class Publication {
 			return;
 		}
 
+		if (authors.size() == 40) {
+			return;
+		}
+
 		author = normalizeToBasicLatin(author);
 
 		String[] parts = author.split("\\s*,\\s+"); // see testfile Non_Latin_input.txt for " , "
@@ -854,23 +872,55 @@ public class Publication {
 		return journals;
 	}
 
+	private static List<String> noTitles = List.of("not available", "[not available]", "untitled");
+
 	public void addTitles(String title) {
-		if (title.toLowerCase().equals("not available") || title.toLowerCase().equals("[not available]")) {
+		if (noTitles.contains(title.toLowerCase())) {
+			// if (title.toLowerCase().equals("not available") || title.toLowerCase().equals("[not available]")) {
 			return;
 		}
 		addTitleWithNormalization(title);
 
-		Matcher matcher = titleAndSubtitlePattern.matcher(title);
-		while (matcher.find()) {
-			// titles.add(matcher.group(1)); // add only the first part (min 50 characters)
-			String firstPart = matcher.group(1); // add only the first part (min 50 characters)
-			addTitleWithNormalization(firstPart);
-			// do not add the subtitle: titles.add(matcher.group(2));
+		// Matcher matcher = titleAndSubtitlePattern.matcher(title);
+		// while (matcher.find()) {
+		// // titles.add(matcher.group(1)); // add only the first part (min 50 characters)
+		// String firstPart = matcher.group(1); // add only the first part (min 50 characters)
+		// addTitleWithNormalization(firstPart);
+		// // do not add the subtitle: titles.add(matcher.group(2));
+		// }
+
+		boolean splittable = true;
+		String secondPart = title;
+
+		while (splittable) {
+			Matcher matcher = titleAndSubtitlePattern.matcher(secondPart);
+			if (matcher.find()) {
+				// titles.add(matcher.group(1)); // add only the first part (min 50 characters)
+				String firstPart = matcher.group(1); // add only the first part (min 50 characters)
+				secondPart = matcher.group(2);
+				if (firstPart.toLowerCase().endsWith("vs")) {
+					addTitleWithNormalization(firstPart + " " + secondPart);
+					// we could set splittable to false, but then 2nd part wont be split
+				} else {
+					addTitleWithNormalization(firstPart);
+					addTitleWithNormalization(secondPart);
+				}
+			} else {
+				splittable = false;
+			}
 		}
+
+		// Matcher matcher = titleAndSubtitlePattern.matcher(title);
+		// while (matcher.find()) {
+		// // titles.add(matcher.group(1)); // add only the first part (min 50 characters)
+		// String firstPart = matcher.group(1); // add only the first part (min 50 characters)
+		// addTitleWithNormalization(firstPart);
+		// // do not add the subtitle: titles.add(matcher.group(2));
+		// }
 	}
 
 	private void addTitleWithNormalization(String title) {
-		String normalized = normalizeJava8(title);
+		String normalized = normalizeTitleJava8(title);
 		String[] parts = normalized.split("=");
 		List<String> list = new ArrayList<>(Arrays.asList(parts));
 
@@ -1017,18 +1067,13 @@ public class Publication {
 	public void parsePublicationYear(String input) {
 		Matcher matcher = publicationYearPattern.matcher(input);
 		if (matcher.find()) {
-			publicationYear = Integer.valueOf(matcher.group(2));
+			setPublicationYear(Integer.valueOf(matcher.group(2)));
 		}
 	}
 
 	public void addReversedTitles() {
-		List<String> reversed = new ArrayList<>();
-		boolean hasId = this.id != null;
-
-		if (titles.isEmpty() && hasId) {
-			titles.add(this.id);
-		}
 		if (!titles.isEmpty()) {
+			List<String> reversed = new ArrayList<>();
 			for (String t : titles) {
 				reversed.add(new StringBuilder(t).reverse().toString());
 			}

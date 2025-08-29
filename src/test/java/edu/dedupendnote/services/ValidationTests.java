@@ -11,6 +11,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -53,6 +54,8 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 class ValidationTests {
+	// temporary
+	public Map<String, Integer> titleCounter = new HashMap<>();
 
 	private DeduplicationService deduplicationService = new DeduplicationService();
 
@@ -69,6 +72,7 @@ class ValidationTests {
 	private static Logger rootLogger;
 
 	private boolean withTracing = false;
+	private boolean withTitleSplitterOutput = false;
 
 	@BeforeAll
 	static void beforeAll() {
@@ -100,6 +104,7 @@ class ValidationTests {
 		// rootLogger.setLevel(Level.DEBUG);
 
 		withTracing = true;
+		withTitleSplitterOutput = false;
 
 		// previous results
 		Map<String, ValidationResult> validationResultsMap = List
@@ -107,7 +112,7 @@ class ValidationTests {
 						new ValidationResult("ASySD_Diabetes", 1816, 18, 11, 0, 900L),
 						new ValidationResult("ASySD_Neuroimaging", 2169, 32, 1235, 2, 1_250L),
 						new ValidationResult("ASySD_SRSR_Human", 27816, 190, 24988, 7, 68_000L),
-						new ValidationResult("BIG_SET", 3721, 238, 962, 5, 24_000L),
+						new ValidationResult("BIG_SET", 3725, 238, 962, 5, 24_000L),
 						new ValidationResult("McKeown_2021", 2010, 62, 1058, 0, 470L),
 						new ValidationResult("SRA2_Cytology_screening", 1359, 61, 436, 0, 400L),
 						new ValidationResult("SRA2_Haematology", 222, 14, 1179, 0, 300L),
@@ -194,6 +199,17 @@ class ValidationTests {
 		System.out.println(
 				"FN solvable can be found with regex: ^\\d+\\t\\t\\d+\\ttrue\\tfalse\\tfalse\\tfalse\\ttrue\\tfalse");
 		System.out.println("TP which will be kept can be found with regex: ^(\\d+)\\t\\1\\t\\ttrue\\ttrue\\t");
+
+		Map<String, Integer> sortedTitleMap = titleCounter.entrySet().stream()
+				.sorted((c1, c2) -> c2.getValue().compareTo(c1.getValue())).collect(Collectors.toMap(Map.Entry::getKey,
+						Map.Entry::getValue, (oldValue, newValue) -> oldValue, LinkedHashMap::new));
+		int i = 0;
+		for (Map.Entry<String, Integer> entry : sortedTitleMap.entrySet()) {
+			if (i++ > 500) {
+				break;
+			}
+			System.err.println("title: " + entry.getKey() + " --> " + entry.getValue());
+		}
 
 		assertThat(changed).isFalse();
 	}
@@ -331,11 +347,19 @@ class ValidationTests {
 		recordDBService.saveRecordDBs(publicationDBs, outputFileName);
 		ValidationResult validationResult = new ValidationResult(setName, tps, fns, tns, fps, endTime - startTime);
 		if (withTracing) {
+				/*
+				 * There may be records in the output file with "... - ... ARE DUPLICATES" but with publication years
+				 * which are more than 1 year apart, 
+				 * because the test of the pair does not look at the publication years
+				 */
 			if (! fnPairs.isEmpty()) {
 				validationResult.setFnPairs(fnPairs);
 				writeFNandFPresults(fnPairs, inputFileName + "_FN_Analysis.txt");
 			}
 			if (! fpPairs.isEmpty()) {
+				/*
+				 * There may be records in the output file with the same DOI but an error in the journal and/or pages
+				 */
 				validationResult.setFpPairs(fpPairs);
 				writeFNandFPresults(fpPairs, inputFileName + "_FP_Analysis.txt");
 			}
@@ -351,6 +375,18 @@ class ValidationTests {
 				.count();
 
 		System.err.println("File " + setName +  " has unique duplicates: " + uniqueDuplicates);
+
+		if (withTitleSplitterOutput) {
+			for (Publication p : publications) {
+				for (String t : p.getTitles()) {
+					if (!titleCounter.containsKey(t)) {
+						titleCounter.put(t, 1);
+					} else {
+						titleCounter.put(t, titleCounter.get(t) + 1);
+					}
+				}
+			}
+		}
 		return validationResult;
 	}
 	
