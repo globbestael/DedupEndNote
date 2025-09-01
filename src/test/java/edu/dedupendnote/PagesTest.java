@@ -38,8 +38,12 @@ class PagesTest {
 			arguments("12-4", "12", "14", "12"), 
 			arguments("1251-4", "1251", "1254", "1251"),
 			arguments("12-14", "12", "14", "12"), 
-			arguments("12-4; author reply 15", "12", "4;", "12"),
-			arguments("12; author reply 15", "12;", null, "12"),
+			arguments("12-4; author reply 15", "12", "14", "12"),
+			arguments("12; author reply 15", "12", null, "12"),
+			arguments("11; author reply 11-2", "11", null, "11"),
+			arguments("1252-3; author reply 1252-3", "1252", "1253", "1252"),
+			arguments("1469-87; discussion 1487-9", "1469", "87; discussion 1487-9", "1469"),
+			arguments("11; discussion 11-2", "11", "discussion 11-2", "11"),
 			arguments("12-14, 17-18", "12", "14, 17-18", "12"), 
 			arguments("S12-14", "S12", "S14", "12"),
 			arguments("S12-S14", "S12", "S14", "12"), 
@@ -53,6 +57,7 @@ class PagesTest {
 			arguments("ii22-ii33", "ii22", "ii33", "22"), 
 			arguments("ii-ix", "ii", "ix", null),
 			arguments("UNSP e12345", "e12345", null, "12345"), 
+			arguments("371, 425", "371", "425", "371"), 
 			arguments("1-125", "1", "125", "125"),
 			// books / reports starting at page 1
 			arguments("1-99", "1", "99", "1"), 
@@ -66,8 +71,8 @@ class PagesTest {
 			arguments("0-3", "3", null, "3"),
 			arguments("000-003", "3", null, "3"), 
 			arguments("000", "000", null, null),
-			arguments("1469-87; discussion 1487-9", "1469", "87; discussion 1487-9", "1469"),
-			arguments("1469-1487", "1469", "1487", "1469"));
+			arguments("1469-1487", "1469", "1487", "1469")
+			);
 	}
 	// @formatter:on
 

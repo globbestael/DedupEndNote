@@ -11,6 +11,7 @@ import java.util.stream.Stream;
 
 import org.apache.commons.text.similarity.JaroWinklerSimilarity;
 import org.assertj.core.api.SoftAssertions;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -27,6 +28,10 @@ class JaroWinklerTitleTest {
 
 	JaroWinklerSimilarity jws = new JaroWinklerSimilarity();
 
+	/*
+	 * This test is not useful because it uses only the input title itself, not it's variants (main title, subtitles)
+	 */
+	@Disabled("Compares only full title, not the parts")
 	@ParameterizedTest(name = "{index}: jaroWinkler({0}, {1})={2}")
 	@MethodSource("positiveArgumentProvider")
 	void jwPositiveTest(String input1, String input2, double expected) {
@@ -134,12 +139,12 @@ class JaroWinklerTitleTest {
 						"Epidemiology and diagnosis profile of digestive cancer in teaching hospital campus of lome: About 250 cases. [French]",
 						"Epidemiology and diagnosis profile of digestive cancer in teaching Hospital Campus of Lome: about 250 cases",
 						1.0), // bibliographic addition in "[...]"
+				// several bibliographic additions in "[...]", but still many differences at the end.
+				// The first argument is NOT an erratum / the addition within square brackets should be removed?
 				arguments(
 						"Increased risk of asthma attacks and emergency visits among asthma patients with allergic rhinitis: a subgroup analysis of the investigation of montelukast as a partner agent for complementary therapy [corrected].[Erratum appears in Clin Exp Allergy. 2006 Feb;36(2):249]",
 						"Increased risk of asthma attacks and emergency visits among asthma patients with allergic rhinitis: A subgroup analysis of the improving asthma control trial",
-						0.94), // unexpected!
-				// several bibliographic additions in "[...]", but still many differences at the end
-				// FIXME: Is the first one an erratum and the second not a erratum?
+						1.0), // because main title is identical
 				arguments(
 						"[The efficacy of half of the Global Initiative for Asthma recommended dose of inhaled corticosteroids in the management of Chinese asthmatics]",
 						"The efficacy of half of the Global Initiative for Asthma recommended dose of inhaled corticosteroids in the management of Chinese asthmatics. [Chinese]",
@@ -174,34 +179,6 @@ class JaroWinklerTitleTest {
 						revertString(
 								"JAK2 Germline Genetic Variation In Budd-Chiari Syndrome and Portal Vein Thrombosis"),
 						0.91),
-				arguments(
-						"Erratum: Severe deficiency of the specific von Willebrand factor-cleaving protease (ADAMTS 13) activity in a sub-group of children with atypical hemolytic uremic syndrome (The Journal of Pediatrics (M",
-						"Severe deficiency of the specific von Willebrand factor-cleaving protease (ADAMTS 13) activity in a subgroup of children with atypical hemolytic uremic syndrome (vol 142, pg 310, 2003)",
-						0.96), // FIXME: treat Erratum. !!! The first string does not end
-								// with a balanced group of round braces !!!
-				arguments( // Erratum, without ending brace-group deleted, but starting
-							// "Erratum: " deleted
-						"Severe deficiency of the specific von Willebrand factor-cleaving protease (ADAMTS 13) activity in a sub-group of children with atypical hemolytic uremic syndrome (The Journal of Pediatrics (M",
-						"Severe deficiency of the specific von Willebrand factor-cleaving protease (ADAMTS 13) activity in a subgroup of children with atypical hemolytic uremic syndrome (vol 142, pg 310, 2003)",
-						0.9618), // FIXME: treat Erratum
-				arguments( // Erratum, with ending brace-group deleted only when starting
-							// with "Erratum: ", and starting "Erratum: " deleted
-						"Severe deficiency of the specific von Willebrand factor-cleaving protease (ADAMTS 13) activity in a sub-group of children with atypical hemolytic uremic syndrome",
-						"Severe deficiency of the specific von Willebrand factor-cleaving protease (ADAMTS 13) activity in a subgroup of children with atypical hemolytic uremic syndrome (vol 142, pg 310, 2003)",
-						0.98), // FIXME: treat Erratum
-				arguments( // Erratum, with ending brace-group deleted
-						"Erratum: Severe deficiency of the specific von Willebrand factor-cleaving protease (ADAMTS 13) activity in a sub-group of children with atypical hemolytic uremic syndrome",
-						"Severe deficiency of the specific von Willebrand factor-cleaving protease (ADAMTS 13) activity in a subgroup of children with atypical hemolytic uremic syndrome",
-						1.0),
-				arguments( // Erratum, with ending brace-group deleted, and starting
-							// "Erratum: " deleted
-						"Severe deficiency of the specific von Willebrand factor-cleaving protease (ADAMTS 13) activity in a sub-group of children with atypical hemolytic uremic syndrome",
-						"Severe deficiency of the specific von Willebrand factor-cleaving protease (ADAMTS 13) activity in a subgroup of children with atypical hemolytic uremic syndrome",
-						1.0),
-				arguments(
-						"Erratum to Low Alpha-Fetoprotein Levels Are Associated with Improved Survival in Hepatocellular Carcinoma Patients with Portal Vein Thrombosis (Dig Dis Sci, DOI 10.1007/s10620-015-3922-3)",
-						"Erratum to: Low Alpha-Fetoprotein Levels Are Associated with Improved Survival in Hepatocellular Carcinoma Patients with Portal Vein Thrombosis",
-						1.0),
 				arguments("Is homozygous a-thalassaemia a lethal condition in the 1990s?",
 						"Is homozygous alpha-thalassaemia a lethal condition in the 1990s?", 
 						0.93),
@@ -326,88 +303,80 @@ class JaroWinklerTitleTest {
 						"A phase 3 study of durvalumab with or without bevacizumab as adjuvant therapy in patients with hepatocellular carcinoma (HCC) who are at high risk of recurrence after curative hepatic resection",
 						0.9474), // example of False Positive: difference at the end
 				arguments(
-						"<<Except for the war's laws>>. Psychic trauma in soldiers murderers. French",
-						"Except for the war's laws. Psychic trauma in soldiers murderers. French", 
-						0.72),
-				arguments(
-						revertString("<<Except for the war's laws>>. Psychic trauma in soldiers murderers. French"),
-						revertString("Except for the war's laws. Psychic trauma in soldiers murderers. French"), 
-						1.0),
-				arguments(
 						"What can psychoanalysis contribute to the current refugee crisis?: Preliminary reports from STEP-BY-STEP: A psychoanalytic pilot project for supporting refugees in a \"first reception camp\" and crisis interventions with traumatized refugees",
 						"What can psychoanalysis contribute to the current refugee crisis?", 
-						0.86),
+						1.0),
 				arguments(
 						"Phase 2 open-label study of single-agent sorafenib in treating advanced hepatocellular carcinoma in a hepatitis B-endemic Asian population: presence of lung metastasis predicts poor response",
 						"Phase 2 open-label study of single-agent sorafenib in treating advanced hepatocellular carcinoma in a hepatitis B-endemic Asian population",
-						0.95));
+						1.0),
+				arguments(
+					revertString("<<Except for the war's laws>>. Psychic trauma in soldiers murderers. French"),
+					revertString("Except for the war's laws. Psychic trauma in soldiers murderers. French"), 
+					1.0)
+						);
 	}
 	// @formatter:on
 
 	// @formatter:off
 	static Stream<Arguments> negativeArgumentProvider() {
 		return Stream.of(
-				// not usable for some journal abbreviations
-				arguments("British journal of surgery", "Br J Surg", 0.6),
 				arguments(
 						"The use of TIPS should be cautious in noncirrhotic patients with obliterative portal vein thrombosis",
 						"The significance of nonobstructive sinusoidal dilatation of the liver: Impaired portal perfusion or inflammatory reaction syndrome",
 						0.71), // unexpectedly high!
-				arguments("[Elimination of airborne allergens from the household environment]",
-						"Eviction of airborne allergens for the household environment. [French]", 0.83), // different
-																											// translations
-				arguments("[Elimination of airborne allergens from the household environment]",
-						"Eviction of airborne allergens for the household environment", 0.83), // different
-																								// translations
-				arguments("[Various aspects of respiratory emergencies in non-hospital practice]",
-						"Some aspects of respiratory emergencies in non-hospital practice. [French]", 0.81), // different
-																												// translations
+				arguments(
+					"[Elimination of airborne allergens from the household environment]",
+					"Eviction of airborne allergens for the household environment. [French]", 
+					0.83), // different translations
+				arguments(
+					"[Elimination of airborne allergens from the household environment]",
+					"Eviction of airborne allergens for the household environment", 
+					0.83), // different translations
+				arguments(
+					"[Various aspects of respiratory emergencies in non-hospital practice]",
+					"Some aspects of respiratory emergencies in non-hospital practice. [French]", 
+					0.81), // different translations
 				arguments(
 						"NFkappaB inhibition decreases hepatocyte proliferation but does not alter apoptosis in obstructive jaundice",
 						"NF kappa B inhibition decreases hepatocyte proliferation but does not alter apoptosis in obstructive jaundice",
 						0.88), // heavy penalty on differences at start
-				arguments("Case report. Duplication of the portal vein: a rare congenital anomaly",
-						"Duplication of the portal vein - A rare congenital anomaly", 0.79),
 				arguments(
-						"La sémantique de l'image radiologique. Intérêt du procédé de soustraction électronique en couleurs d'Oosterkamp en angiographie abdominale",
-						"INTERET DU PROCEDE DE SOUSTRACTION ELECTRONIQUE EN COULEURS D'OOSTERKAMP EN ANGIOGRAPHIE ABDOMINALE",
-						0.75),
-				arguments("The JAK2 46/1 haplotype in Budd-Chiari syndrome and portal vein thrombosis",
-						"JAK2 Germline Genetic Variation In Budd-Chiari Syndrome and Portal Vein Thrombosis", 0.85),
+					"Case report. Duplication of the portal vein: a rare congenital anomaly",
+					"Duplication of the portal vein - A rare congenital anomaly", 
+					0.79),
 				arguments(
-						"RETRACTED: Isolated central retinal artery occlusion as an initial presentation of paroxysmal nocturnal hemoglobinuria and successful long-term prevention of systemic thrombosis with eculizumab (Retracted article. See vol. 58, pg. 307, 2014)",
-						"Isolated central retinal artery occlusion as an initial presentation of paroxysmal nocturnal hemoglobinuria and successful long-term prevention of systemic thrombosis with eculizumab",
-						0.77),
-				arguments(revertString(
-						"RETRACTED: Isolated central retinal artery occlusion as an initial presentation of paroxysmal nocturnal hemoglobinuria and successful long-term prevention of systemic thrombosis with eculizumab (Retracted article. See vol. 58, pg. 307, 2014)"),
-						revertString(
-								"Isolated central retinal artery occlusion as an initial presentation of paroxysmal nocturnal hemoglobinuria and successful long-term prevention of systemic thrombosis with eculizumab"),
-						0.77),
-				arguments("Was ist mit der Pfortader? Idiopathic phlethrombosis.", "Was ist mit der pfortader?", 0.898), // NOT
-																															// >
-																															// 0.90,
-																															// will
-																															// not
-																															// be
-																															// accepted
-				arguments(revertString(
-						"Erratum: Severe deficiency of the specific von Willebrand factor-cleaving protease (ADAMTS 13) activity in a sub-group of children with atypical hemolytic uremic syndrome (The Journal of Pediatrics (M"),
-						revertString(
-								"Severe deficiency of the specific von Willebrand factor-cleaving protease (ADAMTS 13) activity in a subgroup of children with atypical hemolytic uremic syndrome (vol 142, pg 310, 2003)"),
-						0.77), // FIXME: treat Erratum
+					"La sémantique de l'image radiologique. Intérêt du procédé de soustraction électronique en couleurs d'Oosterkamp en angiographie abdominale",
+					"INTERET DU PROCEDE DE SOUSTRACTION ELECTRONIQUE EN COULEURS D'OOSTERKAMP EN ANGIOGRAPHIE ABDOMINALE",
+					0.75),
 				arguments(
-						"90 Y radioembolization for locally advanced hepatocellular carcinoma with portal vein thrombosis: Long-term outcomes in a 185-patient cohort",
-						"Y-90 Radioembolization for Locally Advanced Hepatocellular Carcinoma with Portal Vein Thrombosis: Long-Term Outcomes in a 185-Patient Cohort",
-						0.84), // just because of the space
-				arguments("Complication-based learning curve in laparoscopic sleeve gastrectomy",
-						"Complications of laparoscopic sleeve gastrectomy", 0.87), // example
-																					// of
-																					// False
-																					// Positive
+					"The JAK2 46/1 haplotype in Budd-Chiari syndrome and portal vein thrombosis",
+					"JAK2 Germline Genetic Variation In Budd-Chiari Syndrome and Portal Vein Thrombosis", 
+					0.85),
 				arguments(
-						"Case records of the Massachusetts General Hospital. Case 35-2007. A 30-year-old man with inflammatory bowel disease and recent onset of fever and bloody diarrhea",
-						"Case 35-2007: A 30-year-old man with inflammatory bowel disease and recent onset of fever and bloody diarrhea",
-						0.84),
+					"RETRACTED: Isolated central retinal artery occlusion as an initial presentation of paroxysmal nocturnal hemoglobinuria and successful long-term prevention of systemic thrombosis with eculizumab (Retracted article. See vol. 58, pg. 307, 2014)",
+					"Isolated central retinal artery occlusion as an initial presentation of paroxysmal nocturnal hemoglobinuria and successful long-term prevention of systemic thrombosis with eculizumab",
+					0.77),
+				arguments(
+					revertString("RETRACTED: Isolated central retinal artery occlusion as an initial presentation of paroxysmal nocturnal hemoglobinuria and successful long-term prevention of systemic thrombosis with eculizumab (Retracted article. See vol. 58, pg. 307, 2014)"),
+					revertString("Isolated central retinal artery occlusion as an initial presentation of paroxysmal nocturnal hemoglobinuria and successful long-term prevention of systemic thrombosis with eculizumab"),
+					0.77),
+				arguments(
+					"Was ist mit der Pfortader? Idiopathic phlethrombosis.", 
+					"Was ist mit der pfortader?", 
+					0.898), // NOT >  0.90,  will not be accepted
+				arguments(
+					"90 Y radioembolization for locally advanced hepatocellular carcinoma with portal vein thrombosis: Long-term outcomes in a 185-patient cohort",
+					"Y-90 Radioembolization for Locally Advanced Hepatocellular Carcinoma with Portal Vein Thrombosis: Long-Term Outcomes in a 185-Patient Cohort",
+					0.84), // just because of the space
+				arguments(
+					"Complication-based learning curve in laparoscopic sleeve gastrectomy",
+					"Complications of laparoscopic sleeve gastrectomy", 
+					0.87), // example of  False  Positive
+				arguments(
+					"Case records of the Massachusetts General Hospital. Case 35-2007. A 30-year-old man with inflammatory bowel disease and recent onset of fever and bloody diarrhea",
+					"Case 35-2007: A 30-year-old man with inflammatory bowel disease and recent onset of fever and bloody diarrhea",
+					0.84),
 				/*
 				 * Example 1 of a False Positive: Phase I and Phase I/II trial
 				 */
@@ -424,21 +393,29 @@ class JaroWinklerTitleTest {
 				 * / Six year ...
 				 */
 				arguments(
-						"Six-year (yr) follow-up of patients (pts) with imatinib-resistant or -intolerant chronic-phase chronic myeloid leukemia (CML-CP) receiving dasatinib",
-						"Five-year follow-up of patients with imatinib-resistant or -intolerant chronic-phase chronic myeloid leukemia (CML-CP) receiving dasatinib",
-						0.81), // example of False Positive
+					"Six-year (yr) follow-up of patients (pts) with imatinib-resistant or -intolerant chronic-phase chronic myeloid leukemia (CML-CP) receiving dasatinib",
+					"Five-year follow-up of patients with imatinib-resistant or -intolerant chronic-phase chronic myeloid leukemia (CML-CP) receiving dasatinib",
+					0.81), // example of False Positive
 				/*
 				 * Example 3 of a False Positive: Difference at the end
 				 */
-				arguments(revertString(
-						"A phase 3 study of durvalumab with or without bevacizumab as adjuvant therapy in patients with hepatocellular carcinoma at high risk of recurrence after curative hepatic resection or ablation: EMERALD-2"),
-						revertString(
-								"A phase 3 study of durvalumab with or without bevacizumab as adjuvant therapy in patients with hepatocellular carcinoma (HCC) who are at high risk of recurrence after curative hepatic resection"),
-						0.81) // example of False Positive
+				arguments(
+					revertString("A phase 3 study of durvalumab with or without bevacizumab as adjuvant therapy in patients with hepatocellular carcinoma at high risk of recurrence after curative hepatic resection or ablation: EMERALD-2"),
+						revertString("A phase 3 study of durvalumab with or without bevacizumab as adjuvant therapy in patients with hepatocellular carcinoma (HCC) who are at high risk of recurrence after curative hepatic resection"),
+						0.81), // example of False Positive
+				arguments(
+					"<<Except for the war's laws>>. Psychic trauma in soldiers murderers. French",
+					"Except for the war's laws. Psychic trauma in soldiers murderers. French", 
+					0.71)
 		);
 	}
 	// @formatter:on
 
+	/*
+	 * FIXME: This is far from complete. See comment in IOService (above erratumPattern) with the examples of errata
+	 * WITHOUT words as erratum / correction / corrigendum in the title.
+	 * See https://github.com/globbestael/DedupEndNote/issues/32
+	 */
 	@Test
 	void testErrata() {
 		// https://stackoverflow.com/questions/47162098/is-it-possible-to-match-nested-brackets-with-a-regex-without-using-recursion-or/47162099#47162099

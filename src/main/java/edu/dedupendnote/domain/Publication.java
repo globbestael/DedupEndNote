@@ -52,6 +52,8 @@ public class Publication {
 
 	private String pageForComparison;
 
+	private boolean pagesWithComma = false;
+
 	private boolean presentInOldFile = false; // used when comparing 2 files
 
 	private Integer publicationYear = 0;
@@ -169,29 +171,6 @@ public class Publication {
 	private static Pattern startingArticlePattern = Pattern.compile("^(the|a|an) ");
 
 	// FIXME: check last characters in pattern (space or punctuation?)
-	// @formatter:off
-	/*
-	 * Starting patterns:
-	 * "Correction to " + [A-Z]...
-	 * "Correction to '" + ...'
-	 * "Correction to: "
-	 * "Correction: "
-	 * "Corrections:  "
-	 *
-	 * "Corrigendum to "
-	 * "Corrigendum to '"
-	 * "Corrigendum to: "
-	 * "Corrigendum: "
-	
-	 * "Erratum to "  [A-Z]...
-	 * "Erratum: "
-	 * 
-	 * Ending patterns:
-	 * (especially 'correction' should be the last word. Can there be one or more words after "correction"?)
-	 */
-	// @formatter:on
-	private static Pattern erratumPattern = Pattern.compile("^(Erratum: |Erratum to|Correction to )(.*)$");
-
 	/**
 	 * Esp. Scopus uses "(Japanese)" (or "(Japanese text)") at the end of the title.
 	 * 
@@ -201,9 +180,13 @@ public class Publication {
 	private static Pattern languagePattern = Pattern
 			.compile("(\\(?(chinese|dutch|french|german|italian|japanese|polish|russian|spanish)( text)?\\)?)$");
 
-	// https://stackoverflow.com/questions/47162098/is-it-possible-to-match-nested-brackets-with-a-regex-without-using-recursion-or/47162099#47162099
-	private static Pattern balancedBracespattern = Pattern.compile(
-			"(?=\\()(?:(?=.*?\\((?!.*?\\1)(.*\\)(?!.*\\2).*))(?=.*?\\)(?!.*?\\2)(.*)).)+?.*?(?=\\1)[^(]*(?=\\2$)");
+	/*
+	 * Pattern for balanced brackets.
+	 * Was used when errata titles where preprocessed. 
+	 * See: https://stackoverflow.com/questions/47162098/is-it-possible-to-match-nested-brackets-with-a-regex-without-using-recursion-or/47162099#47162099
+	 */
+	// private static Pattern balancedBracespattern = Pattern.compile(
+	// "(?=\\()(?:(?=.*?\\((?!.*?\\1)(.*\\)(?!.*\\2).*))(?=.*?\\)(?!.*?\\2)(.*)).)+?.*?(?=\\1)[^(]*(?=\\2$)");
 
 	/**
 	 * The first group is non greedy (with 2 times ": " in string, first group captures before first ": ", second the
@@ -233,27 +216,7 @@ public class Publication {
 		 * original records (erratum as first record encountered). There are some tests in
 		 * {@link edu.dedupendnote.JaroWinklerTitleTest} (and an incomplete method
 		 * {@link edu.dedupendnote.JaroWinklerTitleTest#testErrata()})
-		 * 
-		 * FIXME: Is it necessary to mark publications as erratum, and only compare pairs of records of both are erratum
-		 * publcations or both are non erratum publications?
 		 */
-		Matcher matcher = erratumPattern.matcher(s);
-		if (matcher.find()) {
-			log.debug("Title WAS: {}", s);
-			s = matcher.group(2);
-			log.debug("Title IS1: {}", s);
-			matcher = balancedBracespattern.matcher(s);
-			while (matcher.find()) {
-				if (matcher.end(0) == s.length()) {
-					if (matcher.start() == 0) {
-						s = s.substring(1, s.length() - 1);
-					} else {
-						s = s.substring(0, matcher.start() - 1);
-					}
-				}
-			}
-			log.debug("Title IS2: {}", s);
-		}
 		String r = s.toLowerCase();
 		r = languagePattern.matcher(r).replaceAll("");
 		r = nonInitialSquareBracketsPattern.matcher(r).replaceAll("");
@@ -876,18 +839,9 @@ public class Publication {
 
 	public void addTitles(String title) {
 		if (noTitles.contains(title.toLowerCase())) {
-			// if (title.toLowerCase().equals("not available") || title.toLowerCase().equals("[not available]")) {
 			return;
 		}
 		addTitleWithNormalization(title);
-
-		// Matcher matcher = titleAndSubtitlePattern.matcher(title);
-		// while (matcher.find()) {
-		// // titles.add(matcher.group(1)); // add only the first part (min 50 characters)
-		// String firstPart = matcher.group(1); // add only the first part (min 50 characters)
-		// addTitleWithNormalization(firstPart);
-		// // do not add the subtitle: titles.add(matcher.group(2));
-		// }
 
 		boolean splittable = true;
 		String secondPart = title;
@@ -935,10 +889,12 @@ public class Publication {
 	 * "UNSP ..." (and variants) should be cleaned from the C7 field (WoS). Import may have changed UNSP" Into "Unsp".
 	 * "author..." (reply etc): delete rest of string
 	 */
-	private static Pattern pagesAdditionsPattern = Pattern.compile("((UNSP|Unsp)\\s*|author.+$)");
+	private static Pattern pagesAdditionsPattern = Pattern.compile("((UNSP|Unsp)\\s*|; author.+$)");
 
 	private static Pattern pagesDatePattern = Pattern
 			.compile("\\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\\b");
+
+	private static Pattern firstPagesGroup = Pattern.compile("^([^-,;]+)([,;])(.*)$");
 
 	/**
 	 * parsePages: parses the different input strings with page numbers / article numbers to the fields pageStart,
@@ -1001,7 +957,27 @@ public class Publication {
 
 		// normalize starting page: W-22 --> 22
 		pages = pages.replaceAll("^([^\\d]+)\\-(\\d+)", "$1$2");
-		if (pages.contains("-")) {
+
+		// @formatter:off
+		/*
+		 * First check for "[,;] before any "-"
+		 * - if "," then there is another (discontinuous?) page or an addition
+		 * - if ";" the there is an addition 
+		 * In both cases: consider it as NOT a meeting abstract, and severalPages = true
+		 */ 
+		// @formatter:on
+		Matcher firstPagesGroupMatcher = firstPagesGroup.matcher(pages);
+		if (firstPagesGroupMatcher.matches()) {
+			severalPages = true;
+			this.pageStart = firstPagesGroupMatcher.group(1);
+			if (",".equals(firstPagesGroupMatcher.group(2))) {
+				this.pagesWithComma = true;
+			}
+			this.pageEnd = firstPagesGroupMatcher.group(3).strip();
+			if (this.pageEnd.equals("")) {
+				this.pageEnd = null;
+			}
+		} else if (pages.contains("-")) {
 			severalPages = true;
 			int indexOf = pages.indexOf("-");
 			this.pageStart = pages.substring(0, indexOf);

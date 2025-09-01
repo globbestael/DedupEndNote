@@ -36,9 +36,64 @@ public class IOService {
 	/** Pattern to identify clinical trials phase (1 ..4, i .. iv) */
 	private static final Pattern phasePattern = Pattern.compile(".*phase\\s[\\di].*", Pattern.CASE_INSENSITIVE);
 
-	// Don't use "Response" as last word, e.g: Endothelial cell injury in
-	// cardiovascular surgery: the procoagulant response
+	// @formatter:on
+	/*
+	 * Replies and errata
+	 * ==================
+	 * 
+	 * Replies:
+	 * 	Don't use "Response" as last word, 
+	 *  e.g: Endothelial cell injury in cardiovascular surgery: the procoagulant response
+	 *
+	 * Errata:
+	 * 
+	 * Starting patterns:
+	 * "Correction to " + [A-Z]...
+	 * "Correction to '" + ...'
+	 * "Correction to: "
+	 * "Correction: "
+	 * "Corrections:  "
+	 *
+	 * "Corrigendum to "
+	 * "Corrigendum to '"
+	 * "Corrigendum to: "
+	 * "Corrigendum: "
+	
+	 * "Erratum to "  [A-Z]...
+	 * "Erratum: "
+	 * 
+	 * Ending patterns:
+	 * - Correction
+	 * - Corrigendum
+	 * - Erratum
+	 * 
+	 * There are title with "... [Erratum appears ...]" (or "... [published erratum appears ...]") which are NOT errata
+	 * - Diminished GABA(A) receptor-binding capacity and a DNA base substitution in a patient with treatment-resistant 
+	 *   depression and anxiety.[Erratum appears in Neuropsychopharmacology. 2004 Sep;29(9):1762]
+	 * - Variant of Rett syndrome and CDKL5 gene: clinical and autonomic description of 10 cases.[Erratum appears in 
+	 *   Neuropediatrics. 2013 Aug;44(4):237]
+	 * - White matter microstructure, cognition, and molecular markers in fragile X premutation females.[Erratum appears 
+	 *   in Neurology. 2017 Sep 26;89(13):1430; PMID: 28947586]
+	 * 
+	 * There are titles with "[corrected]", sometimes with further additions, whch also are NOT errata
+	 * - Extensive thrombosis in a patient with familial Mediterranean fever, despite hyperimmunoglobulin D state in 
+	 *   serum. [corrected]
+	 * - Ecologically-oriented neurorehabilitation of memory: robustness of outcome across diagnosis and 
+	 *   severity... [corrected][published erratum appears in Brain Inj. 2013 Mar;27(3):377]
+	 * - "Up-dating the monograph." [corrected] Cytolytic immune lymphocytes in the armamentarium of the human host
+	 * In the last example the correction follows the "[corrected]"?
+	 * 
+	 * Errata are treated in the same was as replies: In IOService::readPublications titles which match 
+	 * the erratumPattern also set the Publication::isReply field. In the comparisons of the DeduplicationService
+	 * and in the enrich steps they are treated exactly like replies.
+	 * 
+	 * Because the errata titles are skipped in the DeduplicationService::compareTtitlesm, there is NO proprocessing
+	 * of them in Publication::addTitles.
+	 */
+	// @formatter:on
 	private static final Pattern replyPattern = Pattern.compile("(.*\\breply\\b.*|.*author(.+)respon.*|^response$)");
+	private static final Pattern erratumPattern = Pattern.compile(
+			"(^(Correction|Corrigendum|Erratum)( to (?=[A-Z])| to '|( to)?: ).*)|(.*(Correction|Corrigendum|Erratum)$)");
 
 	/*
 	 * If field content starts with a comma (",") EndNote exports "[Fieldname]  -,",
@@ -192,7 +247,8 @@ public class IOService {
 						publication.addTitles(fieldContent);
 						// Don't do this in IOService::readRecords because these 2 patterns are only applied to TI
 						// field, not to the other fields which are added to List<String> titles
-						if (replyPattern.matcher(fieldContent.toLowerCase()).matches()) {
+						if (replyPattern.matcher(fieldContent.toLowerCase()).matches()
+								|| erratumPattern.matcher(fieldContent).matches()) {
 							publication.setReply(true);
 							publication.setTitle(fieldContent);
 						}
@@ -423,7 +479,7 @@ public class IOService {
 			}
 			if (publication.getPageStart() != null) {
 				if (publication.getPageEnd() != null && !publication.getPageEnd().equals(publication.getPageStart())) {
-					map.put("SP", publication.getPageStart() + "-" + publication.getPageEnd());
+					map.put("SP", publication.getPageStart() + (publication.isPagesWithComma() ? ", " : "-") + publication.getPageEnd());
 				} else {
 					map.put("SP", publication.getPageStart());
 				}

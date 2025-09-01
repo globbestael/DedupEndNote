@@ -49,13 +49,15 @@ public class DeduplicationService {
 			boolean sufficientDois = !r1.getDois().isEmpty() && !r2.getDois().isEmpty();
 
 			if (r1.getAllAuthors().isEmpty() || r2.getAllAuthors().isEmpty()) {
-				// Because Anonymous AND Reply would only compare on journals (and maybe
+				// Because Anonymous would only compare on journals (and maybe
 				// SP/DOIs) (see "MedGenMed Medscape General Medicine" articles in
 				// Cannabis test set)
 				// Because Anonymous AND no SP or DOI would only compare on title and
 				// journals (see "Abstracts of 16th National Congress of SIGENP" articles
 				// in Joost problem set)
-				if (isReply || (!sufficientStartPages && !sufficientDois)) {
+				if (!sufficientStartPages && !sufficientDois) {
+					log.trace(
+							"- 2. Not the same because not enough data: One or both authors are empty AND not enough starting pages AND not enough DOIs");
 					return false;
 				}
 				log.trace("- 2. One or both authors are empty");
@@ -837,6 +839,8 @@ public class DeduplicationService {
 				 * FIXME: Should empty authors be filled in from the duplicate set? See DOI
 				 * 10.2298/sarh0902077c in test database, but the 2 duplicates have not the same
 				 * author forms: "Culafic, D." (WoS) and "Dorde, Ć" (Scopus, error)
+				 * Better example: 4605 in BIG_TEST without authors, 21391 with authors.
+				 * But records can have different authors: in BIG_SET 4226 (none), 21471 (Banks ...), 36519 (Cabot ...)
 				 */
 			}
 		}
