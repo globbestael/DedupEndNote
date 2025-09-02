@@ -108,15 +108,15 @@ class ValidationTests {
 
 		// previous results
 		Map<String, ValidationResult> validationResultsMap = List
-				.of(new ValidationResult("ASySD_Cardiac_human", 6748, 25, 2175, 0, 3_700L),
-						new ValidationResult("ASySD_Diabetes", 1816, 18, 11, 0, 900L),
-						new ValidationResult("ASySD_Neuroimaging", 2169, 32, 1235, 2, 1_250L),
-						new ValidationResult("ASySD_SRSR_Human", 27816, 190, 24988, 7, 68_000L),
-						new ValidationResult("BIG_SET", 3725, 238, 962, 5, 24_000L),
-						new ValidationResult("McKeown_2021", 2010, 62, 1058, 0, 470L),
-						new ValidationResult("SRA2_Cytology_screening", 1359, 61, 436, 0, 400L),
-						new ValidationResult("SRA2_Haematology", 222, 14, 1179, 0, 300L),
-						new ValidationResult("SRA2_Respiratory", 761, 39, 1188, 0, 800L),
+				.of(new ValidationResult("ASySD_Cardiac_human", 6753, 20, 2175, 0, 3_700L),
+						new ValidationResult("ASySD_Diabetes", 1816, 18, 11, 0, 1_000L),
+						new ValidationResult("ASySD_Neuroimaging", 2172, 29, 1235, 2, 1_350L),
+						new ValidationResult("ASySD_SRSR_Human", 27897, 120, 24975, 9, 100_000L),
+						new ValidationResult("BIG_SET", 39009, 187, 961, 17, 66_000L),
+						new ValidationResult("McKeown_2021", 2016, 56, 1054, 4, 470L),
+						new ValidationResult("SRA2_Cytology_screening", 1361, 59, 436, 0, 400L),
+						new ValidationResult("SRA2_Haematology", 225, 11, 1177, 2, 300L),
+						new ValidationResult("SRA2_Respiratory", 766, 34, 1184, 4, 800L),
 						new ValidationResult("SRA2_Stroke", 497, 13, 782, 0, 320L))
 				.stream().collect(Collectors.toMap(ValidationResult::getFileName, Function.identity(), (o1, o2) -> o1,
 						TreeMap::new));
@@ -231,7 +231,7 @@ class ValidationTests {
 						new ValidationResultASySD("Haematology", 222, 14, 1179, 0, 106),
 						new ValidationResultASySD("Respiratory", 761, 39, 1188, 0, 354),
 						new ValidationResultASySD("Stroke", 497, 13, 782, 0, 190),
-						new ValidationResultASySD("BIG_SET", 3721, 238, 962, 5, 1361), // 1347 unique
+						new ValidationResultASySD("BIG_SET", 3889, 207, 961, 17, 1416),
 						new ValidationResultASySD("McKeown_2021", 2010, 62, 1058, 0, 816),
 
 						new ValidationResultASySD("ASySD_Cardiac_human", 6748, 25, 2175, 0, 3234),
