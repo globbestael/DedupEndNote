@@ -91,9 +91,14 @@ public class IOService {
 	 * of them in Publication::addTitles.
 	 */
 	// @formatter:on
-	private static final Pattern replyPattern = Pattern.compile("(.*\\breply\\b.*|.*author(.+)respon.*|^response$)");
+	// FIXME: Can some of these 4 patterns be merged?
+	private static final Pattern replyPattern = Pattern
+			.compile("(^C(omment|OMMENT)|^R[Ee]: .+|.*\\breply\\b.*|.*author(.+)respon.*|^response$)");
 	private static final Pattern erratumPattern = Pattern.compile(
 			"(^(Correction|Corrigendum|Erratum)( to (?=[A-Z])| to '|( to)?: ).*)|(.*(Correction|Corrigendum|Erratum)$)");
+	public static final Pattern sourcePattern = Pattern.compile(".+(\\(vol \\d+\\D+\\d+\\D+\\d+\\D*\\))");
+	public static Pattern commentPattern = Pattern.compile(
+			"(e)?Comment(|s|ary)\\b.*|.+[cC]omment(|s|ary)( from| on| to)?:? [A-Z'\"].+|.+[Cc]omment(|s|ary)|.+COMMENT");
 
 	/*
 	 * If field content starts with a comma (",") EndNote exports "[Fieldname]  -,",
@@ -248,7 +253,9 @@ public class IOService {
 						// Don't do this in IOService::readRecords because these 2 patterns are only applied to TI
 						// field, not to the other fields which are added to List<String> titles
 						if (replyPattern.matcher(fieldContent.toLowerCase()).matches()
-								|| erratumPattern.matcher(fieldContent).matches()) {
+								|| erratumPattern.matcher(fieldContent).matches()
+								|| (fieldContent.endsWith(")") && sourcePattern.matcher(fieldContent).matches())
+								|| commentPattern.matcher(fieldContent).matches()) {
 							publication.setReply(true);
 							publication.setTitle(fieldContent);
 						}

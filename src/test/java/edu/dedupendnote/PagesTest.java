@@ -71,7 +71,8 @@ class PagesTest {
 			arguments("0-3", "3", null, "3"),
 			arguments("000-003", "3", null, "3"), 
 			arguments("000", "000", null, null),
-			arguments("1469-1487", "1469", "1487", "1469")
+			arguments("1469-1487", "1469", "1487", "1469"),
+			arguments("AA59-AA60", "AA59", "AA60", "59")
 			);
 	}
 	// @formatter:on

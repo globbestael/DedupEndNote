@@ -4,9 +4,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.text.similarity.JaroWinklerSimilarity;
@@ -20,12 +25,16 @@ import org.springframework.boot.test.context.TestConfiguration;
 
 import edu.dedupendnote.domain.Publication;
 import edu.dedupendnote.services.DeduplicationService;
+import edu.dedupendnote.services.IOService;
 
 //@Slf4j
 //@ExtendWith(TimingExtension.class)
 @TestConfiguration
 class JaroWinklerTitleTest {
 
+	String homeDir = System.getProperty("user.home");
+
+	String testdir = homeDir + "/dedupendnote_files";
 	JaroWinklerSimilarity jws = new JaroWinklerSimilarity();
 
 	/*
@@ -428,6 +437,108 @@ class JaroWinklerTitleTest {
 					+ s.length());
 		}
 		assertThat(1 * 1).isEqualTo(1);
+	}
+
+	@Test
+	void testErrataFromFile() throws IOException {
+		String fileName = testdir + "/all/all__ST_TI_ending_with_round_bracket.txt";
+		Path path = Path.of(fileName);
+		List<String> lines = Files.readAllLines(path);
+
+		List<String> results = new ArrayList<>();
+
+		for (String line : lines) {
+			Matcher matcher = IOService.sourcePattern.matcher(line);
+			if (matcher.matches()) {
+				System.err.println("\t- " + matcher.group(1));
+				results.add(matcher.group(1));
+			}
+		}
+
+		assertThat(results).as("There are more than 10 results").hasSizeGreaterThan(10);
+		assertThat(lines).as("There are more than 100 lines").hasSizeGreaterThan(100);
+	}
+
+	@Test
+	void testPositiveCommentsFromFile() throws IOException {
+		String fileName = testdir + "/all/All__comment__positive_examples.txt";
+		Path path = Path.of(fileName);
+		List<String> lines = Files.readAllLines(path);
+
+		List<String> negativeResults = new ArrayList<>();
+		List<String> positiveResults = new ArrayList<>();
+
+		for (String line : lines) {
+			Matcher matcher = IOService.commentPattern.matcher(line);
+			if (matcher.matches()) {
+				System.err.println("- Positive comment caught: " + line);
+				positiveResults.add(line);
+			} else {
+				System.err.println("- Negative comment passed: " + line);
+				negativeResults.add(line);
+			}
+		}
+
+		SoftAssertions softAssertions = new SoftAssertions();
+		softAssertions.assertThat(negativeResults)
+				.as("There are positive examples which are NOT caught as normal comments").hasSize(0);
+		softAssertions.assertThat((100 * positiveResults.size()) / lines.size())
+				.as("Only " + (100 * positiveResults.size()) / lines.size() + "% of positive cases caught")
+				.isEqualTo(100);
+		softAssertions.assertAll();
+	}
+
+	@Test
+	void testNegativeCommentsFromFile() throws IOException {
+		String fileName = testdir + "/all/All__comment__negative_examples.txt";
+		Path path = Path.of(fileName);
+		List<String> lines = Files.readAllLines(path);
+
+		List<String> negativeResults = new ArrayList<>();
+
+		for (String line : lines) {
+			Matcher matcher = IOService.commentPattern.matcher(line);
+			if (matcher.matches()) {
+				System.err.println("- Negative comment passed: " + line);
+				negativeResults.add(line);
+			}
+		}
+
+		SoftAssertions softAssertions = new SoftAssertions();
+		softAssertions.assertThat(negativeResults).as("There negative examples are caught as normal comments results")
+				.hasSize(0);
+		softAssertions.assertThat((100 * negativeResults.size()) / lines.size())
+				.as((100 * negativeResults.size()) / lines.size() + "% of negative cases are not caught").isEqualTo(0);
+		softAssertions.assertAll();
+	}
+
+	@Test
+	void testPositiveCommentsAndRepliesFromFile() throws IOException {
+		String fileName = testdir + "/all/All__comment_AND_reply__positive_examples.txt";
+		Path path = Path.of(fileName);
+		List<String> lines = Files.readAllLines(path);
+
+		List<String> negativeResults = new ArrayList<>();
+		List<String> positiveResults = new ArrayList<>();
+
+		for (String line : lines) {
+			Matcher matcher = IOService.commentPattern.matcher(line);
+			if (matcher.matches()) {
+				System.err.println("- Positive comment caught: " + line);
+				positiveResults.add(line);
+			} else {
+				System.err.println("- Negative comment passed: " + line);
+				negativeResults.add(line);
+			}
+		}
+
+		SoftAssertions softAssertions = new SoftAssertions();
+		softAssertions.assertThat(negativeResults)
+				.as("There are positive examples which are NOT caught as normal comments").hasSize(0);
+		softAssertions.assertThat((100 * positiveResults.size()) / lines.size())
+				.as("Only " + (100 * positiveResults.size()) / lines.size() + "% of positive cases caught")
+				.isEqualTo(100);
+		softAssertions.assertAll();
 	}
 
 	@Test

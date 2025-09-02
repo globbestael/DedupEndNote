@@ -109,7 +109,7 @@ public class DeduplicationService {
 
 	public static final Double TITLE_SIMILARITY_PHASE = 0.96;
 
-	public static final Double TITLE_SIMILARITY_SUFFICIENT_STARTPAGES_OR_DOIS = 0.90;
+	public static final Double TITLE_SIMILARITY_SUFFICIENT_STARTPAGES_OR_DOIS = 0.89;
 
 	protected AuthorsComparator authorsComparator;
 

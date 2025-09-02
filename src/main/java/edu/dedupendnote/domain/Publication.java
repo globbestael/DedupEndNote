@@ -185,7 +185,7 @@ public class Publication {
 	 * Was used when errata titles where preprocessed. 
 	 * See: https://stackoverflow.com/questions/47162098/is-it-possible-to-match-nested-brackets-with-a-regex-without-using-recursion-or/47162099#47162099
 	 */
-	// private static Pattern balancedBracespattern = Pattern.compile(
+	// private static Pattern balancedBracketspattern = Pattern.compile(
 	// "(?=\\()(?:(?=.*?\\((?!.*?\\1)(.*\\)(?!.*\\2).*))(?=.*?\\)(?!.*?\\2)(.*)).)+?.*?(?=\\1)[^(]*(?=\\2$)");
 
 	/**
@@ -1013,7 +1013,7 @@ public class Publication {
 			 * See https://github.com/globbestael/DedupEndnote/issues/4 for preprint publications.
 			 */
 			// @formatter:on
-			pageForComparison = pageForComparison.replaceAll("^([\\D0]*)([\\d]+)(.*)$", "$2");
+			pageForComparison = pageForComparison.replaceAll("^([^1-9]*)([\\d]+)(.*)$", "$2");
 			// Use pageEnd instead of pageStart for books (criteria: start = 1, end >= 100)
 			if ("1".equals(pageForComparison) && pageEnd != null && pageEnd.length() > 2) {
 				log.debug("Long pageEnd used for pageForComparison {}", pageEnd);
@@ -1025,7 +1025,8 @@ public class Publication {
 			if (pageForComparison.length() < 11 && pageEnd != null) {
 				try {
 					int pageStartInt = Integer.valueOf(pageForComparison);
-					int pageEndInt = Integer.valueOf(pageEnd);
+					String pageEndForComparison = pageEnd.replaceAll("^([^1-9]*)([\\d]+)(.*)$", "$2");
+					int pageEndInt = Integer.valueOf(pageEndForComparison);
 					int pageRange = pageEndInt - pageStartInt;
 					severalPages = pageRange > 1;
 				} catch (NumberFormatException e) {
@@ -1076,7 +1077,7 @@ public class Publication {
 	 */
 
 	public void setPublicationYear(Integer publicationYear) {
-		if (publicationYear < 1900) {
+		if (publicationYear < 1800) {
 			publicationYear = 0;
 		}
 		this.publicationYear = publicationYear;
