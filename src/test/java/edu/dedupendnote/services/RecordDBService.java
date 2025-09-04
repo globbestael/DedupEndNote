@@ -23,8 +23,6 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 public class RecordDBService {
 
-	private UtilitiesService utilities = new UtilitiesService();
-
 	/*
 	 * FIXME: These are the same fieldnames as the @JSonPropertyOrder({...}) of
 	 * PublicationDB. Can a Spring property be used in both cases? See:

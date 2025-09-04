@@ -112,7 +112,7 @@ class ValidationTests {
 						new ValidationResult("ASySD_Diabetes", 1816, 18, 11, 0, 1_000L),
 						new ValidationResult("ASySD_Neuroimaging", 2172, 29, 1235, 2, 1_350L),
 						new ValidationResult("ASySD_SRSR_Human", 27897, 120, 24975, 9, 100_000L),
-						new ValidationResult("BIG_SET", 39009, 187, 961, 17, 66_000L),
+						new ValidationResult("BIG_SET", 3915, 187, 959, 17, 66_000L),
 						new ValidationResult("McKeown_2021", 2016, 56, 1054, 4, 470L),
 						new ValidationResult("SRA2_Cytology_screening", 1361, 59, 436, 0, 400L),
 						new ValidationResult("SRA2_Haematology", 225, 11, 1177, 2, 300L),

@@ -1,11 +1,8 @@
 package edu.dedupendnote;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import java.util.List;
 
 import org.apache.commons.text.similarity.JaroWinklerSimilarity;
-import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.test.context.TestConfiguration;
 

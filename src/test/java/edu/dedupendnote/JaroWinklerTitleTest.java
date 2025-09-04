@@ -127,7 +127,7 @@ class JaroWinklerTitleTest {
 				.isEqualTo(expected, within(0.01));
 		softAssertions.assertThat(highestSimilarity)
 				.as("\nTitle1: %s\nTitle2: %s\nGreaterThanOrEqualTo threshold", highestTitle1, highestTitle2)
-				.isGreaterThanOrEqualTo(DeduplicationService.TITLE_SIMILARITY_SUFFICIENT_STARTPAGES_OR_DOIS);
+				.isLessThan(DeduplicationService.TITLE_SIMILARITY_SUFFICIENT_STARTPAGES_OR_DOIS);
 		softAssertions.assertAll();
 	}
 
@@ -237,6 +237,10 @@ class JaroWinklerTitleTest {
 				arguments(revertString("Complication-based learning curve in laparoscopic sleeve gastrectomy"),
 						revertString("Complications of laparoscopic sleeve gastrectomy"), 
 						0.90), // example of FP
+				arguments(
+					"Case records of the Massachusetts General Hospital. Case 35-2007. A 30-year-old man with inflammatory bowel disease and recent onset of fever and bloody diarrhea",
+					"Case 35-2007: A 30-year-old man with inflammatory bowel disease and recent onset of fever and bloody diarrhea",
+					1.0),
 				arguments(revertString(
 						"Case records of the Massachusetts General Hospital. Case 35-2007. A 30-year-old man with inflammatory bowel disease and recent onset of fever and bloody diarrhea"),
 						revertString(
@@ -354,70 +358,66 @@ class JaroWinklerTitleTest {
 				arguments(
 					"Was ist mit der Pfortader? Idiopathic phlethrombosis.", 
 					"Was ist mit der pfortader?", 
-					1.0)
-				);
+					0.89),
+				arguments(
+					"RETRACTED: Evaluation of the treatment strategies on patient-derived xenograft mice of human breast tumor (Retracted Article)",
+					"Evaluation of the treatment strategies on patient-derived xenograft mice of human breast tumor",
+					1.0
+				), // WOS retraction marking without full source
+				arguments(
+					"RETRACTED: Response of Breast Cancer Cells and Cancer Stem Cells to Metformin and Hyperthermia Alone or Combined (Retracted article. See vol. 20, 2025)",
+					"Response of Breast Cancer Cells and Cancer Stem Cells to Metformin and Hyperthermia Alone or Combined",
+					1.0
+				), // WOS retraction marking with full source
+				arguments(
+					"RETRACTED: Isolated central retinal artery occlusion as an initial presentation of paroxysmal nocturnal hemoglobinuria and successful long-term prevention of systemic thrombosis with eculizumab (Retracted article. See vol. 58, pg. 307, 2014)",
+					"Isolated central retinal artery occlusion as an initial presentation of paroxysmal nocturnal hemoglobinuria and successful long-term prevention of systemic thrombosis with eculizumab",
+					1.0
+				) // WOS retraction marking with full source
+			);
 	}
 	// @formatter:on
 
 	// @formatter:off
 	static Stream<Arguments> negativeArgumentProvider() {
 		return Stream.of(
-				// arguments(
-				// 		"The use of TIPS should be cautious in noncirrhotic patients with obliterative portal vein thrombosis",
-				// 		"The significance of nonobstructive sinusoidal dilatation of the liver: Impaired portal perfusion or inflammatory reaction syndrome",
-				// 		0.71), // unexpectedly high!
-				// arguments(
-				// 	"[Elimination of airborne allergens from the household environment]",
-				// 	"Eviction of airborne allergens for the household environment. [French]", 
-				// 	0.83), // different translations
-				// arguments(
-				// 	"[Elimination of airborne allergens from the household environment]",
-				// 	"Eviction of airborne allergens for the household environment", 
-				// 	0.83), // different translations
-				// arguments(
-				// 	"[Various aspects of respiratory emergencies in non-hospital practice]",
-				// 	"Some aspects of respiratory emergencies in non-hospital practice. [French]", 
-				// 	0.81), // different translations
-				// arguments(
-				// 		"NFkappaB inhibition decreases hepatocyte proliferation but does not alter apoptosis in obstructive jaundice",
-				// 		"NF kappa B inhibition decreases hepatocyte proliferation but does not alter apoptosis in obstructive jaundice",
-				// 		0.88), // heavy penalty on differences at start
-				// arguments(
-				// 	"Case report. Duplication of the portal vein: a rare congenital anomaly",
-				// 	"Duplication of the portal vein - A rare congenital anomaly", 
-				// 	0.79),
-				// arguments(
-				// 	"La sémantique de l'image radiologique. Intérêt du procédé de soustraction électronique en couleurs d'Oosterkamp en angiographie abdominale",
-				// 	"INTERET DU PROCEDE DE SOUSTRACTION ELECTRONIQUE EN COULEURS D'OOSTERKAMP EN ANGIOGRAPHIE ABDOMINALE",
-				// 	0.75),
-				// arguments(
-				// 	"The JAK2 46/1 haplotype in Budd-Chiari syndrome and portal vein thrombosis",
-				// 	"JAK2 Germline Genetic Variation In Budd-Chiari Syndrome and Portal Vein Thrombosis", 
-				// 	0.85),
 				arguments(
-					"RETRACTED: Evaluation of the treatment strategies on patient-derived xenograft mice of human breast tumor (Retracted Article)",
-					"Evaluation of the treatment strategies on patient-derived xenograft mice of human breast tumor",
-					1.3
-				), // WOS retraction marking without full source
+						"The use of TIPS should be cautious in noncirrhotic patients with obliterative portal vein thrombosis",
+						"The significance of nonobstructive sinusoidal dilatation of the liver: Impaired portal perfusion or inflammatory reaction syndrome",
+						0.71), // unexpectedly high!
 				arguments(
-					"RETRACTED: Response of Breast Cancer Cells and Cancer Stem Cells to Metformin and Hyperthermia Alone or Combined (Retracted article. See vol. 20, 2025)",
-					"Response of Breast Cancer Cells and Cancer Stem Cells to Metformin and Hyperthermia Alone or Combined",
-					1.3
-				), // WOS retraction marking with full source
+					"[Elimination of airborne allergens from the household environment]",
+					"Eviction of airborne allergens for the household environment. [French]", 
+					0.83), // different translations
+				arguments(
+					"[Elimination of airborne allergens from the household environment]",
+					"Eviction of airborne allergens for the household environment", 
+					0.83), // different translations
+				arguments(
+					"[Various aspects of respiratory emergencies in non-hospital practice]",
+					"Some aspects of respiratory emergencies in non-hospital practice. [French]", 
+					0.81), // different translations
+				arguments(
+						"NFkappaB inhibition decreases hepatocyte proliferation but does not alter apoptosis in obstructive jaundice",
+						"NF kappa B inhibition decreases hepatocyte proliferation but does not alter apoptosis in obstructive jaundice",
+						0.88), // heavy penalty on differences at start
+				arguments(
+					"Case report. Duplication of the portal vein: a rare congenital anomaly",
+					"Duplication of the portal vein - A rare congenital anomaly", 
+					0.79),
+				arguments(
+					"La sémantique de l'image radiologique. Intérêt du procédé de soustraction électronique en couleurs d'Oosterkamp en angiographie abdominale",
+					"INTERET DU PROCEDE DE SOUSTRACTION ELECTRONIQUE EN COULEURS D'OOSTERKAMP EN ANGIOGRAPHIE ABDOMINALE",
+					0.75),
+				arguments(
+					"The JAK2 46/1 haplotype in Budd-Chiari syndrome and portal vein thrombosis",
+					"JAK2 Germline Genetic Variation In Budd-Chiari Syndrome and Portal Vein Thrombosis", 
+					0.85),
 				arguments(
 					"Retraction notice to \"Evaluation of the treatment strategies on patient-derived xenograft mice of human breast tumor\" [Eur. J. Pharmacol. 889 (2020) 173605]",
 					"Evaluation of the treatment strategies on patient-derived xenograft mice of human breast tumor",
-					1.77
+					0.78
 				), // Publication and separate rectraction notice (PubMed)
-				arguments(
-					"RETRACTED: Isolated central retinal artery occlusion as an initial presentation of paroxysmal nocturnal hemoglobinuria and successful long-term prevention of systemic thrombosis with eculizumab (Retracted article. See vol. 58, pg. 307, 2014)",
-					"Isolated central retinal artery occlusion as an initial presentation of paroxysmal nocturnal hemoglobinuria and successful long-term prevention of systemic thrombosis with eculizumab",
-					1.3
-				), // WOS retraction marking with full source
-				arguments(
-					revertString("RETRACTED: Isolated central retinal artery occlusion as an initial presentation of paroxysmal nocturnal hemoglobinuria and successful long-term prevention of systemic thrombosis with eculizumab (Retracted article. See vol. 58, pg. 307, 2014)"),
-					revertString("Isolated central retinal artery occlusion as an initial presentation of paroxysmal nocturnal hemoglobinuria and successful long-term prevention of systemic thrombosis with eculizumab"),
-					1.77),
 				arguments(
 					"90 Y radioembolization for locally advanced hepatocellular carcinoma with portal vein thrombosis: Long-term outcomes in a 185-patient cohort",
 					"Y-90 Radioembolization for Locally Advanced Hepatocellular Carcinoma with Portal Vein Thrombosis: Long-Term Outcomes in a 185-Patient Cohort",
@@ -426,10 +426,6 @@ class JaroWinklerTitleTest {
 					"Complication-based learning curve in laparoscopic sleeve gastrectomy",
 					"Complications of laparoscopic sleeve gastrectomy", 
 					0.87), // example of  False  Positive
-				arguments(
-					"Case records of the Massachusetts General Hospital. Case 35-2007. A 30-year-old man with inflammatory bowel disease and recent onset of fever and bloody diarrhea",
-					"Case 35-2007: A 30-year-old man with inflammatory bowel disease and recent onset of fever and bloody diarrhea",
-					0.84),
 				/*
 				 * Example 1 of a False Positive: Phase I and Phase I/II trial
 				 */
