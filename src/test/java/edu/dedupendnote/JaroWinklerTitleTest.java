@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.text.similarity.JaroWinklerSimilarity;
@@ -44,14 +43,14 @@ class JaroWinklerTitleTest {
 	@ParameterizedTest(name = "{index}: jaroWinkler({0}, {1})={2}")
 	@MethodSource("positiveArgumentProvider")
 	void jwPositiveTest(String input1, String input2, double expected) {
-		Double distance = jws.apply(Publication.normalizeTitleJava8(input1), Publication.normalizeTitleJava8(input2));
+		Double similarity = jws.apply(Publication.normalizeTitleJava8(input1), Publication.normalizeTitleJava8(input2));
 		System.err.println("- 1: %s\n- 2: %s\n- 3: %s\n- 4: %s\n".formatted(input1,
 				Publication.normalizeTitleJava8(input1), input2, Publication.normalizeTitleJava8(input2)));
 
 		SoftAssertions softAssertions = new SoftAssertions();
-		softAssertions.assertThat(distance).as("\nTitle1: %s\nTitle2: %s", input1, input2).isEqualTo(expected,
+		softAssertions.assertThat(similarity).as("\nTitle1: %s\nTitle2: %s", input1, input2).isEqualTo(expected,
 				within(0.01));
-		softAssertions.assertThat(distance)
+		softAssertions.assertThat(similarity)
 				.as("\nTitle1: %s\nTitle2: %s\nGreaterThanOrEqualTo threshold", input1, input2)
 				.isGreaterThanOrEqualTo(DeduplicationService.TITLE_SIMILARITY_SUFFICIENT_STARTPAGES_OR_DOIS);
 		softAssertions.assertAll();
@@ -65,25 +64,22 @@ class JaroWinklerTitleTest {
 		Publication p2 = new Publication();
 		p2.addTitles(input2);
 
-		Double highestDistance = 0.0;
+		Double highestSimilarity = 0.0;
 
 		for (String title1 : p1.getTitles()) {
 			for (String title2 : p2.getTitles()) {
-				Double distance = jws.apply(title1, title2);
-				if (distance > highestDistance) {
-					highestDistance = distance;
+				Double similarity = jws.apply(title1, title2);
+				if (similarity > highestSimilarity) {
+					highestSimilarity = similarity;
 				}
 			}
 		}
 
 		SoftAssertions softAssertions = new SoftAssertions();
-		softAssertions.assertThat(highestDistance)
+		softAssertions.assertThat(highestSimilarity)
 				.as("\nTitle1: %s\nTitle2: %s", p1.getTitles().get(0), p2.getTitles().get(0))
 				.isEqualTo(expected, within(0.01));
-		// .isGreaterThanOrEqualTo(DeduplicationService.TITLE_SIMILARITY_PHASE);
-		softAssertions.assertThat(highestDistance)
-				// .as("\nTitle1: %s\nTitle2: %s\nGreaterThanOrEqualTo threshold", p1.getTitles().get(0),
-				// p2.getTitles().get(0))
+		softAssertions.assertThat(highestSimilarity)
 				.as("\nTitle1: %s\nTitle2: %s\nGreaterThanOrEqualTo threshold", p1.getTitles(), p2.getTitles())
 				.isGreaterThanOrEqualTo(DeduplicationService.TITLE_SIMILARITY_SUFFICIENT_STARTPAGES_OR_DOIS);
 		softAssertions.assertAll();
@@ -92,15 +88,47 @@ class JaroWinklerTitleTest {
 	@ParameterizedTest(name = "{index}: jaroWinkler({0}, {1})={2}")
 	@MethodSource("negativeArgumentProvider")
 	void jwNegativeTest(String input1, String input2, double expected) {
-		Double distance = jws.apply(Publication.normalizeTitleJava8(input1), Publication.normalizeTitleJava8(input2));
+		Double similarity = jws.apply(Publication.normalizeTitleJava8(input1), Publication.normalizeTitleJava8(input2));
 		System.err.println("- 1: %s\n- 2: %s\n- 3: %s\n- 4: %s\n".formatted(input1,
 				Publication.normalizeTitleJava8(input1), input2, Publication.normalizeTitleJava8(input2)));
-		assertThat(distance).isEqualTo(expected, within(0.01))
+		assertThat(similarity).isEqualTo(expected, within(0.01))
 				.isLessThan(DeduplicationService.TITLE_SIMILARITY_SUFFICIENT_STARTPAGES_OR_DOIS);
 	}
 
 	static String revertString(String s) {
 		return new StringBuilder(s).reverse().toString();
+	}
+
+	@ParameterizedTest(name = "{index}: jaroWinkler({0}, {1})={2}")
+	@MethodSource("negativeArgumentProvider")
+	void jwFullNegativeTest(String input1, String input2, double expected) {
+		Publication p1 = new Publication();
+		p1.addTitles(input1);
+		Publication p2 = new Publication();
+		p2.addTitles(input2);
+
+		Double highestSimilarity = 0.0;
+		String highestTitle1 = "";
+		String highestTitle2 = "";
+
+		for (String title1 : p1.getTitles()) {
+			for (String title2 : p2.getTitles()) {
+				Double similarity = jws.apply(title1, title2);
+				if (similarity > highestSimilarity) {
+					highestSimilarity = similarity;
+					highestTitle1 = title1;
+					highestTitle2 = title2;
+				}
+			}
+		}
+
+		SoftAssertions softAssertions = new SoftAssertions();
+		softAssertions.assertThat(highestSimilarity).as("\nTitle1: %s\nTitle2: %s", highestTitle1, highestTitle2)
+				.isEqualTo(expected, within(0.01));
+		softAssertions.assertThat(highestSimilarity)
+				.as("\nTitle1: %s\nTitle2: %s\nGreaterThanOrEqualTo threshold", highestTitle1, highestTitle2)
+				.isGreaterThanOrEqualTo(DeduplicationService.TITLE_SIMILARITY_SUFFICIENT_STARTPAGES_OR_DOIS);
+		softAssertions.assertAll();
 	}
 
 	/*
@@ -322,58 +350,74 @@ class JaroWinklerTitleTest {
 				arguments(
 					revertString("<<Except for the war's laws>>. Psychic trauma in soldiers murderers. French"),
 					revertString("Except for the war's laws. Psychic trauma in soldiers murderers. French"), 
+					1.0),
+				arguments(
+					"Was ist mit der Pfortader? Idiopathic phlethrombosis.", 
+					"Was ist mit der pfortader?", 
 					1.0)
-						);
+				);
 	}
 	// @formatter:on
 
 	// @formatter:off
 	static Stream<Arguments> negativeArgumentProvider() {
 		return Stream.of(
+				// arguments(
+				// 		"The use of TIPS should be cautious in noncirrhotic patients with obliterative portal vein thrombosis",
+				// 		"The significance of nonobstructive sinusoidal dilatation of the liver: Impaired portal perfusion or inflammatory reaction syndrome",
+				// 		0.71), // unexpectedly high!
+				// arguments(
+				// 	"[Elimination of airborne allergens from the household environment]",
+				// 	"Eviction of airborne allergens for the household environment. [French]", 
+				// 	0.83), // different translations
+				// arguments(
+				// 	"[Elimination of airborne allergens from the household environment]",
+				// 	"Eviction of airborne allergens for the household environment", 
+				// 	0.83), // different translations
+				// arguments(
+				// 	"[Various aspects of respiratory emergencies in non-hospital practice]",
+				// 	"Some aspects of respiratory emergencies in non-hospital practice. [French]", 
+				// 	0.81), // different translations
+				// arguments(
+				// 		"NFkappaB inhibition decreases hepatocyte proliferation but does not alter apoptosis in obstructive jaundice",
+				// 		"NF kappa B inhibition decreases hepatocyte proliferation but does not alter apoptosis in obstructive jaundice",
+				// 		0.88), // heavy penalty on differences at start
+				// arguments(
+				// 	"Case report. Duplication of the portal vein: a rare congenital anomaly",
+				// 	"Duplication of the portal vein - A rare congenital anomaly", 
+				// 	0.79),
+				// arguments(
+				// 	"La sémantique de l'image radiologique. Intérêt du procédé de soustraction électronique en couleurs d'Oosterkamp en angiographie abdominale",
+				// 	"INTERET DU PROCEDE DE SOUSTRACTION ELECTRONIQUE EN COULEURS D'OOSTERKAMP EN ANGIOGRAPHIE ABDOMINALE",
+				// 	0.75),
+				// arguments(
+				// 	"The JAK2 46/1 haplotype in Budd-Chiari syndrome and portal vein thrombosis",
+				// 	"JAK2 Germline Genetic Variation In Budd-Chiari Syndrome and Portal Vein Thrombosis", 
+				// 	0.85),
 				arguments(
-						"The use of TIPS should be cautious in noncirrhotic patients with obliterative portal vein thrombosis",
-						"The significance of nonobstructive sinusoidal dilatation of the liver: Impaired portal perfusion or inflammatory reaction syndrome",
-						0.71), // unexpectedly high!
+					"RETRACTED: Evaluation of the treatment strategies on patient-derived xenograft mice of human breast tumor (Retracted Article)",
+					"Evaluation of the treatment strategies on patient-derived xenograft mice of human breast tumor",
+					1.3
+				), // WOS retraction marking without full source
 				arguments(
-					"[Elimination of airborne allergens from the household environment]",
-					"Eviction of airborne allergens for the household environment. [French]", 
-					0.83), // different translations
+					"RETRACTED: Response of Breast Cancer Cells and Cancer Stem Cells to Metformin and Hyperthermia Alone or Combined (Retracted article. See vol. 20, 2025)",
+					"Response of Breast Cancer Cells and Cancer Stem Cells to Metformin and Hyperthermia Alone or Combined",
+					1.3
+				), // WOS retraction marking with full source
 				arguments(
-					"[Elimination of airborne allergens from the household environment]",
-					"Eviction of airborne allergens for the household environment", 
-					0.83), // different translations
-				arguments(
-					"[Various aspects of respiratory emergencies in non-hospital practice]",
-					"Some aspects of respiratory emergencies in non-hospital practice. [French]", 
-					0.81), // different translations
-				arguments(
-						"NFkappaB inhibition decreases hepatocyte proliferation but does not alter apoptosis in obstructive jaundice",
-						"NF kappa B inhibition decreases hepatocyte proliferation but does not alter apoptosis in obstructive jaundice",
-						0.88), // heavy penalty on differences at start
-				arguments(
-					"Case report. Duplication of the portal vein: a rare congenital anomaly",
-					"Duplication of the portal vein - A rare congenital anomaly", 
-					0.79),
-				arguments(
-					"La sémantique de l'image radiologique. Intérêt du procédé de soustraction électronique en couleurs d'Oosterkamp en angiographie abdominale",
-					"INTERET DU PROCEDE DE SOUSTRACTION ELECTRONIQUE EN COULEURS D'OOSTERKAMP EN ANGIOGRAPHIE ABDOMINALE",
-					0.75),
-				arguments(
-					"The JAK2 46/1 haplotype in Budd-Chiari syndrome and portal vein thrombosis",
-					"JAK2 Germline Genetic Variation In Budd-Chiari Syndrome and Portal Vein Thrombosis", 
-					0.85),
+					"Retraction notice to \"Evaluation of the treatment strategies on patient-derived xenograft mice of human breast tumor\" [Eur. J. Pharmacol. 889 (2020) 173605]",
+					"Evaluation of the treatment strategies on patient-derived xenograft mice of human breast tumor",
+					1.77
+				), // Publication and separate rectraction notice (PubMed)
 				arguments(
 					"RETRACTED: Isolated central retinal artery occlusion as an initial presentation of paroxysmal nocturnal hemoglobinuria and successful long-term prevention of systemic thrombosis with eculizumab (Retracted article. See vol. 58, pg. 307, 2014)",
 					"Isolated central retinal artery occlusion as an initial presentation of paroxysmal nocturnal hemoglobinuria and successful long-term prevention of systemic thrombosis with eculizumab",
-					0.77),
+					1.3
+				), // WOS retraction marking with full source
 				arguments(
 					revertString("RETRACTED: Isolated central retinal artery occlusion as an initial presentation of paroxysmal nocturnal hemoglobinuria and successful long-term prevention of systemic thrombosis with eculizumab (Retracted article. See vol. 58, pg. 307, 2014)"),
 					revertString("Isolated central retinal artery occlusion as an initial presentation of paroxysmal nocturnal hemoglobinuria and successful long-term prevention of systemic thrombosis with eculizumab"),
-					0.77),
-				arguments(
-					"Was ist mit der Pfortader? Idiopathic phlethrombosis.", 
-					"Was ist mit der pfortader?", 
-					0.898), // NOT >  0.90,  will not be accepted
+					1.77),
 				arguments(
 					"90 Y radioembolization for locally advanced hepatocellular carcinoma with portal vein thrombosis: Long-term outcomes in a 185-patient cohort",
 					"Y-90 Radioembolization for Locally Advanced Hepatocellular Carcinoma with Portal Vein Thrombosis: Long-Term Outcomes in a 185-Patient Cohort",

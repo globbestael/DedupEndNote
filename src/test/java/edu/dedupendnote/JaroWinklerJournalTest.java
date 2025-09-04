@@ -33,30 +33,30 @@ class JaroWinklerJournalTest {
 	 */
 
 	/*
-	 * Jarowinkler distance > 0.9 for normalized journals
+	 * Jarowinkler similarity > 0.9 for normalized journals
 	 */
 	@ParameterizedTest(name = "{index}: jaroWinkler({0}, {1})")
 	@MethodSource("positiveArgumentProvider")
 	void jwPositiveTest(String input1, String input2) {
-		Double distance = jws.apply(Publication.normalizeJournalJava8(input1),
+		Double similarity = jws.apply(Publication.normalizeJournalJava8(input1),
 				Publication.normalizeJournalJava8(input2));
 		// System.err.println(String.format("- 1: %s\n- 2: %s\n- 3: %s\n- 4: %s\n",
 		// input1, Publication.normalizeJava8(input1), input2,
 		// Publication.normalizeJava8(input2)));
-		assertThat(distance).isGreaterThan(DeduplicationService.JOURNAL_SIMILARITY_REPLY);
+		assertThat(similarity).isGreaterThan(DeduplicationService.JOURNAL_SIMILARITY_REPLY);
 	}
 
 	/*
-	 * Jarowinkler distance <= 0.9 for normalized journals
+	 * Jarowinkler similarity <= 0.9 for normalized journals
 	 */
 	@ParameterizedTest(name = "{index}: jaroWinkler({0}, {1})")
 	@MethodSource("negativeArgumentProvider")
 	void jwNegativeTest(String input1, String input2) {
-		Double distance = jws.apply(Publication.normalizeJournalJava8(input1),
+		Double similarity = jws.apply(Publication.normalizeJournalJava8(input1),
 				Publication.normalizeJournalJava8(input2));
 		System.err.println("- 1: %s\n- 2: %s\n- 3: %s\n- 4: %s\n".formatted(input1,
 				Publication.normalizeTitleJava8(input1), input2, Publication.normalizeTitleJava8(input2)));
-		assertThat(distance).isLessThanOrEqualTo(DeduplicationService.JOURNAL_SIMILARITY_REPLY);
+		assertThat(similarity).isLessThanOrEqualTo(DeduplicationService.JOURNAL_SIMILARITY_REPLY);
 	}
 
 	/*

@@ -45,8 +45,8 @@ class JaroWinklerAuthorsTest {
 		Double similarity = authorsComparator.getSimilarity();
 
 		assertThat(similarity).as("\nAuthors1: %s\nAuthors2: %s", r1.getAllAuthors().get(0), r2.getAllAuthors().get(0))
-			.isEqualTo(lowestAcceptedSimilarity, within(0.01))
-			.isGreaterThan(DeduplicationService.DefaultAuthorsComparator.AUTHOR_SIMILARITY_NO_REPLY);
+				.isEqualTo(lowestAcceptedSimilarity, within(0.01))
+				.isGreaterThan(DeduplicationService.DefaultAuthorsComparator.AUTHOR_SIMILARITY_NO_REPLY);
 	}
 
 	/*
@@ -56,25 +56,25 @@ class JaroWinklerAuthorsTest {
 	@ParameterizedTest(name = "{index}: jaroWinkler({0}, {1})={3}")
 	@MethodSource("positiveAuthorsProvider")
 	void jwFullPositiveTest_highest_similarity(String input1, String input2, double lowestAcceptedSimilarity,
-			double highestSimilarity) {
+			double highSimilarity) {
 		Publication r1 = fillRecord(input1);
 		Publication r2 = fillRecord(input2);
 
-		Double highestDistance = 0.0;
+		Double highestSimilarity = 0.0;
 
 		for (String authors1 : r1.getAllAuthors()) {
 			for (String authors2 : r2.getAllAuthors()) {
-				Double distance = jws.apply(authors1, authors2);
-				if (distance > highestDistance) {
-					highestDistance = distance;
+				Double similarity = jws.apply(authors1, authors2);
+				if (similarity > highestSimilarity) {
+					highestSimilarity = similarity;
 				}
 			}
 		}
 
-		assertThat(highestDistance)
-			.as("\nAuthors1: %s\nAuthors2: %s", r1.getAllAuthors().get(0), r2.getAllAuthors().get(0))
-			.isEqualTo(highestSimilarity, within(0.01))
-			.isGreaterThan(DeduplicationService.DefaultAuthorsComparator.AUTHOR_SIMILARITY_NO_REPLY);
+		assertThat(highestSimilarity)
+				.as("\nAuthors1: %s\nAuthors2: %s", r1.getAllAuthors().get(0), r2.getAllAuthors().get(0))
+				.isEqualTo(highSimilarity, within(0.01))
+				.isGreaterThan(DeduplicationService.DefaultAuthorsComparator.AUTHOR_SIMILARITY_NO_REPLY);
 	}
 
 	@ParameterizedTest(name = "{index}: jaroWinkler({0}, {1})={2}")
@@ -87,7 +87,7 @@ class JaroWinklerAuthorsTest {
 		Double similarity = authorsComparator.getSimilarity();
 
 		assertThat(similarity).isEqualTo(expected, within(0.01))
-			.isLessThan(DeduplicationService.DefaultAuthorsComparator.AUTHOR_SIMILARITY_NO_REPLY);
+				.isLessThan(DeduplicationService.DefaultAuthorsComparator.AUTHOR_SIMILARITY_NO_REPLY);
 	}
 
 	/*
@@ -101,10 +101,10 @@ class JaroWinklerAuthorsTest {
 		Publication r1 = fillRecord(input1);
 		Publication r2 = fillRecord(input2);
 
-		Double distance = jws.apply(r1.getAllAuthors().get(0), r2.getAllAuthors().get(0));
+		Double similarity = jws.apply(r1.getAllAuthors().get(0), r2.getAllAuthors().get(0));
 
-		assertThat(distance).isEqualTo(expected, within(0.01))
-			.isLessThan(DeduplicationService.DefaultAuthorsComparator.AUTHOR_SIMILARITY_NO_REPLY);
+		assertThat(similarity).isEqualTo(expected, within(0.01))
+				.isLessThan(DeduplicationService.DefaultAuthorsComparator.AUTHOR_SIMILARITY_NO_REPLY);
 	}
 
 	private Publication fillRecord(String authors) {
@@ -118,19 +118,9 @@ class JaroWinklerAuthorsTest {
 	// The 3rd argument is JWS score without transposed authors, the 4th argument with
 	// transposed authors
 	static Stream<Arguments> positiveAuthorsProvider() {
-		return Stream.of(
-				arguments(
-						"Ram, S; Lewis, LA; Rice, PA", 
-						"Ram, S.; Lewis, L. A.; Rice, P. A.", 
-						1.0, 1.0),
-				arguments(
-						"Okuda, K.", 
-						"Okuda, K.; et al.", 
-						1.0, 1.0),
-				arguments( // double last names
-						"Cobos Mateos, J. M.", 
-						"Mateos, J. M. C", 
-						0.70, 1.0),
+		return Stream.of(arguments("Ram, S; Lewis, LA; Rice, PA", "Ram, S.; Lewis, L. A.; Rice, P. A.", 1.0, 1.0),
+				arguments("Okuda, K.", "Okuda, K.; et al.", 1.0, 1.0), arguments( // double last names
+						"Cobos Mateos, J. M.", "Mateos, J. M. C", 0.70, 1.0),
 				arguments(
 						"Cobos Mateos, J. M.; Aguinaga Manzanos, M. V.; Casas Pinillos, M. S.; Gonzalez Conde, R.; Gonzalez Sanchez, J. A.; De Miguel Velasco, J. E.; Soleto Saez, E.; Suarez Mier, M. P.",
 						"Mateos, J. M. C.; Manzanos, M. V. A.; Pinillos, M. S. C.; Conde, R. G.; Sanchez, J. A. G.; Velasco, J. E. D. M.; Saez, E. S.; Mier, M. P. S.",
@@ -249,10 +239,8 @@ class JaroWinklerAuthorsTest {
 						"Cruz-Ramon, V.; Chinchilla-Lopez, P.; Ramirez-Perez, O.; Aguilar-Olivos, N. E.; Alva-Lopez, L. F.; Fajardo-Ordonez, E.; Ponciano-Rodriguez, G.; Northup, P. G.; Intagliata, N.; Caldwell, S. H.; Qi, X. S.; Mendez-Sanchez, N.",
 						"Raoul, J. L.; Decaens, T.; Burak, K.; Koskinas, J.; Villadsen, G. E.; Heurgue-Berlot, A.; Bayh, I.; Cheng, A. L.; Kudo, M.; Lee, H. C.; Nakajima, K.; Peck-Radosavljevic, M.",
 						0.67, 0.67), // 0.68 // !!! despite big differences: NO NAMES IN COMMON
-				arguments(
-					"Lofving Gupta, S.; Wijk, K.; Warner, G.; Sarkadi, A.",
-					"Gupta, S. L.; Wijk, K.; Warner, G.; Sarkadi, A.",
-					0.8, 1.0),
+				arguments("Lofving Gupta, S.; Wijk, K.; Warner, G.; Sarkadi, A.",
+						"Gupta, S. L.; Wijk, K.; Warner, G.; Sarkadi, A.", 0.8, 1.0),
 				arguments("", "", 1.0, 1.0));
 	}
 
@@ -265,12 +253,17 @@ class JaroWinklerAuthorsTest {
 				arguments("Iacoviello, L.; Donati, M. B.", "Jolobe, O. M.", 0.49),
 				arguments("Armentano, P.", "Carter, G. T.; Mirken, B.", 0.47),
 				arguments("Clendenning, R.", "Finnerup, N. B.; Otto, M.; Jensen, T. S.; Sindrup, S. H.", 0.47),
-				arguments("Armentano, P.", "Finnerup, N. B.; Otto, M.; Jensen, T. S.; Sindrup, S. H.", 0.43),
-				arguments( // authors 3ff ecept for last 4 are group authors
+				arguments("Armentano, P.", "Finnerup, N. B.; Otto, M.; Jensen, T. S.; Sindrup, S. H.", 0.43), arguments( // authors
+																															// 3ff
+																															// ecept
+																															// for
+																															// last
+																															// 4
+																															// are
+																															// group
+																															// authors
 						"Burgin, D.; Anagnostopoulos, D.; Doyle, M.; Eliez, S.; Fegert, J.; Fuentes, J.; Hebebrand, J.; Hillegers, M.; Karwautz, A.; Kiss, E.; Kotsis, K.; Pejovic-Milovancevic, M.; Raberg Christensen, A. M.; Raynaud, J. P.; Crommen, S.; Cetin, F. C.; Boricevic, V. M.; Kehoe, L.; Radobuljac, M. D.; Schepker, R.; Vermeiren, R.; Vitiello, B.; Sukale, T.; Schmid, M.; Fegert, J. M.",
-						"Burgin, D.; Anagnostopoulos, D.; Vitiello, B.; Sukale, T.; Schmid, M.; Fegert, J. M.",
-						0.63)
-			);
+						"Burgin, D.; Anagnostopoulos, D.; Vitiello, B.; Sukale, T.; Schmid, M.; Fegert, J. M.", 0.63));
 	}
 
 }

@@ -105,48 +105,40 @@ class AbstracttextTest {
 		void jwNegativeTest(String input1, String input2, double expected) {
 			String t1 = cleanAbstracttext(input1);
 			String t2 = cleanAbstracttext(input2);
-			Double distance = jws.apply(t1, t2);
-//			System.err.println("- 1: %s\n- 2: %s\n- 3: %s\n- 4: %s\n".formatted(input1, t1, input2, t2));
-//			assertThat(distance).isLessThanOrEqualTo(expected);
+			Double similarity = jws.apply(t1, t2);
 			/*
 			 * Awful way to get and print the differences between 2 strings to the console tab (instead of the JUnit tab)
 			 */
-			if (distance <= (expected - 0.01d)) {
-				assertThat(distance)
-					.isLessThanOrEqualTo(expected);
+			if (similarity <= (expected - 0.01d)) {
+				assertThat(similarity).isLessThanOrEqualTo(expected);
 			} else {
-				System.err.println("Diffs: " +  getDiffs(t1,t2));
-				assertThat(distance)
-					.as("JWS distance too small. String: %s ...", t1.substring(0, 25))
-					.isLessThanOrEqualTo(expected);
+				System.err.println("Diffs: " + getDiffs(t1, t2));
+				assertThat(similarity).as("JWS similarity too small. String: %s ...", t1.substring(0, 25))
+						.isLessThanOrEqualTo(expected);
 			}
-			// assertThat(distance).isLessThan(DeduplicationService.TITLE_SIMILARITY_SUFFICIENT_STARTPAGES_OR_DOIS);
 		}
-	
+
 		@ParameterizedTest(name = "{index}: jaroWinkler({0}, {1})={2}")
 		@MethodSource("edu.dedupendnote.AbstracttextTest#positiveArgumentProvider")
 		void jwPositiveTest(String input1, String input2, double expected) {
 			// String diffsOfRawInput = getDiffs(input1, input2);
 			String t1 = cleanAbstracttext(input1);
 			String t2 = cleanAbstracttext(input2);
-			Double distance = jws.apply(t1, t2);
-			
+			Double similarity = jws.apply(t1, t2);
+
 			/*
 			 * Awful way to get and print the differences between 2 strings to the console tab (instead of the JUnit tab)
 			 */
-			if (distance >= (expected - 0.01d) && distance <= (expected + 0.01d)) {
-				assertThat(distance)
-					.isEqualTo(expected, within(0.01));
+			if (similarity >= (expected - 0.01d) && similarity <= (expected + 0.01d)) {
+				assertThat(similarity).isEqualTo(expected, within(0.01));
 			} else {
-				System.err.println("Diffs: " +  getDiffs(t1,t2));
-				assertThat(distance)
-					.as("JWS distance too big. String: %s ...", t1.substring(0, 25))
-					.isEqualTo(expected, within(0.01));
+				System.err.println("Diffs: " + getDiffs(t1, t2));
+				assertThat(similarity).as("JWS similarity too big. String: %s ...", t1.substring(0, 25))
+						.isEqualTo(expected, within(0.01));
 			}
-			// assertThat(distance).isGreaterThanOrEqualTo(DeduplicationService.TITLE_SIMILARITY_SUFFICIENT_STARTPAGES_OR_DOIS);
 		}
 	}
-	
+
 	// formatter::off
 	/*
 	 * Ratcliff-Obershelp: preliminary results 
@@ -161,86 +153,85 @@ class AbstracttextTest {
 		@ParameterizedTest(name = "{index}: RatcliffObershelp({0}, {1})={2}")
 		@MethodSource("edu.dedupendnote.AbstracttextTest#negativeArgumentProvider")
 		void ratcliffObershelpNegative(String input1, String input2, double expected) {
-			System.err
-					.println("RO: %.3f\tROlc: %.3f\tROclean: %.3f\tJWS: %.3f\tJWSclean: %.3f\texpected: %.3f".formatted(
-				ro.similarity(input1, input2), ro.similarity(input1.toLowerCase(), input2.toLowerCase()),
-				ro.similarity(cleanAbstracttext(input1), cleanAbstracttext(input2)), jws.apply(input1, input2),
-				jws.apply(cleanAbstracttext(input1), cleanAbstracttext(input2)), expected));
-			assertThat(1*1).isEqualTo(1);
+			System.err.println("RO: %.3f\tROlc: %.3f\tROclean: %.3f\tJWS: %.3f\tJWSclean: %.3f\texpected: %.3f"
+					.formatted(ro.similarity(input1, input2), ro.similarity(input1.toLowerCase(), input2.toLowerCase()),
+							ro.similarity(cleanAbstracttext(input1), cleanAbstracttext(input2)),
+							jws.apply(input1, input2), jws.apply(cleanAbstracttext(input1), cleanAbstracttext(input2)),
+							expected));
+			assertThat(1 * 1).isEqualTo(1);
 		}
-	
+
 		@ParameterizedTest(name = "{index}: RatcliffObershelp({0}, {1})={2}")
 		@MethodSource("edu.dedupendnote.AbstracttextTest#negativeArgumentProvider")
 		void ratcliffObershelpNegative200(String input1, String input2, double expected) {
 			input1 = input1.substring(0, 200);
 			input2 = input2.substring(0, 200);
-			System.err
-					.println("RO200: %.3f\tROlc: %.3f\tROclean: %.3f\tJWS: %.3f\tJWSclean: %.3f\texpected: %.3f".formatted(
-				ro.similarity(input1, input2), ro.similarity(input1.toLowerCase(), input2.toLowerCase()),
-				ro.similarity(cleanAbstracttext(input1), cleanAbstracttext(input2)), jws.apply(input1, input2),
-				jws.apply(cleanAbstracttext(input1), cleanAbstracttext(input2)), expected));
-			assertThat(1*1).isEqualTo(1);
+			System.err.println("RO200: %.3f\tROlc: %.3f\tROclean: %.3f\tJWS: %.3f\tJWSclean: %.3f\texpected: %.3f"
+					.formatted(ro.similarity(input1, input2), ro.similarity(input1.toLowerCase(), input2.toLowerCase()),
+							ro.similarity(cleanAbstracttext(input1), cleanAbstracttext(input2)),
+							jws.apply(input1, input2), jws.apply(cleanAbstracttext(input1), cleanAbstracttext(input2)),
+							expected));
+			assertThat(1 * 1).isEqualTo(1);
 		}
-	
+
 		@ParameterizedTest(name = "{index}: RatcliffObershelp({0}, {1})={2}")
 		@MethodSource("edu.dedupendnote.AbstracttextTest#positiveArgumentProvider")
 		void ratcliffObershelpPositive(String input1, String input2, double expected) {
-			System.err
-					.println("RO: %.3f\tROlc: %.3f\tROclean: %.3f\tJWS: %.3f\tJWSclean: %.3f\texpected: %.3f".formatted(
-				ro.similarity(input1, input2), ro.similarity(input1.toLowerCase(), input2.toLowerCase()),
-				ro.similarity(cleanAbstracttext(input1), cleanAbstracttext(input2)), jws.apply(input1, input2),
-				jws.apply(cleanAbstracttext(input1), cleanAbstracttext(input2)), expected));
-			assertThat(1*1).isEqualTo(1);
+			System.err.println("RO: %.3f\tROlc: %.3f\tROclean: %.3f\tJWS: %.3f\tJWSclean: %.3f\texpected: %.3f"
+					.formatted(ro.similarity(input1, input2), ro.similarity(input1.toLowerCase(), input2.toLowerCase()),
+							ro.similarity(cleanAbstracttext(input1), cleanAbstracttext(input2)),
+							jws.apply(input1, input2), jws.apply(cleanAbstracttext(input1), cleanAbstracttext(input2)),
+							expected));
+			assertThat(1 * 1).isEqualTo(1);
 		}
-	
+
 		@ParameterizedTest(name = "{index}: RatcliffObershelp({0}, {1})={2}")
 		@MethodSource("edu.dedupendnote.AbstracttextTest#positiveArgumentProvider")
 		void ratcliffObershelpPositive200(String input1, String input2, double expected) {
 			input1 = input1.substring(0, 200);
 			input2 = input2.substring(0, 200);
-			System.err
-					.println("RO200: %.3f\tROlc: %.3f\tROclean: %.3f\tJWS: %.3f\tJWSclean: %.3f\texpected: %.3f".formatted(
-				ro.similarity(input1, input2), ro.similarity(input1.toLowerCase(), input2.toLowerCase()),
-				ro.similarity(cleanAbstracttext(input1), cleanAbstracttext(input2)), jws.apply(input1, input2),
-				jws.apply(cleanAbstracttext(input1), cleanAbstracttext(input2)), expected));
-			assertThat(1*1).isEqualTo(1);
+			System.err.println("RO200: %.3f\tROlc: %.3f\tROclean: %.3f\tJWS: %.3f\tJWSclean: %.3f\texpected: %.3f"
+					.formatted(ro.similarity(input1, input2), ro.similarity(input1.toLowerCase(), input2.toLowerCase()),
+							ro.similarity(cleanAbstracttext(input1), cleanAbstracttext(input2)),
+							jws.apply(input1, input2), jws.apply(cleanAbstracttext(input1), cleanAbstracttext(input2)),
+							expected));
+			assertThat(1 * 1).isEqualTo(1);
 		}
 	}
-	
-	//create a configured DiffRowGenerator
-	private static DiffRowGenerator generator = DiffRowGenerator.create()
-	                .showInlineDiffs(true)
-	                .mergeOriginalRevised(true)
-	                .inlineDiffByWord(true)
-	                .oldTag(f -> "~~")      //introduce markdown style for strikethrough
-	                .newTag(f -> "**")     //introduce markdown style for bold
-	                .build();
+
+	// create a configured DiffRowGenerator
+	private static DiffRowGenerator generator = DiffRowGenerator.create().showInlineDiffs(true)
+			.mergeOriginalRevised(true).inlineDiffByWord(true).oldTag(f -> "~~") // introduce markdown style for
+																					// strikethrough
+			.newTag(f -> "**") // introduce markdown style for bold
+			.build();
 
 	private String getDiffs(String text1, String text2) {
-		//compute the differences for two test texts.
+		// compute the differences for two test texts.
 		List<DiffRow> rows = generator.generateDiffRows(List.of(text1), List.of(text2));
-		 return rows.get(0).getOldLine();
+		return rows.get(0).getOldLine();
 	}
 
 	private String cleanAbstracttext(String inputtext) {
 		String text = inputtext;
 		text = text.replaceAll("\\. Copyright.+$", "");
 		text = text.replaceAll("\\. ©.+$", "");
-		 
+
 		text = text.toLowerCase();
 		text = text.replaceAll("\\<[^>]*>", "");
 		// FIXME: replace with pattern
 		// remove first one or two words + ": "
-		// This replacement is more important with JaroWinkler distance metric than with
+		// This replacement is more important with JaroWinkler similarity metric than with
 		// others because JW favors differences at the start of strings?
 		// TODO: try with other metrics
 		text = text.replaceAll(
 				"^(aim(s?)|background(s?)|context|importance|introduction|objective(s?)|purpose|question|study objective|synopsis|(\\w+(\\s\\w+)?:\\s?))",
 				"");
 		// FIXME: replace with pattern
-		text = text.replaceAll("\u2010", "\u002D");		// replace HYPHEN with HYPHEN-MINUS
-		text = text.replaceAll("\u2009", "");			// remove THIN SPACE. Some databases use THIN SPACE within "30 mg", others use no character
-		text = text.replaceAll("\\p{Zs}+", " ");	 	// normalize white space
+		text = text.replaceAll("\u2010", "\u002D"); // replace HYPHEN with HYPHEN-MINUS
+		text = text.replaceAll("\u2009", ""); // remove THIN SPACE. Some databases use THIN SPACE within "30 mg", others
+												// use no character
+		text = text.replaceAll("\\p{Zs}+", " "); // normalize white space
 		// remove all characters which are not letters or numbers or spaces
 		text = text.replaceAll("[^\\p{L}\\p{N} ]+", ""); // use "\\p{Nd}" if you want "¼" treated as a number
 		text = text.strip();

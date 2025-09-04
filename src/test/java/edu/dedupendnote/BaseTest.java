@@ -25,9 +25,9 @@ public class BaseTest {
 
 		for (String authors1 : listAuthors1) {
 			for (String authors2 : listAuthors2) {
-				Double distance = jws.apply(authors1, authors2);
-				if (distance > highestSimilarity) {
-					highestSimilarity = distance;
+				Double similarity = jws.apply(authors1, authors2);
+				if (similarity > highestSimilarity) {
+					highestSimilarity = similarity;
 				}
 			}
 		}
