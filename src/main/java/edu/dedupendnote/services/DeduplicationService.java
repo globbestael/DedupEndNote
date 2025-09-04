@@ -433,6 +433,10 @@ public class DeduplicationService {
 
 					if (r.isReply()) {
 						publication.setReply(true);
+					} else {
+						if (r.getTitle() != null && publication.getTitle() == null) {
+							publication.setTitle(r.getTitle());
+						}
 					}
 					if (log.isTraceEnabled()) {
 						log.trace("{} - {} ARE DUPLICATES", publication.getId(), r.getId());
@@ -786,8 +790,8 @@ public class DeduplicationService {
 				// Don't set keptRecord in compareSet(): trouble when multiple duplicates and no publication year
 				recordList.stream().forEach(r -> r.setKeptRecord(false));
 
-				// Reply: replace the title with the longest title from the duplicates
-				if (recordToKeep.isReply()) {
+				// Reply and Retraction: replace the title with the longest title from the duplicates
+				if (recordToKeep.isReply() || recordToKeep.getTitle() != null) {
 					log.debug("Publication {} is a reply: ", recordToKeep.getId());
 					String longestTitle = recordList.stream()
 							// .filter(Publication::isReply)

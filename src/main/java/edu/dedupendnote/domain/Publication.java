@@ -837,9 +837,24 @@ public class Publication {
 
 	private static List<String> noTitles = List.of("not available", "[not available]", "untitled");
 
+	private static Pattern retractionStartPattern = Pattern
+			.compile("((retracted|removed|withdrawn)( article)?[.:] )(.+)", Pattern.CASE_INSENSITIVE);
+	private static Pattern retractionEndPattern = Pattern.compile("(.+)\\(Retracted [Aa]rticle.*\\)");
+
 	public void addTitles(String title) {
 		if (noTitles.contains(title.toLowerCase())) {
 			return;
+		}
+		String origTitle = title;
+		Matcher endMatcher = retractionEndPattern.matcher(title);
+		if (endMatcher.matches()) {
+			this.title = origTitle;
+			title = endMatcher.group(1);
+		}
+		Matcher startMatcher = retractionStartPattern.matcher(title);
+		if (startMatcher.matches()) {
+			this.title = origTitle;
+			title = startMatcher.group(4);
 		}
 		addTitleWithNormalization(title);
 
