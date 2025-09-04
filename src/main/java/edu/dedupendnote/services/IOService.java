@@ -491,8 +491,9 @@ public class IOService {
 					map.put("SP", publication.getPageStart());
 				}
 			}
-			if (publication.isReply()) {
+			if (publication.isReply() || publication.getTitle() != null) {
 				map.put("TI", publication.getTitle());
+				map.put("ST", publication.getTitle());
 			}
 			// An author as "Nct," should be kept
 			if (publication.getAuthors().isEmpty() && "Anonymous".equals(map.get("AU"))) {
