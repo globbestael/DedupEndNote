@@ -117,7 +117,8 @@ class ValidationTests {
 						new ValidationResult("SRA2_Cytology_screening", 1361, 59, 436, 0, 400L),
 						new ValidationResult("SRA2_Haematology", 225, 11, 1177, 2, 300L),
 						new ValidationResult("SRA2_Respiratory", 766, 34, 1184, 4, 800L),
-						new ValidationResult("SRA2_Stroke", 497, 13, 782, 0, 320L))
+						new ValidationResult("SRA2_Stroke", 497, 13, 782, 0, 320L),
+						new ValidationResult("TIL", 687, 25, 390, 0, 9_000L))
 				.stream().collect(Collectors.toMap(ValidationResult::getFileName, Function.identity(), (o1, o2) -> o1,
 						TreeMap::new));
 
@@ -133,7 +134,8 @@ class ValidationTests {
 					checkResults_SRA2_Cytology_screening(),
 					checkResults_SRA2_Haematology(), 
 					checkResults_SRA2_Respiratory(), 
-					checkResults_SRA2_Stroke()
+					checkResults_SRA2_Stroke(),
+					checkResults_TIL()				
 				)
 				.stream().collect(Collectors.toMap(ValidationResult::getFileName, Function.identity(), (o1, o2) -> o1,
 						TreeMap::new));
@@ -524,6 +526,14 @@ class ValidationTests {
 		return checkResults("SRA2_Stroke", inputFileName, outputFileName, truthFileName);
 	}
 	
+	ValidationResult checkResults_TIL() throws IOException {
+		String truthFileName = testdir + "/TIL/TIL_TRUTH.txt";
+		String inputFileName = testdir + "/TIL/TIL.txt";
+		String outputFileName = testdir + "/TIL/TIL_to_validate.txt";
+
+		return checkResults("TIL", inputFileName, outputFileName, truthFileName);
+	}
+	
 	/*
 	 * Test files only needed to create an initial TRUTH file (unvalidated).
 	 * Result should be imported into a database and marked for validation there.
@@ -613,6 +623,14 @@ class ValidationTests {
 	void createInitialTruthFile_SRA2_Stroke() {
 		String inputFileName = testdir + "/SRA2/Stroke.txt";
 		String outputFileName = testdir + "/SRA2/Stroke_for_truth.txt";
+		createInitialTruthFile(inputFileName, outputFileName);
+	}
+
+	@Disabled("Only needed for initialisation of TRUTH file")
+	@Test
+	void createInitialTruthFile_TIL() {
+		String inputFileName = testdir + "/TIL/TIL.txt";
+		String outputFileName = testdir + "/TIL/TIL_for_truth.txt";
 		createInitialTruthFile(inputFileName, outputFileName);
 	}
 

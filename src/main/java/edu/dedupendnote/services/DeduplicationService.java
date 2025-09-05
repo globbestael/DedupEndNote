@@ -786,7 +786,8 @@ public class DeduplicationService {
 			for (Map.Entry<String, List<Publication>> entry : labelMap.entrySet()) {
 				recordList = entry.getValue();
 				Publication recordToKeep = recordList.remove(0);
-				log.debug("Kept: {}: {}", recordToKeep.getId(), recordToKeep.getTitles().get(0));
+				log.debug("Kept: {}: {}", recordToKeep.getId(),
+						(recordToKeep.getTitles().size() > 0 ? recordToKeep.getTitles().get(0) : "(no titles found)"));
 				// Don't set keptRecord in compareSet(): trouble when multiple duplicates and no publication year
 				recordList.stream().forEach(r -> r.setKeptRecord(false));
 
