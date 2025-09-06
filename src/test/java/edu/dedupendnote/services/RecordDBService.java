@@ -70,6 +70,8 @@ public class RecordDBService {
 		String fieldContent = null;
 		String fieldName = null;
 		PublicationDB publicationDB = new PublicationDB();
+		Integer phantomId = 0;
+		String realId = null;
 
 		try (BufferedReader br = new BufferedReader(new FileReader(inputFileName))) {
 			if (hasBom) {
@@ -97,6 +99,10 @@ public class RecordDBService {
 						publicationDB.setDatabase(fieldContent);
 						break;
 					case "ER":
+						phantomId++;
+						if (realId == null) {
+							publicationDB.setId(phantomId);
+						}
 						publication = recordIdMap.get(String.valueOf(publicationDB.getId()));
 						if (publication != null) {
 							if (publication.getLabel() != null) {
@@ -105,9 +111,11 @@ public class RecordDBService {
 							publicationDBs.add(publicationDB);
 						}
 						publicationDB = new PublicationDB();
+						realId = null;
 						break;
 					case "ID": // EndNote Publication number
 						publicationDB.setId(Integer.valueOf(fieldContent));
+						realId = line.substring(6);
 						break;
 					case "IS":
 						publicationDB.setIssue(fieldContent);

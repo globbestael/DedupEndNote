@@ -113,12 +113,13 @@ class ValidationTests {
 						new ValidationResult("ASySD_Neuroimaging", 2172, 29, 1235, 2, 1_350L),
 						new ValidationResult("ASySD_SRSR_Human", 27897, 120, 24975, 9, 100_000L),
 						new ValidationResult("BIG_SET", 3915, 187, 959, 17, 66_000L),
-						new ValidationResult("McKeown_2021", 2016, 56, 1054, 4, 470L),
+						new ValidationResult("McKeown_2021", 2018, 56, 1054, 2, 470L),
 						new ValidationResult("SRA2_Cytology_screening", 1361, 59, 436, 0, 400L),
 						new ValidationResult("SRA2_Haematology", 225, 11, 1177, 2, 300L),
 						new ValidationResult("SRA2_Respiratory", 766, 34, 1184, 4, 800L),
 						new ValidationResult("SRA2_Stroke", 497, 13, 782, 0, 320L),
-						new ValidationResult("TIL", 687, 25, 390, 0, 9_000L))
+						new ValidationResult("TIL", 687, 15, 390, 0, 9_000L),
+						new ValidationResult("TIL_Zotero", 685, 17, 389, 1, 9_000L))
 				.stream().collect(Collectors.toMap(ValidationResult::getFileName, Function.identity(), (o1, o2) -> o1,
 						TreeMap::new));
 
@@ -127,15 +128,16 @@ class ValidationTests {
 				.of(
 					checkResults_ASySD_Cardiac_human(),
 					checkResults_ASySD_Diabetes(),
-					checkResults_ASySD_Neuroimaging(), 
-					checkResults_ASySD_SRSR_Human(), 
+					checkResults_ASySD_Neuroimaging(),
+					checkResults_ASySD_SRSR_Human(),
 					checkResults_BIG_SET(),
-					checkResults_McKeown_2021(), 
+					checkResults_McKeown_2021(),
 					checkResults_SRA2_Cytology_screening(),
-					checkResults_SRA2_Haematology(), 
-					checkResults_SRA2_Respiratory(), 
+					checkResults_SRA2_Haematology(),
+					checkResults_SRA2_Respiratory(),
 					checkResults_SRA2_Stroke(),
-					checkResults_TIL()				
+					checkResults_TIL(),
+					checkResults_TIL_Zotero()
 				)
 				.stream().collect(Collectors.toMap(ValidationResult::getFileName, Function.identity(), (o1, o2) -> o1,
 						TreeMap::new));
@@ -534,6 +536,14 @@ class ValidationTests {
 		return checkResults("TIL", inputFileName, outputFileName, truthFileName);
 	}
 	
+	ValidationResult checkResults_TIL_Zotero() throws IOException {
+		String truthFileName = testdir + "/TIL/TIL_TRUTH.txt";
+		String inputFileName = testdir + "/TIL/TIL_Zotero.ris";
+		String outputFileName = testdir + "/TIL/TIL_Zotero_to_validate.txt";
+
+		return checkResults("TIL_Zotero", inputFileName, outputFileName, truthFileName);
+	}
+
 	/*
 	 * Test files only needed to create an initial TRUTH file (unvalidated).
 	 * Result should be imported into a database and marked for validation there.
@@ -631,6 +641,15 @@ class ValidationTests {
 	void createInitialTruthFile_TIL() {
 		String inputFileName = testdir + "/TIL/TIL.txt";
 		String outputFileName = testdir + "/TIL/TIL_for_truth.txt";
+		createInitialTruthFile(inputFileName, outputFileName);
+	}
+
+	@Disabled("Only needed for initialisation of TRUTH file")
+	@Test
+	void createInitialTruthFile_TIL_Zotero() {
+		String inputFileName = testdir + "/TIL/TIL_Zotero.ris";
+		// uses the same TRUTH file as createInitialTruthFile_TIL
+		String outputFileName = testdir + "/TIL/TIL_Zotero_for_truth.txt";
 		createInitialTruthFile(inputFileName, outputFileName);
 	}
 
