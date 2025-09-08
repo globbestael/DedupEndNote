@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="en">
+
 <head>
-    <title>DedupEndNote</title>
+	<title>DedupEndNote</title>
 
 	<script th:src="@{/webjars/jquery/jquery.min.js}"></script>
 	<script th:src="@{/webjars/jquery-ui/jquery-ui.min.js}"></script>
@@ -9,104 +10,105 @@
 	<script th:src="@{/webjars/blueimp-file-upload/js/jquery.fileupload-process.js}"></script>
 	<link rel="stylesheet" th:href="@{/webjars/bootstrap/css/bootstrap.min.css}">
 	<script th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}" type="text/javascript"></script>
-    <script th:src="@{/webjars/sockjs-client/dist/sockjs.min.js}"></script>
-    <script th:src="@{/webjars/stomp-websocket/stomp.min.js}"></script>
+	<script th:src="@{/webjars/sockjs-client/dist/sockjs.min.js}"></script>
+	<script th:src="@{/webjars/stomp-websocket/stomp.min.js}"></script>
 
-    <style type="text/css">
-    	td {
-    		vertical-align: top;
-    	}
-    	.diff {
-    		color: red;
-    		font-weight: bold;
-    	}
-    </style>
+	<style type="text/css">
+		td {
+			vertical-align: top;
+		}
 
- 	<script th:inline="javascript">
-	 	var stompClient = null;
-	 	var wssessionId = null;
-	 	
-	 	/* Also adds data to the start form (step 2) */
-	 	function checkFileSize(evant, data) {
+		.diff {
+			color: red;
+			font-weight: bold;
+		}
+	</style>
+
+	<script th:inline="javascript">
+		var stompClient = null;
+		var wssessionId = null;
+
+		/* Also adds data to the start form (step 2) */
+		function checkFileSize(evant, data) {
 			if (data.files[0].size > (150 * 1024 * 1024)) {
 				var MB = parseInt(data.files[0].size / (1024 * 1024));
 				alert("File is bigger than 150 MB! This file: " + MB + "MB");
 			} else {
 				// connect();
-				$("#fileName_1").val(data.files[0].name);						
+				$("#fileName_1").val(data.files[0].name);
 				data.submit();
 			}
-	 	}
-	 	
-	 	function hideDiv(id) {
-	 		$(id).removeClass('d-block');
-	 		$(id).addClass('d-none');
-	 	}
-	 	function showDiv(id) {
-	 		$(id).removeClass('d-none');
-	 		$(id).addClass('d-block');
-	 	}
-	 	function showProgress(percentage) {
-	 		$("#progress").html(`<div class="progress-bar" role="progressbar" style="width: ${percentage}%;" aria-valuenow="${percentage}" aria-valuemin="0" aria-valuemax="100">${percentage}%</div>`);
-	 	}
-	 	function disableButton(id) {
-	 		$(id).prop("disabled", true);
-	 	}
-	 	function enableButton(id) {
-	 		$(id).prop("disabled", false);
-	 	}
-	 	function markAsDone(id) {
-	 		$(id).removeClass('alert-warning');
-	 		$(id).addClass('alert-success');
-	 	}
-	 	/*
-	 	 * Calling disconnect() will invalidate the wssessionId?
-	 	 * Would it be better to restart with a reload?
-	 	 * - new wssessionId
-	 	 * - if there is a old running deduplication, then its messages will be send to the subscription which is no longer valid,
-	 	 *   and not interfere with the current subscription 
-	 	 */
-	 	function disconnect() {
-	 	    if (stompClient !== null) {
-	 	    }
-	 	    console.log("Disconnected");
-	 	}
+		}
 
- 		$(function() {
+		function hideDiv(id) {
+			$(id).removeClass('d-block');
+			$(id).addClass('d-none');
+		}
+		function showDiv(id) {
+			$(id).removeClass('d-none');
+			$(id).addClass('d-block');
+		}
+		function showProgress(percentage) {
+			$("#progress").html(`<div class="progress-bar" role="progressbar" style="width: ${percentage}%;" aria-valuenow="${percentage}" aria-valuemin="0" aria-valuemax="100">${percentage}%</div>`);
+		}
+		function disableButton(id) {
+			$(id).prop("disabled", true);
+		}
+		function enableButton(id) {
+			$(id).prop("disabled", false);
+		}
+		function markAsDone(id) {
+			$(id).removeClass('alert-warning');
+			$(id).addClass('alert-success');
+		}
+		/*
+		 * Calling disconnect() will invalidate the wssessionId?
+		 * Would it be better to restart with a reload?
+		 * - new wssessionId
+		 * - if there is a old running deduplication, then its messages will be send to the subscription which is no longer valid,
+		 *   and not interfere with the current subscription 
+		 */
+		function disconnect() {
+			if (stompClient !== null) {
+			}
+			console.log("Disconnected");
+		}
+
+		$(function () {
 
 			connect();
 
 			function connect() {
- 		 	    var socket = new SockJS('/gs-guide-websocket');
- 		 	    stompClient = Stomp.over(socket);
- 				stompClient.debug = null;	// disable debug, shorthand for: "stompClient.debug = function(str) {};" see https://stomp-js.github.io/stomp-websocket/codo/class/Client.html 
- 		 	    stompClient.connect({}, function (frame) {
+				var socket = new SockJS('/gs-guide-websocket');
+				stompClient = Stomp.over(socket);
+				stompClient.debug = null;	// disable debug, shorthand for: "stompClient.debug = function(str) {};" see https://stomp-js.github.io/stomp-websocket/codo/class/Client.html 
+				stompClient.connect({}, function (frame) {
 					// subscribe to a user specific URL (see the controller for more info)
- 					var wssessionId = /\/([^\/]+)\/websocket/.exec(socket._transport.url)[1];
- 			        // console.log("connected, session id: " + wssessionId);
- 			        $("#wssessionId").val(wssessionId);
- 		 	        stompClient.subscribe('/topic/messages-' + wssessionId, function (stompMessage) {
- 		 	        	let message = JSON.parse(stompMessage.body).name
- 	                    if (message.match("^DONE")) {
- 	                    	showProgress(0);
- 	                        $('#results').html(message);      
- 							enableButton('#buttonResultFile');
- 							markAsDone('#step2');
- 	                    } else if (message.match("^ERROR")) {  
- 	 		        		$('#results').removeClass('alert-warning');
- 	 		        		$('#results').addClass('alert-danger');
- 	                        $('#results').html(message);      
- 	                    } else if (message.match("^PROGRESS:")) {
- 	                    	var found = message.match(/^PROGRESS: (.+)$/);
- 	                    	var percentage = found[1]; 
- 	                    	showProgress(percentage);
- 	                    } else {
- 		                  	console.log("DATA: " + message);
- 			 	       		$('#results').html("<span>" + message + "</span>");
- 	                    }
- 		 	        });
- 		 	    });
- 		 	}
+					var wssessionId = /\/([^\/]+)\/websocket/.exec(socket._transport.url)[1];
+					// console.log("connected, session id: " + wssessionId);
+					$("#wssessionId").val(wssessionId);
+					stompClient.subscribe('/topic/messages-' + wssessionId, function (stompMessage) {
+						let message = JSON.parse(stompMessage.body).name
+						if (message.match("^DONE")) {
+							showProgress(0);
+							$('#results').html(message);
+							enableButton('#buttonResultFile');
+							markAsDone('#step2');
+						} else if (message.match("^ERROR")) {
+							$('#results').removeClass('alert-warning');
+							$('#results').addClass('alert-danger');
+							$('#results').html(message);
+						} else if (message.match("^PROGRESS:")) {
+							var found = message.match(/^PROGRESS: (.+)$/);
+							var percentage = found[1];
+							showProgress(percentage);
+						} else {
+							console.log("DATA: " + message);
+							$('#results').html("<span>" + message + "</span>");
+						}
+					});
+				});
+			}
 
 			$('#file').change(function () {
 				// solution for "fakepath" problem: remove everything before the fileName
@@ -116,72 +118,73 @@
 				if (match != null) {
 					fileName = match[2];
 				}
- 		    	$("#fileName_1").val(fileName);
+				$("#fileName_1").val(fileName);
 			});
-			
+
 			$('#upload_form').fileupload({
 				dataType: 'json',
 				limitMultiFileUploads: 1,
 				replaceFileInput: false,
-				start: function() {
+				start: function () {
 					showProgress(0);
 				},
-				add: function(event, data) {
-	        	   checkFileSize(event, data);
+				add: function (event, data) {
+					checkFileSize(event, data);
 				},
-		 		done: function (e, data) {
-	    			$("#markModeResultFile").val($("input[name='markMode']").prop("checked"));
- 		        	if (data.textStatus == "success") {
+				done: function (e, data) {
+					$("#markModeResultFile").val($("input[name='markMode']").prop("checked"));
+					if (data.textStatus == "success") {
 						showProgress(0);
- 		        		$('#results').html("<span>File " + data.files[0].name + " has been uploaded</span>");
+						$('#results').html("<span>File " + data.files[0].name + " has been uploaded</span>");
 						disableButton('#fileUpload1');
 						enableButton('#buttonStartDeduplication');
 						markAsDone('#step1');
- 		        	}
- 		        },
- 		        error: function (jqXHR, data, thrownError) {
- 		        	var response = jQuery.parseJSON(jqXHR.responseText);
-	        		$('#results').html("<span>" + response.result + "</span>");
- 	        		$('#results').addClass('alert-danger');
- 	        		$('#results').removeClass('alert-warning');
- 		        },
-  				progressall: function (e, data) {
- 		            var percentage = parseInt(data.loaded / data.total * 100, 10);
-                 	$("#progress").html(`<div class="progress-bar" role="progressbar" style="width: ${percentage}%;" aria-valuenow="${percentage}" aria-valuemin="0" aria-valuemax="100">${percentage}%</div>`);
- 		        }
- 		    });
- 
- 			$('#buttonStartDeduplication').on('click', function (event) {
- 				event.preventDefault();
-				disableButton('#buttonStartDeduplication');
-    			$("#fileNameResultFile").val($('#fileName_1').val());	// in getResultFile_form
-    			$("#markModeResultFile").val($('#markMode').prop("checked"));	// in getResultFile_form
+					}
+				},
+				error: function (jqXHR, data, thrownError) {
+					var response = jQuery.parseJSON(jqXHR.responseText);
+					$('#results').html("<span>" + response.result + "</span>");
+					$('#results').addClass('alert-danger');
+					$('#results').removeClass('alert-warning');
+				},
+				progressall: function (e, data) {
+					var percentage = parseInt(data.loaded / data.total * 100, 10);
+					$("#progress").html(`<div class="progress-bar" role="progressbar" style="width: ${percentage}%;" aria-valuenow="${percentage}" aria-valuemin="0" aria-valuemax="100">${percentage}%</div>`);
+				}
+			});
 
- 	    		$.ajax({
- 	    			url: '/startOneFile',
- 	    			type: 'POST',
- 	    			data: new FormData(document.getElementById('start_form')),
- 	    			dataType: 'json',
- 	    			processData: false,
- 	    			contentType: false,
- 					success: function(response) {
- 						console.log("RESPONSE: " + response.result);
-	                    if (response.result.match("^DONE")) {  
-	                        $('#results').html(response.result);      
-	                    } else if (response.result.match("^ERROR")) {  
-	 		        		$('#results').removeClass('alert-warning');
-	 		        		$('#results').addClass('alert-danger');
-	                        $('#results').html(response.result);      
-	                    } else {
-	                    	$('#results').html(response.result);
-	                    }
- 	    			}
- 	    		});
- 			});
-			
- 		});
- 	</script>
+			$('#buttonStartDeduplication').on('click', function (event) {
+				event.preventDefault();
+				disableButton('#buttonStartDeduplication');
+				$("#fileNameResultFile").val($('#fileName_1').val());	// in getResultFile_form
+				$("#markModeResultFile").val($('#markMode').prop("checked"));	// in getResultFile_form
+
+				$.ajax({
+					url: '/startOneFile',
+					type: 'POST',
+					data: new FormData(document.getElementById('start_form')),
+					dataType: 'json',
+					processData: false,
+					contentType: false,
+					success: function (response) {
+						console.log("RESPONSE: " + response.result);
+						if (response.result.match("^DONE")) {
+							$('#results').html(response.result);
+						} else if (response.result.match("^ERROR")) {
+							$('#results').removeClass('alert-warning');
+							$('#results').addClass('alert-danger');
+							$('#results').html(response.result);
+						} else {
+							$('#results').html(response.result);
+						}
+					}
+				});
+			});
+
+		});
+	</script>
 </head>
+
 <body data-spy="scroll" data-target="#menu" data-offset="1">
 	<div class="container-fluid">
 		<div class="row">
@@ -196,10 +199,13 @@
 						<a class="list-group-item list-group-item-action" href="#examples">Examples of comparison</a>
 						<a class="list-group-item list-group-item-action" href="#performance">Performance</a>
 						<a class="list-group-item list-group-item-action" href="#limitations">Limitations</a>
-						<!-- the next 3 links to other pages open a new window in order to preserve the Web Socket sessionId on this page (possibly running a deduplication --> 
-						<a class="list-group-item list-group-item-action" href="/justification" target="window2">Justification</a>
-						<a class="list-group-item list-group-item-action" href="/resources/faq.html" target="window2">FAQ</a>
-						<a class="list-group-item list-group-item-action" href="/resources/developers.html" target="window2">Developers</a>
+						<!-- the next 3 links to other pages open a new window in order to preserve the Web Socket sessionId on this page (possibly running a deduplication -->
+						<a class="list-group-item list-group-item-action" href="/justification"
+							target="window2">Justification</a>
+						<a class="list-group-item list-group-item-action" href="/resources/faq.html"
+							target="window2">FAQ</a>
+						<a class="list-group-item list-group-item-action" href="/resources/developers.html"
+							target="window2">Developers</a>
 						<a class="list-group-item list-group-item-action" href="#issues">Issues and feature requests</a>
 						<a class="list-group-item list-group-item-action" href="#citing">How to cite</a>
 						<a class="list-group-item list-group-item-action" href="#changes">Latest changes</a>
@@ -213,10 +219,13 @@
 						<h3>1. INPUT FILE</h3>
 					</div>
 					<div class="col-9">
-						<form class="form-horizontal" id="upload_form" method="post" enctype="multipart/form-data" th:action="@{|/uploadFile|}">
+						<form class="form-horizontal" id="upload_form" method="post" enctype="multipart/form-data"
+							th:action="@{|/uploadFile|}">
 							<div class="form-group">
-								<label for="oldFile">Select the EndNote RIS file to deduplicate<br/>(use <a href="/twofiles">/twofiles</a> to deduplicate an new set of records against an old set)</label><br/>
-								<input type="file" id="fileUpload1" name="file"/>
+								<label for="oldFile">Select the EndNote RIS file to deduplicate<br />(use <a
+										href="/twofiles">/twofiles</a> to deduplicate an new set of records against an
+									old set)</label><br />
+								<input type="file" id="fileUpload1" name="file" />
 							</div>
 						</form>
 					</div>
@@ -230,11 +239,13 @@
 							<input type="hidden" id="fileName_1" name="fileName_1" value="" />
 							<input type="hidden" id="wssessionId" name="wssessionId" value="" />
 							<div class="form-check form-check-inline">
-								<input class="form-check-input" type="checkbox" id="markMode" name="markMode"/>
-								<label class="form-check-label" for="file"> Do NOT deduplicate the file but mark the duplicate records (see <a href="#markModeText">Mark mode</a>)</label>
+								<input class="form-check-input" type="checkbox" id="markMode" name="markMode" />
+								<label class="form-check-label" for="file"> Do NOT deduplicate the file but mark the
+									duplicate records (see <a href="#markModeText">Mark mode</a>)</label>
 							</div>
 							<div>
-								<button type="submit" id="buttonStartDeduplication" disabled class="btn btn-primary mb-2">Start deduplication</button>
+								<button type="submit" id="buttonStartDeduplication" disabled
+									class="btn btn-primary mb-2">Start deduplication</button>
 							</div>
 						</form>
 					</div>
@@ -244,20 +255,23 @@
 						<h3>3. RESULT</h3>
 					</div>
 					<div class="col-9">
-						<form class="form-horizontal" id="getResultFile_form" method="post" th:action="@{|/getResultFile|}">
+						<form class="form-horizontal" id="getResultFile_form" method="post"
+							th:action="@{|/getResultFile|}">
 							<input type="hidden" name="fileNameResultFile" id="fileNameResultFile" />
 							<input type="hidden" name="markModeResultFile" id="markModeResultFile" />
 							<!-- nodig om submit() voor IE te laten werken -->
-							<button type="submit" id="buttonResultFile" disabled class="btn btn-primary mb-2" onclick="this.form.submit(); markAsDone('#step3');">Get the result</button>
+							<button type="submit" id="buttonResultFile" disabled class="btn btn-primary mb-2"
+								onclick="this.form.submit(); markAsDone('#step3');">Get the result</button>
 						</form>
 					</div>
 				</div>
 				<div class="row" style="margin-top: 10px;">
 					<div class="col-8 border border-primary rounded">
 						<h3>Progress</h3>
-					    <div id="progress" class="progress" style="height: 20px;">
-					        <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
-					    </div>
+						<div id="progress" class="progress" style="height: 20px;">
+							<div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0"
+								aria-valuemax="100"></div>
+						</div>
 						<p id="results" class="alert alert-warning">Waiting for new input file ...</p>
 					</div>
 					<div class="col-1"></div>
@@ -266,360 +280,464 @@
 					</div>
 				</div>
 
-	        	<h3 id="steps" style="margin-top: 20px;">Steps</h3>
+				<h3 id="steps" style="margin-top: 20px;">Steps</h3>
 
-	        	<ol>
-	        		<li>Deduplicate one file:
-			        	<ul>
-			        		<li>export an EndNote database into a file in RIS format</li>
-			        		<li>upload this file in DedupEndNote</li>
-			        		<li>save the results file with deduplicated records</li>
-			        		<li>import this results file into a new EndNote database</li>  
-			        	</ul>
-			        </li>
-			        <li>Deduplicate a new file against an existing file / EndNote database: see <a href="/twofiles">/twofiles</a></li>
-	        	</ol>
-		        	
-	        	<h3 id="why">Why DedupEndNote?</h3>
-
-	        	<p>Deduplication in EndNote misses many duplicate records. Building and maintaining a Journals List within Endnote can partly solve this
-	        	problem, but there remain lots of cases where EndNote is too unforgiving when comparing records. Some bibliographic databases offer deduplication
-	        	for their own databases (OVID: Medline and EMBASE), but this does not help PubMed, Cochrane or Web of Science users.</p>
-	        	<p>DedupEndNote deduplicates an EndNote RIS file and writes a new RIS file with the unique records, which can be imported into a new EndNote database.
-	        	It is more forgiving than EndNote itself when comparing records,
-	        	but tests have shown that it identifies many more duplicates (see below under "Test results").</p>
-	        	<p>The program has been tested on EndNote databases with records from:</p>
-	        	<ul>
-	        		<li>CINAHL (EBSCOHost)</li>
-	        		<li>Cochrane Library (Trials)</li>
-	        		<li>EMBASE (OVID)</li>
-	        		<li>Medline (OVID)</li>
-	        		<li>PsycINFO (OVID)
-	        		<li>PubMed</li>
-	        		<li>Scopus</li>
-	        		<li>Web of Science (very few tests with conference papers)</li>
-	        	</ul>
-	        	
-		        <h3 id="what">What does DedupEndNote do?</h3>
-		        
-		        <h5>1. Deduplicate records in a RIS file</h5>
-		        
-		        <p>Each pair of records is compared in 5 different ways. The general rule is:</p>
-		        <table class="table table-bordered" style="width: 60%;">
-					<caption>General rule of DedupEndNote</caption>
-		        	<thead>
-		        		<tr>
-		        			<th>Comparison</th>
-		        			<th>Result</th>
-		        			<th>Action</th>
-		        		</tr>
-		        	</thead>
-		        	<tbody>
-		        		<tr>
-		        			<td rowspan="3">1 ... 5</td>
-		        			<td>YES</td>
-		        			<td rowspan="2" class="align-middle">go to next comparison if present,<br/>else mark the records as duplicates</td>
-		        		</tr>
-		        		<tr>
-		        			<td>(insufficient data for comparison)</td>
-		        		</tr>
-		        		<tr>
-		        			<td>NO</td>
-		        			<td>stop comparisons for this pair of record</td>
-		        		</tr>
-		        	</tbody>
-		        </table>
-
-		        <p>The following comparisons are used (in this order, chosen for performance reasons):</p>
-		        <ol>
-		        	<li><strong>Publication year:</strong> Are they at most 1 year apart?<br/>
-		        	<i>Insufficient data: Records without a publication year are compared to all records unless they have been identified as a duplicate.</i><br/>
-		        	<i>Special cases: Cochrane Reviews are compared for the same publication year</i>
-		        	</li>
-		        	
-	 				<li><strong>Starting page or DOI:</strong> Are they the same?<br/>
-		 				If the starting pages are different or one or both are absent, the DOIs are compared.<br/>
-				        <i>Preprocessing: Article number is treated as a starting page if starting page itself is empty or contains "-".</i><br/>
-				        <i>Preprocessing: Starting pages are compared only for number: "S123" and "123" are considered the same.</i><br/> 
-				        <i>Preprocessing: In DOIs 'http://dx.doi.org/', 'http://doi.org/', ... are left out.</i><br/>
-				        <i>Insufficient data: If one or both DOIs are missing and one or both of the starting pages are missing, the answer is YES. This is important because of PubMed ahead of print publications.</i><br/>
-			        	<i>Special cases: For Cochrane Reviews DOIs are compared before starting pages.</i>
-			        </li>
-	
-			        <li><strong>Authors:</strong> Is the <a href="https://en.wikipedia.org/wiki/Jaro%E2%80%93Winkler_distance" target="_blank">Jaro-Winkler similarity</a> of the authors &gt;
-			        	<span th:text="${T(edu.dedupendnote.services.DeduplicationService.DefaultAuthorsComparator).AUTHOR_SIMILARITY_NO_REPLY}">-0.67</span>?<br/>
-				        <i>Preprocessing: The author "Anonymous," and all Author Groups are skipped.</i><br/>
-				        <i>Preprocessing: First names are reduced to initials ("Moorthy, Ranjith K." to "Moorthy, RK").</i><br/> 
-				        <i>Preprocessing: All authors from each record are joined by "; ".</i><br/>
-				        <i>Insufficient data: If one or both records have no authors, the answer is YES (except if one of the records is a reply (see below)
-				        and one of the records has no starting page or DOI).</i>
-				     </li>
-	
-			        <li><strong>Title:</strong> Is the <a href="https://en.wikipedia.org/wiki/Jaro%E2%80%93Winkler_distance" target="_blank">Jaro-Winkler similarity</a> of (one of) the normalized titles &gt;
-						<span th:text="${T(edu.dedupendnote.services.DeduplicationService).TITLE_SIMILARITY_SUFFICIENT_STARTPAGES_OR_DOIS}">-0.90</span>?<br/>
-				        The fields Original publication (OP), Short Title (ST), Title (TI) and sometimes Book section (T3, see below) are treated as titles.<br/>
-				        Because the Jaro-Winkler similarity algorithm puts a heavy penalty on differences at the beginning of a string, the normalized titles are also reversed.<br/>
-				        <i>Preprocessing: The titles are normalized (converted to lower case, text between "&lt;...&gt;" removed,
-				        all characters which are not letters or numbers are replaced by a space character, ...).</i><br/>
-				        <i>Insufficient data: If one of the records is a reply (see below), the titles are not compared / the answer is YES
-				        (but the Jaro-Winkler similarity of the authors should be &gt; <span th:text="${T(edu.dedupendnote.services.DeduplicationService.DefaultAuthorsComparator).AUTHOR_SIMILARITY_REPLY_SUFFICIENT_STARTPAGES_OR_DOIS}">-0.75</span>
-				        and the comparison between the journals is more strict).</i>
-				    </li>
-	
-			        <li><strong>ISSN or Journal:</strong> Are they the same (ISSN) or similar (Journal)?<br/>
-						This rule is skipped if both records have the same DOI (that comparison was made in step 2).<br/>
-				        The fields Journal / Book Title (T2), Alternate Journal (J2) and sometimes Book section (T3, see below) are treated as journals, ISBNs are treated as ISSNs. All ISSns and journal titles (including abbreviations) in the records are used.<br/>
-				        If the ISSns are different or one or both records have no ISSN, the journals are compared.<br/>
-				        Abbreviated and full journal titles are compared in a sensible way (see examples below).<br/>
-				        <i>Preprocessing: ISSNs are normalized (dashes are removed, lowercased).
-							For ISBN-10 the first 9 digits are used, for ISBN-13 the 9 digits starting at position 4.</i><br/>
-				        <i>Preprocessing: Journal titles of the form "Zhonghua wai ke za zhi [Chinese journal of surgery]"
-				        or "Zhonghua wei chang wai ke za zhi = Chinese journal of gastrointestinal surgery"
-				        or "The Canadian Journal of Neurological Sciences / Le Journal Canadien Des Sciences Neurologiques" are split into 2 journal titles.</i><br/>
-				        <i>Preprocessing: the journal titles are normalized (hyphens, dots and apostrophes are replaced with space,
-				        end part between round or square brackets is removed, initial article is removed, ...).</i>
-			        </li>
-		        </ol>
-   				<p><i>T3 field: Especially EMBASE (OVID) uses this field for (1) Conference title (majority of cases), (2) an alternative journal title, and (3) original (non English) title. Case 1 (identified as containing a
-				number or "Annual", "Conference", "Congress", "Meeting" or "Society") is skipped. All other T3 fields are treated as Journals and as titles.</i>
-   				
-   				<p><i>Reply: a publication is considered a reply if the title (field TI) contains "reply", or contains "author(...)respon(...)", or is nothing but "response" (all case insensitive).</i></p>
-   				
-
-		        <p>If two records get 5 YES answers, they are considered duplicates.<br/>
-		        
-		        <h5>2. Enrich the deduplicated records</h5> 
-		        Only the first record of a set of duplicate records is copied to the output file.</p>
-		        <p>When writing the output file, the following fields will be changed:</p>
-		        <ul>
-		        	<li>Author (AU):
-		        		<ul>
-		        			<li>if the (only) author is "Anonymous", the author is omitted</li>
-		        		</ul>
-		        	</li>
-		        	<li>DOI (DO):
-		        		<ul>
-		        			<li>the DOIs of the removed duplicate records are copied to the saved record and deduplicated. The DOI field is important for finding the full text in EndNote.</li>
-		        			<li>DOIs of the form "10.1038/ctg.2014.12", "http://dx.doi.org/10.1038/ctg.2014.12", ... are rewritten in the
-		        	 			<a href="https://www.crossref.org/education/metadata/persistent-identifiers/doi-display-guidelines/" target="_blank">prescribed form</a> "https://doi.org/10.1038/ctg.2014.12". DOIs of this form are clickable links in EndNote.</li>
-		        		</ul>
-		        	</li>
-					<li>Journal name (T2):
+				<ol>
+					<li>Deduplicate one file:
 						<ul>
-							<li>if the saved record has no value for the Journal name (T2) but has a value for the Alternate Journal (J2), 
-								this J2 value is copied to the T2 field. This is relevant for the ClinicalTrials.gov records in Embase.</li>
-							<li>missing Journal name (T2) for "Social Science Research Network" records from Embase.com are filled</li>
+							<li>export an EndNote database into a file in RIS format</li>
+							<li>upload this file in DedupEndNote</li>
+							<li>save the results file with deduplicated records</li>
+							<li>import this results file into a new EndNote database</li>
 						</ul>
 					</li>
-		        	<li>Publication year (PY):
-		        		<ul>
-		        			<li>if the saved record has no value for its Publication year but one of the removed duplicate records has,
-		        				the first not empty Publication year of the duplicates is copied to the saved record.</li>
-		        		</ul>
-		        	</li>
-		        	<li>Starting page (SP) and Article Number (C7):
-		        		<ul>
-		        			<li>the article number is put in the Pages field (SP) if the Pages field is empty or does not contain a "-", overwriting the Pages field content.</li>
-		        			<li>the article number field (C7) is omitted</li>
-		        			<li>if the saved record has no value for its Pages field (e.g. PubMed ahead of print publications) but one of the removed duplicate records has,
-		        				the first not empty pages of the duplicates are copied to the saved record.</li>
-		        			<li>the Pages field gets an unabbreviated form: e.g. "482-91" is rewritten as "482-491".</li>
-		        			<li>if the ending page is the same as the starting page, only the starting page is written ("192" instead of "192-192").</li>
-		        			<li>for Cochrane Reviews a missing review number ("CD...") is extracted from the DOI.</li> 
-		        		</ul>
-		        	</li>
-		        	<li>Title (TI):
-		        		<ul>
-		        			<li>If the publication is a reply, the title is replaced with the longest title from the duplicates (e.g. "Reply from the authors" is replaced by
-		        			 	"Coagulation parameters and portal vein thrombosis in cirrhosis Reply")</li>
-		        		</ul>
-		        	</li>
-		        </ul>
-		        
-		        <p>The output file is a new RIS file which can be imported into a new EndNote database.</p>
-		        
-		        <p>DedupEndNote is slower than EndNote in deduplicating records because its comparisons are more time consuming.
-		        EndNote can deduplicate a EndNote database of ca. 15,000 records in less dan 5 seconds. DedupEndNote needs around 20 seconds to deduplicate
-		        the export file in RIS format (115MB).</p>
-				
-		        <p>DedupEndNote has borrowed several ideas from: Yu Jiang, Can Lin, Weiyi Meng, Clement Yu, Aaron M. Cohen and Neil R. Smalheiser:
-		        <a href="http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3893659/" target="_blank">Rule-based deduplication of article records from bibliographic databases</a>, in: Database 2014, ID bat086, doi:10.1093/database/bat086</p>
-		        
-		        <h3 id="markModeText">Mark mode</h3>
+					<li>Deduplicate a new file against an existing file / EndNote database: see <a
+							href="/twofiles">/twofiles</a></li>
+				</ol>
 
-				<p>If you want to manually merge the records which are duplicates according to DedupEndNote, you can use Mark mode.</p>  		        
-		        <p>In Mark mode the ID of the first record of a set of duplicate records is copied to the label field ("LB") of all duplicate records.
-		        The input file is copied to the output file with the addition of the Label field if it is not empty.
-		        The original content of the Label field is overwritten! All other fields are copied as is (so no enriching of the output: prescribed form of DOI, ...).</p>
-		        
-				<p>After importing the results file into a new EndNote database, make the Label field visible. The IDs in the Label field refer to the IDs of the <u>original</u> EndNote database.</p>
+				<h3 id="why">Why DedupEndNote?</h3>
+
+				<p>Deduplication in EndNote misses many duplicate records. Building and maintaining a Journals List
+					within Endnote can partly solve this
+					problem, but there remain lots of cases where EndNote is too unforgiving when comparing records.
+					Some bibliographic databases offer deduplication
+					for their own databases (OVID: Medline and EMBASE), but this does not help PubMed, Cochrane or Web
+					of Science users.</p>
+				<p>DedupEndNote deduplicates an EndNote RIS file and writes a new RIS file with the unique records,
+					which can be imported into a new EndNote database.
+					It is more forgiving than EndNote itself when comparing records,
+					but tests have shown that it identifies many more duplicates (see below under "Test results").</p>
+				<p>The program has been tested on EndNote databases with records from:</p>
+				<ul>
+					<li>CINAHL (EBSCOHost)</li>
+					<li>Cochrane Library (Trials)</li>
+					<li>EMBASE (OVID)</li>
+					<li>Medline (OVID)</li>
+					<li>PsycINFO (OVID)
+					<li>PubMed</li>
+					<li>Scopus</li>
+					<li>Web of Science (very few tests with conference papers)</li>
+				</ul>
+
+				<h3 id="what">What does DedupEndNote do?</h3>
+
+				<h5>1. Deduplicate records in a RIS file</h5>
+
+				<p>Each pair of records is compared in 5 different ways. The general rule is:</p>
+				<table class="table table-bordered" style="width: 60%;">
+					<caption>General rule of DedupEndNote</caption>
+					<thead>
+						<tr>
+							<th>Comparison</th>
+							<th>Result</th>
+							<th>Action</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td rowspan="3">1 ... 5</td>
+							<td>YES</td>
+							<td rowspan="2" class="align-middle">go to next comparison if present,<br />else mark the
+								records as duplicates</td>
+						</tr>
+						<tr>
+							<td>(insufficient data for comparison)</td>
+						</tr>
+						<tr>
+							<td>NO</td>
+							<td>stop comparisons for this pair of record</td>
+						</tr>
+					</tbody>
+				</table>
+
+				<p>The following comparisons are used (in this order, chosen for performance reasons):</p>
+				<ol>
+					<li><strong>Publication year:</strong> Are they at most 1 year apart?<br />
+						<i>Insufficient data: Records without a publication year are compared to all records unless they
+							have been identified as a duplicate.</i><br />
+						<i>Special cases: Cochrane Reviews are compared for the same publication year</i>
+					</li>
+
+					<li><strong>Starting page or DOI:</strong> Are they the same?<br />
+						If the starting pages are different or one or both are absent, the DOIs are compared.<br />
+						<i>Preprocessing: Article number is treated as a starting page if starting page itself is empty
+							or contains "-".</i><br />
+						<i>Preprocessing: Starting pages are compared only for number: "S123" and "123" are considered
+							the same.</i><br />
+						<i>Preprocessing: In DOIs 'http://dx.doi.org/', 'http://doi.org/', ... are left out.</i><br />
+						<i>Insufficient data: If one or both DOIs are missing and one or both of the starting pages are
+							missing, the answer is YES. This is important because of PubMed ahead of print
+							publications.</i><br />
+						<i>Special cases: For Cochrane Reviews DOIs are compared before starting pages.</i>
+					</li>
+
+					<li><strong>Authors:</strong> Is the <a
+							href="https://en.wikipedia.org/wiki/Jaro%E2%80%93Winkler_distance"
+							target="_blank">Jaro-Winkler similarity</a> of the authors &gt;
+						<span
+							th:text="${T(edu.dedupendnote.services.DeduplicationService.DefaultAuthorsComparator).AUTHOR_SIMILARITY_NO_REPLY}">-0.67</span>?<br />
+						<i>Preprocessing: The author "Anonymous," and all Author Groups are skipped.</i><br />
+						<i>Preprocessing: First names are reduced to initials ("Moorthy, Ranjith K." to "Moorthy,
+							RK").</i><br />
+						<i>Preprocessing: All authors from each record are joined by "; ".</i><br />
+						<i>Insufficient data: If one or both records have no authors, the answer is YES (except if one
+							of the records is a reply (see below)
+							and one of the records has no starting page or DOI).</i>
+					</li>
+
+					<li><strong>Title:</strong> Is the <a
+							href="https://en.wikipedia.org/wiki/Jaro%E2%80%93Winkler_distance"
+							target="_blank">Jaro-Winkler similarity</a> of (one of) the normalized titles &gt;
+						<span
+							th:text="${T(edu.dedupendnote.services.DeduplicationService).TITLE_SIMILARITY_SUFFICIENT_STARTPAGES_OR_DOIS}">-0.90</span>?<br />
+						The fields Original publication (OP), Short Title (ST), Title (TI) and sometimes Book section
+						(T3, see below) are treated as titles.<br />
+						Because the Jaro-Winkler similarity algorithm puts a heavy penalty on differences at the
+						beginning of a string, the normalized titles are also reversed.<br />
+						<i>Preprocessing: The titles are normalized (converted to lower case, text between "&lt;...&gt;"
+							removed,
+							all characters which are not letters or numbers are replaced by a space character,
+							...).</i><br />
+						<i>Insufficient data: If one of the records is a reply (see below), the titles are not compared
+							/ the answer is YES
+							(but the Jaro-Winkler similarity of the authors should be &gt; <span
+								th:text="${T(edu.dedupendnote.services.DeduplicationService.DefaultAuthorsComparator).AUTHOR_SIMILARITY_REPLY_SUFFICIENT_STARTPAGES_OR_DOIS}">-0.75</span>
+							and the comparison between the journals is more strict).</i>
+					</li>
+
+					<li><strong>ISSN or Journal:</strong> Are they the same (ISSN) or similar (Journal)?<br />
+						This rule is skipped if both records have the same DOI (that comparison was made in step
+						2).<br />
+						The fields Journal / Book Title (T2), Alternate Journal (J2) and sometimes Book section (T3, see
+						below) are treated as journals, ISBNs are treated as ISSNs. All ISSns and journal titles
+						(including abbreviations) in the records are used.<br />
+						If the ISSns are different or one or both records have no ISSN, the journals are compared.<br />
+						Abbreviated and full journal titles are compared in a sensible way (see examples below).<br />
+						<i>Preprocessing: ISSNs are normalized (dashes are removed, lowercased).
+							For ISBN-10 the first 9 digits are used, for ISBN-13 the 9 digits starting at position
+							4.</i><br />
+						<i>Preprocessing: Journal titles of the form "Zhonghua wai ke za zhi [Chinese journal of
+							surgery]"
+							or "Zhonghua wei chang wai ke za zhi = Chinese journal of gastrointestinal surgery"
+							or "The Canadian Journal of Neurological Sciences / Le Journal Canadien Des Sciences
+							Neurologiques" are split into 2 journal titles.</i><br />
+						<i>Preprocessing: the journal titles are normalized (hyphens, dots and apostrophes are replaced
+							with space,
+							end part between round or square brackets is removed, initial article is removed, ...).</i>
+					</li>
+				</ol>
+				<p><i>T3 field: Especially EMBASE (OVID) uses this field for (1) Conference title (majority of cases),
+						(2) an alternative journal title, and (3) original (non English) title. Case 1 (identified as
+						containing a
+						number or "Annual", "Conference", "Congress", "Meeting" or "Society") is skipped. All other T3
+						fields are treated as Journals and as titles.</i>
+
+				<p><i>Reply: a publication is considered a reply if the title (field TI) contains "reply", or contains
+						"author(...)respon(...)", or is nothing but "response" (all case insensitive).</i></p>
+
+
+				<p>If two records get 5 YES answers, they are considered duplicates.<br />
+
+				<h5>2. Enrich the deduplicated records</h5>
+				Only the first record of a set of duplicate records is copied to the output file.</p>
+				<p>When writing the output file, the following fields will be changed:</p>
+				<ul>
+					<li>Author (AU):
+						<ul>
+							<li>if the (only) author is "Anonymous", the author is omitted</li>
+						</ul>
+					</li>
+					<li>DOI (DO):
+						<ul>
+							<li>the DOIs of the removed duplicate records are copied to the saved record and
+								deduplicated. The DOI field is important for finding the full text in EndNote.</li>
+							<li>DOIs of the form "10.1038/ctg.2014.12", "http://dx.doi.org/10.1038/ctg.2014.12", ... are
+								rewritten in the
+								<a href="https://www.crossref.org/education/metadata/persistent-identifiers/doi-display-guidelines/"
+									target="_blank">prescribed form</a> "https://doi.org/10.1038/ctg.2014.12". DOIs of
+								this form are clickable links in EndNote.
+							</li>
+						</ul>
+					</li>
+					<li>Journal name (T2):
+						<ul>
+							<li>if the saved record has no value for the Journal name (T2) but has a value for the
+								Alternate Journal (J2),
+								this J2 value is copied to the T2 field. This is relevant for the ClinicalTrials.gov
+								records in Embase.</li>
+							<li>missing Journal name (T2) for "Social Science Research Network" records from Embase.com
+								are filled</li>
+						</ul>
+					</li>
+					<li>Publication year (PY):
+						<ul>
+							<li>if the saved record has no value for its Publication year but one of the removed
+								duplicate records has,
+								the first not empty Publication year of the duplicates is copied to the saved record.
+							</li>
+						</ul>
+					</li>
+					<li>Starting page (SP) and Article Number (C7):
+						<ul>
+							<li>the article number is put in the Pages field (SP) if the Pages field is empty or does
+								not contain a "-", overwriting the Pages field content.</li>
+							<li>the article number field (C7) is omitted</li>
+							<li>if the saved record has no value for its Pages field (e.g. PubMed ahead of print
+								publications) but one of the removed duplicate records has,
+								the first not empty pages of the duplicates are copied to the saved record.</li>
+							<li>the Pages field gets an unabbreviated form: e.g. "482-91" is rewritten as "482-491".
+							</li>
+							<li>if the ending page is the same as the starting page, only the starting page is written
+								("192" instead of "192-192").</li>
+							<li>for Cochrane Reviews a missing review number ("CD...") is extracted from the DOI.</li>
+						</ul>
+					</li>
+					<li>Title (TI):
+						<ul>
+							<li>If the publication is a reply, the title is replaced with the longest title from the
+								duplicates (e.g. "Reply from the authors" is replaced by
+								"Coagulation parameters and portal vein thrombosis in cirrhosis Reply")</li>
+						</ul>
+					</li>
+				</ul>
+
+				<p>The output file is a new RIS file which can be imported into a new EndNote database.</p>
+
+				<p>DedupEndNote is slower than EndNote in deduplicating records because its comparisons are more time
+					consuming.
+					EndNote can deduplicate a EndNote database of ca. 15,000 records in less dan 5 seconds. DedupEndNote
+					needs around 20 seconds to deduplicate
+					the export file in RIS format (115MB).</p>
+
+				<p>DedupEndNote has borrowed several ideas from: Yu Jiang, Can Lin, Weiyi Meng, Clement Yu, Aaron M.
+					Cohen and Neil R. Smalheiser:
+					<a href="http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3893659/" target="_blank">Rule-based
+						deduplication of article records from bibliographic databases</a>, in: Database 2014, ID bat086,
+					doi:10.1093/database/bat086
+				</p>
+
+				<h3 id="markModeText">Mark mode</h3>
+
+				<p>If you want to manually merge the records which are duplicates according to DedupEndNote, you can use
+					Mark mode.</p>
+				<p>In Mark mode the ID of the first record of a set of duplicate records is copied to the label field
+					("LB") of all duplicate records.
+					The input file is copied to the output file with the addition of the Label field if it is not empty.
+					The original content of the Label field is overwritten! All other fields are copied as is (so no
+					enriching of the output: prescribed form of DOI, ...).</p>
+
+				<p>After importing the results file into a new EndNote database, make the Label field visible. The IDs
+					in the Label field refer to the IDs of the <u>original</u> EndNote database.</p>
 				<ul>
 					<li>To see the duplicates, search for "Label" "is greater than" 0, and sort on the label field.</li>
-					<li>To manually merge, change in Preferences / Deduplicate the fields to deduplicate on to the Label field, deduplicate (in EndNote) and merge at will</li>
+					<li>To manually merge, change in Preferences / Deduplicate the fields to deduplicate on to the Label
+						field, deduplicate (in EndNote) and merge at will</li>
 				</ul>
-				
+
 				<p>Comparing the results of deduplication by EndNote itself and DedupEndNote:</p>
 				<ul>
 					<li>Import the result file into a new EndNote database</li>
 					<li>Deduplicate by EndNote itself</li>
 					<li>Select all records in the "Duplicate References" set, and mark them as Read</li>
-					<li>Select the "All References" set, limit to the duplicates found by DedupEndNote (search for "Label" "is greater than" 0), and sort on the label field.</li>
-					<li>The records marked as Unread were identified as duplicates by DedupEndNote, but not by EndNote itself.</li>
-					<li>Select the "All References" set, limit to the duplicates not found by DedupEndNote (search for "Label" "is less than" 0).</li>
-					<li>The records marked as Read were identified as duplicates by EndNote itself, but not by DedupEndNote.</li>
+					<li>Select the "All References" set, limit to the duplicates found by DedupEndNote (search for
+						"Label" "is greater than" 0), and sort on the label field.</li>
+					<li>The records marked as Unread were identified as duplicates by DedupEndNote, but not by EndNote
+						itself.</li>
+					<li>Select the "All References" set, limit to the duplicates not found by DedupEndNote (search for
+						"Label" "is less than" 0).</li>
+					<li>The records marked as Read were identified as duplicates by EndNote itself, but not by
+						DedupEndNote.</li>
 				</ul>
-		        
-		        <h3 id="examples">Examples of comparison</h3>
-		        
-		        <p>In the following table the results of EndNote's Find duplicates is compared to the comparisons in DedupEndNote. For these tests only one field was 
-		        selected in EndNote in "Edit&nbsp;&gt;&nbsp;Preferences&nbsp;&gt; Duplicates", and "Ignore spacing and punctuation" was selected.</p>
-		        <table class="table table-sm">
+
+				<h3 id="examples">Examples of comparison</h3>
+
+				<p>In the following table the results of EndNote's Find duplicates is compared to the comparisons in
+					DedupEndNote. For these tests only one field was
+					selected in EndNote in "Edit&nbsp;&gt;&nbsp;Preferences&nbsp;&gt; Duplicates", and "Ignore spacing
+					and punctuation" was selected.</p>
+				<table class="table table-sm">
 					<caption>Examples of duplicates found</caption>
-		        	<thead class="thead-light">
-		        		<tr>
-			        		<th>Field</th>
-			        		<th>Examples</th>
-			        		<th>EndNote finds duplicates</th>
-			        		<th>DedupEndNote Score</th>
-			        	</tr>
-		        	</thead>
-		        	<tbody>
-		        		<tr>
-		        			<td><span style="color:red;">Starting page and article number</span></td>
-		        			<td>
-		        				<ul>
-		        					<li>...</li>
-		        					<li>...</li>
+					<thead class="thead-light">
+						<tr>
+							<th>Field</th>
+							<th>Examples</th>
+							<th>EndNote finds duplicates</th>
+							<th>DedupEndNote Score</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td><span style="color:red;">Starting page and article number</span></td>
+							<td>
+								<ul>
+									<li>...</li>
+									<li>...</li>
 								</ul>
 							</td>
 							<td>???</td>
 							<td>???</td>
 						</tr>
-		        		<tr>
-		        			<td>Title</td>
-		        			<td>
-		        				<ul>
-		        					<li>90Y radioembolization using resin microspheres in patients with hepatocellular carcinoma and portal vein thrombosis</li>
-									<li>90Y RADIOEMBOLIZATION USING RESIN MICROSPHERES IN PATIENTS WITH HEPATOCELLULAR CARCINOMA AND PORTAL VEIN THROMBOSIS</li>
+						<tr>
+							<td>Title</td>
+							<td>
+								<ul>
+									<li>90Y radioembolization using resin microspheres in patients with hepatocellular
+										carcinoma and portal vein thrombosis</li>
+									<li>90Y RADIOEMBOLIZATION USING RESIN MICROSPHERES IN PATIENTS WITH HEPATOCELLULAR
+										CARCINOMA AND PORTAL VEIN THROMBOSIS</li>
 								</ul>
 							</td>
 							<td>Yes</td>
 							<td>1.00 == Yes</td>
 						</tr>
-		        		<tr>
-		        			<td>Title</td>
-		        			<td>
-		        				<ul>
-		        					<li>Comments about Glisson<span class="diff">'s</span> capsule phleboliths and portal vein thrombosis<span class="diff"> [1]</span></li>
+						<tr>
+							<td>Title</td>
+							<td>
+								<ul>
+									<li>Comments about Glisson<span class="diff">'s</span> capsule phleboliths and
+										portal vein thrombosis<span class="diff"> [1]</span></li>
 									<li>COMMENTS ABOUT GLISSON CAPSULE PHLEBOLITHS AND PORTAL-VEIN THROMBOSIS</li>
 								</ul>
 							</td>
 							<td>No</td>
 							<td>0.92 == Yes</td>
 						</tr>
-		        		<tr>
-		        			<td>Title</td>
-		        			<td>
-		        				<ul>
-		        					<li>Transarterial chemoembolization and <span class="diff">&lt;sup&gt;90&lt;/sup&gt;y</span> radioembolization for hepatocellular carcinoma: Review of current applications beyond intermediate-stage disease</li>
-									<li>Transarterial Chemoembolization and <span class="diff">Y-90</span> Radioembolization for Hepatocellular Carcinoma: Review of Current Applications Beyond Intermediate-Stage Disease</li>
+						<tr>
+							<td>Title</td>
+							<td>
+								<ul>
+									<li>Transarterial chemoembolization and <span
+											class="diff">&lt;sup&gt;90&lt;/sup&gt;y</span> radioembolization for
+										hepatocellular carcinoma: Review of current applications beyond
+										intermediate-stage disease</li>
+									<li>Transarterial Chemoembolization and <span class="diff">Y-90</span>
+										Radioembolization for Hepatocellular Carcinoma: Review of Current Applications
+										Beyond Intermediate-Stage Disease</li>
 								</ul>
 							</td>
 							<td>No</td>
 							<td>0.92 == Yes</td>
 						</tr>
-		        		<tr>
-		        			<td>Title</td>
-		        			<td>
-		        				<ul>
-		        					<li>Epidemiology and diagnosis profile of digestive cancer in teaching hospital campus of lome: About 250 cases.<span class="diff"> [French]</span></li>
-									<li>Epidemiology and diagnosis profile of digestive cancer in teaching Hospital Campus of Lome: about 250 cases</li>
+						<tr>
+							<td>Title</td>
+							<td>
+								<ul>
+									<li>Epidemiology and diagnosis profile of digestive cancer in teaching hospital
+										campus of lome: About 250 cases.<span class="diff"> [French]</span></li>
+									<li>Epidemiology and diagnosis profile of digestive cancer in teaching Hospital
+										Campus of Lome: about 250 cases</li>
 								</ul>
 							</td>
 							<td>No</td>
 							<td>0.99 == Yes</td>
 						</tr>
-		        		<tr>
-		        			<td>Title</td>
-		        			<td>
-		        				<ul>
-		        					<li>Post Splenectomy Outcome in <span class="diff">beta</span>-Thalassemia</li>
+						<tr>
+							<td>Title</td>
+							<td>
+								<ul>
+									<li>Post Splenectomy Outcome in <span class="diff">beta</span>-Thalassemia</li>
 									<li>Post Splenectomy Outcome in <span class="diff">β</span>-Thalassemia</li>
 								</ul>
 							</td>
 							<td>No</td>
 							<td>0.96 == Yes</td>
 						</tr>
-		        		<tr>
-		        			<td>Title</td>
-		        			<td>
-		        				<ul>
-		        					<li>Letter: portal vein obstruction<span class="diff">--</span>which subset of patients could benefit the most?<span class="diff"> Authors' reply</span></li>
-									<li>Letter: Portal vein obstruction<span class="diff"> - </span>Which subset of patients could benefit the most?</li>
+						<tr>
+							<td>Title</td>
+							<td>
+								<ul>
+									<li>Letter: portal vein obstruction<span class="diff">--</span>which subset of
+										patients could benefit the most?<span class="diff"> Authors' reply</span></li>
+									<li>Letter: Portal vein obstruction<span class="diff"> - </span>Which subset of
+										patients could benefit the most?</li>
 								</ul>
 							</td>
 							<td>No</td>
 							<td>0.97 == Yes *</td>
 						</tr>
-		        		<tr>
-		        			<td>Title</td>
-		        			<td>
-		        				<ul>
-		        					<li>Title: <span class="diff">Some diseases associated with ulcero- hemorrhagic colitis: complication or coincidence. [French]</span><br/>
-		        					Original Title: Quelques maladies associees a la colite ulcero- Hemorragique: Complications ou coincidences</li>
-									<li>Title: <span class="diff">[Various diseases associated with ulcero-hemorrhagic colitis: complications or coincidences]</span><br/>
-									Original Title: Quelques maladies associees a la colite ulcero-hemorragique: complications ou coincidences.</li>
+						<tr>
+							<td>Title</td>
+							<td>
+								<ul>
+									<li>Title: <span class="diff">Some diseases associated with ulcero- hemorrhagic
+											colitis: complication or coincidence. [French]</span><br />
+										Original Title: Quelques maladies associees a la colite ulcero- Hemorragique:
+										Complications ou coincidences</li>
+									<li>Title: <span class="diff">[Various diseases associated with ulcero-hemorrhagic
+											colitis: complications or coincidences]</span><br />
+										Original Title: Quelques maladies associees a la colite ulcero-hemorragique:
+										complications ou coincidences.</li>
 								</ul>
 							</td>
 							<td>No</td>
 							<td>1.00 == Yes *</td>
 						</tr>
-		        		<tr>
-		        			<td>Title</td>
-		        			<td>
-		        				<ul>
-		        					<li>Title: <span class="diff">[HELLP in the second trimester in a patient with antiphospholipid syndrome]</span><br/>
-		        					Original Title: HELLP kan ses i andet trimester ved antifosfolipidsyndrom.</li>
-									<li>Title: <span class="diff">HELLP kan ses i andet trimester ved antifosfolipidsyndrom</span></li>
+						<tr>
+							<td>Title</td>
+							<td>
+								<ul>
+									<li>Title: <span class="diff">[HELLP in the second trimester in a patient with
+											antiphospholipid syndrome]</span><br />
+										Original Title: HELLP kan ses i andet trimester ved antifosfolipidsyndrom.</li>
+									<li>Title: <span class="diff">HELLP kan ses i andet trimester ved
+											antifosfolipidsyndrom</span></li>
 								</ul>
 							</td>
 							<td>No</td>
 							<td>1.00 == Yes *</td>
 						</tr>
-		        		<tr>
-		        			<td>Title</td>
-		        			<td>
-		        				<ul>
-		        					<li>Title: <span class="diff">NFkappaB</span> inhibition decreases hepatocyte proliferation but does not alter apoptosis in obstructive jaundice<br/>
-		        					Reversed Title: ecidnuaj evitcurtsbo ni sisotpopa retla ton seod tub noitarefilorp etycotapeh sesaerced noitibihni <span class="diff">BappakFN</span></li>
-									<li>Title: <span class="diff">NF kappa B</span> inhibition decreases hepatocyte proliferation but does not alter apoptosis in obstructive jaundice<br/>
-									Reversed title: ecidnuaj evitcurtsbo ni sisotpopa retla ton seod tub noitarefilorp etycotapeh sesaerced noitibihni <span class="diff">B appak FN</span></li>
+						<tr>
+							<td>Title</td>
+							<td>
+								<ul>
+									<li>Title: <span class="diff">NFkappaB</span> inhibition decreases hepatocyte
+										proliferation but does not alter apoptosis in obstructive jaundice<br />
+										Reversed Title: ecidnuaj evitcurtsbo ni sisotpopa retla ton seod tub
+										noitarefilorp etycotapeh sesaerced noitibihni <span class="diff">BappakFN</span>
+									</li>
+									<li>Title: <span class="diff">NF kappa B</span> inhibition decreases hepatocyte
+										proliferation but does not alter apoptosis in obstructive jaundice<br />
+										Reversed title: ecidnuaj evitcurtsbo ni sisotpopa retla ton seod tub
+										noitarefilorp etycotapeh sesaerced noitibihni <span class="diff">B appak
+											FN</span></li>
 								</ul>
 							</td>
 							<td>No</td>
 							<td>1.00 == Yes *</td>
 						</tr>
-		        		<tr>
-		        			<td>Title</td>
-		        			<td>
-		        				<ul>
-		        					<li>Title: <span class="diff">Case report. </span>Duplication of the portal vein: a rare congenital anomaly<br/>
-		        					Reversed Title: ylamona latinegnoc erar a :niev latrop eht fo noitacilpuD<span class="diff"> .troper esaC</span></li>
-									<li>Title: Duplication of the portal vein - A rare congenital anomaly<br/>
-									Reversed title: ylamona latinegnoc erar A - niev latrop eht fo noitacilpuD</li>
+						<tr>
+							<td>Title</td>
+							<td>
+								<ul>
+									<li>Title: <span class="diff">Case report. </span>Duplication of the portal vein: a
+										rare congenital anomaly<br />
+										Reversed Title: ylamona latinegnoc erar a :niev latrop eht fo noitacilpuD<span
+											class="diff"> .troper esaC</span></li>
+									<li>Title: Duplication of the portal vein - A rare congenital anomaly<br />
+										Reversed title: ylamona latinegnoc erar A - niev latrop eht fo noitacilpuD</li>
 								</ul>
 							</td>
 							<td>No</td>
 							<td>0.96 == Yes *</td>
 						</tr>
-		        		<tr>
-		        			<td>Title</td>
-		        			<td>
-		        				<ul>
-		        					<li>Title: <span class="diff">La sémantique de l'image radiologique. </span>Int<span class="diff">é</span>r<span class="diff">ê</span>t du proc<span class="diff">é</span>d<span class="diff">é</span> de soustraction <span class="diff">é</span>lectronique en couleurs d'Oosterkamp en angiographie abdominale<br/>
-		        					Reversed Title: elanimodba eihpargoigna ne pmakretsoO'd srueluoc ne euqinortcel<span class="diff">é</span> noitcartsuos ed <span class="diff">é</span>d<span class="diff">é</span>corp ud t<span class="diff">ê</span>r<span class="diff">é</span>tnI<span class="diff"> .euqigoloidar egami'l ed euqitnamés aL</span></li>
-									<li>Title: INTERET DU PROCEDE DE SOUSTRACTION ELECTRONIQUE EN COULEURS D'OOSTERKAMP EN ANGIOGRAPHIE ABDOMINALE<br/>
-									Reversed title: ELANIMODBA EIHPARGOIGNA NE PMAKRETSOO'D SRUELUOC NE EUQINORTCELE NOITCARTSUOS ED EDECORP UD TERETNI</li>
+						<tr>
+							<td>Title</td>
+							<td>
+								<ul>
+									<li>Title: <span class="diff">La sémantique de l'image radiologique. </span>Int<span
+											class="diff">é</span>r<span class="diff">ê</span>t du proc<span
+											class="diff">é</span>d<span class="diff">é</span> de soustraction <span
+											class="diff">é</span>lectronique en couleurs d'Oosterkamp en angiographie
+										abdominale<br />
+										Reversed Title: elanimodba eihpargoigna ne pmakretsoO'd srueluoc ne
+										euqinortcel<span class="diff">é</span> noitcartsuos ed <span
+											class="diff">é</span>d<span class="diff">é</span>corp ud t<span
+											class="diff">ê</span>r<span class="diff">é</span>tnI<span class="diff">
+											.euqigoloidar egami'l ed euqitnamés aL</span></li>
+									<li>Title: INTERET DU PROCEDE DE SOUSTRACTION ELECTRONIQUE EN COULEURS D'OOSTERKAMP
+										EN ANGIOGRAPHIE ABDOMINALE<br />
+										Reversed title: ELANIMODBA EIHPARGOIGNA NE PMAKRETSOO'D SRUELUOC NE EUQINORTCELE
+										NOITCARTSUOS ED EDECORP UD TERETNI</li>
 								</ul>
 							</td>
 							<td>No</td>
@@ -629,12 +747,20 @@
 							<td>Authors</td>
 							<td>
 								<ul>
-									<li><span class="diff">Cobos</span> Mateos, J. M.; <span class="diff">Aguinaga</span> Manzanos, M. V.; <span class="diff">Casas</span> Pinillos, M. S.;
-									 <span class="diff">Gonzalez</span> Conde, R.; <span class="diff">Gonzalez</span> Sanchez, J. A.; <span class="diff">De Miguel Velasco</span>, J. E.;
-									  <span class="diff">Soleto</span> Saez, E.; <span class="diff">Suarez</span> Mier, M. P.</li>
-									<li>Mateos, J. M. <span class="diff">C.</span>; Manzanos, M. V. <span class="diff">A.</span>; Pinillos, M. S. <span class="diff">C.</span>;
-									 Conde, R. <span class="diff">G.</span>; Sanchez, J. A. <span class="diff">G.</span>; Velasco, J. E. <span class="diff">D.</span>;
-									 Saez, E. <span class="diff">S.</span>; Mier, M. P. <span class="diff">S.</span></li>
+									<li><span class="diff">Cobos</span> Mateos, J. M.; <span
+											class="diff">Aguinaga</span> Manzanos, M. V.; <span
+											class="diff">Casas</span> Pinillos, M. S.;
+										<span class="diff">Gonzalez</span> Conde, R.; <span class="diff">Gonzalez</span>
+										Sanchez, J. A.; <span class="diff">De Miguel Velasco</span>, J. E.;
+										<span class="diff">Soleto</span> Saez, E.; <span class="diff">Suarez</span>
+										Mier, M. P.
+									</li>
+									<li>Mateos, J. M. <span class="diff">C.</span>; Manzanos, M. V. <span
+											class="diff">A.</span>; Pinillos, M. S. <span class="diff">C.</span>;
+										Conde, R. <span class="diff">G.</span>; Sanchez, J. A. <span
+											class="diff">G.</span>; Velasco, J. E. <span class="diff">D.</span>;
+										Saez, E. <span class="diff">S.</span>; Mier, M. P. <span class="diff">S.</span>
+									</li>
 								</ul>
 							</td>
 							<td>No</td>
@@ -644,8 +770,10 @@
 							<td>Authors</td>
 							<td>
 								<ul>
-									<li>Danil<span class="diff">ă</span>, M.; Sporea, I.; Popescu, A.; <span class="diff">ş</span>irli, R.</li>
-									<li>Danil<span class="diff">a</span>, M.; Sporea, I.; Popescu, A.; <span class="diff">S</span>irli, R.</li>
+									<li>Danil<span class="diff">ă</span>, M.; Sporea, I.; Popescu, A.; <span
+											class="diff">ş</span>irli, R.</li>
+									<li>Danil<span class="diff">a</span>, M.; Sporea, I.; Popescu, A.; <span
+											class="diff">S</span>irli, R.</li>
 								</ul>
 							</td>
 							<td>No</td>
@@ -656,7 +784,9 @@
 							<td>
 								<ul>
 									<li>Lv, Y.; Qi, X.; Xia, J.; Fan, D.; Han, G.</li>
-									<li>Lv, Y.; Qi, X. <span class="diff">S.</span>; Xia, J. <span class="diff">L.</span>; Fan, D. <span class="diff">M.</span>; Han, G. <span class="diff">H.</span></li>
+									<li>Lv, Y.; Qi, X. <span class="diff">S.</span>; Xia, J. <span
+											class="diff">L.</span>; Fan, D. <span class="diff">M.</span>; Han, G. <span
+											class="diff">H.</span></li>
 								</ul>
 							</td>
 							<td>No</td>
@@ -677,7 +807,8 @@
 							<td>Journal</td>
 							<td>
 								<ul>
-									<li>Br<span class="diff">itish</span> j<span class="diff">ournal of</span> surg<span class="diff">ery</span></li>
+									<li>Br<span class="diff">itish</span> j<span class="diff">ournal of</span> surg<span
+											class="diff">ery</span></li>
 									<li>Br J Surg</li>
 								</ul>
 							</td>
@@ -688,8 +819,10 @@
 							<td>Journal</td>
 							<td>
 								<ul>
-									<li>European Journal of Gastroenterology <span class="diff">and</span> Hepatology</li>
-									<li>European Journal of Gastroenterology <span class="diff">&amp;</span> Hepatology</li>
+									<li>European Journal of Gastroenterology <span class="diff">and</span> Hepatology
+									</li>
+									<li>European Journal of Gastroenterology <span class="diff">&amp;</span> Hepatology
+									</li>
 								</ul>
 							</td>
 							<td>No</td>
@@ -699,7 +832,8 @@
 							<td>Journal + ISSN</td>
 							<td>
 								<ul>
-									<li><span class="diff">Japanese Journal of Cancer and Chemotherapy</span> [ISSN: 2690-2692]</li>
+									<li><span class="diff">Japanese Journal of Cancer and Chemotherapy</span> [ISSN:
+										2690-2692]</li>
 									<li><span class="diff">Gan To Kagaku Ryoho</span> [ISSN: 2690-2692]</li>
 								</ul>
 							</td>
@@ -711,7 +845,8 @@
 							<td>
 								<ul>
 									<li>JAMA</li>
-									<li>J<span class="diff">ournal of the</span> A<span class="diff">merican</span> M<span class="diff">edical</span> A<span class="diff">ssociation</span></li>
+									<li>J<span class="diff">ournal of the</span> A<span class="diff">merican</span>
+										M<span class="diff">edical</span> A<span class="diff">ssociation</span></li>
 								</ul>
 							</td>
 							<td>No</td>
@@ -744,7 +879,8 @@
 							<td>
 								<ul>
 									<li>AJR Am J Roentgenol</li>
-									<li>Am<span class="diff">erican</span> J<span class="diff">ournal of</span> Roentgenol<span class="diff">ogy</span></li>
+									<li>Am<span class="diff">erican</span> J<span class="diff">ournal of</span>
+										Roentgenol<span class="diff">ogy</span></li>
 								</ul>
 							</td>
 							<td>No</td>
@@ -763,17 +899,21 @@
 						</tr>
 					</tbody>
 				</table>
-				<p>*: In these cases the comparison of DedupEndNote for this content for this field is not accurate. However, the comparison of the other fields
-				for these records does not result in YES answers, so the records are ultimately not considered duplicates.</p>
-	
+				<p>*: In these cases the comparison of DedupEndNote for this content for this field is not accurate.
+					However, the comparison of the other fields
+					for these records does not result in YES answers, so the records are ultimately not considered
+					duplicates.</p>
+
 				<h3 id="performance">Performance</h3>
-				
-				<p>See <a href="https://github.com/globbestael/DedupEndnote#performance" target="github">here</a> for comparison with other tools 
-				and published test sets.</p>
+
+				<p>See <a href="https://github.com/globbestael/DedupEndnote#performance" target="github">here</a> for
+					comparison with other tools
+					and published test sets.</p>
 
 				<h4>Own test database: portal vein thrombosis (52,828 records) </h4>
-				<p>See <a href="/test_results_details">Test results - details</a> for a description of this test database.</p>				
-							
+				<p>See <a href="/test_results_details">Test results - details</a> for a description of this test
+					database.</p>
+
 				<table class="table table-sm">
 					<caption>Perfomance table</caption>
 					<thead>
@@ -788,7 +928,7 @@
 					</thead>
 					<tr>
 						<td>EndNote</td>
-						<td>Author + Year + Title + Reference Type<br/>(default setting)</td>
+						<td>Author + Year + Title + Reference Type<br />(default setting)</td>
 						<td class="text-right">32,891</td>
 						<td class="text-right">19,959</td>
 						<td class="text-right">32,869</td>
@@ -822,11 +962,13 @@
 
 				<h5>Validation</h5>
 
-				<p>A general subset of 4926 records was manually checked (150 records without an Author, 79 with Author "Anonymous",
-				the 366 articles with "phase" in the title (because of "Phase I", Phase I/II", ...)
-				the rest: "Aagaard"  ... "Abbitt", "Anoob" ... "Axelrod",
-				"Liu", "v Koppenfels" ... "von Woellwarth", and some others). Because replies are treated in a special way, 130 records with "reply" in the title
-				which were identified as duplicates, were checked, but only for true and false positives.</p>
+				<p>A general subset of 4926 records was manually checked (150 records without an Author, 79 with Author
+					"Anonymous",
+					the 366 articles with "phase" in the title (because of "Phase I", Phase I/II", ...)
+					the rest: "Aagaard" ... "Abbitt", "Anoob" ... "Axelrod",
+					"Liu", "v Koppenfels" ... "von Woellwarth", and some others). Because replies are treated in a
+					special way, 130 records with "reply" in the title
+					which were identified as duplicates, were checked, but only for true and false positives.</p>
 				<table class="table table-bordered">
 					<caption>Performance table 2</caption>
 					<thead>
@@ -872,29 +1014,45 @@
 				</table>
 				<p>The False Positives are all conference abstracts:</p>
 				<ul>
-					<li>wrong DOI in second of 2 EMBASE (OVID) records: same authors, year, title, DOI, different starting page
+					<li>wrong DOI in second of 2 EMBASE (OVID) records: same authors, year, title, DOI, different
+						starting page
 						<ul>
-					  		<li>Segovia, M. C., et al. (2019). "Combined multivisceral and renal transplant in a patient with JAK-2 mutation." 
+							<li>Segovia, M. C., et al. (2019). "Combined multivisceral and renal transplant in a patient
+								with JAK-2 mutation."
 								Transplantation 103(7 Supplement 2): S143. DOI: 10.1097/01.tp.0000576288.84252.91</li>
-							<li>Segovia, M. C., et al. (2019). "Combined multivisceral and renal transplant in a patient with JAK-2 mutation." 
+							<li>Segovia, M. C., et al. (2019). "Combined multivisceral and renal transplant in a patient
+								with JAK-2 mutation."
 								Neurology 92(15 Supplement 1). DOI: 10.1097/01.tp.0000576288.84252.91</li>
 						</ul>
 					</li>
-					<li>wrong DOI in second of 2 EMBASE (OVID) records: same authors, year, title, DOI, different starting page
+					<li>wrong DOI in second of 2 EMBASE (OVID) records: same authors, year, title, DOI, different
+						starting page
 						<ul>
-							<li>Galvao, F. H., et al. (2019). "Intestinal and multivisceral transplantation at hospital dasclinicas da faculdade De medicina 
-								da universidade De Sao Paulo (HC-FMUSP)-Brazil." Transplantation 103(7 Supplement 2): S171. DOI: 10.1097/01.tp.0000576492.69414.80</li>
-						  	<li>Galvao, F. H., et al. (2019). "Intestinal and multivisceral transplantation at hospital dasclinicas da faculdade De medicina
-								da universidade De Sao Paulo (HC-FMUSP)-Brazil." Neurology 92(15 Supplement 1). DOI: 10.1097/01.tp.0000576492.69414.80</li>
+							<li>Galvao, F. H., et al. (2019). "Intestinal and multivisceral transplantation at hospital
+								dasclinicas da faculdade De medicina
+								da universidade De Sao Paulo (HC-FMUSP)-Brazil." Transplantation 103(7 Supplement 2):
+								S171. DOI: 10.1097/01.tp.0000576492.69414.80</li>
+							<li>Galvao, F. H., et al. (2019). "Intestinal and multivisceral transplantation at hospital
+								dasclinicas da faculdade De medicina
+								da universidade De Sao Paulo (HC-FMUSP)-Brazil." Neurology 92(15 Supplement 1). DOI:
+								10.1097/01.tp.0000576492.69414.80</li>
 						</ul>
 					</li>
-					<li>reversed title 3 seen as similar to reversed title of 1 and 2: same authors, year, title, starting page
+					<li>reversed title 3 seen as similar to reversed title of 1 and 2: same authors, year, title,
+						starting page
 						<ul>
-					  		<li>Cool, J., et al. (2018). "TRENDS IN THE PREVALENCE OF PORTAL VEIN THROMBOSIS AND ASSOCIATED MORTALITY IN CIRRHOSIS: ANALYSIS OF A NATIONALLY REPRESENTATIVE INPATIENT COHORT." 
+							<li>Cool, J., et al. (2018). "TRENDS IN THE PREVALENCE OF PORTAL VEIN THROMBOSIS AND
+								ASSOCIATED MORTALITY IN CIRRHOSIS: ANALYSIS OF A NATIONALLY REPRESENTATIVE INPATIENT
+								COHORT."
 								Gastroenterology 154(6): S1178-S1178. [Web of Science]</li>
-					  		<li>Cool, J., et al. (2018). "TRENDS IN THE PREVALENCE OF PORTAL VEIN THROMBOSIS AND ASSOCIATED MORTALITY IN CIRRHOSIS: ANALYSIS OF A NATIONALLY REPRESENTATIVE INPATIENT COHORT." 
-								Gastroenterology 154(6 Supplement 1): S-1178. DOI: 10.1016/S0016-5085%2818%2933901-5 [Embase OVID]</li>
-					  		<li>Cool, J., et al. (2018). "THE ASSOCIATION BETWEEN PORTAL VEIN THROMBOSIS AND OTHER VENOUS THROMBOEMBOLISM IN CIRRHOSIS: ANALYSIS OF A NATIONALLY REPRESENTATIVE INPATIENT COHORT."
+							<li>Cool, J., et al. (2018). "TRENDS IN THE PREVALENCE OF PORTAL VEIN THROMBOSIS AND
+								ASSOCIATED MORTALITY IN CIRRHOSIS: ANALYSIS OF A NATIONALLY REPRESENTATIVE INPATIENT
+								COHORT."
+								Gastroenterology 154(6 Supplement 1): S-1178. DOI: 10.1016/S0016-5085%2818%2933901-5
+								[Embase OVID]</li>
+							<li>Cool, J., et al. (2018). "THE ASSOCIATION BETWEEN PORTAL VEIN THROMBOSIS AND OTHER
+								VENOUS THROMBOEMBOLISM IN CIRRHOSIS: ANALYSIS OF A NATIONALLY REPRESENTATIVE INPATIENT
+								COHORT."
 								Gastroenterology 154(6): S1178-S1179. [Web of Science]</li>
 						</ul>
 					</li>
@@ -905,56 +1063,79 @@
 					<li>Input file size: The maximum size of the input file is limited to 150MB.</li>
 					<li>Input file format: The program only handles files in RIS format, not in XML or CSV format.</li>
 					<li>Input file encoding: The program assumes that the input file is encoded as UTF-8.</li>
-					<li>If authors AND (all) titles AND (all) journal names for a record use a non-Latin script, results for this record may be inaccurate.</li>
-					<li>(when deduplicating one file:) The input file must be an export from ONE EndNote database: the ID fields are used internally for identifying the records, so they have to be unique.
-						However, if the RIS file does not have an ID field in the first publication, DedupEndNote assumes the whole file has no ID fields 
+					<li>If authors AND (all) titles AND (all) journal names for a record use a non-Latin script, results
+						for this record may be inaccurate.</li>
+					<li>(when deduplicating one file:) The input file must be an export from ONE EndNote database: the
+						ID fields are used internally for identifying the records, so they have to be unique.
+						However, if the RIS file does not have an ID field in the first publication, DedupEndNote
+						assumes the whole file has no ID fields
 						and gives every publication an ID (starting with 1). This has only been tested on Zotero files!
 					</li>
-					<li>The program has been developed and tested for biomedical databases (PubMed, EMBASE, ...) and some general databases (Web of Science, Scopus).
-						The data sets used were the results of biomedical queries. 
-					Deduplicating records from other databases is not guaranteed to work, and performance is often very poor, esp. for non journal articles 
-					(see <a href="/justification#effect">Justification. 2.5</a>).</li>
+					<li>The program has been developed and tested for biomedical databases (PubMed, EMBASE, ...) and
+						some general databases (Web of Science, Scopus).
+						The data sets used were the results of biomedical queries.
+						Deduplicating records from other databases is not guaranteed to work, and performance is often
+						very poor, esp. for non journal articles
+						(see <a href="/justification#effect">Justification. 2.5</a>).</li>
 					<li>The program uses a bibliographic point of view:
 						<ul>
-							<li>an article or conference abstract that has been published in more than one (issue of a) journal	is not considered a duplicate publication.</li>
-							<li>Records for each publication year are compared to records from the same and the following year: a record from 2016 is compared to the records from 2015 (when treating the records from
-							2015) and from 2016 and 2017 (when treating the records from 2016). A PubMed ahead-of-print record from 2013 and a corresponding record from 2017 (when it was 'officially' 
-							published) will not be compared (and possibly deduplicated).</li>
-							<li>Bibliographic databases are not always very accurate in the starting page of a publication. Because starting page is part of the comparisons,
-							DedupEndNote misses the duplicates when bibliographic databases don't agree on the starting page (and one or both records have no DOIs).</li>
+							<li>an article or conference abstract that has been published in more than one (issue of a)
+								journal is not considered a duplicate publication.</li>
+							<li>Records for each publication year are compared to records from the same and the
+								following year: a record from 2016 is compared to the records from 2015 (when treating
+								the records from
+								2015) and from 2016 and 2017 (when treating the records from 2016). A PubMed
+								ahead-of-print record from 2013 and a corresponding record from 2017 (when it was
+								'officially'
+								published) will not be compared (and possibly deduplicated).</li>
+							<li>Bibliographic databases are not always very accurate in the starting page of a
+								publication. Because starting page is part of the comparisons,
+								DedupEndNote misses the duplicates when bibliographic databases don't agree on the
+								starting page (and one or both records have no DOIs).</li>
 						</ul>
-					</li> 
+					</li>
 				</ul>
-				
+
 				<h3 id="issues">Issues and feature requests</h3>
 				<div>If you have any questions about the tool or come across a problem when trying to use it,
-					please raise an issue on the <a href="https://github.com/globbestael/DedupEndNote" target="github">GitHub Repository</a>.</div>
+					please raise an issue on the <a href="https://github.com/globbestael/DedupEndNote"
+						target="github">GitHub Repository</a>.</div>
 
 				<h3 id="citing" style="margin-top: 15px;">How to cite</h3>
 				<div>If you use this software, please cite it as:<br>
-				Lobbestael, G. (2025). DedupEndNote (Version 1.0.2) [Computer software]. https://github.com/globbestael/DedupEndNote</div> 
+					Lobbestael, G. (2025). DedupEndNote (Version 1.0.2) [Computer software].
+					https://github.com/globbestael/DedupEndNote</div>
 
 				<h3 id="changes" style="margin-top: 15px;">Latest changes</h3>
 				<ul>
 					<li>2025-08-01: 1.0.2:
 						<ul>
-							<li>Changed 5th comparison: this comparison is skipped if both publications have the same DOI</li>
-							<li>Enrich deduplicated records: missing journal titles added (esp. "clinicaltrials.gov", and "Social Science Research Network" from Embase.com)</li>
+							<li>Changed 5th comparison: this comparison is skipped if both publications have the same
+								DOI</li>
+							<li>Enrich deduplicated records: missing journal titles added (esp. "clinicaltrials.gov",
+								and "Social Science Research Network" from Embase.com)</li>
 							<li>Upgrade to Java 21, Spring Boot 3.5.4</li>
 						</ul>
-						*: A next release will try to handle ClinicalTrials.gov records (from ClinicalTrials.gov, Cochrane, Embase (OVID en Embase.com)) better
+						*: A next release will try to handle ClinicalTrials.gov records (from ClinicalTrials.gov,
+						Cochrane, Embase (OVID en Embase.com)) better
 					</li>
 					<li>2024-01-14: 1.0.1: BUG: Doesn't handle author last name starting with a hyphen</li>
 					<li>2023-09-02: ISBN-10 and ISBN-13 are compared correctly: 9024274214 = 9789024274215</li>
-					<li>2023-09-02: BUG: Publication years of form "1-1-1989" (instead of "1989") are parsed as years</li>
-					<li>2023-08-21: If a title with ": " has at least 50 characters before the ": ", that first part is also used as a title variant</li>
-					<li>2023-08-21: BUG: Result file for deduplication of two files in Mark mode was not always written</li>
+					<li>2023-09-02: BUG: Publication years of form "1-1-1989" (instead of "1989") are parsed as years
+					</li>
+					<li>2023-08-21: If a title with ": " has at least 50 characters before the ": ", that first part is
+						also used as a title variant</li>
+					<li>2023-08-21: BUG: Result file for deduplication of two files in Mark mode was not always written
+					</li>
 					<li>2023-08-18: "How to cite" added (CITATION.cff)</li>
-					<li>2023-08-12: Files without IDs (record numbers) for each record (e.g. Zotero), get an ID assigned by DedupEndNote</li>
-					<li>2023-08-12: Deduplication of Conference proceedings from Web of Science was very poor (too many false positives). This problem has been solved</li>   					
+					<li>2023-08-12: Files without IDs (record numbers) for each record (e.g. Zotero), get an ID assigned
+						by DedupEndNote</li>
+					<li>2023-08-12: Deduplication of Conference proceedings from Web of Science was very poor (too many
+						false positives). This problem has been solved</li>
 				</ul>
-	        </div>
-       </div>
-    </div>
+			</div>
+		</div>
+	</div>
 </body>
+
 </html>

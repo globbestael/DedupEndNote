@@ -327,6 +327,7 @@ public class IOService {
 				.collect(Collectors.toMap(Publication::getId, Function.identity()));
 
 		int numberWritten = 0;
+		int lineNumber = 0;
 		String fieldContent = null;
 		String fieldName = null;
 		String previousFieldName = "XYZ";
@@ -345,6 +346,7 @@ public class IOService {
 			String realId = null;
 
 			while ((line = br.readLine()) != null) {
+				lineNumber++;
 				line = unusualWhiteSpacePattern.matcher(line).replaceAll(" ");
 				Matcher matcher = risLinePattern.matcher(line);
 				if (matcher.matches()) {
@@ -388,7 +390,10 @@ public class IOService {
 				}
 			}
 		} catch (IOException e) {
-			e.printStackTrace();
+            String message = String.format("IOException while writing deduplicated records to %s at line %d: %s", outputFileName, lineNumber, e.getMessage());
+            log.error(message, e);
+            // Consider re-throwing the exception or handling it in another appropriate way
+            throw new RuntimeException(message, e);
 		}
 		log.debug("Finished writing to file. # records: {}", numberWritten);
 		return numberWritten;
