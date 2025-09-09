@@ -208,12 +208,13 @@
 							target="window2">Developers</a>
 						<a class="list-group-item list-group-item-action" href="#issues">Issues and feature requests</a>
 						<a class="list-group-item list-group-item-action" href="#citing">How to cite</a>
-						<a class="list-group-item list-group-item-action" href="#changes">Latest changes</a>
+						<a class="list-group-item list-group-item-action" href="/resources/changelog.html"
+							target="window2">Changelog</a>
 					</nav>
 				</nav>
 			</div>
 			<div class="col-9" style="height: 100vh; position: relative;">
-				<h1 id="start">DedupEndNote (version 1.0.2 20250801)</h1>
+				<h1 id="start">DedupEndNote (version 1.1.0 20250910)</h1>
 				<div class="row col-11 border border-primary rounded alert alert-secondary" id="step1">
 					<div class="col-3">
 						<h3>1. INPUT FILE</h3>
@@ -222,7 +223,7 @@
 						<form class="form-horizontal" id="upload_form" method="post" enctype="multipart/form-data"
 							th:action="@{|/uploadFile|}">
 							<div class="form-group">
-								<label for="oldFile">Select the EndNote RIS file to deduplicate<br />(use <a
+								<label for="oldFile">Select the EndNote / Zotero RIS file to deduplicate<br />(use <a
 										href="/twofiles">/twofiles</a> to deduplicate an new set of records against an
 									old set)</label><br />
 								<input type="file" id="fileUpload1" name="file" />
@@ -285,10 +286,10 @@
 				<ol>
 					<li>Deduplicate one file:
 						<ul>
-							<li>export an EndNote database into a file in RIS format</li>
+							<li>export an EndNote / Zotero database into a file in RIS format</li>
 							<li>upload this file in DedupEndNote</li>
 							<li>save the results file with deduplicated records</li>
-							<li>import this results file into a new EndNote database</li>
+							<li>import this results file into a new EndNote / Zotero database</li>
 						</ul>
 					</li>
 					<li>Deduplicate a new file against an existing file / EndNote database: see <a
@@ -297,17 +298,17 @@
 
 				<h3 id="why">Why DedupEndNote?</h3>
 
-				<p>Deduplication in EndNote misses many duplicate records. Building and maintaining a Journals List
-					within Endnote can partly solve this
-					problem, but there remain lots of cases where EndNote is too unforgiving when comparing records.
-					Some bibliographic databases offer deduplication
-					for their own databases (OVID: Medline and EMBASE), but this does not help PubMed, Cochrane or Web
-					of Science users.</p>
-				<p>DedupEndNote deduplicates an EndNote RIS file and writes a new RIS file with the unique records,
-					which can be imported into a new EndNote database.
-					It is more forgiving than EndNote itself when comparing records,
-					but tests have shown that it identifies many more duplicates (see below under "Test results").</p>
-				<p>The program has been tested on EndNote databases with records from:</p>
+				<p>Deduplication in EndNote or Zotero misses many duplicate records. Building and maintaining a Journals
+					List within Endnote can partly solve this problem, but there remain lots of cases where EndNote is
+					too unforgiving when comparing records.
+					Some bibliographic databases offer deduplication for their own databases (OVID: Medline and EMBASE),
+					but this does not help PubMed, Cochrane or Web of Science users.</p>
+				<p>DedupEndNote deduplicates an EndNote / Zotero RIS file and writes a new RIS file with the unique
+					records,
+					which can be imported into a new EndNote / Zotero database.
+					It is more forgiving than EndNote and Zotero when comparing records, but tests have shown that it
+					identifies many more duplicates (see below under "Test results").</p>
+				<p>The program has been tested on EndNote and Zotero databases with records from:</p>
 				<ul>
 					<li>CINAHL (EBSCOHost)</li>
 					<li>Cochrane Library (Trials)</li>
@@ -359,21 +360,25 @@
 					</li>
 
 					<li><strong>Starting page or DOI:</strong> Are they the same?<br />
-						If the starting pages are different or one or both are absent, the DOIs are compared.<br />
+						If the Starting and Ending page of both publications are more than 2 pages apart,<br />
+						then: if the DOIs are different or one or both are absent, the starting pages are
+						compared,<br />
+						otherwise: if the starting pages are different or one or both are absent, the DOIs are
+						compared.<br />
 						<i>Preprocessing: Article number is treated as a starting page if starting page itself is empty
 							or contains "-".</i><br />
 						<i>Preprocessing: Starting pages are compared only for number: "S123" and "123" are considered
 							the same.</i><br />
 						<i>Preprocessing: In DOIs 'http://dx.doi.org/', 'http://doi.org/', ... are left out.</i><br />
-						<i>Insufficient data: If one or both DOIs are missing and one or both of the starting pages are
+						<i>Insufficient data: If one or both DOIs are missing AND one or both of the starting pages are
 							missing, the answer is YES. This is important because of PubMed ahead of print
 							publications.</i><br />
-						<i>Special cases: For Cochrane Reviews DOIs are compared before starting pages.</i>
+						<i>Special cases: For Cochrane Reviews DOIs are always compared before starting pages.</i>
 					</li>
 
 					<li><strong>Authors:</strong> Is the <a
 							href="https://en.wikipedia.org/wiki/Jaro%E2%80%93Winkler_distance"
-							target="_blank">Jaro-Winkler similarity</a> of the authors &gt;
+							target="_blank">Jaro-Winkler similarity</a> of the first 40 authors &gt;
 						<span
 							th:text="${T(edu.dedupendnote.services.DeduplicationService.DefaultAuthorsComparator).AUTHOR_SIMILARITY_NO_REPLY}">-0.67</span>?<br />
 						<i>Preprocessing: The author "Anonymous," and all Author Groups are skipped.</i><br />
@@ -398,7 +403,15 @@
 							removed,
 							all characters which are not letters or numbers are replaced by a space character,
 							...).</i><br />
-						<i>Insufficient data: If one of the records is a reply (see below), the titles are not compared
+						<i>Preprocessing: In the titles of retracted publications all parts which refer to the
+							retraction are removed. "RETRACTED: Response of Breast Cancer Cells and Cancer Stem Cells to
+							Metformin and Hyperthermia Alone or Combined (Retracted article. See vol. 20, 2025)"
+							is altered in "Response of Breast Cancer Cells and Cancer Stem Cells to Metformin and
+							Hyperthermia Alone or Combined".
+							A publication is considered a retraction if the Title starts with
+							"retracted|removed|withdrawn" or contains "retracted article".</i><br />
+						<i>Insufficient data: If one of the records is a reply, erratum or comment (see below), the
+							titles are not compared
 							/ the answer is YES
 							(but the Jaro-Winkler similarity of the authors should be &gt; <span
 								th:text="${T(edu.dedupendnote.services.DeduplicationService.DefaultAuthorsComparator).AUTHOR_SIMILARITY_REPLY_SUFFICIENT_STARTPAGES_OR_DOIS}">-0.75</span>
@@ -432,8 +445,15 @@
 						number or "Annual", "Conference", "Congress", "Meeting" or "Society") is skipped. All other T3
 						fields are treated as Journals and as titles.</i>
 
-				<p><i>Reply: a publication is considered a reply if the title (field TI) contains "reply", or contains
+				<p><i>Reply: a publication is considered a reply if the title (fields ST and TI) contains "reply", or
+						contains
 						"author(...)respon(...)", or is nothing but "response" (all case insensitive).</i></p>
+				<p><i>Comment: a publication is considered a comment if the title (fields ST and TI) contains words as
+						"comment"
+						or
+						"commentary".</i></p>
+				<p><i>Erratum: a publication is considered am erratum if the title (fields ST and TI) contains
+						"Correction|Corrigendum|Erratum".</i></p>
 
 
 				<p>If two records get 5 YES answers, they are considered duplicates.<br />
@@ -494,16 +514,18 @@
 					</li>
 					<li>Title (TI):
 						<ul>
-							<li>If the publication is a reply, the title is replaced with the longest title from the
+							<li>If the publication is a reply / erratum / comment / retraction, the title is replaced
+								with the longest title from the
 								duplicates (e.g. "Reply from the authors" is replaced by
 								"Coagulation parameters and portal vein thrombosis in cirrhosis Reply")</li>
 						</ul>
 					</li>
 				</ul>
 
-				<p>The output file is a new RIS file which can be imported into a new EndNote database.</p>
+				<p>The output file is a new RIS file which can be imported into a new EndNote / Zotero database.</p>
 
-				<p>DedupEndNote is slower than EndNote in deduplicating records because its comparisons are more time
+				<p>DedupEndNote is slower than EndNote and Zotero in deduplicating records because its comparisons are
+					more time
 					consuming.
 					EndNote can deduplicate a EndNote database of ca. 15,000 records in less dan 5 seconds. DedupEndNote
 					needs around 20 seconds to deduplicate
@@ -1102,37 +1124,9 @@
 						target="github">GitHub Repository</a>.</div>
 
 				<h3 id="citing" style="margin-top: 15px;">How to cite</h3>
-				<div>If you use this software, please cite it as:<br>
-					Lobbestael, G. (2025). DedupEndNote (Version 1.0.2) [Computer software].
+				<div style="padding-bottom: 35px;">If you use this software, please cite it as:<br>
+					Lobbestael, G. (2025). DedupEndNote (Version 1.1.0) [Computer software].
 					https://github.com/globbestael/DedupEndNote</div>
-
-				<h3 id="changes" style="margin-top: 15px;">Latest changes</h3>
-				<ul>
-					<li>2025-08-01: 1.0.2:
-						<ul>
-							<li>Changed 5th comparison: this comparison is skipped if both publications have the same
-								DOI</li>
-							<li>Enrich deduplicated records: missing journal titles added (esp. "clinicaltrials.gov",
-								and "Social Science Research Network" from Embase.com)</li>
-							<li>Upgrade to Java 21, Spring Boot 3.5.4</li>
-						</ul>
-						*: A next release will try to handle ClinicalTrials.gov records (from ClinicalTrials.gov,
-						Cochrane, Embase (OVID en Embase.com)) better
-					</li>
-					<li>2024-01-14: 1.0.1: BUG: Doesn't handle author last name starting with a hyphen</li>
-					<li>2023-09-02: ISBN-10 and ISBN-13 are compared correctly: 9024274214 = 9789024274215</li>
-					<li>2023-09-02: BUG: Publication years of form "1-1-1989" (instead of "1989") are parsed as years
-					</li>
-					<li>2023-08-21: If a title with ": " has at least 50 characters before the ": ", that first part is
-						also used as a title variant</li>
-					<li>2023-08-21: BUG: Result file for deduplication of two files in Mark mode was not always written
-					</li>
-					<li>2023-08-18: "How to cite" added (CITATION.cff)</li>
-					<li>2023-08-12: Files without IDs (record numbers) for each record (e.g. Zotero), get an ID assigned
-						by DedupEndNote</li>
-					<li>2023-08-12: Deduplication of Conference proceedings from Web of Science was very poor (too many
-						false positives). This problem has been solved</li>
-				</ul>
 			</div>
 		</div>
 	</div>

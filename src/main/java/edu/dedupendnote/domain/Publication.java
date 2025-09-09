@@ -258,7 +258,7 @@ public class Publication {
 	private static Pattern nonBasicLatinPattern = Pattern.compile("[^\\p{InBasic_Latin}]");
 
 	/**
-	 * "&": will be replaced by SPACE because an anmpersand is problem in some of the following patterns
+	 * "&": will be replaced by SPACE because an ampersand is problem in some of the following patterns
 	 */
 	private static Pattern ampersandPattern = Pattern.compile("&");
 
@@ -376,12 +376,14 @@ public class Publication {
 	 */
 	private static Pattern journalSectionMarkers = Pattern.compile("^(.+)(\\b(Part|Section))?\\b([A-I]\\b.*)$");
 
+	// @formatter:off
 	/**
 	 * A number or ". Conference" and all following characters: The number and all following characters will be removed.
-	 * E.g.: - "Clinical neuropharmacology.12 Suppl 2 ()(pp v-xii; S1-105) 1989.Date of Publication: 1989." -->
-	 * "Clinical neuropharmacology" - "European Respiratory Journal. Conference: European Respiratory Society Annual
-	 * Congress" (Cochrane records)
+	 * E.g.:
+	 * - "Clinical neuropharmacology.12 Suppl 2 ()(pp v-xii; S1-105) 1989.Date of Publication: 1989." --> "Clinical neuropharmacology" 
+	 * - "European Respiratory Journal. Conference: European Respiratory Society Annual Congress" (Cochrane records)
 	 */
+	// @formatter:on
 	private static Pattern journalExtraPattern = Pattern.compile("^(.+?)((\\d.*|\\. Conference.*))$");
 
 	/**
@@ -439,8 +441,7 @@ public class Publication {
 		r = journalOtherRoundBracketsPattern.matcher(r).replaceAll(" "); // Some journals only have "(" without a ")",
 																			// which causes regex problems
 		if (r.toLowerCase().startsWith("http")) {
-			// Cochrane library CENTRAL has journal name of type:
-			// Https://clinicaltrials.gov/show/nct00969397
+			// Cochrane library CENTRAL has journal name of type: https://clinicaltrials.gov/show/nct00969397
 			r = r.toLowerCase();
 		} else {
 			r = journalAdditionPattern.matcher(r).replaceAll("");
