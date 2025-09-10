@@ -603,6 +603,15 @@ class ValidationTests {
 		createInitialTruthFile(inputFileName, asysdInputfileName, outputFileName);
 	}
 	
+//	@Disabled("Only needed for initialisation of TRUTH file")
+	@Test
+	void createInitialTruthFile_CTG() {
+		String dir = testdir + "/clinical_trials";
+		String inputFileName = dir + "/clinicaltrialsdotgov.txt";
+		String outputFileName = dir + "/clinicaltrialsdotgov_for_truth.txt";
+		createInitialTruthFile(inputFileName, outputFileName);
+	}
+	
 	@Disabled("Only needed for initialisation of TRUTH file")
 	@Test
 	void createInitialTruthFile_McKeown_2021() {

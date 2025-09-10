@@ -586,6 +586,11 @@ public class DeduplicationService {
 		if (r1.isReply() || r2.isReply()) {
 			return true;
 		}
+		if (r1.isClinicalTrialGov() && r2.isClinicalTrialGov()) {
+			log.trace("- 3. Both records are from ClinicalTrials.gov");
+			return true;
+		}
+
 		Double similarity = 0.0;
 		List<String> titles1 = r1.getTitles();
 		List<String> titles2 = r2.getTitles();
@@ -792,7 +797,7 @@ public class DeduplicationService {
 				recordList.stream().forEach(r -> r.setKeptRecord(false));
 
 				// Reply and Retraction: replace the title with the longest title from the duplicates
-				if (recordToKeep.isReply() || recordToKeep.getTitle() != null) {
+				if (recordToKeep.isReply() || (!recordToKeep.isClinicalTrialGov() && recordToKeep.getTitle() != null)) {
 					log.debug("Publication {} is a reply: ", recordToKeep.getId());
 					String longestTitle = recordList.stream()
 							// .filter(Publication::isReply)
@@ -805,6 +810,21 @@ public class DeduplicationService {
 					if (recordToKeep.getTitle() == null || recordToKeep.getTitle().length() < longestTitle.length()) {
 						log.debug("REPLY: changing title {}\nto {}", recordToKeep.getTitle(), longestTitle);
 						recordToKeep.setTitle(longestTitle);
+					}
+				}
+				// Clinical trials from ClinicalTrials.gov: replace the title with the shortest title from the
+				// duplicates
+				if (recordToKeep.isClinicalTrialGov()) {
+					log.debug("Publication {} is a trial: ", recordToKeep.getId());
+					String shortestTitle = recordList.stream().map(r -> {
+						log.debug("Trial {} has title: {}.", r.getId(), r.getTitle());
+						return r.getTitle() != null ? r.getTitle() : r.getTitles().get(0);
+					}).min(Comparator.comparingInt(String::length)).orElse("");
+					// There are cases where not all titles are recognized as replies ->
+					// record.title can be null
+					if (recordToKeep.getTitle() == null || recordToKeep.getTitle().length() > shortestTitle.length()) {
+						log.debug("Trial: changing title {}\nto {}", recordToKeep.getTitle(), shortestTitle);
+						recordToKeep.setTitle(shortestTitle);
 					}
 				}
 

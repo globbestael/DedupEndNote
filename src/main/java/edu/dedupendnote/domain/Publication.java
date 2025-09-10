@@ -66,6 +66,8 @@ public class Publication {
 
 	private List<String> titles = new ArrayList<>();
 
+	private boolean isClinicalTrialGov = false;
+
 	// @formatter:off
 	/**
 	 * Cochrane publications need a slightly different comparison. 
@@ -743,11 +745,22 @@ public class Publication {
 	}
 
 	public Set<String> addJournals(String journal) {
+		// @formatter:off
 		/*
-		 * General: - mark Cochrane publication - remove unwanted parts - split combined
-		 * journal names into in separate journal names - create other variant journal
-		 * names - for all journal names - capitalize - normalize
+		 * General: 
+		 * - mark Cochrane publication 
+		 * - remove unwanted parts 
+		 * - split combined journal names into in separate journal names 
+		 * - create other variant journal names 
+		 * - for all journal names 
+		 * 		- capitalize 
+		 * 		- normalize
 		 */
+		// @formatter:on
+		if (journal.startsWith("http")) {
+			journals.add(journal);
+			return journals;
+		}
 		if (journal.toLowerCase().contains("cochrane")) {
 			this.isCochrane = true;
 		}

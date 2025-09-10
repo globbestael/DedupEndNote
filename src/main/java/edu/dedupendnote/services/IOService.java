@@ -127,6 +127,13 @@ public class IOService {
 		String fieldContent = null;
 		String fieldName = null;
 		String previousFieldName = "XYZ";
+		/*
+		 * With records from clinicaltrials.gov the raw title must be recorded in publication.title. The records
+		 * can be identified by the content of the T2 or UR field. The first comes before the TI field, 
+		 * the second after the TI field. We need this titleCache field for this second case, but use it after
+		 * reading the ER field
+		 */
+		String titleCache = null;
 		Publication publication = new Publication();
 
 		boolean hasBom = UtilitiesService.detectBom(inputFileName);
@@ -174,6 +181,21 @@ public class IOService {
 							publication.setId(Integer.toString(missingId++));
 						}
 						publication.addReversedTitles();
+						if (publication.isClinicalTrialGov()) {
+							publication.getAuthors().clear();
+							String journal = publication.getJournals().stream()
+									.filter(j -> j.startsWith("https://clinicaltrials.gov")).findFirst().orElse(null);
+							if (journal != null) {
+								// should handle EndNoe records which have already been standardized
+								String ctgId = journal.substring(journal.length() - 11);
+								if (ctgId.startsWith("NCT")) {
+									publication.parsePages(ctgId, "T2");
+									publication.getJournals().remove(journal);
+									publication.getJournals().add("https://clinicaltrials.gov");
+								}
+							}
+							publication.setTitle(titleCache);
+						}
 						publication.fillAllAuthors();
 						publications.add(publication);
 						log.debug("Publication read with id {} and title: {}", publication.getId(),
@@ -218,6 +240,9 @@ public class IOService {
 						publication.addTitles(fieldContent);
 						break;
 					case "T2": // Journal title / Book title
+						if (fieldContent.startsWith("https://clinicaltrials.gov")) {
+							publication.setClinicalTrialGov(true);
+						}
 						publication.addJournals(fieldContent);
 						break;
 					// @formatter:off
@@ -262,6 +287,7 @@ public class IOService {
 						if (phasePattern.matcher(fieldContent.toLowerCase()).matches()) {
 							publication.setPhase(true);
 						}
+						titleCache = fieldContent;
 						previousFieldName = fieldName;
 						break;
 					// TODO: When does TT occur? is translated (i.e. original?) title
@@ -270,6 +296,13 @@ public class IOService {
 						publication.setReferenceType(fieldContent);
 						break;
 					// do not use UR to extract more DOI's: see https://github.com/globbestael/DedupEndNote/issues/14
+					case "UR":
+						if (fieldContent.startsWith("https://clinicaltrials.gov")) {
+							publication.setClinicalTrialGov(true);
+							publication.addJournals(fieldContent);
+						}
+						previousFieldName = fieldName;
+						break;
 					default:
 						previousFieldName = fieldName;
 						break;
@@ -284,6 +317,12 @@ public class IOService {
 						break;
 					case "TI": // EMBASE original title
 						publication.addTitles(line);
+						break;
+					case "UR":
+						if (line.startsWith("https://clinicaltrials.gov")) {
+							publication.setClinicalTrialGov(true);
+							publication.addJournals(line);
+						}
 						break;
 					default:
 						break;
@@ -378,7 +417,11 @@ public class IOService {
 						break;
 					default:
 						if (map.containsKey(fieldName)) {
-							map.put(fieldName, map.get(fieldName) + "\n" + line);
+							if (line.startsWith(fieldName)) {
+								map.put(fieldName, map.get(fieldName) + "\n" + fieldContent);
+							} else {
+								map.put(fieldName, map.get(fieldName) + "\n" + line);
+							}
 						} else {
 							map.put(fieldName, fieldContent);
 						}
@@ -500,8 +543,24 @@ public class IOService {
 				map.put("TI", publication.getTitle());
 				map.put("ST", publication.getTitle());
 			}
-			// An author as "Nct," should be kept
-			if (publication.getAuthors().isEmpty() && "Anonymous".equals(map.get("AU"))) {
+			if (publication.isClinicalTrialGov()) {
+				map.put("TY", "JOUR");
+				map.put("T2", "https://clinicaltrials.gov");
+				String url = "https://clinicaltrials.gov/study/" + publication.getPageStart();
+				List<String> urlList = new ArrayList<>();
+				if (map.containsKey("UR")) {
+					String urls = map.get("UR");
+					urlList.addAll(Arrays.asList(urls.split("\n")));
+					urlList.removeIf(u -> u.startsWith("https://clinicaltrials.gov"));
+					urlList.addFirst(url);
+					map.put("UR", urlList.stream().collect(Collectors.joining("\nUR  - ")));
+				} else {
+					map.put("UR", url);
+				}
+			}
+
+			// Some unusual authors should be kept, e.g. Group authors 
+			if (publication.getAuthors().isEmpty() && ("Anonymous".equals(map.get("AU")) || "Nct".equals(map.get("AU")))) {
 				map.remove("AU");
 			}
 			if (!map.containsKey("PY") && publication.getPublicationYear() != 0) {
@@ -515,7 +574,6 @@ public class IOService {
 					map.put("T2", "Social Science Research Network");
 				}
 			}
-
 		}
 		// in enhanced mode C7 (Article number) is skipped, in Mark mode C7 is NOT skipped
 		String skipFields = enhance ? "(C7|ER|ID|TY|XYZ)" : "(ER|ID|TY|XYZ)";
