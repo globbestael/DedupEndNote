@@ -1,0 +1,19 @@
+td {
+    vertical-align: top;
+}
+
+.diff {
+    color: red;
+    font-weight: bold;
+}
+
+/* overrules bootstrap style */
+.navbar-nav .nav-link.active,
+.navbar-nav .nav-link.show {
+    color: white;
+}
+
+.external-link:after {
+    content: url("/resources/box-arrow-up-right.svg");
+    margin-left: 6px;
+}

@@ -66,14 +66,15 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 		fail("Not yet implemented");
 	}
 
+	// @formatter:off
 	/*
-	 * Very rude comparison which might be usefull for CYK names (because of mixup of
-	 * first and last names): - take only the uppercase letters - sort them for each
-	 * author
+	 * Very rude comparison which might be usefull for CYK names (because of mixup of first and last names):
+	 * - take only the uppercase letters 
+	 * - sort them for each author
 	 *
-	 * Results however are very poor compared to the default implementation (with its
-	 * transposition of names)
+	 * Results however are very poor compared to the default implementation (with its transposition of names)
 	 */
+	// @formatter:on
 	@Test
 	void compareAuthorsLimitedToFirstLettersTest() throws IOException {
 		List<Triple> triples = getValidatedAuthorsPairs();
@@ -109,20 +110,26 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 		assertThat(jws.apply(a1, a2)).as("Even with 1 letter out of 3 in common JWS is 0.0").isEqualTo(0.0);
 	}
 
+	// @formatter:off
 	/*
 	 * Compare the same number of authors for both records
 	 *
-	 * Results: - Default never wins, Experiment wins but only in 0,34% of cases -
-	 * Threshold could be higher: 98th percentile 0,72 (instead of 0,68)
+	 * Results: 
+	 * - Default never wins, Experiment wins but only in 0,34% of cases 
+	 * - Threshold could be higher: 98th percentile 0,72 (instead of 0,68)
 	 *
 	 * But implementing this will not be easy, and performance (speed, and memory?) might
-	 * be impacted. Possible solution - Publication.numberOfAuthors - Publication has an
-	 * array endOffsets[numberOfAuthors] of ending offsets for each author - record 1:
-	 * numberOfAuthors = n1 - record 2: numberOfAuthors = n2 - numberWanted = Math.min(n1,
-	 * n2) - authors1 = if n1 > numberWanted then authors1.substring(0,
-	 * endOffsets1[numberWanted] -1) else authors1 - authors2 = if n2 > numberWanted then
-	 * authors2.substring(0, endOffsets2[numberWanted] -1) else authors2
+	 * be impacted. 
+	 * Possible solution 
+	 * - Publication.numberOfAuthors 
+	 * - Publication has an array endOffsets[numberOfAuthors] of ending offsets for each author 
+	 * - record 1: numberOfAuthors = n1 
+	 * - record 2: numberOfAuthors = n2 
+	 * - numberWanted = Math.min(n1, n2) 
+	 * - authors1 = if n1 > numberWanted then authors1.substring(0, endOffsets1[numberWanted] -1) else authors1
+	 * - authors2 = if n2 > numberWanted then authors2.substring(0, endOffsets2[numberWanted] -1) else authors2
 	 */
+	// @formatter:on
 	@Test
 	void compareSameNumberOfAuthorsTest() throws IOException {
 		List<Triple> triples = getValidatedAuthorsPairs();
@@ -148,15 +155,19 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 		fail("Not yet implemented");
 	}
 
+	// @formatter:off
 	/*
 	 * Compare only the first 10 authors for both records
 	 *
-	 * Results: - Default never wins, Experiment wins but only in 0,17% of cases (2) -
-	 * Threshold could be higher: 98th percentile 0,70 (instead of 0,68)
+	 * Results: 
+	 * - Default never wins, Experiment wins but only in 0,17% of cases (2) 
+	 * - Threshold could be higher: 98th percentile 0,70 (instead of 0,68)
 	 *
-	 * Implementing this is quite easy. - mwah: in AuthorsComparator - better: in
-	 * Publication: add only the first 10 authors
+	 * Implementing this is quite easy. 
+	 * - mwah: in AuthorsComparator 
+	 * - better: in Publication: add only the first 10 authors
 	 */
+	// @formatter:on
 	@Test
 	void compareOnlyFirst10AuthorsTest() throws IOException {
 		List<Triple> triples = getValidatedAuthorsPairs();
@@ -188,15 +199,19 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 		fail("Not yet implemented");
 	}
 
+	// @formatter:off
 	/*
 	 * Compare only the first 5 authors for both records
 	 *
-	 * Results: - Default never wins, Experiment wins but only in 0,25% of cases (3) -
-	 * Threshold could be higher: 98th percentile 0,70 (instead of 0,68)
+	 * Results: 
+	 * - Default never wins, Experiment wins but only in 0,25% of cases (3) 
+	 * - Threshold could be higher: 98th percentile 0,70 (instead of 0,68)
 	 *
-	 * Implementing this is quite easy - mwah: in AuthorsComparator - better: in
-	 * Publication: add only the first 10 authors
+	 * Implementing this is quite easy 
+	 * - mwah: in AuthorsComparator 
+	 * - better: in Publication: add only the first 10 authors
 	 */
+	// @formatter:on
 	@Test
 	void compareOnlyFirst5AuthorsTest() throws IOException {
 		List<Triple> triples = getValidatedAuthorsPairs();
@@ -278,27 +293,24 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 	}
 
 	private String showTripleComparison(Triple t) {
-		return "JWS %.2f vs %.2f (%.2f):\n- %s\n- %s".formatted(t.getJws(), t.getExpJws(),
-			t.getJws() - t.getExpJws(), t.getAuthors1(), t.getAuthors2());
+		return "JWS %.2f vs %.2f (%.2f):\n- %s\n- %s".formatted(t.getJws(), t.getExpJws(), t.getJws() - t.getExpJws(),
+				t.getAuthors1(), t.getAuthors2());
 	}
 
 	private void showTripleComparisonDetails(String nameExperiment, List<Triple> triples, boolean onlySummary) {
 		// double threshold = 0.85;
 		double threshold = DeduplicationService.DefaultAuthorsComparator.AUTHOR_SIMILARITY_NO_REPLY;
 
-		List<Triple> better = triples.stream()
-			.filter(t -> t.getJws() > threshold && t.getExpJws() <= threshold)
-			.collect(Collectors.toList());
+		List<Triple> better = triples.stream().filter(t -> t.getJws() > threshold && t.getExpJws() <= threshold)
+				.collect(Collectors.toList());
 		better.sort(new TripleComparatorDefault());
 
-		List<Triple> worse = triples.stream()
-			.filter(t -> t.getJws() <= threshold && t.getExpJws() > threshold)
-			.collect(Collectors.toList());
+		List<Triple> worse = triples.stream().filter(t -> t.getJws() <= threshold && t.getExpJws() > threshold)
+				.collect(Collectors.toList());
 		worse.sort(new TripleComparatorExperiment());
 
-		List<Triple> bothBelow = triples.stream()
-			.filter(t -> t.getJws() <= threshold && t.getExpJws() <= threshold)
-			.collect(Collectors.toList());
+		List<Triple> bothBelow = triples.stream().filter(t -> t.getJws() <= threshold && t.getExpJws() <= threshold)
+				.collect(Collectors.toList());
 		bothBelow.sort(new TripleComparatorDefault());
 
 		if (!onlySummary) {
@@ -322,12 +334,12 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 			List<Triple> worse, List<Triple> bothBelow) {
 		System.err.println("\nExperiment: " + nameExperiment);
 		System.err.println("--------------------------------------------------------------------");
-		System.err.println("| %10s | %15s | %15s | %15s |".formatted("Total", "Default wins", "Experiment wins",
-			"Both below"));
+		System.err.println(
+				"| %10s | %15s | %15s | %15s |".formatted("Total", "Default wins", "Experiment wins", "Both below"));
 		System.err.println("--------------------------------------------------------------------");
 		System.err.println("| %10d | %7d (%2.2f%%) | %7d (%2.2f%%) | %7d (%2.2f%%) |".formatted(triples.size(),
-			better.size(), better.size() * 100.0 / triples.size(), worse.size(),
-			worse.size() * 100.0 / triples.size(), bothBelow.size(), bothBelow.size() * 100.0 / triples.size()));
+				better.size(), better.size() * 100.0 / triples.size(), worse.size(),
+				worse.size() * 100.0 / triples.size(), bothBelow.size(), bothBelow.size() * 100.0 / triples.size()));
 		System.err.println("--------------------------------------------------------------------");
 		triples.sort(Comparator.comparing(Triple::getJws).reversed());
 		double default98 = percentile(triples, 98);
@@ -335,12 +347,10 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 		triples.sort(Comparator.comparing(Triple::getExpJws).reversed());
 		double exp98 = expPercentile(triples, 98);
 		double exp99 = expPercentile(triples, 99);
-		System.err
-			.println("98th percentile for default at %2.2f, for experiment at %2.2f: experiment wins? %b".formatted(
-			default98, exp98, default98 < exp98));
-		System.err
-			.println("99th percentile for default at %2.2f, for experiment at %2.2f: experiment wins? %b".formatted(
-			default99, exp99, default99 < exp99));
+		System.err.println("98th percentile for default at %2.2f, for experiment at %2.2f: experiment wins? %b"
+				.formatted(default98, exp98, default98 < exp98));
+		System.err.println("99th percentile for default at %2.2f, for experiment at %2.2f: experiment wins? %b"
+				.formatted(default99, exp99, default99 < exp99));
 	}
 
 }

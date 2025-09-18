@@ -12,17 +12,7 @@
 	<script th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}" type="text/javascript"></script>
 	<script th:src="@{/webjars/sockjs-client/dist/sockjs.min.js}"></script>
 	<script th:src="@{/webjars/stomp-websocket/stomp.min.js}"></script>
-
-	<style type="text/css">
-		td {
-			vertical-align: top;
-		}
-
-		.diff {
-			color: red;
-			font-weight: bold;
-		}
-	</style>
+	<link rel="stylesheet" href="/resources/common-style.css">
 
 	<script th:inline="javascript">
 		var stompClient = null;
@@ -185,35 +175,38 @@
 	</script>
 </head>
 
-<body data-spy="scroll" data-target="#menu" data-offset="1">
+<body>
 	<div class="container-fluid">
 		<div class="row">
 			<div class="col-3">
 				<nav id="menu" class="navbar navbar-light bg-light" style="position: fixed;">
-					<nav class="nav nav-pills flex-column small">
-						<a class="list-group-item list-group-item-action" href="#start">Top</a>
-						<a class="list-group-item list-group-item-action" href="#steps">Steps</a>
-						<a class="list-group-item list-group-item-action" href="#why">Why DedupEndNote?</a>
-						<a class="list-group-item list-group-item-action" href="#what">What does DedupEndNote do?</a>
-						<a class="list-group-item list-group-item-action" href="#markModeText">Mark mode</a>
-						<a class="list-group-item list-group-item-action" href="#examples">Examples of comparison</a>
-						<a class="list-group-item list-group-item-action" href="#performance">Performance</a>
-						<a class="list-group-item list-group-item-action" href="#limitations">Limitations</a>
-						<!-- the next 3 links to other pages open a new window in order to preserve the Web Socket sessionId on this page (possibly running a deduplication -->
-						<a class="list-group-item list-group-item-action" href="/justification"
-							target="window2">Justification</a>
-						<a class="list-group-item list-group-item-action" href="/resources/faq.html"
-							target="window2">FAQ</a>
-						<a class="list-group-item list-group-item-action" href="/resources/developers.html"
-							target="window2">Developers</a>
-						<a class="list-group-item list-group-item-action" href="#issues">Issues and feature requests</a>
-						<a class="list-group-item list-group-item-action" href="#citing">How to cite</a>
-						<a class="list-group-item list-group-item-action" href="/resources/changelog.html"
-							target="window2">Changelog</a>
-					</nav>
+					<div class="container-fluid">
+						<div class="navbar-nav" id="navmenu">
+							<nav class="nav nav-pills flex-column small">
+								<a class="nav-link" href="#start">Top</a>
+								<a class="nav-link" href="#steps" target="_self">Steps</a>
+								<a class="nav-link" href="#why">Why DedupEndNote?</a>
+								<a class="nav-link" href="#what">What does DedupEndNote do?</a>
+								<a class="nav-link" href="#markModeText">Mark mode</a>
+								<a class="nav-link" href="#examples">Examples of comparison</a>
+								<a class="nav-link" href="#performance">Performance</a>
+								<a class="nav-link" href="#limitations">Limitations</a>
+								<!-- the next 3 links to other pages open a new window in order to preserve the Web Socket sessionId on this page (possibly running a deduplication -->
+								<a class="nav-link external-link" href="/justification"
+									target="window2">Justification</a>
+								<a class="nav-link external-link" href="/resources/faq.html" target="window2">FAQ</a>
+								<a class="nav-link external-link" href="/resources/developers.html"
+									target="window2">Developers</a>
+								<a class="nav-link" href="#issues">Issues and feature requests</a>
+								<a class="nav-link" href="#citing">How to cite</a>
+								<a class="nav-link external-link" href="/resources/changelog.html"
+									target="window2">Changelog</a>
+							</nav>
+						</div>
+					</div>
 				</nav>
 			</div>
-			<div class="col-9" style="height: 100vh; position: relative;">
+			<div class="col-9" data-bs-spy="scroll" data-bs-target="#navmenu">
 				<h1 id="start">DedupEndNote (version 1.1.0 20250910)</h1>
 				<div class="row col-11 border border-primary rounded alert alert-secondary" id="step1">
 					<div class="col-3">
@@ -222,9 +215,11 @@
 					<div class="col-9">
 						<form class="form-horizontal" id="upload_form" method="post" enctype="multipart/form-data"
 							th:action="@{|/uploadFile|}">
-							<div class="form-group">
-								<label for="oldFile">Select the EndNote / Zotero RIS file to deduplicate<br />(use <a
-										href="/twofiles">/twofiles</a> to deduplicate an new set of records against an
+							<div class="input-group">
+								<label for="oldFile" class="form-label">Select the EndNote / Zotero RIS file to
+									deduplicate<br />(use <a href="/twofiles">/twofiles</a> to deduplicate an new
+									set of
+									records against an
 									old set)</label><br />
 								<input type="file" id="fileUpload1" name="file" />
 							</div>
@@ -298,15 +293,19 @@
 
 				<h3 id="why">Why DedupEndNote?</h3>
 
-				<p>Deduplication in EndNote or Zotero misses many duplicate records. Building and maintaining a Journals
-					List within Endnote can partly solve this problem, but there remain lots of cases where EndNote is
+				<p>Deduplication in EndNote or Zotero misses many duplicate records. Building and maintaining a
+					Journals
+					List within Endnote can partly solve this problem, but there remain lots of cases where EndNote
+					is
 					too unforgiving when comparing records.
-					Some bibliographic databases offer deduplication for their own databases (OVID: Medline and EMBASE),
+					Some bibliographic databases offer deduplication for their own databases (OVID: Medline and
+					EMBASE),
 					but this does not help PubMed, Cochrane or Web of Science users.</p>
 				<p>DedupEndNote deduplicates an EndNote / Zotero RIS file and writes a new RIS file with the unique
 					records,
 					which can be imported into a new EndNote / Zotero database.
-					It is more forgiving than EndNote and Zotero when comparing records, but tests have shown that it
+					It is more forgiving than EndNote and Zotero when comparing records, but tests have shown that
+					it
 					identifies many more duplicates (see below under "Test results").</p>
 				<p>The program has been tested on EndNote and Zotero databases with records from:</p>
 				<ul>
@@ -338,7 +337,8 @@
 						<tr>
 							<td rowspan="3">1 ... 5</td>
 							<td>YES</td>
-							<td rowspan="2" class="align-middle">go to next comparison if present,<br />else mark the
+							<td rowspan="2" class="align-middle">go to next comparison if present,<br />else mark
+								the
 								records as duplicates</td>
 						</tr>
 						<tr>
@@ -354,7 +354,8 @@
 				<p>The following comparisons are used (in this order, chosen for performance reasons):</p>
 				<ol>
 					<li><strong>Publication year:</strong> Are they at most 1 year apart?<br />
-						<i>Insufficient data: Records without a publication year are compared to all records unless they
+						<i>Insufficient data: Records without a publication year are compared to all records unless
+							they
 							have been identified as a duplicate.</i><br />
 						<i>Special cases: Cochrane Reviews are compared for the same publication year</i>
 					</li>
@@ -365,12 +366,16 @@
 						compared,<br />
 						otherwise: if the starting pages are different or one or both are absent, the DOIs are
 						compared.<br />
-						<i>Preprocessing: Article number is treated as a starting page if starting page itself is empty
+						<i>Preprocessing: Article number is treated as a starting page if starting page itself is
+							empty
 							or contains "-".</i><br />
-						<i>Preprocessing: Starting pages are compared only for number: "S123" and "123" are considered
+						<i>Preprocessing: Starting pages are compared only for number: "S123" and "123" are
+							considered
 							the same.</i><br />
-						<i>Preprocessing: In DOIs 'http://dx.doi.org/', 'http://doi.org/', ... are left out.</i><br />
-						<i>Insufficient data: If one or both DOIs are missing AND one or both of the starting pages are
+						<i>Preprocessing: In DOIs 'http://dx.doi.org/', 'http://doi.org/', ... are left
+							out.</i><br />
+						<i>Insufficient data: If one or both DOIs are missing AND one or both of the starting pages
+							are
 							missing, the answer is YES. This is important because of PubMed ahead of print
 							publications.</i><br />
 						<i>Special cases: For Cochrane Reviews DOIs are always compared before starting pages.</i>
@@ -385,7 +390,8 @@
 						<i>Preprocessing: First names are reduced to initials ("Moorthy, Ranjith K." to "Moorthy,
 							RK").</i><br />
 						<i>Preprocessing: All authors from each record are joined by "; ".</i><br />
-						<i>Insufficient data: If one or both records have no authors, the answer is YES (except if one
+						<i>Insufficient data: If one or both records have no authors, the answer is YES (except if
+							one
 							of the records is a reply (see below)
 							and one of the records has no starting page or DOI).</i>
 					</li>
@@ -395,16 +401,19 @@
 							target="_blank">Jaro-Winkler similarity</a> of (one of) the normalized titles &gt;
 						<span
 							th:text="${T(edu.dedupendnote.services.DeduplicationService).TITLE_SIMILARITY_SUFFICIENT_STARTPAGES_OR_DOIS}">-0.90</span>?<br />
-						The fields Original publication (OP), Short Title (ST), Title (TI) and sometimes Book section
+						The fields Original publication (OP), Short Title (ST), Title (TI) and sometimes Book
+						section
 						(T3, see below) are treated as titles.<br />
 						Because the Jaro-Winkler similarity algorithm puts a heavy penalty on differences at the
 						beginning of a string, the normalized titles are also reversed.<br />
-						<i>Preprocessing: The titles are normalized (converted to lower case, text between "&lt;...&gt;"
+						<i>Preprocessing: The titles are normalized (converted to lower case, text between
+							"&lt;...&gt;"
 							removed,
 							all characters which are not letters or numbers are replaced by a space character,
 							...).</i><br />
 						<i>Preprocessing: In the titles of retracted publications all parts which refer to the
-							retraction are removed. "RETRACTED: Response of Breast Cancer Cells and Cancer Stem Cells to
+							retraction are removed. "RETRACTED: Response of Breast Cancer Cells and Cancer Stem
+							Cells to
 							Metformin and Hyperthermia Alone or Combined (Retracted article. See vol. 20, 2025)"
 							is altered in "Response of Breast Cancer Cells and Cancer Stem Cells to Metformin and
 							Hyperthermia Alone or Combined".
@@ -421,11 +430,14 @@
 					<li><strong>ISSN or Journal:</strong> Are they the same (ISSN) or similar (Journal)?<br />
 						This rule is skipped if both records have the same DOI (that comparison was made in step
 						2).<br />
-						The fields Journal / Book Title (T2), Alternate Journal (J2) and sometimes Book section (T3, see
+						The fields Journal / Book Title (T2), Alternate Journal (J2) and sometimes Book section (T3,
+						see
 						below) are treated as journals, ISBNs are treated as ISSNs. All ISSns and journal titles
 						(including abbreviations) in the records are used.<br />
-						If the ISSns are different or one or both records have no ISSN, the journals are compared.<br />
-						Abbreviated and full journal titles are compared in a sensible way (see examples below).<br />
+						If the ISSns are different or one or both records have no ISSN, the journals are
+						compared.<br />
+						Abbreviated and full journal titles are compared in a sensible way (see examples
+						below).<br />
 						<i>Preprocessing: ISSNs are normalized (dashes are removed, lowercased).
 							For ISBN-10 the first 9 digits are used, for ISBN-13 the 9 digits starting at position
 							4.</i><br />
@@ -434,21 +446,28 @@
 							or "Zhonghua wei chang wai ke za zhi = Chinese journal of gastrointestinal surgery"
 							or "The Canadian Journal of Neurological Sciences / Le Journal Canadien Des Sciences
 							Neurologiques" are split into 2 journal titles.</i><br />
-						<i>Preprocessing: the journal titles are normalized (hyphens, dots and apostrophes are replaced
+						<i>Preprocessing: the journal titles are normalized (hyphens, dots and apostrophes are
+							replaced
 							with space,
-							end part between round or square brackets is removed, initial article is removed, ...).</i>
+							end part between round or square brackets is removed, initial article is removed,
+							...).</i>
 					</li>
 				</ol>
-				<p><i>T3 field: Especially EMBASE (OVID) uses this field for (1) Conference title (majority of cases),
-						(2) an alternative journal title, and (3) original (non English) title. Case 1 (identified as
+				<p><i>T3 field: Especially EMBASE (OVID) uses this field for (1) Conference title (majority of
+						cases),
+						(2) an alternative journal title, and (3) original (non English) title. Case 1 (identified
+						as
 						containing a
-						number or "Annual", "Conference", "Congress", "Meeting" or "Society") is skipped. All other T3
+						number or "Annual", "Conference", "Congress", "Meeting" or "Society") is skipped. All other
+						T3
 						fields are treated as Journals and as titles.</i>
 
-				<p><i>Reply: a publication is considered a reply if the title (fields ST and TI) contains "reply", or
+				<p><i>Reply: a publication is considered a reply if the title (fields ST and TI) contains "reply",
+						or
 						contains
 						"author(...)respon(...)", or is nothing but "response" (all case insensitive).</i></p>
-				<p><i>Comment: a publication is considered a comment if the title (fields ST and TI) contains words as
+				<p><i>Comment: a publication is considered a comment if the title (fields ST and TI) contains words
+						as
 						"comment"
 						or
 						"commentary".</i></p>
@@ -471,10 +490,12 @@
 						<ul>
 							<li>the DOIs of the removed duplicate records are copied to the saved record and
 								deduplicated. The DOI field is important for finding the full text in EndNote.</li>
-							<li>DOIs of the form "10.1038/ctg.2014.12", "http://dx.doi.org/10.1038/ctg.2014.12", ... are
+							<li>DOIs of the form "10.1038/ctg.2014.12", "http://dx.doi.org/10.1038/ctg.2014.12", ...
+								are
 								rewritten in the
 								<a href="https://www.crossref.org/education/metadata/persistent-identifiers/doi-display-guidelines/"
-									target="_blank">prescribed form</a> "https://doi.org/10.1038/ctg.2014.12". DOIs of
+									target="_blank">prescribed form</a> "https://doi.org/10.1038/ctg.2014.12". DOIs
+								of
 								this form are clickable links in EndNote.
 							</li>
 						</ul>
@@ -485,7 +506,8 @@
 								Alternate Journal (J2),
 								this J2 value is copied to the T2 field. This is relevant for the ClinicalTrials.gov
 								records in Embase.</li>
-							<li>missing Journal name (T2) for "Social Science Research Network" records from Embase.com
+							<li>missing Journal name (T2) for "Social Science Research Network" records from
+								Embase.com
 								are filled</li>
 						</ul>
 					</li>
@@ -493,13 +515,15 @@
 						<ul>
 							<li>if the saved record has no value for its Publication year but one of the removed
 								duplicate records has,
-								the first not empty Publication year of the duplicates is copied to the saved record.
+								the first not empty Publication year of the duplicates is copied to the saved
+								record.
 							</li>
 						</ul>
 					</li>
 					<li>Starting page (SP) and Article Number (C7):
 						<ul>
-							<li>the article number is put in the Pages field (SP) if the Pages field is empty or does
+							<li>the article number is put in the Pages field (SP) if the Pages field is empty or
+								does
 								not contain a "-", overwriting the Pages field content.</li>
 							<li>the article number field (C7) is omitted</li>
 							<li>if the saved record has no value for its Pages field (e.g. PubMed ahead of print
@@ -507,14 +531,17 @@
 								the first not empty pages of the duplicates are copied to the saved record.</li>
 							<li>the Pages field gets an unabbreviated form: e.g. "482-91" is rewritten as "482-491".
 							</li>
-							<li>if the ending page is the same as the starting page, only the starting page is written
+							<li>if the ending page is the same as the starting page, only the starting page is
+								written
 								("192" instead of "192-192").</li>
-							<li>for Cochrane Reviews a missing review number ("CD...") is extracted from the DOI.</li>
+							<li>for Cochrane Reviews a missing review number ("CD...") is extracted from the DOI.
+							</li>
 						</ul>
 					</li>
 					<li>Title (TI):
 						<ul>
-							<li>If the publication is a reply / erratum / comment / retraction, the title is replaced
+							<li>If the publication is a reply / erratum / comment / retraction, the title is
+								replaced
 								with the longest title from the
 								duplicates (e.g. "Reply from the authors" is replaced by
 								"Coagulation parameters and portal vein thrombosis in cirrhosis Reply")</li>
@@ -524,38 +551,47 @@
 
 				<p>The output file is a new RIS file which can be imported into a new EndNote / Zotero database.</p>
 
-				<p>DedupEndNote is slower than EndNote and Zotero in deduplicating records because its comparisons are
+				<p>DedupEndNote is slower than EndNote and Zotero in deduplicating records because its comparisons
+					are
 					more time
 					consuming.
-					EndNote can deduplicate a EndNote database of ca. 15,000 records in less dan 5 seconds. DedupEndNote
+					EndNote can deduplicate a EndNote database of ca. 15,000 records in less dan 5 seconds.
+					DedupEndNote
 					needs around 20 seconds to deduplicate
 					the export file in RIS format (115MB).</p>
 
 				<p>DedupEndNote has borrowed several ideas from: Yu Jiang, Can Lin, Weiyi Meng, Clement Yu, Aaron M.
 					Cohen and Neil R. Smalheiser:
 					<a href="http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3893659/" target="_blank">Rule-based
-						deduplication of article records from bibliographic databases</a>, in: Database 2014, ID bat086,
+						deduplication of article records from bibliographic databases</a>, in: Database 2014, ID
+					bat086,
 					doi:10.1093/database/bat086
 				</p>
 
 				<h3 id="markModeText">Mark mode</h3>
 
-				<p>If you want to manually merge the records which are duplicates according to DedupEndNote, you can use
+				<p>If you want to manually merge the records which are duplicates according to DedupEndNote, you can
+					use
 					Mark mode.</p>
 				<p>Because Zotero does not work with / does not show record numbers, Mark Mode is not relevant for
 					Zotero users.</p>
 
-				<p>In Mark mode the ID of the first record of a set of duplicate records is copied to the label field
+				<p>In Mark mode the ID of the first record of a set of duplicate records is copied to the label
+					field
 					("LB") of all duplicate records.
-					The input file is copied to the output file with the addition of the Label field if it is not empty.
+					The input file is copied to the output file with the addition of the Label field if it is not
+					empty.
 					The original content of the Label field is overwritten! All other fields are copied as is (so no
 					enriching of the output: prescribed form of DOI, ...).</p>
 
-				<p>After importing the results file into a new EndNote database, make the Label field visible. The IDs
+				<p>After importing the results file into a new EndNote database, make the Label field visible. The
+					IDs
 					in the Label field refer to the IDs of the <u>original</u> EndNote database.</p>
 				<ul>
-					<li>To see the duplicates, search for "Label" "is greater than" 0, and sort on the label field.</li>
-					<li>To manually merge, change in Preferences / Deduplicate the fields to deduplicate on to the Label
+					<li>To see the duplicates, search for "Label" "is greater than" 0, and sort on the label field.
+					</li>
+					<li>To manually merge, change in Preferences / Deduplicate the fields to deduplicate on to the
+						Label
 						field, deduplicate (in EndNote) and merge at will</li>
 				</ul>
 
@@ -566,9 +602,11 @@
 					<li>Select all records in the "Duplicate References" set, and mark them as Read</li>
 					<li>Select the "All References" set, limit to the duplicates found by DedupEndNote (search for
 						"Label" "is greater than" 0), and sort on the label field.</li>
-					<li>The records marked as Unread were identified as duplicates by DedupEndNote, but not by EndNote
+					<li>The records marked as Unread were identified as duplicates by DedupEndNote, but not by
+						EndNote
 						itself.</li>
-					<li>Select the "All References" set, limit to the duplicates not found by DedupEndNote (search for
+					<li>Select the "All References" set, limit to the duplicates not found by DedupEndNote (search
+						for
 						"Label" "is less than" 0).</li>
 					<li>The records marked as Read were identified as duplicates by EndNote itself, but not by
 						DedupEndNote.</li>
@@ -578,11 +616,12 @@
 
 				<p>In the following table the results of EndNote's Find duplicates is compared to the comparisons in
 					DedupEndNote. For these tests only one field was
-					selected in EndNote in "Edit&nbsp;&gt;&nbsp;Preferences&nbsp;&gt; Duplicates", and "Ignore spacing
+					selected in EndNote in "Edit&nbsp;&gt;&nbsp;Preferences&nbsp;&gt; Duplicates", and "Ignore
+					spacing
 					and punctuation" was selected.</p>
 				<table class="table table-sm">
 					<caption>Examples of duplicates found</caption>
-					<thead class="thead-light">
+					<thead class="table-light">
 						<tr>
 							<th>Field</th>
 							<th>Examples</th>
@@ -606,9 +645,11 @@
 							<td>Title</td>
 							<td>
 								<ul>
-									<li>90Y radioembolization using resin microspheres in patients with hepatocellular
+									<li>90Y radioembolization using resin microspheres in patients with
+										hepatocellular
 										carcinoma and portal vein thrombosis</li>
-									<li>90Y RADIOEMBOLIZATION USING RESIN MICROSPHERES IN PATIENTS WITH HEPATOCELLULAR
+									<li>90Y RADIOEMBOLIZATION USING RESIN MICROSPHERES IN PATIENTS WITH
+										HEPATOCELLULAR
 										CARCINOMA AND PORTAL VEIN THROMBOSIS</li>
 								</ul>
 							</td>
@@ -636,7 +677,8 @@
 										hepatocellular carcinoma: Review of current applications beyond
 										intermediate-stage disease</li>
 									<li>Transarterial Chemoembolization and <span class="diff">Y-90</span>
-										Radioembolization for Hepatocellular Carcinoma: Review of Current Applications
+										Radioembolization for Hepatocellular Carcinoma: Review of Current
+										Applications
 										Beyond Intermediate-Stage Disease</li>
 								</ul>
 							</td>
@@ -672,7 +714,8 @@
 							<td>
 								<ul>
 									<li>Letter: portal vein obstruction<span class="diff">--</span>which subset of
-										patients could benefit the most?<span class="diff"> Authors' reply</span></li>
+										patients could benefit the most?<span class="diff"> Authors' reply</span>
+									</li>
 									<li>Letter: Portal vein obstruction<span class="diff"> - </span>Which subset of
 										patients could benefit the most?</li>
 								</ul>
@@ -686,9 +729,11 @@
 								<ul>
 									<li>Title: <span class="diff">Some diseases associated with ulcero- hemorrhagic
 											colitis: complication or coincidence. [French]</span><br />
-										Original Title: Quelques maladies associees a la colite ulcero- Hemorragique:
+										Original Title: Quelques maladies associees a la colite ulcero-
+										Hemorragique:
 										Complications ou coincidences</li>
-									<li>Title: <span class="diff">[Various diseases associated with ulcero-hemorrhagic
+									<li>Title: <span class="diff">[Various diseases associated with
+											ulcero-hemorrhagic
 											colitis: complications or coincidences]</span><br />
 										Original Title: Quelques maladies associees a la colite ulcero-hemorragique:
 										complications ou coincidences.</li>
@@ -703,7 +748,8 @@
 								<ul>
 									<li>Title: <span class="diff">[HELLP in the second trimester in a patient with
 											antiphospholipid syndrome]</span><br />
-										Original Title: HELLP kan ses i andet trimester ved antifosfolipidsyndrom.</li>
+										Original Title: HELLP kan ses i andet trimester ved antifosfolipidsyndrom.
+									</li>
 									<li>Title: <span class="diff">HELLP kan ses i andet trimester ved
 											antifosfolipidsyndrom</span></li>
 								</ul>
@@ -734,12 +780,14 @@
 							<td>Title</td>
 							<td>
 								<ul>
-									<li>Title: <span class="diff">Case report. </span>Duplication of the portal vein: a
+									<li>Title: <span class="diff">Case report. </span>Duplication of the portal
+										vein: a
 										rare congenital anomaly<br />
-										Reversed Title: ylamona latinegnoc erar a :niev latrop eht fo noitacilpuD<span
-											class="diff"> .troper esaC</span></li>
+										Reversed Title: ylamona latinegnoc erar a :niev latrop eht fo
+										noitacilpuD<span class="diff"> .troper esaC</span></li>
 									<li>Title: Duplication of the portal vein - A rare congenital anomaly<br />
-										Reversed title: ylamona latinegnoc erar A - niev latrop eht fo noitacilpuD</li>
+										Reversed title: ylamona latinegnoc erar A - niev latrop eht fo noitacilpuD
+									</li>
 								</ul>
 							</td>
 							<td>No</td>
@@ -749,19 +797,23 @@
 							<td>Title</td>
 							<td>
 								<ul>
-									<li>Title: <span class="diff">La sémantique de l'image radiologique. </span>Int<span
-											class="diff">é</span>r<span class="diff">ê</span>t du proc<span
-											class="diff">é</span>d<span class="diff">é</span> de soustraction <span
-											class="diff">é</span>lectronique en couleurs d'Oosterkamp en angiographie
+									<li>Title: <span class="diff">La sémantique de l'image radiologique.
+										</span>Int<span class="diff">é</span>r<span class="diff">ê</span>t du
+										proc<span class="diff">é</span>d<span class="diff">é</span> de soustraction
+										<span class="diff">é</span>lectronique en couleurs d'Oosterkamp en
+										angiographie
 										abdominale<br />
 										Reversed Title: elanimodba eihpargoigna ne pmakretsoO'd srueluoc ne
 										euqinortcel<span class="diff">é</span> noitcartsuos ed <span
 											class="diff">é</span>d<span class="diff">é</span>corp ud t<span
 											class="diff">ê</span>r<span class="diff">é</span>tnI<span class="diff">
-											.euqigoloidar egami'l ed euqitnamés aL</span></li>
-									<li>Title: INTERET DU PROCEDE DE SOUSTRACTION ELECTRONIQUE EN COULEURS D'OOSTERKAMP
+											.euqigoloidar egami'l ed euqitnamés aL</span>
+									</li>
+									<li>Title: INTERET DU PROCEDE DE SOUSTRACTION ELECTRONIQUE EN COULEURS
+										D'OOSTERKAMP
 										EN ANGIOGRAPHIE ABDOMINALE<br />
-										Reversed title: ELANIMODBA EIHPARGOIGNA NE PMAKRETSOO'D SRUELUOC NE EUQINORTCELE
+										Reversed title: ELANIMODBA EIHPARGOIGNA NE PMAKRETSOO'D SRUELUOC NE
+										EUQINORTCELE
 										NOITCARTSUOS ED EDECORP UD TERETNI</li>
 								</ul>
 							</td>
@@ -810,8 +862,9 @@
 								<ul>
 									<li>Lv, Y.; Qi, X.; Xia, J.; Fan, D.; Han, G.</li>
 									<li>Lv, Y.; Qi, X. <span class="diff">S.</span>; Xia, J. <span
-											class="diff">L.</span>; Fan, D. <span class="diff">M.</span>; Han, G. <span
-											class="diff">H.</span></li>
+											class="diff">L.</span>; Fan, D. <span class="diff">M.</span>; Han, G.
+										<span class="diff">H.</span>
+									</li>
 								</ul>
 							</td>
 							<td>No</td>
@@ -832,8 +885,8 @@
 							<td>Journal</td>
 							<td>
 								<ul>
-									<li>Br<span class="diff">itish</span> j<span class="diff">ournal of</span> surg<span
-											class="diff">ery</span></li>
+									<li>Br<span class="diff">itish</span> j<span class="diff">ournal of</span>
+										surg<span class="diff">ery</span></li>
 									<li>Br J Surg</li>
 								</ul>
 							</td>
@@ -844,9 +897,11 @@
 							<td>Journal</td>
 							<td>
 								<ul>
-									<li>European Journal of Gastroenterology <span class="diff">and</span> Hepatology
+									<li>European Journal of Gastroenterology <span class="diff">and</span>
+										Hepatology
 									</li>
-									<li>European Journal of Gastroenterology <span class="diff">&amp;</span> Hepatology
+									<li>European Journal of Gastroenterology <span class="diff">&amp;</span>
+										Hepatology
 									</li>
 								</ul>
 							</td>
@@ -881,7 +936,8 @@
 							<td>Journal</td>
 							<td>
 								<ul>
-									<li><span class="diff">The</span> Lancet Haematol<span class="diff">ogy</span></li>
+									<li><span class="diff">The</span> Lancet Haematol<span class="diff">ogy</span>
+									</li>
 									<li>Lancet Haematol</li>
 								</ul>
 							</td>
@@ -931,7 +987,8 @@
 
 				<h3 id="performance">Performance</h3>
 
-				<p>See <a href="https://github.com/globbestael/DedupEndnote#performance" target="github">here</a> for
+				<p>See <a href="https://github.com/globbestael/DedupEndnote#performance" target="github">here</a>
+					for
 					comparison with other tools
 					and published test sets.</p>
 
@@ -987,7 +1044,8 @@
 
 				<h5>Validation</h5>
 
-				<p>A general subset of 4926 records was manually checked (150 records without an Author, 79 with Author
+				<p>A general subset of 4926 records was manually checked (150 records without an Author, 79 with
+					Author
 					"Anonymous",
 					the 366 articles with "phase" in the title (because of "Phase I", Phase I/II", ...)
 					the rest: "Aagaard" ... "Abbitt", "Anoob" ... "Axelrod",
@@ -1042,10 +1100,13 @@
 					<li>wrong DOI in second of 2 EMBASE (OVID) records: same authors, year, title, DOI, different
 						starting page
 						<ul>
-							<li>Segovia, M. C., et al. (2019). "Combined multivisceral and renal transplant in a patient
+							<li>Segovia, M. C., et al. (2019). "Combined multivisceral and renal transplant in a
+								patient
 								with JAK-2 mutation."
-								Transplantation 103(7 Supplement 2): S143. DOI: 10.1097/01.tp.0000576288.84252.91</li>
-							<li>Segovia, M. C., et al. (2019). "Combined multivisceral and renal transplant in a patient
+								Transplantation 103(7 Supplement 2): S143. DOI: 10.1097/01.tp.0000576288.84252.91
+							</li>
+							<li>Segovia, M. C., et al. (2019). "Combined multivisceral and renal transplant in a
+								patient
 								with JAK-2 mutation."
 								Neurology 92(15 Supplement 1). DOI: 10.1097/01.tp.0000576288.84252.91</li>
 						</ul>
@@ -1053,11 +1114,14 @@
 					<li>wrong DOI in second of 2 EMBASE (OVID) records: same authors, year, title, DOI, different
 						starting page
 						<ul>
-							<li>Galvao, F. H., et al. (2019). "Intestinal and multivisceral transplantation at hospital
+							<li>Galvao, F. H., et al. (2019). "Intestinal and multivisceral transplantation at
+								hospital
 								dasclinicas da faculdade De medicina
-								da universidade De Sao Paulo (HC-FMUSP)-Brazil." Transplantation 103(7 Supplement 2):
+								da universidade De Sao Paulo (HC-FMUSP)-Brazil." Transplantation 103(7 Supplement
+								2):
 								S171. DOI: 10.1097/01.tp.0000576492.69414.80</li>
-							<li>Galvao, F. H., et al. (2019). "Intestinal and multivisceral transplantation at hospital
+							<li>Galvao, F. H., et al. (2019). "Intestinal and multivisceral transplantation at
+								hospital
 								dasclinicas da faculdade De medicina
 								da universidade De Sao Paulo (HC-FMUSP)-Brazil." Neurology 92(15 Supplement 1). DOI:
 								10.1097/01.tp.0000576492.69414.80</li>
@@ -1076,7 +1140,8 @@
 								Gastroenterology 154(6 Supplement 1): S-1178. DOI: 10.1016/S0016-5085%2818%2933901-5
 								[Embase OVID]</li>
 							<li>Cool, J., et al. (2018). "THE ASSOCIATION BETWEEN PORTAL VEIN THROMBOSIS AND OTHER
-								VENOUS THROMBOEMBOLISM IN CIRRHOSIS: ANALYSIS OF A NATIONALLY REPRESENTATIVE INPATIENT
+								VENOUS THROMBOEMBOLISM IN CIRRHOSIS: ANALYSIS OF A NATIONALLY REPRESENTATIVE
+								INPATIENT
 								COHORT."
 								Gastroenterology 154(6): S1178-S1179. [Web of Science]</li>
 						</ul>
@@ -1086,28 +1151,35 @@
 				<h3 id="limitations">Limitations</h3>
 				<ul>
 					<li>Input file size: The maximum size of the input file is limited to 150MB.</li>
-					<li>Input file format: The program only handles files in RIS format, not in XML or CSV format.</li>
+					<li>Input file format: The program only handles files in RIS format, not in XML or CSV format.
+					</li>
 					<li>Input file encoding: The program assumes that the input file is encoded as UTF-8.</li>
-					<li>If authors AND (all) titles AND (all) journal names for a record use a non-Latin script, results
+					<li>If authors AND (all) titles AND (all) journal names for a record use a non-Latin script,
+						results
 						for this record may be inaccurate.</li>
-					<li>(when deduplicating one file:) The input file must be an export from ONE EndNote database: the
+					<li>(when deduplicating one file:) The input file must be an export from ONE EndNote database:
+						the
 						ID fields are used internally for identifying the records, so they have to be unique.
 						However, if the RIS file does not have an ID field in the first publication, DedupEndNote
 						assumes the whole file has no ID fields
-						and gives every publication an ID (starting with 1). This has only been tested on Zotero files!
+						and gives every publication an ID (starting with 1). This has only been tested on Zotero
+						files!
 					</li>
 					<li>The program has been developed and tested for biomedical databases (PubMed, EMBASE, ...) and
 						some general databases (Web of Science, Scopus).
 						The data sets used were the results of biomedical queries.
-						Deduplicating records from other databases is not guaranteed to work, and performance is often
+						Deduplicating records from other databases is not guaranteed to work, and performance is
+						often
 						very poor, esp. for non journal articles
 						(see <a href="/justification#effect">Justification. 2.5</a>).</li>
 					<li>The program uses a bibliographic point of view:
 						<ul>
-							<li>an article or conference abstract that has been published in more than one (issue of a)
+							<li>an article or conference abstract that has been published in more than one (issue of
+								a)
 								journal is not considered a duplicate publication.</li>
 							<li>Records for each publication year are compared to records from the same and the
-								following year: a record from 2016 is compared to the records from 2015 (when treating
+								following year: a record from 2016 is compared to the records from 2015 (when
+								treating
 								the records from
 								2015) and from 2016 and 2017 (when treating the records from 2016). A PubMed
 								ahead-of-print record from 2013 and a corresponding record from 2017 (when it was

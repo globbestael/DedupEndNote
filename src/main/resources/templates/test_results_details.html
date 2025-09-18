@@ -1,28 +1,32 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="en">
+
 <head>
-    <title>DedupEndNote</title>
+	<title>DedupEndNote</title>
 
 
-	<script th:src="@{/webjars/jquery/3.7.0/jquery.min.js}"></script>
-	<script th:src="@{/webjars/jquery-ui/1.13.2/jquery-ui.min.js}"></script>
+	<script th:src="@{/webjars/jquery/jquery.min.js}"></script>
+	<script th:src="@{/webjars/jquery-ui/jquery-ui.min.js}"></script>
 	<script th:src="@{/webjars/blueimp-file-upload/js/jquery.fileupload.js}"></script>
 	<script th:src="@{/webjars/blueimp-file-upload/js/jquery.fileupload-process.js}"></script>
-	<link rel="stylesheet" th:href="@{/webjars/bootstrap/4.5.3/css/bootstrap.min.css}">
-    <style type="text/css">
-    	td {
-    		vertical-align: top;
-    	}
-    	.diff {
-    		color: red;
-    		font-weight: bold;
-    	}
-		.bar {
-		    height: 18px;
-		    background: light-green;
+	<link rel="stylesheet" th:href="@{/webjars/bootstrap/css/bootstrap.min.css}">
+	<style type="text/css">
+		td {
+			vertical-align: top;
 		}
-    </style>
+
+		.diff {
+			color: red;
+			font-weight: bold;
+		}
+
+		.bar {
+			height: 18px;
+			background: light-green;
+		}
+	</style>
 </head>
+
 <body data-spy="scroll" data-target="#menu" data-offset="1">
 	<div class="container-fluid">
 		<div class="row">
@@ -38,7 +42,7 @@
 
 				<h3>Own test database: portal vein thrombosis (52,828 records) </h3>
 				<p>The following queries were executed in 8 bibliographic databases on May 30, 2020.</p>
-	
+
 				<table class="table table-sm">
 					<caption>Contents of the BIG SET testdatabase</caption>
 					<thead>
@@ -51,67 +55,76 @@
 					<tbody>
 						<tr>
 							<td>CINAHL Plus with full text (EBSCOHost)</td>
-							<td>(MH "Hepatic Vein Thrombosis")<br/>
-							Date: 12-6-2020<br>
-							Export: Share > E-mail a link to download exported results. RIS format.</td>
+							<td>(MH "Hepatic Vein Thrombosis")<br />
+								Date: 12-6-2020<br>
+								Export: Share > E-mail a link to download exported results. RIS format.</td>
 							<td class="text-right">358</td>
 						</tr>
 						<tr>
 							<td>Cochrane Library (Trials)</td>
-							<td>Title Abstract Keywords: (portal vein thrombosis) OR (portal venous thrombosis) OR (portal vein obstruction) OR (portal venous obstruction)<br>
-							Date: 30-5-2020</td>
+							<td>Title Abstract Keywords: (portal vein thrombosis) OR (portal venous thrombosis) OR
+								(portal vein obstruction) OR (portal venous obstruction)<br>
+								Date: 30-5-2020</td>
 							<td class="text-right">482</td>
 						</tr>
 						<tr>
 							<td>EMBASE (Ovid)</td>
 							<td>exp portal vein thrombosis/<br>
-							Date: 13-6-2020<br>
-							Export: Format RIS, Fields: Complete reference (Not: Format: EndNote because Article Number information is not imported)</td>
+								Date: 13-6-2020<br>
+								Export: Format RIS, Fields: Complete reference (Not: Format: EndNote because Article
+								Number information is not imported)</td>
 							<td class="text-right">11,452</td>
 						</tr>
 						<tr>
 							<td>EMBASE.com</td>
 							<td>portal vein thrombosis/<br>
-							Date: 16-6-2020<br>
-							Export: ???</td>
+								Date: 16-6-2020<br>
+								Export: ???</td>
 							<td class="text-right">11,300</td>
 						</tr>
 						<tr>
 							<td>Medline (Ovid)</td>
-							<td>exp Thrombosis/<br/>
-								limit 1 to (clinical trial, all or consensus development conference or guideline or randomized controlled trial or "review" or "systematic review")<br/>
-								limit 2 to "core clinical journals (aim)" <br/>
-							Query is intentionally different from PubMed query to create some, but not complete overlap<br>
-							Date: 30-5-2020</td>
+							<td>exp Thrombosis/<br />
+								limit 1 to (clinical trial, all or consensus development conference or guideline or
+								randomized controlled trial or "review" or "systematic review")<br />
+								limit 2 to "core clinical journals (aim)" <br />
+								Query is intentionally different from PubMed query to create some, but not complete
+								overlap<br>
+								Date: 30-5-2020</td>
 							<td class="text-right">3,593</td>
 						</tr>
 						<tr>
 							<td>PsycINFO (Ovid)</td>
-							<td>exp thromboses/<br/>
-							Export: Complete reference<br>
-							Date: 12-6-2020</td>
+							<td>exp thromboses/<br />
+								Export: Complete reference<br>
+								Date: 12-6-2020</td>
 							<td class="text-right">903</td>
 						</tr>
 						<tr>
 							<td>PubMed</td>
-							<td>(portal vein thrombosis) OR (portal venous thrombosis) OR (portal vein obstruction) OR (portal venous obstruction)<br>
-							Date: 30-5-2020</td>
+							<td>(portal vein thrombosis) OR (portal venous thrombosis) OR (portal vein obstruction) OR
+								(portal venous obstruction)<br>
+								Date: 30-5-2020</td>
 							<td class="text-right">10,433</td>
 						</tr>
 						<tr>
 							<td>Scopus</td>
-							<td>Article title, Abstract, Keywords: (portal vein thrombosis) OR (portal venous thrombosis) OR (portal vein obstruction) OR (portal venous obstruction)<br/>
-							Date: 1-6-2020<br>
-							Export: (The export uses all Citation information fields, and from the Bibliographic information fields: Serial identifiers (e.g. ISSN) and Abbreviated source title. 
-							The Abstract field was not downloaded)<br>
-							Imported into EndNote as RIS format, not with the Scopus import filter (does not import C7 field (Article number))</td>
+							<td>Article title, Abstract, Keywords: (portal vein thrombosis) OR (portal venous
+								thrombosis) OR (portal vein obstruction) OR (portal venous obstruction)<br />
+								Date: 1-6-2020<br>
+								Export: (The export uses all Citation information fields, and from the Bibliographic
+								information fields: Serial identifiers (e.g. ISSN) and Abbreviated source title.
+								The Abstract field was not downloaded)<br>
+								Imported into EndNote as RIS format, not with the Scopus import filter (does not import
+								C7 field (Article number))</td>
 							<td class="text-right">16,942</td>
 						</tr>
 						<tr>
 							<td>Web of Science (1975-...)</td>
-							<td>Topic: (portal vein thrombosis) OR (portal venous thrombosis) OR (portal vein obstruction) OR (portal venous obstruction)<br/>
-							Date: 1-6-2020<br>
-							Export: Full record</td>
+							<td>Topic: (portal vein thrombosis) OR (portal venous thrombosis) OR (portal vein
+								obstruction) OR (portal venous obstruction)<br />
+								Date: 1-6-2020<br>
+								Export: Full record</td>
 							<td class="text-right">8,665</td>
 						</tr>
 						<tr>
@@ -121,25 +134,34 @@
 						</tr>
 					</tbody>
 				</table>
-	
-				<p>All records were imported into an EndNote X9 3.3 (Bld 13966) database. If the files were imported manually (File > Import ...),
-				the following options were used:</p>
+
+				<p>All records were imported into an EndNote X9 3.3 (Bld 13966) database. If the files were imported
+					manually (File > Import ...),
+					the following options were used:</p>
 				<ul>
 					<li>Import option: Reference Manager (RIS)</li>
 					<li>Duplicates: Import all</li>
 					<li>Text translation: No translation</li>
 				</ul>
-	
+
 				<p>The following fields were cleared in the EndNote database:
 				<ul>
-					<li>CINAHL: Fields cleared: Abstract, Accession number, Author address, Keywords, Name of database, Notes, URL. Fields filled: Database provider: CINAHL</li>
-					<li>Cochrane Library (Trials): Fields cleared: Abstract, Accession number, Keywords, URL. Fields filled: Database provider: Cochrane</li>
-					<li>EMBASE OVID: Fields cleared: Abstract, Author address, Keywords, Place published, Publisher, URL. Fields filled: Database provider: EMBASE_OVID</li>
-					<li>Medline: Fields cleared: Abstract, Accession number, Author address, Keywords, Name of database, Notes, URL. Fields filled: Database provider: Medline_OVID</li>
-					<li>PsycINFO: Fields cleared: Abstract, Author address, Keywords, Place published, Publisher, Secondary author, URL. Fields filled: Database provider: PsycINFO_OVID</li>
-					<li>PubMed: Fields cleared: Abstract, Accession number, Author address, Keywords, Notes. Fields filled: Database provider: PubMed</li>
-					<li>Scopus: Fields cleared: Abstract, Author address, Name of database, Notes, URL. Fields filled: Database provider: Scopus</li>
-					<li>Web of Science: Fields cleared: Abstract, Accession number, Author address, Keywords, Name of database, Notes, URL. Fields filled: Database provider: WoS</li>
+					<li>CINAHL: Fields cleared: Abstract, Accession number, Author address, Keywords, Name of database,
+						Notes, URL. Fields filled: Database provider: CINAHL</li>
+					<li>Cochrane Library (Trials): Fields cleared: Abstract, Accession number, Keywords, URL. Fields
+						filled: Database provider: Cochrane</li>
+					<li>EMBASE OVID: Fields cleared: Abstract, Author address, Keywords, Place published, Publisher,
+						URL. Fields filled: Database provider: EMBASE_OVID</li>
+					<li>Medline: Fields cleared: Abstract, Accession number, Author address, Keywords, Name of database,
+						Notes, URL. Fields filled: Database provider: Medline_OVID</li>
+					<li>PsycINFO: Fields cleared: Abstract, Author address, Keywords, Place published, Publisher,
+						Secondary author, URL. Fields filled: Database provider: PsycINFO_OVID</li>
+					<li>PubMed: Fields cleared: Abstract, Accession number, Author address, Keywords, Notes. Fields
+						filled: Database provider: PubMed</li>
+					<li>Scopus: Fields cleared: Abstract, Author address, Name of database, Notes, URL. Fields filled:
+						Database provider: Scopus</li>
+					<li>Web of Science: Fields cleared: Abstract, Accession number, Author address, Keywords, Name of
+						database, Notes, URL. Fields filled: Database provider: WoS</li>
 				</ul>
 				<p>The databases were imported in the following order, each database sorted on Record number:</p>
 				<ul>
@@ -152,8 +174,9 @@
 					<li>PsycINFO</li>
 					<li>Medline</li>
 				</ul>
-				<p>The complete EndNote DB was sorted on the Author field: the complete ordering (see: Tools / Sort library ...) was by Author, Year, Record number, which generally puts the PubMed records
-				before the EMBASE OVID, ...</p>
+				<p>The complete EndNote DB was sorted on the Author field: the complete ordering (see: Tools / Sort
+					library ...) was by Author, Year, Record number, which generally puts the PubMed records
+					before the EMBASE OVID, ...</p>
 
 				<table class="table table-sm">
 					<caption>Performance further tests</caption>
@@ -167,14 +190,14 @@
 					<tbody>
 						<tr>
 							<td>Authors</td>
-							<td>(empty):  150 records<br/>
+							<td>(empty): 150 records<br />
 								"Anonymous,": 78 records</td>
-							<td> 96 merged successfully<br/>
-								 22 merged successfully</td>
+							<td> 96 merged successfully<br />
+								22 merged successfully</td>
 						</tr>
 						<tr>
 							<td>Publication year</td>
-							<td>(empty):  71 records</td>
+							<td>(empty): 71 records</td>
 							<td>44 merged successfully</td>
 						</tr>
 						<tr>
@@ -189,9 +212,9 @@
 						</tr>
 						<tr>
 							<td>Pages</td>
-							<td>(empty): 1542 records<br/>
+							<td>(empty): 1542 records<br />
 								AND Article Number: 569</td>
-							<td>977 merged successfully<br/>
+							<td>977 merged successfully<br />
 								490 merged successfully</td>
 						</tr>
 						<tr>
@@ -202,29 +225,31 @@
 						</tr>
 						<tr>
 							<td>Reference Type</td>
-							<td>Book: 3<br/>
+							<td>Book: 3<br />
 								Book Section: 143<br>
-								Conference Proceedings: 6<br/>
+								Conference Proceedings: 6<br />
 								Generic: 13<br>
 								Journal Article: 52460<br>
 								Serial: 23</td>
-							<td>Book:  0 merged<br/>
-								Book Section: 6 merged<br/>
-								Conference Proceedings: 0 merged<br/>
+							<td>Book: 0 merged<br />
+								Book Section: 6 merged<br />
+								Conference Proceedings: 0 merged<br />
 								Generic: 2<br>
 								Journal Article: 38401<br>
 								Serial: 12</td>
 						</tr>
 					</tbody>
 				</table>
-				
+
 				<h5>Validating</h5>
-				
-				<p><strong>Checking for false positives outside the manually checked validation set (1585 records):</strong></p>
-				
-				<p>The False Positive result was: same year - same authors - same journal - similar title - different startpages but same doi<br>
-				AND the DOI was for the whole conference abstracts issue.</p>
-				
+
+				<p><strong>Checking for false positives outside the manually checked validation set (1585
+						records):</strong></p>
+
+				<p>The False Positive result was: same year - same authors - same journal - similar title - different
+					startpages but same doi<br>
+					AND the DOI was for the whole conference abstracts issue.</p>
+
 				<p>Assuming that:</p>
 				<ul>
 					<li>Start page is present</li>
@@ -237,16 +262,20 @@
 					<li>with a DOI</li>
 				</ul>
 				<p>ordered on label, manually checking the titles. No other cases found.</p>
-				<p>TODO: Test is incomplete: start page could also be empty. But that would mean checking 29.000 records!
-				(Maybe putting the records in a relational DB could help. OR: Check the records with DOIs which are not unique: 1880 DOIs, see Excel)</p>
-						
+				<p>TODO: Test is incomplete: start page could also be empty. But that would mean checking 29.000
+					records!
+					(Maybe putting the records in a relational DB could help. OR: Check the records with DOIs which are
+					not unique: 1880 DOIs, see Excel)</p>
+
 				<h3>Cannabis database (15,216 records)</h3>
-				<p>See <a href="/test_results_details">Test results - details</a> for a description of this test database.</p>				
+				<p>See <a href="/test_results_details">Test results - details</a> for a description of this test
+					database.</p>
 
-				<p>No details found about the content. Most records are imported from EMBASE (OVID), PubMed en Web of Science? Some records are imported
-				more than once from the same database?</p>
+				<p>No details found about the content. Most records are imported from EMBASE (OVID), PubMed en Web of
+					Science? Some records are imported
+					more than once from the same database?</p>
 
-				<p>Fields cleared: Abstract, Accession number, Author address, Keywords, Notes</p> 
+				<p>Fields cleared: Abstract, Accession number, Author address, Keywords, Notes</p>
 
 				<table class="table table-sm">
 					<caption>Contents cannabis testdatabase</caption>
@@ -260,9 +289,9 @@
 					<tbody>
 						<tr>
 							<td>Authors</td>
-							<td>(empty): 3 records<br/>
+							<td>(empty): 3 records<br />
 								"Anonymous,": 127 records</td>
-							<td>1 (100%) merged successfully<br/>
+							<td>1 (100%) merged successfully<br />
 								1 merged successfully</td>
 						</tr>
 						<tr>
@@ -292,15 +321,15 @@
 						</tr>
 						<tr>
 							<td>Reference Type</td>
-							<td>Book: 13<br/>
+							<td>Book: 13<br />
 								Book Section: 16<br>
 								Journal Article: 15187</td>
-							<td>Book: 0 merged<br/>
-								Book Section: 9 merged<br/>
+							<td>Book: 0 merged<br />
+								Book Section: 9 merged<br />
 								Journal Article: 6978</td>
 						</tr>
 					</tbody>
-				</table>				
+				</table>
 
 				<h3>Datasets: zie ook</h3>
 				<ul>
@@ -309,16 +338,17 @@
 					<li>https://osf.io/8ftzw/</li>
 					<li>https://osf.io/fpj54/files/</li>
 				</ul>
-				
+
 				<h3>Deduplication tools</h3>
 				<ul>
 					<li>https://cran.r-project.org/web/packages/synthesisr/index.html</li>
 					<li>https://onlinelibrary.wiley.com/doi/abs/10.1002/jrsm.1374</li>
 					<li>http://systematicreviewtools.com/tool.php?ref=Systematic%20Review%20Accelerator</li>
 				</ul>
-				
-	        </div>
-       </div>
-    </div>
+
+			</div>
+		</div>
+	</div>
 </body>
+
 </html>

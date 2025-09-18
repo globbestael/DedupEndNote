@@ -4,33 +4,37 @@
 <head>
 	<title>DedupEndNote - FAQ</title>
 	<link rel="stylesheet" href="/webjars/bootstrap/css/bootstrap.min.css">
-	<style type="text/css">
-		td {
-			vertical-align: top;
-		}
-
-		.diff {
-			color: red;
-			font-weight: bold;
-		}
-	</style>
+	<script th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}" type="text/javascript"></script>
+	<link rel="stylesheet" href="/resources/common-style.css">
 </head>
 
 <body>
-	<div class="container">
+	<div class="container-fluid">
 		<div class="row">
-			<div class="col-12">
+			<div class="col-3">
+				<!-- style max-width to let long nav-items wrap -->
+				<nav id="menu" class="navbar navbar-light bg-light" style="position: fixed; max-width: 23%">
+					<div class="container-fluid">
+						<div class="navbar-nav" id="navmenu">
+							<nav class="nav nav-pills flex-column small">
+								<a class="nav-link" href="/">Home</a>
+								<a class="nav-link" href="#endnote">1. Why only EndNote / Zotero RIS export files?</a>
+								<a class="nav-link" href="#not_endnote">2. I don't use EndNote, but ...</a>
+								<a class="nav-link" href="#groups">3. I use groups, comments, ... in EndNote and don't
+									want
+									to lose them</a>
+								<a class="nav-link" href="#deletions">4 I have deleted records in EndNote and don't want
+									them to reappear when updating</a>
+								<a class="nav-link" href="#preferredOrder">5. I prefer PubMed records above EMBASE
+									records</a>
+								<a class="nav-link" href="#perfect">6. Is DedupEndNote perfect?</a>
+							</nav>
+						</div>
+					</div>
+				</nav>
+			</div>
+			<div class="col-9" data-bs-spy="scroll" data-bs-target="#navmenu">
 				<h1>DedupEndNote: FAQ</h1>
-				<a href="/">Home</a>
-				<ol>
-					<li><a href="#endnote">Why only EndNote / Zotero RIS export files?</a></li>
-					<li><a href="#not_endnote">I don't use EndNote, but ...</a></li>
-					<li><a href="#groups">I use groups, comments, ... in EndNote and don't want to lose them</a></li>
-					<li><a href="#deletions">I have deleted records in EndNote and don't want them to reappear when
-							updating</a></li>
-					<li><a href="#preferredOrder">I prefer PubMed records above EMBASE records</a></li>
-					<li><a href="#perfect">Is DedupEndNote perfect?</a></li>
-				</ol>
 
 				<h3 id="endnote">1. Why only EndNote / Zotero RIS export files?</h3>
 				<div>EndNote (and Zotero?) is very good at importing export files from many bibliographic databases. The

@@ -3,52 +3,35 @@
 
 <head>
 	<title>DedupEndNote - Justification</title>
-	<link rel="stylesheet" th:href="@{/webjars/bootstrap/4.5.3/css/bootstrap.min.css}">
-	<style type="text/css">
-		.bg-info {
-			padding: 10px;
-		}
-
-		td {
-			vertical-align: top;
-		}
-
-		.diff {
-			color: red;
-			font-weight: bold;
-		}
-
-		.bar {
-			height: 18px;
-			background: green;
-		}
-	</style>
+	<link rel="stylesheet" th:href="@{/webjars/bootstrap/css/bootstrap.min.css}">
+	<script th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}" type="text/javascript"></script>
+	<link rel="stylesheet" href="/resources/common-style.css">
 </head>
 
-<body data-spy="scroll" data-target="#menu" data-offset="1">
+<body>
 	<div class="container-fluid">
 		<div class="row">
 			<div class="col-3">
 				<nav id="menu" class="navbar navbar-light bg-light" style="position: fixed;">
-					<nav class="nav nav-pills flex-column small">
-						<a class="list-group-item list-group-item-action" href="/">Home</a>
-						<a class="list-group-item list-group-item-action" href="#general_rule">1. General rule</a>
-						<a class="list-group-item list-group-item-action" href="#comparisons">2. Comparisons</a>
-						<a class="list-group-item list-group-item-action" href="#fields_chosen">2.1. The fields
-							chosen</a>
-						<a class="list-group-item list-group-item-action" href="#fields_not_chosen">2.2. The fields not
-							chosen</a>
-						<a class="list-group-item list-group-item-action" href="#similarity">2.3. Similarity</a>
-						<a class="list-group-item list-group-item-action" href="#order_of_comparisons">2.4. Order of
-							comparisons</a>
-						<a class="list-group-item list-group-item-action" href="#effect">2.5. Effect of 'insufficient
-							data from one of two records'</a>
-						<a class="list-group-item list-group-item-action" href="#enriching">3. Enriching the duplicate
-							chosen</a>
-					</nav>
+					<div class="container-fluid">
+						<div class="navbar-nav" id="navmenu">
+							<nav class="nav nav-pills flex-column small">
+								<a class="nav-link" href="/">Home</a>
+								<a class="nav-link" href="#general_rule">1. General rule</a>
+								<a class="nav-link" href="#comparisons">2. Comparisons</a>
+								<a class="nav-link" href="#fields_chosen">2.1. The fields chosen</a>
+								<a class="nav-link" href="#fields_not_chosen">2.2. The fields not chosen</a>
+								<a class="nav-link" href="#similarity">2.3. Similarity</a>
+								<a class="nav-link" href="#order_of_comparisons">2.4. Order of comparisons</a>
+								<a class="nav-link" href="#effect">2.5. Effect of insufficient data from one of two
+									records</a>
+								<a class="nav-link" href="#enriching">3. Enriching the duplicate chosen</a>
+							</nav>
+						</div>
+					</div>
 				</nav>
 			</div>
-			<div class="col-9" style="height: 100vh; position: relative;">
+			<div class="col-9" data-bs-spy="scroll" data-bs-target="#navmenu">
 				<h1>DedupEndNote: Justification</h1>
 
 				<h3 id="general_rule">1. General rule</h3>
