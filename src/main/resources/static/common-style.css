@@ -7,6 +7,10 @@ td {
     font-weight: bold;
 }
 
+h3 {
+    margin-top: 20px;
+}
+
 /* overrules bootstrap style */
 .navbar-nav .nav-link.active,
 .navbar-nav .nav-link.show {
