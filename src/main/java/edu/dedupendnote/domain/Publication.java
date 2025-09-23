@@ -34,6 +34,7 @@ public class Publication {
 
 	private String id;
 
+	private Set<String> isbns = new HashSet<>();
 	private Set<String> issns = new HashSet<>();
 
 	private Set<String> journals = new HashSet<>();
@@ -723,6 +724,7 @@ public class Publication {
 		Matcher matcher = issnIsbnPattern.matcher(issn.toUpperCase());
 		while (matcher.find()) {
 			String group = matcher.group(1).replace("-", "");
+			String isbnToAdd = null;
 			String issnToAdd = null;
 			switch (group.length()) {
 			case 8: // real ISSN
@@ -730,15 +732,20 @@ public class Publication {
 				break;
 			case 10: // ISBN-10
 				issnToAdd = group.substring(0, 9);
+				isbnToAdd = issnToAdd;
 				break;
 			case 13: // ISBN-13
 				issnToAdd = group.substring(3, 12);
+				isbnToAdd = issnToAdd;
 				break;
 			default:
 				break;
 			}
 			if (issnToAdd != null && !issns.contains(issnToAdd)) {
 				issns.add(issnToAdd);
+			}
+			if (isbnToAdd != null && !isbns.contains(isbnToAdd)) {
+				isbns.add(isbnToAdd);
 			}
 		}
 		return issns;

@@ -106,26 +106,28 @@ class ValidationTests {
 		withTracing = true;
 		withTitleSplitterOutput = false;
 
+		// @formatter:off
 		// previous results
 		Map<String, ValidationResult> validationResultsMap = List
-				.of(new ValidationResult("ASySD_Cardiac_human", 6753, 20, 2175, 0, 3_700L),
-						new ValidationResult("ASySD_Diabetes", 1816, 18, 11, 0, 1_000L),
-						new ValidationResult("ASySD_Neuroimaging", 2172, 29, 1235, 2, 1_350L),
-						new ValidationResult("ASySD_SRSR_Human", 27897, 120, 24975, 9, 100_000L),
-						new ValidationResult("BIG_SET", 3915, 187, 959, 17, 66_000L),
-						new ValidationResult("McKeown_2021", 2018, 56, 1054, 2, 470L),
-						new ValidationResult("SRA2_Cytology_screening", 1361, 59, 436, 0, 400L),
-						new ValidationResult("SRA2_Haematology", 225, 11, 1177, 2, 300L),
-						new ValidationResult("SRA2_Respiratory", 766, 34, 1184, 4, 800L),
-						new ValidationResult("SRA2_Stroke", 497, 13, 782, 0, 320L),
-						new ValidationResult("TIL", 687, 15, 390, 0, 9_000L),
-						new ValidationResult("TIL_Zotero", 685, 17, 389, 1, 9_000L))
+				.of(
+					new ValidationResult("AI_subset", 491, 0, 2590, 2, 29_000L),	// why so slow?
+					new ValidationResult("ASySD_Cardiac_human", 6753, 20, 2175, 0, 3_700L),
+					new ValidationResult("ASySD_Diabetes", 1816, 18, 11, 0, 1_000L),
+					new ValidationResult("ASySD_Neuroimaging", 2172, 29, 1235, 2, 1_350L),
+					new ValidationResult("ASySD_SRSR_Human", 27897, 120, 24975, 9, 100_000L),
+					new ValidationResult("BIG_SET", 3915, 187, 959, 17, 66_000L),
+					new ValidationResult("McKeown_2021", 2018, 56, 1054, 2, 470L),
+					new ValidationResult("SRA2_Cytology_screening", 1361, 59, 436, 0, 400L),
+					new ValidationResult("SRA2_Haematology", 225, 11, 1177, 2, 300L),
+					new ValidationResult("SRA2_Respiratory", 766, 34, 1184, 4, 800L),
+					new ValidationResult("SRA2_Stroke", 497, 13, 782, 0, 320L),
+					new ValidationResult("TIL", 687, 15, 390, 0, 9_000L),
+					new ValidationResult("TIL_Zotero", 685, 17, 389, 1, 9_000L))
 				.stream().collect(Collectors.toMap(ValidationResult::getFileName, Function.identity(), (o1, o2) -> o1,
 						TreeMap::new));
-
-		// @formatter:off
 		Map<String, ValidationResult> resultsMap = List
 				.of(
+					checkResults_AI_subset(),
 					checkResults_ASySD_Cardiac_human(),
 					checkResults_ASySD_Diabetes(),
 					checkResults_ASySD_Neuroimaging(),
@@ -437,14 +439,22 @@ class ValidationTests {
 		}
 	}
 
-	ValidationResult checkResults_ASySD_Cardiac_human() throws IOException {
+	ValidationResult checkResults_AI_subset() throws IOException {
+		String truthFileName = testdir + "/AI_subset/AI_subset_TRUTH.txt";
+		String inputFileName = testdir + "/AI_subset/AI_subset.txt";
+		String outputFileName = testdir + "/AI_subset/AI_subset_to_validate.txt";
+
+		return checkResults("AI_subset", inputFileName, outputFileName, truthFileName);
+	}
+
+		ValidationResult checkResults_ASySD_Cardiac_human() throws IOException {
 		String truthFileName = testdir + "/ASySD/dedupendnote_files/Cardiac_human_TRUTH.txt";
 		String inputFileName = testdir + "/ASySD/dedupendnote_files/Cardiac_human.txt";
 		String outputFileName = testdir + "/ASySD/dedupendnote_files/Cardiac_human_to_validate.txt";
 
 		return checkResults("ASySD_Cardiac_human", inputFileName, outputFileName, truthFileName);
 	}
-	
+
 	// ValidationResult checkResults_ASySD_Depression() throws IOException {
 	// 	String truthFileName = testdir + "/ASySD/dedupendnote_files/Depression_TRUTH.txt";
 	// 	String inputFileName = testdir + "/ASySD/dedupendnote_files/Depression.txt";
@@ -548,6 +558,14 @@ class ValidationTests {
 	 * Test files only needed to create an initial TRUTH file (unvalidated).
 	 * Result should be imported into a database and marked for validation there.
 	 */
+
+	@Disabled("Only needed for initialisation of TRUTH file")
+	@Test
+	void createInitialTruthFile_AI_subset() {
+		String inputFileName = testdir + "/AI_subset/AI_subset.txt";
+		String outputFileName = testdir + "/AI_subset/AI_subset_for_truth.txt";
+		createInitialTruthFile(inputFileName, outputFileName);
+	}
 
 	@Disabled("Only needed for initialisation of TRUTH file")
 	@Test

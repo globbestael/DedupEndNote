@@ -49,13 +49,20 @@ public class DeduplicationService {
 			boolean sufficientDois = !r1.getDois().isEmpty() && !r2.getDois().isEmpty();
 
 			if (r1.getAllAuthors().isEmpty() || r2.getAllAuthors().isEmpty()) {
-				// Because Anonymous would only compare on journals (and maybe
-				// SP/DOIs) (see "MedGenMed Medscape General Medicine" articles in
-				// Cannabis test set)
-				// Because Anonymous AND no SP or DOI would only compare on title and
-				// journals (see "Abstracts of 16th National Congress of SIGENP" articles
-				// in Joost problem set)
+				// Because Anonymous would only compare on journals (and maybe SP/DOIs)
+				// (see "MedGenMed Medscape General Medicine" articles in Cannabis test set)
+				// Because Anonymous AND no SP or DOI would only compare on title and journals
+				// (see "Abstracts of 16th National Congress of SIGENP" articles in Joost problem set)
 				if (!sufficientStartPages && !sufficientDois) {
+					/*
+					 * EXception within the exception:
+					 * Conference proceedings (and books?) have no author (AU, maybe A2 which is not used).
+					 * If they have an ISBN, the author comparison without authors returns true.
+					 */
+					if (!r1.getIsbns().isEmpty() && !r2.getIsbns().isEmpty()) {
+						log.trace("- 2. No authors, startpages or DOIs, but ISBNs are present, considered the same");
+						return true;
+					}
 					log.trace(
 							"- 2. Not the same because not enough data: One or both authors are empty AND not enough starting pages AND not enough DOIs");
 					return false;
@@ -205,7 +212,24 @@ public class DeduplicationService {
 		return false;
 	}
 
+	/*
+	 * Compares ISBNs if present, else ISSNs.
+	 * Conference proceedings published in a series (e.g. Lecture Notes in Computer Science)
+	 * all share the same ISSN, but have a unique ISBN. In Scopus the DOI is often absent.
+	 * The proceedings can be split over several volumes(several series numbers).
+	 */
 	public boolean compareIssns(Publication r1, Publication r2) {
+		if (!r1.getIsbns().isEmpty() && !r2.getIsbns().isEmpty()) {
+			if (setsContainSameString(r1.getIsbns(), r2.getIsbns())) {
+				log.trace("- 4. ISBNs are the same");
+				return true;
+			} else {
+				if (log.isTraceEnabled()) {
+					log.trace("- 4. ISBNs are NOT the same: {} and {}", r1.getIsbns(), r2.getIsbns());
+				}
+				return false;
+			}
+		}
 		if (setsContainSameString(r1.getIssns(), r2.getIssns())) {
 			log.trace("- 4. ISSNs are the same");
 			return true;
@@ -229,6 +253,11 @@ public class DeduplicationService {
 	 */
 	// @formatter:on
 	public boolean compareJournals(Publication r1, Publication r2) {
+		// Conferencr proceedings (e.g. Lecture Notes on Computer Science): if both have an ISBN and they are
+		// different, don't compare the journal, but return false
+		if (!r1.getIsbns().isEmpty() && !r2.getIsbns().isEmpty()) {
+			return false;
+		}
 		Set<String> set1 = r1.getJournals();
 		Set<String> set2 = r2.getJournals();
 		boolean isReply = r1.isReply() || r2.isReply();
