@@ -27,16 +27,17 @@ class TextNormalizerTest {
 	 */
 
 	public String escapeUnicode(String input) {
-		StringBuilder b = new StringBuilder(input.length());
-		Formatter f = new Formatter(b);
-		for (char c : input.toCharArray()) {
-			if (c < -128) {
-				b.append(c);
-			} else {
-				f.format("\\u%04x", (int) c);
+		StringBuilder sb = new StringBuilder(input.length());
+		try (Formatter f = new Formatter(sb)) {
+			for (char c : input.toCharArray()) {
+				if (c < -128) {
+					sb.append(c);
+				} else {
+					f.format("\\u%04x", (int) c);
+				}
 			}
 		}
-		return b.toString();
+		return sb.toString();
 	}
 
 	/*
