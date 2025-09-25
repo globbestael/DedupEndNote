@@ -253,8 +253,9 @@ public class DeduplicationService {
 	 */
 	// @formatter:on
 	public boolean compareJournals(Publication r1, Publication r2) {
-		// Conferencr proceedings (e.g. Lecture Notes on Computer Science): if both have an ISBN and they are
-		// different, don't compare the journal, but return false
+		// Conference proceedings (e.g. Lecture Notes on Computer Science): if both have an ISBN and they are
+		// different, don't compare the journal, but return false. A comparable actions happens when comparing
+		// ISSNs/ISBNs.
 		if (!r1.getIsbns().isEmpty() && !r2.getIsbns().isEmpty()) {
 			return false;
 		}

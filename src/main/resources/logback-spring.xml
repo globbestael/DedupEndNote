@@ -16,7 +16,7 @@
 	</appender>
 	<appender name="file" class="ch.qos.logback.core.rolling.RollingFileAppender">
 		<encoder>
-			<pattern>%msg%n</pattern>
+			<pattern>%d{dd-MM-yyyy HH.mm.ss} %-5level %logger{30}:%line - %msg%n</pattern>
 		</encoder>
 		<filter class="ch.qos.logback.classic.filter.ThresholdFilter">
 			<level>INFO</level>
