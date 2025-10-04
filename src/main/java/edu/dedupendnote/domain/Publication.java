@@ -731,12 +731,10 @@ public class Publication {
 				issnToAdd = group;
 				break;
 			case 10: // ISBN-10
-				issnToAdd = group.substring(0, 9);
-				isbnToAdd = issnToAdd;
+				isbnToAdd = group.substring(0, 9);
 				break;
 			case 13: // ISBN-13
-				issnToAdd = group.substring(3, 12);
-				isbnToAdd = issnToAdd;
+				isbnToAdd = group.substring(3, 12);
 				break;
 			default:
 				break;
