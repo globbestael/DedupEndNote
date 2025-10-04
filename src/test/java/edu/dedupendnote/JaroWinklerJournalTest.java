@@ -146,6 +146,7 @@ class JaroWinklerJournalTest {
 	}
 
 	static Stream<Arguments> slashArgumentProvider() {
+		// @formatter:off
 		return Stream.of(arguments(
 				"The Canadian Journal of Neurological Sciences / Le Journal Canadien Des Sciences Neurologiques",
 				Arrays.asList("Canadian Journal of Neurological Sciences",
@@ -160,17 +161,17 @@ class JaroWinklerJournalTest {
 				arguments(
 						"Zhen ci yan jiu = Acupuncture research / [Zhongguo yi xue ke xue yuan Yi xue qing bao yan jiu suo bian ji]",
 						Arrays.asList("Zhen ci yan jiu", "Acupuncture research",
-								"Zhongguo yi xue ke xue yuan Yi xue qing bao yan jiu suo bian ji")));
+								"Zhongguo yi xue ke xue yuan Yi xue qing bao yan jiu suo bian ji"))
+		// @formatter:on
+		);
 	}
 
 	static Stream<Arguments> fullPositiveArgumentProvider() {
-		return Stream.of(arguments("British journal of surgery", "\"British journal of surgery\""), // embedded
-																									// quotes
-				arguments("British journal of surgery", "Br J Surg"), // usable for
-																		// abbreviations
-				arguments("JAMA", "JAMA-Journal of the American Medical Association"), // order
-																						// doesn't
-																						// matter
+		// @formatter:off
+		return Stream.of(
+			arguments("British journal of surgery", "\"British journal of surgery\""), // embedded	quotes
+				arguments("British journal of surgery", "Br J Surg"), // usable for abbreviations
+				arguments("JAMA", "JAMA-Journal of the American Medical Association"), // order doesn't matter
 				arguments("JAMA", "Journal of the American Medical Association"),
 				arguments("JAMA-Journal of the American Medical Association", "JAMA"),
 				arguments("Journal of the American Medical Association", "JAMA"),
@@ -180,7 +181,8 @@ class JaroWinklerJournalTest {
 				arguments("AJR Am J Roentgenol", "American Journal of Roentgenology"),
 				arguments("BMC Surg", "Bmc Surgery"),
 				arguments("Jpn J Clin Oncol", "Japanese Journal of Clinical Oncology"),
-				arguments("BMJ (Online)", "Bmj"), arguments("BMJ (Online)", "British Medical Journal"),
+				arguments("BMJ (Online)", "Bmj"), 
+				arguments("BMJ (Online)", "British Medical Journal"),
 				arguments("Bmj", "British Medical Journal"),
 				arguments("J Med Ultrason (2001)", "Journal of Medical Ultrasonics"),
 				arguments("MMW Fortschr Med", "MMW Fortschritte der Medizin"),
@@ -193,9 +195,8 @@ class JaroWinklerJournalTest {
 				arguments(
 						"Prilozi (Makedonska akademija na naukite i umetnostite. Oddelenie za medicinski nauki). 36 (3) (pp 35-41), 2015. Date of Publication: 2015.",
 						"Prilozi (Makedonska akademija na naukite i umetnostite"),
-				arguments("Annals of Oncology", "Annals of Hepatology"), // JaroWinkler
-																			// 0.916 !!!
-				arguments("Rinsho Ketsueki", "Rinshō ketsueki"), // UTF8
+				arguments("Annals of Oncology", "Annals of Hepatology"), // JWS 0.916 !!!
+				arguments("Rinsho Ketsueki", "Rinshō ketsueki"), // UTF-8
 				arguments("J Pediatr Hematol Oncol", "Journal of pediatric hematology/oncology"),
 				arguments("Clin Appl Thromb Hemost", "Clinical and applied thrombosis/hemostasis"),
 				arguments("Ann Hepatol", "Annals of Hepatology"),
@@ -237,8 +238,7 @@ class JaroWinklerJournalTest {
 				arguments("Revista Espanola de Anestesiologia y Reanimacion",
 						"Revista espa?ola de anestesiolog?a y reanimaci?n"),
 				arguments("Lancet Oncology", "The lancet oncology"),
-				arguments("Journal De Radiologie", "Journal de Radiologie"), // unexpected
-																				// capital
+				arguments("Journal De Radiologie", "Journal de Radiologie"), // unexpected capital
 				arguments("Journal De Radiologie", "J Radiol"), // unexpected capital
 				arguments("Rofo", "Röfo"),
 				arguments("Rofo", "RöFo : Fortschritte auf dem Gebiete der Röntgenstrahlen und der Nuklearmedizin"),
@@ -265,11 +265,10 @@ class JaroWinklerJournalTest {
 						"Arzneimittelforschung."),
 				arguments("Zhen.Ci.Yan.Jiu.",
 						"Zhen ci yan jiu = Acupuncture research / [Zhongguo yi xue ke xue yuan Yi xue qing bao yan jiu suo bian ji].39 (2) ()(pp 136-141) 2014.Date of Publication: Apr 2014."),
-				arguments("RSC Adv", "RSC ADVANCES"), arguments("Pleura Peritoneum", "PLEURA AND PERITONEUM"),
+				arguments("RSC Adv", "RSC ADVANCES"), 
+				arguments("Pleura Peritoneum", "PLEURA AND PERITONEUM"),
 				arguments("AJNR Am J Neuroradiol", "AMERICAN JOURNAL OF NEURORADIOLOGY"),
-				arguments("Samj South African Medical Journal", "South African Medical Journal"), // "Samj",
-																									// not
-																									// "SAMJ"
+				arguments("Samj South African Medical Journal", "South African Medical Journal"), // "Samj",  not "SAMJ"
 				arguments("Adv Physiol Educ", "American Journal of Physiology - Advances in Physiology Education"),
 				arguments("Altern Lab Anim", "ATLA Alternatives to Laboratory Animals"),
 				arguments("Antiinflamm Antiallergy Agents Med Chem",
@@ -290,18 +289,18 @@ class JaroWinklerJournalTest {
 				arguments( // this one matches because of Publication.journalExtraPattern
 						"International Liver Transplantation Society 15th Annual International Congress. New York, NY United States.",
 						"International Liver Transplantation Society"),
-				arguments( // this one matches because IOService.conferencePattern adds a
-							// second journal
+				arguments( // this one matches because IOService.conferencePattern adds a second journal
 						"International Liver Transplantation Society. Annual International Congress. New York, NY United States.",
 						"International Liver Transplantation Society"),
-				arguments("Neuroendocrinology Letters.35 (2) ()(pp 129-136)", "Neuroendocrinology Letters"), arguments( // JWS
-																														// 0.90952380
-																														// !!
-						"Journal of Thoracic Oncology", "Journal of Clinical Oncology"),
+				arguments("Neuroendocrinology Letters.35 (2) ()(pp 129-136)", "Neuroendocrinology Letters"), 
+				arguments("Journal of Thoracic Oncology", "Journal of Clinical Oncology"), // JWS 0.90952380
+				arguments("Journal of Thoracic Oncology", "Journal of Clinical Oncology. Conference"), // JWS 0.90952380
 				arguments( // see issue #1
 						"ADHD-ATTENTION DEFICIT AND HYPERACTIVITY DISORDERS", "Atten Defic Hyperact Disord"),
 				arguments("European Child and Adolescent Psychiatry", "European Child & Adolescent Psychiatry"),
-				arguments("Bull Acad Natl Med", "Bulletin de l'Académie nationale de médecine"));
+				arguments("Bull Acad Natl Med", "Bulletin de l'Académie nationale de médecine")
+		// @formatter:on
+		);
 	}
 
 	static Stream<Arguments> fullNegativeArgumentProvider() {

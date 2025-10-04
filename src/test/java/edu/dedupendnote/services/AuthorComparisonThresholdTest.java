@@ -44,7 +44,7 @@ class AuthorComparisonThresholdTest extends AuthorsBaseTest {
 
 	@Test
 	void test() {
-		triples.stream().limit(5).forEach(System.err::println);
+		// triples.stream().limit(5).forEach(System.err::println);
 
 		for (Triple triple : triples) {
 			Publication r1 = fillRecord(triple.getAuthors1());
@@ -53,16 +53,19 @@ class AuthorComparisonThresholdTest extends AuthorsBaseTest {
 		}
 		triples.sort(Comparator.comparing(Triple::getJws).reversed());
 
-		triples.stream().limit(10).forEach(System.err::println);
+		// The VS Code debug console does not show UTF-8 characters correctly with System.err::println
+		// triples.stream().limit(10).forEach(System.err::println);
+		triples.stream().limit(10).forEach(t -> log.error(t.toString()));
+
 		for (int i = 100; i > 90; i--) {
 			System.err.println("At " + i + ": " + percentile(triples, i));
 		}
 		assertThat(percentile(triples, 98))
-			.as("98% of validated authors pairs are above the threshold AUTHOR_SIMILARITY_NO_REPLY")
-			.isGreaterThan(DeduplicationService.DefaultAuthorsComparator.AUTHOR_SIMILARITY_NO_REPLY);
-		assertThat(percentile(triples, 99))
-			.as("AUTHOR_SIMILARITY_NO_REPLY could have a higher value because 99% of validated authors pairs are above this threshold")
-			.isLessThan(DeduplicationService.DefaultAuthorsComparator.AUTHOR_SIMILARITY_NO_REPLY);
+				.as("98% of validated authors pairs are above the threshold AUTHOR_SIMILARITY_NO_REPLY")
+				.isGreaterThan(DeduplicationService.DefaultAuthorsComparator.AUTHOR_SIMILARITY_NO_REPLY);
+		assertThat(percentile(triples, 99)).as(
+				"AUTHOR_SIMILARITY_NO_REPLY could have a higher value because 99% of validated authors pairs are above this threshold")
+				.isLessThan(DeduplicationService.DefaultAuthorsComparator.AUTHOR_SIMILARITY_NO_REPLY);
 	}
 
 	private Publication fillRecord(String authors) {

@@ -96,7 +96,7 @@ class AuthorsBaseTest extends BaseTest {
 		log.error("There were {} triples", localTriples.size());
 		// deduplicate
 		localTriples = localTriples.stream().distinct().collect(Collectors.toList());
-		log.error("There are {} triples", localTriples.size());
+		log.error("There are {} distinct triples", localTriples.size());
 
 		assertThat(localTriples).as("There are more than 100 authors pairs").hasSizeGreaterThan(100);
 
