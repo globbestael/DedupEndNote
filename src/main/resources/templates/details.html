@@ -25,6 +25,7 @@
                             <a href="#justification_target" class="nav-link">Justification</a>
                             <a href="#performance" class="nav-link">Performance</a>
                             <a href="#markMode" class="nav-link">Mark Mode</a>
+                            <a href="#special_cases" class="nav-link">Special cases</a>
                             <a href="#limitations" class="nav-link">Limitations</a>
                             <a href="#faq" class="nav-link">FAQ</a>
                             <a href="#developers" class="nav-link">For developers</a>
@@ -42,24 +43,19 @@
 
                         <ol>
                             <li><a href="#publication_year" class="link-underline-light">Publication year: Are they at
-                                    most
-                                    1 year apart?</a></li>
+                                    most 1 year apart?</a></li>
                             <li><a href="#starting_page_or_doi" class="link-underline-light">Starting page or DOI: Are
-                                    they
-                                    the same?</a></li>
+                                    they the same?</a></li>
                             <li><a href="#authors" class="link-underline-light">Authors: Is the Jaro-Winkler similarity
-                                    of
-                                    the first 40 authors &gt; <span
+                                    of the first 40 authors &gt; <span
                                         th:text="${T(edu.dedupendnote.services.DeduplicationService.DefaultAuthorsComparator).AUTHOR_SIMILARITY_NO_REPLY}">-0.67?</span></a>
                             </li>
                             <li><a href="#titles" class="link-underline-light">Title: Is the Jaro-Winkler similarity of
-                                    (one
-                                    of) the normalized titles &gt; <span
+                                    (one of) the normalized titles &gt; <span
                                         th:text="${T(edu.dedupendnote.services.DeduplicationService).TITLE_SIMILARITY_SUFFICIENT_STARTPAGES_OR_DOIS}">-0.90</span>?</a>
                             </li>
                             <li><a href="#isbn_issn_journal" class="link-underline-light">ISBN, ISSN or Journal: Are
-                                    they
-                                    the same (ISBN, ISSN) or similar (Journal)?</a></li>
+                                    they the same (ISBN, ISSN) or similar (Journal)?</a></li>
                         </ol>
 
                         <p>The following comparisons are used (in this order, chosen for performance reasons):</p>
@@ -1859,8 +1855,7 @@
                                 field.
                             </li>
                             <li>To manually merge, change in Preferences / Deduplicate the fields to deduplicate on to
-                                the
-                                Label field, deduplicate (in EndNote) and merge at will</li>
+                                the Label field, deduplicate (in EndNote) and merge at will</li>
                         </ul>
 
                         <p>Comparing the results of deduplication by EndNote itself and DedupEndNote:</p>
@@ -1869,17 +1864,35 @@
                             <li>Deduplicate by EndNote itself</li>
                             <li>Select all records in the "Duplicate References" set, and mark them as Read</li>
                             <li>Select the "All References" set, limit to the duplicates found by DedupEndNote (search
-                                for
-                                "Label" "is greater than" 0), and sort on the label field.</li>
+                                for "Label" "is greater than" 0), and sort on the label field.</li>
                             <li>The records marked as Unread were identified as duplicates by DedupEndNote, but not by
                                 EndNote itself.</li>
                             <li>Select the "All References" set, limit to the duplicates not found by DedupEndNote
-                                (search
-                                for "Label" "is less than" 0).</li>
+                                (search for "Label" "is less than" 0).</li>
                             <li>The records marked as Read were identified as duplicates by EndNote itself, but not by
                                 DedupEndNote.</li>
                         </ul>
 
+                    </div>
+
+                    <div id="special_cases">
+                        <h2 class="bg-success-subtle">Special cases</h2>
+
+                        <h4 id="clinical_trials_gov">1. ClinicalTrials.gov records</h4>
+                        <div>Records from <a href="https://clinicaltrials.gov" target="_blank">ClinicalTrials.gov</a>
+                            are also available within the Cochrane Library and EMBASE, but the format of the data is
+                            quite different. DedupEndNote changes the data of these records to a common format when it
+                            imports them so that deduplication can work. The deduplicated output is also standardized:
+                        </div>
+                        <ul>
+                            <li>Reference Type: Journal Article</li>
+                            <li>Authors: (empty)</li>
+                            <li>Journal: https://clinicaltrials.gov</li>
+                            <li>Pages: the ClinicalTrials.gov ID (e.g. NCT06923007)</li>
+                            <li>URL: the first URL is for ClinicalTrials.gov (e.g.
+                                https://clinicaltrials.gov/study/NCT06923007)</li>
+                            <li>the other fields are from the first record in a deduplication set</li>
+                        </ul>
                     </div>
 
                     <div id="limitations">

@@ -89,6 +89,11 @@ public class DedupEndNoteController {
 		return "index";
 	}
 
+	@GetMapping("/changelog")
+	public String changelog() {
+		return "changelog";
+	}
+
 	@GetMapping("/details")
 	public String details() {
 		return "details";
