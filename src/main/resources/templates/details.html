@@ -1,0 +1,2467 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>DedupEndNote - Detailed comparisons</title>
+    <link rel="stylesheet" href="/webjars/bootstrap/css/bootstrap.min.css">
+    <script src="/webjars/bootstrap/js/bootstrap.bundle.min.js" type="text/javascript"></script>
+    <link rel="stylesheet" href="/resources/common-style.css">
+</head>
+
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-3">
+                <!-- style max-width to let long nav-items wrap -->
+                <nav id="navmenu" class="navbar navbar-light bg-light" style="position: fixed; max-width: 23%">
+                    <!-- <div class="container-fluid"> -->
+                    <div class="navbar-nav" id="navmenu2">
+                        <nav class="nav nav-pills flex-column small" id="navmenu3">
+                            <a href="/" class="nav-link">Home</a>
+                            <a href="#top" class="nav-link">Top</a>
+                            <a href="#detailed_comparisons" class="nav-link">Details of the comparisons</a>
+                            <a href="#examples" class="nav-link">Examples of comparisons</a>
+                            <a href="#enrichment" class="nav-link">Enrichment of deduplicated records</a>
+                            <a href="#justification_target" class="nav-link">Justification</a>
+                            <a href="#performance" class="nav-link">Performance</a>
+                            <a href="#markMode" class="nav-link">Mark Mode</a>
+                            <a href="#limitations" class="nav-link">Limitations</a>
+                            <a href="#faq" class="nav-link">FAQ</a>
+                            <a href="#developers" class="nav-link">For developers</a>
+                        </nav>
+                    </div>
+                    <!-- </div> -->
+                </nav>
+            </div>
+            <div class="col-8">
+                <div data-bs-spy="scroll" data-bs-target="#navmenu3" data-bs-smooth-scroll="true" tabindex="0">
+                    <h1 id="top" style="margin-bottom: 30px;">DedupEndNote: Details, lots of details ...</h1>
+
+                    <div id="detailed_comparisons">
+                        <h2 class="bg-success-subtle">Details of the comparisons</h2>
+
+                        <ol>
+                            <li><a href="#publication_year" class="link-underline-light">Publication year: Are they at
+                                    most
+                                    1 year apart?</a></li>
+                            <li><a href="#starting_page_or_doi" class="link-underline-light">Starting page or DOI: Are
+                                    they
+                                    the same?</a></li>
+                            <li><a href="#authors" class="link-underline-light">Authors: Is the Jaro-Winkler similarity
+                                    of
+                                    the first 40 authors &gt; <span
+                                        th:text="${T(edu.dedupendnote.services.DeduplicationService.DefaultAuthorsComparator).AUTHOR_SIMILARITY_NO_REPLY}">-0.67?</span></a>
+                            </li>
+                            <li><a href="#titles" class="link-underline-light">Title: Is the Jaro-Winkler similarity of
+                                    (one
+                                    of) the normalized titles &gt; <span
+                                        th:text="${T(edu.dedupendnote.services.DeduplicationService).TITLE_SIMILARITY_SUFFICIENT_STARTPAGES_OR_DOIS}">-0.90</span>?</a>
+                            </li>
+                            <li><a href="#isbn_issn_journal" class="link-underline-light">ISBN, ISSN or Journal: Are
+                                    they
+                                    the same (ISBN, ISSN) or similar (Journal)?</a></li>
+                        </ol>
+
+                        <p>The following comparisons are used (in this order, chosen for performance reasons):</p>
+
+                        <h3 id="publication_year">1. Publication year: Are they at most 1 year apart?</h3>
+                        <p>This 1 year margin was chosen because "ahead of print" publications and final publications
+                            often are not published in the same year. A margin larger than 1 year would make the program
+                            a lot slower (see <a href="#order_of_comparisons">Justification: Order of comparisons</a>).
+                        </p>
+                        <ul>
+                            <li>Preprocessing: Publications years before 1800 are removed.</li>
+                            <li>Insufficient data: Records without a publication year are compared to all records unless
+                                they already have been identified as a duplicate.</li>
+                            <li>Special cases: Cochrane Reviews are compared for the same publication year only.</li>
+                        </ul>
+
+                        <h3 id="starting_page_or_doi">2. Starting page or DOI: Are they the same?</h3>
+                        <p> If the Starting and Ending page of at least one of the publications are more than 2 pages
+                            apart,<br />
+                            then: the DOIs are compared first. If the DOIs are different or one or both are absent, then
+                            the starting pages are compared,<br />
+                            otherwise: the starting pages are compared first. If the starting pages are different or one
+                            or both are absent, the DOIs are compared.</p>
+                        <p>Meeting abstracts often get the DOI of the whole conference proceedings. Comparing them by
+                            DOI produces a lot of False Positives. Using this "more than 2 pages" choice circumvents
+                            this problem.
+                        </p>
+                        <ul>
+                            <li>Preprocessing:
+                                <ul>
+                                    <li>Article number is treated as a starting page if starting page itself is
+                                        empty or contains "-".</li>
+                                    <li>Starting pages are compared only for number: "S123" and "123" are
+                                        considered the same.</li>
+                                    <li>In DOIs 'http://dx.doi.org/', 'http://doi.org/', ... are left
+                                        out, so that only the part starting with "10." is compared.</li>
+                                </ul>
+                            </li>
+                            <li>Insufficient data: If one or both DOIs are missing AND one or both of the starting pages
+                                are missing, the answer is YES. This is important because of PubMed ahead of print
+                                publications.</li>
+                            <li>Special cases: Cochrane Reviews: if both records have a DOI, only the DOIs are compared,
+                                otherwise the starting pages are compared.</li>
+                        </ul>
+
+                        <h3 id="authors">3. Authors: Is the Jaro-Winkler similarity of the first 40 authors &gt; <span
+                                th:text="${T(edu.dedupendnote.services.DeduplicationService.DefaultAuthorsComparator).AUTHOR_SIMILARITY_NO_REPLY}">-0.67</span>?
+                        </h3>
+                        <p>Jaro-Winkler similarity: See this <a
+                                href="https://en.wikipedia.org/wiki/Jaro%E2%80%93Winkler_distance"
+                                target="_blank">Wikipedia page</a> for a definition and
+                            <a href="https://commons.apache.org/proper/commons-text/apidocs/org/apache/commons/text/similarity/JaroWinklerSimilarity.html#apply(java.lang.CharSequence,java.lang.CharSequence)"
+                                target="_blank">here</a> for some examples.
+                        </p>
+                        <ul>
+                            <li>Preprocessing:
+                                <ul>
+                                    <li>The author "Anonymous," and all Author Groups are skipped.</li>
+                                    <li>Only the first 40 authors are retained.</li>
+                                    <li>All diacritical signs/accents, supplemental characters (e.g. "£") and all
+                                        characters in non-Latin scripts are removed</li>
+                                    <li>First names are reduced to initials ("Moorthy, Ranjith K." becomes "Moorthy
+                                        RK").
+                                    </li>
+                                    <li>Names with a space in the last name, are also compared in a transposed form
+                                        ("Lofving Gupta, S." is compared as "Lofving Gupta S" and as "Gupta SL").</li>
+                                    <li>All authors from each record are joined by "; ". This is the string that is used
+                                        in the comparison.</li>
+                                </ul>
+                            </li>
+                            <li>Insufficient data: If one or both records have no authors,
+                                <ul>
+                                    <li>if both have an ISBN AND (one or both have no DOI OR one or both have no
+                                        starting page), the answer is YES<br />
+                                        Reason: Conference proceedings have no authors, the comparison by ISBN will
+                                        happen in step 5.</li>
+                                    <li>if one or both have no DOI OR one or both have no starting page, the answer is
+                                        NO,<br />
+                                        Reason: Too few fields to make a safe comparison.</li>
+                                </ul>
+                            </li>
+                            <li>Special case: If one of the records is a reply, erratum or comment (see below), a higher
+                                Jaro-Winkler Similarity threshold is used.</li>
+                        </ul>
+
+                        <h3 id="titles">4. Title: Is the Jaro-Winkler similarity of (one of) the normalized titles &gt;
+                            <span
+                                th:text="${T(edu.dedupendnote.services.DeduplicationService).TITLE_SIMILARITY_SUFFICIENT_STARTPAGES_OR_DOIS}">-0.90</span>?
+                        </h3>
+                        <p>The fields Original publication (OP), Short Title (ST), Title (TI) and sometimes Book section
+                            (T3,
+                            see below) are treated as titles.<br />
+                            Because the Jaro-Winkler similarity algorithm puts a heavy penalty on differences at the
+                            beginning
+                            of a string, the normalized titles are also reversed.</p>
+                        <ul>
+                            <li>Preprocessing:
+                                <ul>
+                                    <li>The titles are normalized (converted to lower case, text between "&lt;...&gt;"
+                                        removed,
+                                        all diacritical signs/accents, supplemental characters (e.g. "£") and all
+                                        characters
+                                        in
+                                        non-Latin scripts are removed,
+                                        all characters which are not letters or numbers are replaced by a space
+                                        character,
+                                        ...).
+                                    </li>
+                                    <li>Titles which can be split on ". ", ": " or "? " and have 2 parts of at least 50
+                                        characters, are
+                                        also compared on these parts.</li>
+                                    <li>In the titles of retracted publications all parts which refer to the retraction
+                                        are
+                                        removed. "<del>RETRACTED: </del>Response of Breast Cancer Cells and Cancer Stem
+                                        Cells to
+                                        Metformin and Hyperthermia Alone or Combined<del> (Retracted article. See vol.
+                                            20,
+                                            2025)</del>".
+                                        A publication is considered a retraction if the Title starts with "retracted",
+                                        "removed"
+                                        or "withdrawn", or contains "retracted article" (all case insensitive).</li>
+                                </ul>
+                            </li>
+                            <li>Insufficient data: If one of the records is a reply, erratum or comment (see below), the
+                                titles are not compared / the answer is YES (but the Jaro-Winkler similarity of the
+                                authors
+                                should be &gt; <span
+                                    th:text="${T(edu.dedupendnote.services.DeduplicationService.DefaultAuthorsComparator).AUTHOR_SIMILARITY_REPLY_SUFFICIENT_STARTPAGES_OR_DOIS}">-0.75</span>
+                                and the comparison between the journals is more strict).</li>
+                        </ul>
+
+                        <h3 id="isbn_issn_journal">5. ISBN, ISSN or Journal: Are they the same (ISBN, ISSN) or similar
+                            (Journal)?</h3>
+                        <p>This rule is skipped if both records have the same DOI (that comparison was made in step
+                            2).<br />
+                            The fields Journal / Book Title (T2), Alternate Journal (J2) and sometimes Book section (T3,
+                            see below) are treated as journals. All ISBNs, ISSns and journal titles
+                            (including abbreviations) in the records are used.</p>
+                        <p>If both records have an ISBN, the ISBNs are compared (stop),
+                            if both have an ISSN, the ISSns are compared (stop),
+                            else the journal titles are compared.<br />
+                            Abbreviated and full journal titles are compared in a sensible way (see <a
+                                href="#examples">Examples of comparisons</a>).</p>
+                        <ul>
+                            <li>Preprocessing:
+                                <ul>
+                                    <li>ISBNs and ISSNs are normalized (dashes are removed, lowercased).
+                                        For ISBN-10 the first 9 digits are used, for ISBN-13 the 9 digits starting at
+                                        position 4.</li>
+                                    <li>Journal titles of the form "Zhonghua wai ke za zhi [Chinese journal of
+                                        surgery]" or "Zhonghua wei chang wai ke za zhi = Chinese journal of
+                                        gastrointestinal surgery" or "The Canadian Journal of Neurological Sciences / Le
+                                        Journal Canadien Des Sciences Neurologiques" are split into 2 journal titles.
+                                    </li>
+                                    <li>the journal titles are normalized (hyphens, dots and apostrophes are replaced
+                                        with space, end part between round or square brackets is removed, initial
+                                        article is removed, ...).
+                                    </li>
+                                </ul>
+                            </li>
+                        </ul>
+
+
+                        <h3>Remarks:</h3>
+
+                        <dl class="row">
+                            <dt class="col-sm-2">Comment:</dt>
+                            <dd class="col-sm-9">a publication is considered a comment if the title (fields ST and TI)
+                                contains words as "comment" or "commentary".</dd>
+
+                            <dt class="col-sm-2">Erratum:</dt>
+                            <dd class="col-sm-9">a publication is considered am erratum if the title (fields ST and TI)
+                                contains "Correction", "Corrigendum" or "Erratum".</dd>
+
+                            <dt class="col-sm-2">Reply:</dt>
+                            <dd class="col-sm-9">a publication is considered a reply if the title (fields ST and TI)
+                                contains "reply", or contains "author(...)respon(...)", or is nothing but "response"
+                                (all case insensitive).</dd>
+
+                            <dt class="col-sm-2">T3 field:</dt>
+                            <dd class="col-sm-9">Especially EMBASE (OVID) uses this field for (1) Conference title
+                                (majority of cases), (2) an alternative journal title, and (3) original (non English)
+                                title. Case 1 (identified as containing a number or "Annual", "Conference", "Congress",
+                                "Meeting" or "Society") is skipped. All other T3 fields are treated as Journals and as
+                                titles.</dd>
+                        </dl>
+                    </div>
+
+                    <div id="examples">
+                        <h2 class="bg-success-subtle">Examples of comparisons</h2>
+                        <p>In the following table the results of EndNote's Find duplicates is compared to the
+                            comparisons in DedupEndNote. For these tests only one field was selected in EndNote in
+                            "Edit&nbsp;&gt;&nbsp;Preferences&nbsp;&gt; Duplicates", and "Ignore spacing and punctuation"
+                            was selected.</p>
+                        <table class="table table-sm">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Field</th>
+                                    <th>Examples</th>
+                                    <th>EndNote finds duplicates</th>
+                                    <th>DedupEndNote Score</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><span style="color:red;">Starting page and article number</span></td>
+                                    <td>
+                                        <ul>
+                                            <li>...</li>
+                                            <li>...</li>
+                                        </ul>
+                                    </td>
+                                    <td>???</td>
+                                    <td>???</td>
+                                </tr>
+                                <tr>
+                                    <td>Title</td>
+                                    <td>
+                                        <ul>
+                                            <li>90Y radioembolization using resin microspheres in patients with
+                                                hepatocellular
+                                                carcinoma and portal vein thrombosis</li>
+                                            <li>90Y RADIOEMBOLIZATION USING RESIN MICROSPHERES IN PATIENTS WITH
+                                                HEPATOCELLULAR
+                                                CARCINOMA AND PORTAL VEIN THROMBOSIS</li>
+                                        </ul>
+                                    </td>
+                                    <td>Yes</td>
+                                    <td>1.00 == Yes</td>
+                                </tr>
+                                <tr>
+                                    <td>Title</td>
+                                    <td>
+                                        <ul>
+                                            <li>Comments about Glisson<span class="diff">'s</span> capsule phleboliths
+                                                and
+                                                portal vein thrombosis<span class="diff"> [1]</span></li>
+                                            <li>COMMENTS ABOUT GLISSON CAPSULE PHLEBOLITHS AND PORTAL-VEIN THROMBOSIS
+                                            </li>
+                                        </ul>
+                                    </td>
+                                    <td>No</td>
+                                    <td>0.92 == Yes</td>
+                                </tr>
+                                <tr>
+                                    <td>Title</td>
+                                    <td>
+                                        <ul>
+                                            <li>Transarterial chemoembolization and <span
+                                                    class="diff">&lt;sup&gt;90&lt;/sup&gt;y</span> radioembolization for
+                                                hepatocellular carcinoma: Review of current applications beyond
+                                                intermediate-stage disease</li>
+                                            <li>Transarterial Chemoembolization and <span class="diff">Y-90</span>
+                                                Radioembolization for Hepatocellular Carcinoma: Review of Current
+                                                Applications
+                                                Beyond Intermediate-Stage Disease</li>
+                                        </ul>
+                                    </td>
+                                    <td>No</td>
+                                    <td>0.92 == Yes</td>
+                                </tr>
+                                <tr>
+                                    <td>Title</td>
+                                    <td>
+                                        <ul>
+                                            <li>Epidemiology and diagnosis profile of digestive cancer in teaching
+                                                hospital
+                                                campus of lome: About 250 cases.<span class="diff"> [French]</span></li>
+                                            <li>Epidemiology and diagnosis profile of digestive cancer in teaching
+                                                Hospital
+                                                Campus of Lome: about 250 cases</li>
+                                        </ul>
+                                    </td>
+                                    <td>No</td>
+                                    <td>0.99 == Yes</td>
+                                </tr>
+                                <tr>
+                                    <td>Title</td>
+                                    <td>
+                                        <ul>
+                                            <li>Post Splenectomy Outcome in <span class="diff">beta</span>-Thalassemia
+                                            </li>
+                                            <li>Post Splenectomy Outcome in <span class="diff">β</span>-Thalassemia</li>
+                                        </ul>
+                                    </td>
+                                    <td>No</td>
+                                    <td>0.96 == Yes</td>
+                                </tr>
+                                <tr>
+                                    <td>Title</td>
+                                    <td>
+                                        <ul>
+                                            <li>Letter: portal vein obstruction<span class="diff">--</span>which subset
+                                                of
+                                                patients could benefit the most?<span class="diff"> Authors'
+                                                    reply</span>
+                                            </li>
+                                            <li>Letter: Portal vein obstruction<span class="diff"> - </span>Which subset
+                                                of
+                                                patients could benefit the most?</li>
+                                        </ul>
+                                    </td>
+                                    <td>No</td>
+                                    <td>0.97 == Yes *</td>
+                                </tr>
+                                <tr>
+                                    <td>Title</td>
+                                    <td>
+                                        <ul>
+                                            <li>Title: <span class="diff">Some diseases associated with ulcero-
+                                                    hemorrhagic
+                                                    colitis: complication or coincidence. [French]</span><br />
+                                                Original Title: Quelques maladies associees a la colite ulcero-
+                                                Hemorragique:
+                                                Complications ou coincidences</li>
+                                            <li>Title: <span class="diff">[Various diseases associated with
+                                                    ulcero-hemorrhagic
+                                                    colitis: complications or coincidences]</span><br />
+                                                Original Title: Quelques maladies associees a la colite
+                                                ulcero-hemorragique:
+                                                complications ou coincidences.</li>
+                                        </ul>
+                                    </td>
+                                    <td>No</td>
+                                    <td>1.00 == Yes *</td>
+                                </tr>
+                                <tr>
+                                    <td>Title</td>
+                                    <td>
+                                        <ul>
+                                            <li>Title: <span class="diff">[HELLP in the second trimester in a patient
+                                                    with
+                                                    antiphospholipid syndrome]</span><br />
+                                                Original Title: HELLP kan ses i andet trimester ved
+                                                antifosfolipidsyndrom.
+                                            </li>
+                                            <li>Title: <span class="diff">HELLP kan ses i andet trimester ved
+                                                    antifosfolipidsyndrom</span></li>
+                                        </ul>
+                                    </td>
+                                    <td>No</td>
+                                    <td>1.00 == Yes *</td>
+                                </tr>
+                                <tr>
+                                    <td>Title</td>
+                                    <td>
+                                        <ul>
+                                            <li>Title: <span class="diff">NFkappaB</span> inhibition decreases
+                                                hepatocyte
+                                                proliferation but does not alter apoptosis in obstructive jaundice<br />
+                                                Reversed Title: ecidnuaj evitcurtsbo ni sisotpopa retla ton seod tub
+                                                noitarefilorp etycotapeh sesaerced noitibihni <span
+                                                    class="diff">BappakFN</span>
+                                            </li>
+                                            <li>Title: <span class="diff">NF kappa B</span> inhibition decreases
+                                                hepatocyte
+                                                proliferation but does not alter apoptosis in obstructive jaundice<br />
+                                                Reversed title: ecidnuaj evitcurtsbo ni sisotpopa retla ton seod tub
+                                                noitarefilorp etycotapeh sesaerced noitibihni <span class="diff">B appak
+                                                    FN</span></li>
+                                        </ul>
+                                    </td>
+                                    <td>No</td>
+                                    <td>1.00 == Yes *</td>
+                                </tr>
+                                <tr>
+                                    <td>Title</td>
+                                    <td>
+                                        <ul>
+                                            <li>Title: <span class="diff">Case report. </span>Duplication of the portal
+                                                vein: a
+                                                rare congenital anomaly<br />
+                                                Reversed Title: ylamona latinegnoc erar a :niev latrop eht fo
+                                                noitacilpuD<span class="diff"> .troper esaC</span></li>
+                                            <li>Title: Duplication of the portal vein - A rare congenital anomaly<br />
+                                                Reversed title: ylamona latinegnoc erar A - niev latrop eht fo
+                                                noitacilpuD
+                                            </li>
+                                        </ul>
+                                    </td>
+                                    <td>No</td>
+                                    <td>0.96 == Yes *</td>
+                                </tr>
+                                <tr>
+                                    <td>Title</td>
+                                    <td>
+                                        <ul>
+                                            <li>Title: <span class="diff">La sémantique de l'image radiologique.
+                                                </span>Int<span class="diff">é</span>r<span class="diff">ê</span>t du
+                                                proc<span class="diff">é</span>d<span class="diff">é</span> de
+                                                soustraction
+                                                <span class="diff">é</span>lectronique en couleurs d'Oosterkamp en
+                                                angiographie
+                                                abdominale<br />
+                                                Reversed Title: elanimodba eihpargoigna ne pmakretsoO'd srueluoc ne
+                                                euqinortcel<span class="diff">é</span> noitcartsuos ed <span
+                                                    class="diff">é</span>d<span class="diff">é</span>corp ud t<span
+                                                    class="diff">ê</span>r<span class="diff">é</span>tnI<span
+                                                    class="diff">
+                                                    .euqigoloidar egami'l ed euqitnamés aL</span>
+                                            </li>
+                                            <li>Title: INTERET DU PROCEDE DE SOUSTRACTION ELECTRONIQUE EN COULEURS
+                                                D'OOSTERKAMP
+                                                EN ANGIOGRAPHIE ABDOMINALE<br />
+                                                Reversed title: ELANIMODBA EIHPARGOIGNA NE PMAKRETSOO'D SRUELUOC NE
+                                                EUQINORTCELE
+                                                NOITCARTSUOS ED EDECORP UD TERETNI</li>
+                                        </ul>
+                                    </td>
+                                    <td>No</td>
+                                    <td>0.91 == Yes *</td>
+                                </tr>
+                                <tr>
+                                    <td>Authors</td>
+                                    <td>
+                                        <ul>
+                                            <li><span class="diff">Cobos</span> Mateos, J. M.; <span
+                                                    class="diff">Aguinaga</span> Manzanos, M. V.; <span
+                                                    class="diff">Casas</span> Pinillos, M. S.;
+                                                <span class="diff">Gonzalez</span> Conde, R.; <span
+                                                    class="diff">Gonzalez</span>
+                                                Sanchez, J. A.; <span class="diff">De Miguel Velasco</span>, J. E.;
+                                                <span class="diff">Soleto</span> Saez, E.; <span
+                                                    class="diff">Suarez</span>
+                                                Mier, M. P.
+                                            </li>
+                                            <li>Mateos, J. M. <span class="diff">C.</span>; Manzanos, M. V. <span
+                                                    class="diff">A.</span>; Pinillos, M. S. <span
+                                                    class="diff">C.</span>;
+                                                Conde, R. <span class="diff">G.</span>; Sanchez, J. A. <span
+                                                    class="diff">G.</span>; Velasco, J. E. <span class="diff">D.</span>;
+                                                Saez, E. <span class="diff">S.</span>; Mier, M. P. <span
+                                                    class="diff">S.</span>
+                                            </li>
+                                        </ul>
+                                    </td>
+                                    <td>No</td>
+                                    <td>0.75 == Yes</td>
+                                </tr>
+                                <tr>
+                                    <td>Authors</td>
+                                    <td>
+                                        <ul>
+                                            <li>Danil<span class="diff">ă</span>, M.; Sporea, I.; Popescu, A.; <span
+                                                    class="diff">ş</span>irli, R.</li>
+                                            <li>Danil<span class="diff">a</span>, M.; Sporea, I.; Popescu, A.; <span
+                                                    class="diff">S</span>irli, R.</li>
+                                        </ul>
+                                    </td>
+                                    <td>No</td>
+                                    <td>0.93 == Yes</td>
+                                </tr>
+                                <tr>
+                                    <td>Authors</td>
+                                    <td>
+                                        <ul>
+                                            <li>Lv, Y.; Qi, X.; Xia, J.; Fan, D.; Han, G.</li>
+                                            <li>Lv, Y.; Qi, X. <span class="diff">S.</span>; Xia, J. <span
+                                                    class="diff">L.</span>; Fan, D. <span class="diff">M.</span>; Han,
+                                                G.
+                                                <span class="diff">H.</span>
+                                            </li>
+                                        </ul>
+                                    </td>
+                                    <td>No</td>
+                                    <td>0.90 == Yes</td>
+                                </tr>
+                                <tr>
+                                    <td>Authors</td>
+                                    <td>
+                                        <ul>
+                                            <li>[empty]</li>
+                                            <li><span class="diff">Anonymous,</span></li>
+                                        </ul>
+                                    </td>
+                                    <td>No</td>
+                                    <td>Yes</td>
+                                </tr>
+                                <tr>
+                                    <td>Journal</td>
+                                    <td>
+                                        <ul>
+                                            <li>Br<span class="diff">itish</span> j<span class="diff">ournal of</span>
+                                                surg<span class="diff">ery</span></li>
+                                            <li>Br J Surg</li>
+                                        </ul>
+                                    </td>
+                                    <td>No</td>
+                                    <td>Similar == Yes</td>
+                                </tr>
+                                <tr>
+                                    <td>Journal</td>
+                                    <td>
+                                        <ul>
+                                            <li>European Journal of Gastroenterology <span class="diff">and</span>
+                                                Hepatology
+                                            </li>
+                                            <li>European Journal of Gastroenterology <span class="diff">&amp;</span>
+                                                Hepatology
+                                            </li>
+                                        </ul>
+                                    </td>
+                                    <td>No</td>
+                                    <td>Similar == Yes</td>
+                                </tr>
+                                <tr>
+                                    <td>Journal + ISSN</td>
+                                    <td>
+                                        <ul>
+                                            <li><span class="diff">Japanese Journal of Cancer and Chemotherapy</span>
+                                                [ISSN:
+                                                2690-2692]</li>
+                                            <li><span class="diff">Gan To Kagaku Ryoho</span> [ISSN: 2690-2692]</li>
+                                        </ul>
+                                    </td>
+                                    <td>No</td>
+                                    <td>Similar == Yes</td>
+                                </tr>
+                                <tr>
+                                    <td>Journal</td>
+                                    <td>
+                                        <ul>
+                                            <li>JAMA</li>
+                                            <li>J<span class="diff">ournal of the</span> A<span
+                                                    class="diff">merican</span>
+                                                M<span class="diff">edical</span> A<span class="diff">ssociation</span>
+                                            </li>
+                                        </ul>
+                                    </td>
+                                    <td>No</td>
+                                    <td>Similar == Yes</td>
+                                </tr>
+                                <tr>
+                                    <td>Journal</td>
+                                    <td>
+                                        <ul>
+                                            <li><span class="diff">The</span> Lancet Haematol<span
+                                                    class="diff">ogy</span>
+                                            </li>
+                                            <li>Lancet Haematol</li>
+                                        </ul>
+                                    </td>
+                                    <td>No</td>
+                                    <td>Similar == Yes</td>
+                                </tr>
+                                <tr>
+                                    <td>Journal</td>
+                                    <td>
+                                        <ul>
+                                            <li>Hepatology</li>
+                                            <li>Hepatology <span class="diff">International</span></li>
+                                        </ul>
+                                    </td>
+                                    <td>No</td>
+                                    <td>Similar == Yes *</td>
+                                </tr>
+                                <tr>
+                                    <td>Journal</td>
+                                    <td>
+                                        <ul>
+                                            <li>AJR Am J Roentgenol</li>
+                                            <li>Am<span class="diff">erican</span> J<span class="diff">ournal of</span>
+                                                Roentgenol<span class="diff">ogy</span></li>
+                                        </ul>
+                                    </td>
+                                    <td>No</td>
+                                    <td>Similar == Yes</td>
+                                </tr>
+                                <tr>
+                                    <td>Journal</td>
+                                    <td>
+                                        <ul>
+                                            <li><span class="diff">British journal of</span> surgery</li>
+                                            <li>Surgery</li>
+                                        </ul>
+                                    </td>
+                                    <td>No</td>
+                                    <td>NOT similar == No</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <p>*: In these cases the comparison of DedupEndNote for this content for this field is not
+                            accurate.
+                            However, the comparison of the other fields
+                            for these records does not result in YES answers, so the records are ultimately not
+                            considered
+                            duplicates.</p>
+                    </div>
+
+                    <div id="enrichment">
+                        <h2 class="bg-success-subtle">Enrichment of the deduplicated records</h2>
+                        <p>Only the first record of a set of duplicate records is copied to the output file.</p>
+                        <p>When writing the output file, the following fields will be changed:</p>
+
+                        <table class="table table-bordered">
+                            <tbody>
+                                <tr>
+                                    <td>Author (AU)</td>
+                                    <td>
+                                        <ul>
+                                            <li>if the (only) author is "Anonymous", the author is omitted</li>
+                                        </ul>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>DOI (DO):</td>
+                                    <td>
+                                        <ul>
+                                            <li>the DOIs of the removed duplicate records are copied to the saved record
+                                                and deduplicated. The DOI field is important for finding the full text
+                                                in EndNote.
+                                            </li>
+                                            <li>DOIs of the form "10.1038/ctg.2014.12",
+                                                "http://dx.doi.org/10.1038/ctg.2014.12", ...
+                                                are rewritten in the <a
+                                                    href="https://www.crossref.org/education/metadata/persistent-identifiers/doi-display-guidelines/"
+                                                    target="_blank">prescribed form</a>
+                                                "https://doi.org/10.1038/ctg.2014.12". DOIs of this form are clickable
+                                                links in EndNote.
+                                            </li>
+                                        </ul>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Journal name (T2)</td>
+                                    <td>
+                                        <ul>
+                                            <li>if the saved record has no value for the Journal name (T2) but has a
+                                                value for the Alternate Journal (J2), this J2 value is copied to the T2
+                                                field. This is relevant for the ClinicalTrials.gov records in Embase.
+                                            </li>
+                                            <li>missing Journal name (T2) for "Social Science Research Network" records
+                                                from Embase.com are filled</li>
+                                        </ul>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Publication year (PY):</td>
+
+                                    <td>
+                                        <ul>
+                                            <li>if the saved record has no value for its Publication year but one of the
+                                                removed duplicate records has, the first not empty Publication year of
+                                                the duplicates is copied to the saved record.
+                                            </li>
+                                        </ul>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Starting page (SP) and Article Number (C7):</td>
+                                    <td>
+                                        <ul>
+                                            <li>the article number is put in the Pages field (SP) if the Pages field is
+                                                empty or does not contain a "-", overwriting the Pages field content.
+                                            </li>
+                                            <li>the article number field (C7) is omitted</li>
+                                            <li>if the saved record has no value for its Pages field (e.g. PubMed ahead
+                                                of print publications) but one of the removed duplicate records has, the
+                                                first not empty pages of the duplicates are copied to the saved record.
+                                            </li>
+                                            <li>the Pages field gets an unabbreviated form: e.g. "482-91" is rewritten
+                                                as "482-491".</li>
+                                            <li>if the ending page is the same as the starting page, only the starting
+                                                page is written ("192" instead of "192-192").</li>
+                                            <li>for Cochrane Reviews a missing review number ("CD...") is extracted from
+                                                the DOI.</li>
+                                        </ul>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Title (TI):</td>
+                                    <td>
+                                        <ul>
+                                            <li>If the publication is a reply / erratum / comment / retraction, the
+                                                title is replaced with the longest title from the duplicates (e.g.
+                                                "Reply from the authors" is replaced by "Coagulation parameters and
+                                                portal vein thrombosis in cirrhosis Reply")</li>
+                                        </ul>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div id="justification_target">
+                        <h2 class="bg-success-subtle">Justification</h2>
+                        <ol class="list-unstyled">
+                            <li><a class="link-underline-light" href="#general_rule">1. General rule</a></li>
+                            <li><a class="link-underline-light" href="#comparisons">2. Comparisons</a></li>
+                            <li><a class="link-underline-light" href="#fields_chosen">2.1. The fields chosen</a></li>
+                            <li><a class="link-underline-light" href="#fields_not_chosen">2.2. The fields not chosen</a>
+                            </li>
+                            <li><a class="link-underline-light" href="#similarity">2.3. Similarity</a></li>
+                            <li><a class="link-underline-light" href="#order_of_comparisons">2.4. Order of
+                                    comparisons</a>
+                            </li>
+                            <li><a class="link-underline-light" href="#effect">2.5. Effect of insufficient data from one
+                                    of two records</a></li>
+                            <li><a class="link-underline-light" href="#enriching">3. Enriching the duplicate chosen</a>
+                            </li>
+                        </ol>
+                        <div id="general_rule">
+                            <h3>1. General rule</h3>
+                            <div>
+                                <p>The general rule is:</p>
+                                <table class="table table-bordered" style="width: 80%;">
+                                    <caption>General rule</caption>
+                                    <thead>
+                                        <tr>
+                                            <th>Comparison</th>
+                                            <th>Result</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td rowspan="3">1 ... 5</td>
+                                            <td>YES</td>
+                                            <td rowspan="2" class="align-middle">go to next comparison if
+                                                present,<br />else
+                                                mark the records as duplicates</td>
+                                        </tr>
+                                        <tr>
+                                            <td>(insufficient data for the comparison in one of the records)</td>
+                                        </tr>
+                                        <tr>
+                                            <td>NO</td>
+                                            <td>stop comparisons for this pair of record</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div>The part "(insufficient data for the comparison in one of the records) &#x2192; goto
+                                next
+                                comparison ..." sets DedupEndNote apart from other deduplication programs.</div>
+
+                            <p><u><strong>Justification:</strong></u></p>
+                            <ul>
+                                <li>If bibliographic databases didn't miss some data: DOI
+                                    https://doi.org/10.1007/5584_2016_118
+                                    has Pages information in PubMed, but not in EMBASE or Scopus</li>
+                                <li>If EndNote import filters (EndNote provided, provided by producers of bibliographic
+                                    databases, home made) always put comparable data in the same EndNote fields</li>
+                                <li>If all bibliographic data of imported records were already available, e.g. not with
+                                    PubMed ahead of print publications</li>
+                            </ul>
+                            <p>then the absence of Starting Page / DOI / Authors / ... in an EndNote record would mean
+                                that the corresponding publication has no Starting Page / DOI / Authors / .... Alas, the
+                                world isn't perfect yet.</p>
+                            <p>DedupEndNote therefore interprets a comparison with insufficient data from one of two
+                                records not as "NO" (i.e. these records are different), but as "UNKNOWN" (i.e. we can't
+                                tell
+                                (yet)), and continues with the other comparisons for these records.</p>
+                            <p>As a consequence, fields which are useful in comparisons but are not always available
+                                (e.g.
+                                DOI), can be used.</p>
+                            <p>NOTE: If <strong>both</strong> records have insufficient data for a comparison,
+                                DedupEndNote interprets the fields as different. If there is no alternative for the
+                                comparison (see below), then DedupEndNote stops the comparisons for this pair of records
+                                and considers them different publications. See <a href="#effect">2.5. Effect of
+                                    insufficient data from one of two records</a>.</p>
+                        </div>
+
+                        <div id="comparisons">
+                            <h3>2. Comparisons</h3>
+
+                            <div id="fields_chosen">
+                                <h5>2.1. The fields chosen</h5>
+                                <p>The EndNote fields used in the comparisons are:</p>
+                                <table class="table table-bordered" style="width: 60%;">
+                                    <caption>The EndNote fields used in the comparisons</caption>
+                                    <thead>
+                                        <tr>
+                                            <th>EndNote field</th>
+                                            <th>Content</th>
+                                            <th>Treated as</th>
+                                            <th>Used in comparison no.</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>PY</td>
+                                            <td>Publication year</td>
+                                            <td>Year</td>
+                                            <td>1</td>
+                                        </tr>
+                                        <tr>
+                                            <td>SP</td>
+                                            <td>Pages</td>
+                                            <td rowspan="2" class="align-middle">Starting page</td>
+                                            <td rowspan="3" class="align-middle" style="border-left: 2px solid black;">2
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>C7</td>
+                                            <td>Article number</td>
+                                        </tr>
+                                        <tr>
+                                            <td>DO</td>
+                                            <td>DOI</td>
+                                            <td>DOI</td>
+                                        </tr>
+                                        <tr>
+                                            <td>AU</td>
+                                            <td>Authors</td>
+                                            <td>Authors</td>
+                                            <td>3</td>
+                                        </tr>
+                                        <tr>
+                                            <td>TI</td>
+                                            <td>Title</td>
+                                            <td rowspan="4" class="align-middle">Title</td>
+                                            <td rowspan="4" class="align-middle" style="border-left: 2px solid black;">4
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>OP *</td>
+                                            <td>Original title (when reference type is not Conference Proceedings)</td>
+                                        </tr>
+                                        <tr>
+                                            <td>ST</td>
+                                            <td>Short title</td>
+                                        </tr>
+                                        <tr>
+                                            <td>T3 **</td>
+                                            <td>Conference title<br />Alternate journal title<br />Original title</td>
+                                        </tr>
+                                        <tr>
+                                            <td>SN</td>
+                                            <td>ISSN or ISBN</td>
+                                            <td>ISBN<br />ISSN</td>
+                                            <td rowspan="5" class="align-middle" style="border-left: 2px solid black;">5
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>T2</td>
+                                            <td>Journal title<br />Book title</td>
+                                            <td rowspan="4" class="align-middle">Journal</td>
+                                        </tr>
+                                        <tr>
+                                            <td>J2</td>
+                                            <td>Alternate journal</td>
+                                        </tr>
+                                        <tr>
+                                            <td>OP *</td>
+                                            <td>Conference title (when reference type is Conference Proceedings)</td>
+                                        </tr>
+                                        <tr>
+                                            <td>T3 **</td>
+                                            <td>Conference title<br />Alternate journal title<br />Original title</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <p><i>*: the field OP can be a title variant or a journal variant.</i></p>
+                                <p><i>**: Conference titles in T3 are omitted.</i></p>
+
+                                <p><u><strong>Justification:</strong></u></p>
+                                <ul>
+                                    <li>These fields (or combinations of fields) are present for most records. DOIs may
+                                        be
+                                        absent, but in comparison 2 (Starting Page OR DOI) most records provide data
+                                    </li>
+                                    <li>These fields proved to be sufficient to get good deduplication results.</li>
+                                    <li>Author: Reducing first names to initials identifies more duplicates although
+                                        cases
+                                        where
+                                        first and last names are mixed up ("Ashish Anil, Sule" vs "Sule, A. A.") are no
+                                        longer
+                                        identified as duplicates.</li>
+                                    <li>Journal: There is no standard (used) for journals. PubMed puts the journal
+                                        abbreviation
+                                        in the Journal field, most other databases use the full journal title. There is
+                                        no
+                                        agreement on the journal names / abbreviations: "Am J Roentgenol" vs "AJR Am J
+                                        Roentgenol".<br />
+                                        DedupendNote treats the content of the journal fields as a set. Comparing the
+                                        journal of
+                                        two records comes down to "Is there a journal from the set of journals of record
+                                        1
+                                        sufficiently similar to a journal from the set of journals of record 2?"</li>
+                                    <li>Title: There is no standard (used) for non-English titles. Bibliographic
+                                        databases
+                                        put
+                                        the English translation of the title in the Title field, and sometimes the
+                                        original
+                                        title in another field.<br />
+                                        The translation may be their own: the original title "Autogreffe de cellules
+                                        souches
+                                        hématopoïétiques périphériques dans le cadre du traitement d'hémopathies
+                                        malignes.
+                                        Partie I: patients." became:
+                                        <ul>
+                                            <li>[Autologous transplantation of peripheral blood hematopoietic stem cells
+                                                in
+                                                the
+                                                treatment of hematological malignancies. I: patients] (PubMed)</li>
+                                            <li>Autologous transplantation of peripheral blood stem cells for
+                                                haematological
+                                                malignancies. Part I: patients (Scopus, Web of Science)</li>
+                                        </ul>
+                                        <p>In the test database of 52.000 records 11% of the records were of non-English
+                                            origin
+                                        </p>
+                                    </li>
+                                    <li>Starting Page: Bibliographic databases do not always use the same fields for
+                                        comparable
+                                        content (e.g. PubMed doesn't use the Article number field, and puts the
+                                        article number in the Pages field, Web of Science uses the Article Number field,
+                                        and
+                                        puts the number of pages of such publication in the Pages field).<br />
+                                        While reading the EndNote file DedupEndNote first picks the Article number
+                                        (field
+                                        C7) as
+                                        Starting page (if present), overwriting it with the Starting page (field SP) of
+                                        the
+                                        file
+                                        if it contains a "-". In the absence of an Article number (C7), Starting page
+                                        (SP)
+                                        is
+                                        taken as Starting page.<br><br>
+                                        The DOI would be very useful field for deduplication if only each meeting
+                                        abstract
+                                        would
+                                        have a unique DOI. However all the meeting abstract within a conference
+                                        proceedings
+                                        share the same DOI. Because it is not easy to identify meeting abstracts,
+                                        DedupEndNote
+                                        looks at the number of pages: if it is greater than 2, DedupEndNote considers
+                                        the
+                                        publication as NOT a meeting abstract, and prefers the comparison by DOI above
+                                        the
+                                        comparison by starting page.
+                                    </li>
+                                </ul>
+                            </div>
+
+                            <div id="fields_not_chosen">
+                                <h5>2.2. The fields not chosen</h5>
+
+                                <p><u><strong>Justification:</strong></u></p>
+                                <ul>
+                                    <li>Reference type: Bibliographic databases don't agree on this. Publications in
+                                        "Advances
+                                        in Experimental Medicine and Biology" are Journal Article when imported from
+                                        PubMed
+                                        or
+                                        EMBASE, but Serial when imported from Web of Science.<br />
+                                        The only exception to this rule is Conference proceedings: The OP field can be
+                                        the
+                                        title
+                                        of a conference or the original (non-English) title</li>
+                                    <li>Volume and Issue: these fields were found to have no additional value for
+                                        deduplication
+                                    </li>
+                                    <li>Accession number: are tied to specific bibliographic databases, so of minimal
+                                        value
+                                        for
+                                        deduplication</li>
+                                    <li>Type of Work: Not always provided by bibliographic databases, not standardized
+                                        over
+                                        bibliographic databases</li>
+                                    <li>Ending page: Not always provided by bibliographic databases. Comparison by only
+                                        Starting
+                                        page proved to be sufficient to get good deduplication results.</li>
+                                </ul>
+                            </div>
+
+                            <div id="similarity">
+                                <h5>2.3. Similarity</h5>
+
+                                <p>DedupEndNote uses Jaro-Winkler Similarity instead of equality when comparing some
+                                    fields
+                                    (Authors, Titles, partly with Journals).</p>
+
+                                <p><u><strong>Justification:</strong></u></p>
+                                <ul>
+                                    <li>(see <a href="#examples">Examples of comparisons</a>)</li>
+                                    <li>Most bibliographic databases use UTF-8, some however still use the ASCII set
+                                        (Web of
+                                        Science) making comparisons by equality hopeless when diacritical signs or Greek
+                                        letters
+                                        are used in one but not both records</li>
+                                    <li>Bibliographic databases may add metadata (e.g. for Title: "[French]", "Authors
+                                        reply",
+                                        ...)
+                                    </li>
+                                    <li>Bibliographic databases may use different rules for number of authors recorded
+                                        (when
+                                        to
+                                        use "et al."). Are:
+                                        <ul>
+                                            <li>Albrecht, M. H.; Vogl, T. J.; Wichmann, J. L.; Martin, S. S.; Scholtz,
+                                                J.
+                                                E.;
+                                                Fischer, S.; Hammerstingl, R. M.; Harth, M.; Nour-Eldin, N. A.;
+                                                Thalhammer,
+                                                A.;
+                                                et al.,
+                                            </li>
+                                            <li>Albrecht, M. H.; Vogl, T. J.; Wichmann, J. L.; Martin, S. S.; Scholtz,
+                                                J.
+                                                E.;
+                                                Fischer, S.; Hammerstingl, R. M.; Harth, M.; Nour-Eldin, N. A.;
+                                                Thalhammer,
+                                                A.;
+                                                Zangos, S.; Bauer, R. W.</li>
+                                        </ul>
+                                        the same authors?
+                                    </li>
+                                    <li>Is "NFκB" (publication form) "NFκB", "NFkappaB" or "NF kappa B"?</li>
+                                    <li>Bibliographic databases don't agree on the author name:
+                                        <ul>
+                                            <li>Is "Xingshun Qi" (publication form) "Qi, X." (PubMed) or "Qi, X. S."
+                                                (Web of
+                                                Science)?
+                                            </li>
+                                            <li>Is "E. MorenoGonzález" (publication form) "MorenoGonzález, E." (Scopus),
+                                                "Moreno
+                                                González, E." (PubMed) or "Gonzalez, E. M." (Web of Science)?</li>
+                                        </ul>
+                                    </li>
+                                </ul>
+
+                                <p><u><strong>Why Jaro-Winkler Similarity (JWS) and not Levenshtein distance /
+                                            ...?</strong></u>
+                                </p>
+                                <ul>
+                                    <li>JWS is always a value between 0 and 1 making it easier to choose a cut-off point
+                                        for
+                                        allowed similarity (e.g. similarity &gt; 0.91)</li>
+                                    <li>JWS's property of putting a heavier penalty on differences at the beginning of
+                                        strings
+                                        proved very helpful in comparing Titles and Authors:
+                                        <ul>
+                                            <li>"..." and "... - Commentary" are more similar than if a less partial
+                                                similarity
+                                                measure was used</li>
+                                            <li>"..." and "Case report: ..." (when compared in their reversed form) are
+                                                more
+                                                similar than if a less partial similarity measure was used</li>
+                                            <li>some bibliographic databases list all authors, others limit them and add
+                                                "et
+                                                al."
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li>JWS proved useful, so no other similarity measures were tested</li>
+                                </ul>
+
+                                <p>Thresholds used for Jaro-Winkler Similarity:</p>
+                                <table class="table table-bordered" style="width: 80%">
+                                    <caption>Thresholds used for Jaro-Winkler Similarity</caption>
+                                    <thead>
+                                        <tr>
+                                            <th>Field</th>
+                                            <th>Case</th>
+                                            <th>Threshold</th>
+                                            <th>Explanation</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td rowspan="3">Authors</td>
+                                            <td>default (i.e. not a Reply)</td>
+                                            <td
+                                                th:text="${T(edu.dedupendnote.services.DeduplicationService.DefaultAuthorsComparator).AUTHOR_SIMILARITY_NO_REPLY}">
+                                                -0.67</td>
+                                            <td></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Reply and sufficient Start Pages</td>
+                                            <td
+                                                th:text="${T(edu.dedupendnote.services.DeduplicationService.DefaultAuthorsComparator).AUTHOR_SIMILARITY_REPLY_SUFFICIENT_STARTPAGES_OR_DOIS}">
+                                                -0.75</td>
+                                            <td>When a Reply the titles are not compared</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Reply and insufficient Start Pages</td>
+                                            <td
+                                                th:text="${T(edu.dedupendnote.services.DeduplicationService.DefaultAuthorsComparator).AUTHOR_SIMILARITY_REPLY_INSUFFICIENT_STARTPAGES_AND_DOIS}">
+                                                -0.80</td>
+                                            <td>When a Reply the titles are not compared</td>
+                                        </tr>
+                                        <tr>
+                                            <td rowspan="2">Journals *</td>
+                                            <td>default (i.e. not a Reply)</td>
+                                            <td
+                                                th:text="${T(edu.dedupendnote.services.DeduplicationService).JOURNAL_SIMILARITY_NO_REPLY}">
+                                                -0.90</td>
+                                            <td></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Reply</td>
+                                            <td
+                                                th:text="${T(edu.dedupendnote.services.DeduplicationService).JOURNAL_SIMILARITY_REPLY}">
+                                                -0.93</td>
+                                            <td></td>
+                                        </tr>
+                                        <tr>
+                                            <td rowspan="2">Title</td>
+                                            <td>Sufficient Start Pages or DOIs</td>
+                                            <td
+                                                th:text="${T(edu.dedupendnote.services.DeduplicationService).TITLE_SIMILARITY_SUFFICIENT_STARTPAGES_OR_DOIS}">
+                                                -0.90</td>
+                                            <td></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Insufficient Start Pages and DOIs</td>
+                                            <td
+                                                th:text="${T(edu.dedupendnote.services.DeduplicationService).TITLE_SIMILARITY_INSUFFICIENT_STARTPAGES_AND_DOIS}">
+                                                -0.94</td>
+                                            <td></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <div><i>Journals: if the JWS between Journal titles is below the threshold, two
+                                        comparisons
+                                        of
+                                        the
+                                        following types are tried:
+                                        <ul>
+                                            <li>"Ann Fr Anesth Reanim" and "Ann... Fr... Anesth... Reanim..."</li>
+                                            <li>"BMJ" and "B... M... J..."</li>
+                                        </ul>
+                                    </i>
+                                </div>
+                            </div>
+
+                            <div id="order_of_comparisons">
+                                <h5>2.4. The order of comparisons</h5>
+                                <p>Records are put in year sets based on the publication year. Records without
+                                    publication
+                                    year
+                                    are
+                                    put in a special year set YEAR_0.</p>
+
+                                <p>When deduplicating 1 file, records are compared in descending order of pairs of year
+                                    sets.
+                                    The records in YEAR_0 are added to each of these pairs except for the ones which are
+                                    already
+                                    marked as duplicates. For an EndNote RIS file with records from 1889 to 2020:</p>
+                                <ul>
+                                    <li>YEAR 2020 + YEAR 2019 + YEAR 0: all records of YEAR 2020 are compared to all
+                                        records
+                                        of
+                                        YEAR
+                                        2020 and YEAR 2019 and YEAR 0</li>
+                                    <li>YEAR 2019 + YEAR 2018 + YEAR 0: all records of YEAR 2019 are compared to all
+                                        records
+                                        of
+                                        YEAR
+                                        2019 and YEAR 2018 and YEAR 0</li>
+                                    <li>...</li>
+                                    <li>YEAR 1889 + YEAR 0: all records of YEAR 1889 are compared to all records of YEAR
+                                        1889
+                                        and
+                                        YEAR 0
+                                    </li>
+                                </ul>
+
+                                <p><u><strong>Justification:</strong></u></p>
+                                <ul>
+                                    <li>Pairs of year sets:
+                                        <ul>
+                                            <li>Bibliographic databases sometimes don't agree on the publication year,
+                                                in
+                                                most
+                                                cases
+                                                the difference is only 1 year</li>
+                                            <li>The publication year of Ahead of print publications and of their final
+                                                form
+                                                can
+                                                be
+                                                more than 1 year apart, but in the majority of cases they are at most 1
+                                                year
+                                                apart.
+                                            </li>
+                                            <li>Extending to groupings of more years would take longer and could cause
+                                                more
+                                                false
+                                                positives</li>
+                                        </ul>
+                                    </li>
+                                    <li>Descending order: Because the first record of a set of duplicate records is
+                                        saved to
+                                        the
+                                        output file,
+                                        <ul>
+                                            <li>when encountering an ahead of print publication of e.g. 2018 and a
+                                                corresponding
+                                                final record of 2019, the 2019 record will be saved</li>
+                                            <li>when encountering a record without a publication year and a
+                                                corresponding
+                                                record
+                                                with a publication year, the record with the publication year will be
+                                                saved
+                                            </li>
+                                        </ul>
+                                    </li>
+                                </ul>
+
+                                <p>When deduplicating 2 files, records of both files are compared in ascending order of
+                                    pairs of
+                                    year sets. The YEAR_0 is added to each of these pairs, but records which are marked
+                                    as
+                                    duplicates are first removed.<br />
+                                    The records of the OLD file are read before the records of the NEW file; because the
+                                    duplicate
+                                    chosen in a set of duplicate records is the first one encountered, duplicate records
+                                    from
+                                    the
+                                    OLD file will be chosen when present.<br>
+                                    For an EndNote RIS file with records from 1889 to 2020:</p>
+                                <ul>
+                                    <li>YEAR 0 + YEAR 1889 + YEAR 1890: all records of YEAR 0 + YEAR 1889 are compared
+                                        to
+                                        all
+                                        records of YEAR 0 and YEAR 1889 and YEAR 1890</li>
+                                    <li>YEAR 0 + YEAR 1890 + YEAR 1891: all records of YEAR 0 + YEAR 1890 are compared
+                                        to
+                                        all
+                                        records of YEAR 0 and YEAR 1890 and YEAR 1891</li>
+                                    <li>...</li>
+                                    <li>YEAR 0 + YEAR 2020: all records of YEAR 0 + YEAR 2020 are compared to all
+                                        records of
+                                        YEAR 0
+                                        and YEAR 2020</li>
+                                </ul>
+                                <p>The output file only contains records from the NEW file which are not duplicates of
+                                    records
+                                    of
+                                    the OLD file, and (if there are duplicates within the NEW file) are the first
+                                    duplicate
+                                    encountered within that duplicate set.</p>
+
+                                <p><u><strong>Justification:</strong></u></p>
+                                <ul>
+                                    <li>Ascending order:
+                                        <ul>
+                                            <li>when encountering an ahead of print publication of e.g. 2018 in the OLD
+                                                file
+                                                and
+                                                a
+                                                corresponding final record of 2018 or 2019 in the NEW file, the NEW
+                                                record
+                                                will
+                                                be
+                                                seen as a duplicate of the OLD record and not be saved. Saving that
+                                                record
+                                                would
+                                                create a duplicate</li>
+                                            <li>when encountering a record without a publication year in the OLD file
+                                                and a
+                                                corresponding record with a publication year in the NEW file, the record
+                                                with
+                                                the
+                                                publication year will be seen as a duplicate of the OLD record and not
+                                                be
+                                                saved.
+                                                Saving that record would create a duplicate</li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </div>
+
+                            <div id="effect">
+                                <h5>2.5. Effect of 'insufficient data from one of two records'</h5>
+
+                                <p>The 5th comparison (ISSN or Journal: Are they the same (ISSN) or similar (Journal)?)
+                                    looks at
+                                    first sight to only compare journal articles (with the additional effect that no
+                                    publications of
+                                    another type can ever be a duplicate). This is not completely true:</p>
+                                <ul>
+                                    <li>ISBN is treated the same way as a ISSN</li>
+                                    <li>The EndNote fields T2, J2, OP and T3 can also be used with other publications
+                                        types
+                                    </li>
+                                </ul>
+                                <p>However: the general rule treats 2 records / field sets as different if
+                                    <strong>both</strong>
+                                    records have insufficient data for that comparison. Two book records with the same
+                                    authors,
+                                    publication year and book title will be considered duplicates only if both have the
+                                    same
+                                    / a
+                                    similar ISBN.
+                                </p>
+                                <p>Relaxing this general rule (so that comparisons with insufficient data in one or both
+                                    records
+                                    are
+                                    treated the same way: UNKNOWN, so go on to the next comparison) would result in a
+                                    lot
+                                    more
+                                    False
+                                    Positives.</p>
+                            </div>
+                        </div>
+
+                        <div id="enriching">
+                            <h3>3. Enriching the duplicate chosen</h3>
+
+                            <p><u><strong>Justification:</strong></u></p>
+                            <ul>
+                                <li>(all cases): the enriched data are copied from existing duplicate records or occur
+                                    in a
+                                    lot
+                                    of records (empty author, full pages form, omitted same ending page)</li>
+                                <li>Author "Anonymous": There is no reason to use 2 forms (Author "Anonymous" and no
+                                    Author)
+                                    for
+                                    this case</li>
+                                <li>DOI - adding from other duplicates: Considered a useful addition</li>
+                                <li>DOI - standardized form: Considered a useful addition (clickable in EndNote)</li>
+                                <li>Publication year - missing added from other duplicates: Records without publication
+                                    year
+                                    are
+                                    subpar</li>
+                                <li>Starting page and Article number:
+                                    <ul>
+                                        <li>Some bibliographic databases (e.g. PubMed) treat them the same way, others
+                                            (e.g.
+                                            Scopus, Web of Science) don't</li>
+                                        <li>EndNote output formats (e.g. Vancouver style) can't handle Article numbers
+                                        </li>
+                                    </ul>
+                                </li>
+                                <li>Starting page - missing added from other duplicates: Records without starting page
+                                    are
+                                    subpar
+                                </li>
+                                <li>Starting page - standardized to full form:
+                                    <ul>
+                                        <li>EndNote deduplication treats "492-5" and "492-495" as different values</li>
+                                        <li>EndNote output formats (e.g. Vancouver style) handle this full form
+                                            gracefully
+                                            (emit
+                                            "492-5" for pages "492-495")</li>
+                                    </ul>
+                                </li>
+                                <li>Starting page - omitting same end page:
+                                    <ul>
+                                        <li>Some bibliographic databases (esp. Web of Science) sometimes use this form
+                                            (e.g.
+                                            "211-211")</li>
+                                        <li>EndNote deduplication treats "211" and "211-211" as different values</li>
+                                        <li>EndNote output formats (e.g. Vancouver style) emit "211-" for pages
+                                            "211-211"
+                                        </li>
+                                    </ul>
+                                </li>
+                                <li>Title - Reply / Erratum / Comment / Retraction: Inconsistent use of bibliographic
+                                    databases.
+                                    The longest title holds most information</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div id="performance">
+                        <h2 class="bg-success-subtle">Performance</h2>
+                        <p>Data are from:</p>
+                        <ul>
+                            <li>[SRA] Rathbone, J., Carter, M., Hoffmann, T. et al.
+                                Better duplicate detection for systematic reviewers: evaluation of Systematic Review
+                                Assistant-Deduplication Module.
+                                Syst Rev 4, 6 (2015). <a href="https://doi.org/10.1186/2046-4053-4-6"
+                                    target="_blank">https://doi.org/10.1186/2046-4053-4-6</a><br>
+                                The data sets are available at <a href="https://osf.io/dyvnj/"
+                                    target="_blank">https://osf.io/dyvnj/</a>
+                            </li>
+                            <li>[McKeown] McKeown, S., Mir, Z.M.
+                                Considerations for conducting systematic reviews: evaluating the performance of
+                                different
+                                methods for de-duplicating references.
+                                Syst Rev 10, 38 (2021). <a href="https://doi.org/10.1186/s13643-021-01583-y"
+                                    target="_blank">https://doi.org/10.1186/s13643-021-01583-y</a>
+                            </li>
+                            <li>[BIG_SET] Own test database for DedupEndNote on portal vein thrombosis (52,828 records,
+                                with 5078 records validated)</li>
+                        </ul>
+                        <table border="1" class="table">
+                            <colgroup>
+                                <col>
+                                <col>
+                                <col span="7" style="text-align:right">
+                            </colgroup>
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Tool</th>
+                                    <th>True pos</th>
+                                    <th>False neg</th>
+                                    <th>Sensitivity</th>
+                                    <th>True neg</th>
+                                    <th>False pos</th>
+                                    <th>Specificity</th>
+                                    <th>Accuracy</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td rowspan="3">SRA: Cytology screening<br>(1856 rec)</td>
+                                    <td>EndNote X9</td>
+                                    <td align="right">885</td>
+                                    <td align="right">518</td>
+                                    <td align="right">63.1%</td>
+                                    <td align="right">452</td>
+                                    <td align="right">1</td>
+                                    <td align="right">99.8%</td>
+                                    <td align="right">72.0%</td>
+                                </tr>
+                                <tr>
+                                    <td>SRA-DM</td>
+                                    <td align="right">1265</td>
+                                    <td align="right">139</td>
+                                    <td align="right">90.1%</td>
+                                    <td align="right">452</td>
+                                    <td align="right">0</td>
+                                    <td align="right"><strong>100.0%</strong></td>
+                                    <td align="right">92.5%</td>
+                                </tr>
+                                <tr>
+                                    <td>DedupEndNote</td>
+                                    <td align="right">1361</td>
+                                    <td align="right">59</td>
+                                    <td align="right"><strong>95.8%</strong></td>
+                                    <td align="right">436</td>
+                                    <td align="right">0</td>
+                                    <td align="right"><strong>100.0%</strong></td>
+                                    <td align="right"><strong>96.8%</strong></td>
+                                </tr>
+                                <tr>
+                                    <td cellspan="9" style="height: 15px;"></td>
+                                </tr>
+                                <tr>
+                                    <td rowspan="3">SRA: Haematology (1415 rec)</td>
+                                    <td>EndNote</td>
+                                    <td align="right">159</td>
+                                    <td align="right">87</td>
+                                    <td align="right">64.6%</td>
+                                    <td align="right">1165</td>
+                                    <td align="right">4</td>
+                                    <td align="right">99.7%</td>
+                                    <td align="right">93.6%</td>
+                                </tr>
+                                <tr>
+                                    <td>SRA-DM</td>
+                                    <td align="right">208</td>
+                                    <td align="right">38</td>
+                                    <td align="right">84.6%</td>
+                                    <td align="right">1169</td>
+                                    <td align="right">0</td>
+                                    <td align="right"><strong>100.0%</strong></td>
+                                    <td align="right">97.3%</td>
+                                </tr>
+                                <tr>
+                                    <td>DedupEndNote</td>
+                                    <td align="right">225</td>
+                                    <td align="right">11</td>
+                                    <td align="right"><strong>95.3%</strong></td>
+                                    <td align="right">1177</td>
+                                    <td align="right">2</td>
+                                    <td align="right">99.8%</td>
+                                    <td align="right"><strong>99.1%</strong></td>
+                                </tr>
+                                <tr>
+                                    <td cellspan="9" style="height: 15px;"></td>
+                                </tr>
+                                <tr>
+                                    <td rowspan="3">SRA: Respiratory<br>(1988 rec)</td>
+                                    <td>EndNote X9</td>
+                                    <td align="right">410</td>
+                                    <td align="right">391</td>
+                                    <td align="right">51.2%</td>
+                                    <td align="right">1185</td>
+                                    <td align="right">2</td>
+                                    <td align="right">99.8%</td>
+                                    <td align="right">80.2%</td>
+                                </tr>
+                                <tr>
+                                    <td>SRA-DM</td>
+                                    <td align="right">674</td>
+                                    <td align="right">125</td>
+                                    <td align="right">84.4%</td>
+                                    <td align="right">1189</td>
+                                    <td align="right">0</td>
+                                    <td align="right"><strong>100.0%</strong></td>
+                                    <td align="right">93.7%</td>
+                                </tr>
+                                <tr>
+                                    <td>DedupEndNote</td>
+                                    <td align="right">766</td>
+                                    <td align="right">34</td>
+                                    <td align="right"><strong>95.8%</strong></td>
+                                    <td align="right">1184</td>
+                                    <td align="right">4</td>
+                                    <td align="right">99.7%</td>
+                                    <td align="right"><strong>98.1%</strong></td>
+                                </tr>
+                                <tr>
+                                    <td cellspan="9" style="height: 15px;"></td>
+                                </tr>
+                                <tr>
+                                    <td rowspan="3">SRA: Stroke<br>(1292 rec)</td>
+                                    <td>EndNote X9</td>
+                                    <td align="right">372</td>
+                                    <td align="right">134</td>
+                                    <td align="right">73.5%</td>
+                                    <td align="right">784</td>
+                                    <td align="right">2</td>
+                                    <td align="right">99.7%</td>
+                                    <td align="right">89.5%</td>
+                                </tr>
+                                <tr>
+                                    <td>SRA-DM</td>
+                                    <td align="right">426</td>
+                                    <td align="right">81</td>
+                                    <td align="right">84.0%</td>
+                                    <td align="right">785</td>
+                                    <td align="right">0</td>
+                                    <td align="right"><strong>100.0%</strong></td>
+                                    <td align="right">93.7%</td>
+                                </tr>
+                                <tr>
+                                    <td>DedupEndNote</td>
+                                    <td align="right">497</td>
+                                    <td align="right">13</td>
+                                    <td align="right"><strong>97.4%</strong></td>
+                                    <td align="right">782</td>
+                                    <td align="right">0</td>
+                                    <td align="right"><strong>100.0%</strong></td>
+                                    <td align="right"><strong>99.0%</strong></td>
+                                </tr>
+                                <tr>
+                                    <td cellspan="9" style="height: 15px;"></td>
+                                </tr>
+                                <tr>
+                                    <td rowspan="7">McKeown<br>(3130 rec)</td>
+                                    <td>OVID</td>
+                                    <td align="right">1982</td>
+                                    <td align="right">90</td>
+                                    <td align="right">95.7%</td>
+                                    <td align="right">1058</td>
+                                    <td align="right">0</td>
+                                    <td align="right"><strong>100.0%</strong></td>
+                                    <td align="right">97.1%</td>
+                                </tr>
+                                <tr>
+                                    <td>EndNote</td>
+                                    <td align="right">1541</td>
+                                    <td align="right">531</td>
+                                    <td align="right">74.4%</td>
+                                    <td align="right">850</td>
+                                    <td align="right">208</td>
+                                    <td align="right">80.3%</td>
+                                    <td align="right">76.4%</td>
+                                </tr>
+                                <tr>
+                                    <td>Mendeley</td>
+                                    <td align="right">1877</td>
+                                    <td align="right">195</td>
+                                    <td align="right">90.6%</td>
+                                    <td align="right">1041</td>
+                                    <td align="right">17</td>
+                                    <td align="right">98.4%</td>
+                                    <td align="right">93.2%</td>
+                                </tr>
+                                <tr>
+                                    <td>Zotero</td>
+                                    <td align="right">1473</td>
+                                    <td align="right">599</td>
+                                    <td align="right">71.1%</td>
+                                    <td align="right">1038</td>
+                                    <td align="right">20</td>
+                                    <td align="right">98.1%</td>
+                                    <td align="right">80.2%</td>
+                                </tr>
+                                <tr>
+                                    <td>Covidence</td>
+                                    <td align="right">1952</td>
+                                    <td align="right">120</td>
+                                    <td align="right">94.2%</td>
+                                    <td align="right">1056</td>
+                                    <td align="right">2</td>
+                                    <td align="right">99.8%</td>
+                                    <td align="right">96.1%</td>
+                                </tr>
+                                <tr>
+                                    <td>Rayyan</td>
+                                    <td align="right">2023</td>
+                                    <td align="right">49</td>
+                                    <td align="right"><strong>97.6%</strong></td>
+                                    <td align="right">1006</td>
+                                    <td align="right">52</td>
+                                    <td align="right">95.1%</td>
+                                    <td align="right">96.8%</td>
+                                </tr>
+                                <tr>
+                                    <td>DedupEndNote</td>
+                                    <td align="right">2018</td>
+                                    <td align="right">56</td>
+                                    <td align="right">97.3%</td>
+                                    <td align="right">1056</td>
+                                    <td align="right">0</td>
+                                    <td align="right"><strong>100.0%</strong></td>
+                                    <td align="right"><strong>98.2%</strong></td>
+                                </tr>
+                                <tr>
+                                    <td cellspan="9" style="height: 15px;"></td>
+                                </tr>
+                                <tr>
+                                    <td>BIG_SET<br>(5078 rec)</td>
+                                    <td>DedupEndNote</td>
+                                    <td align="right">3937</td>
+                                    <td align="right">176</td>
+                                    <td align="right">95.7%</td>
+                                    <td align="right">959</td>
+                                    <td align="right">10</td>
+                                    <td align="right">99.0%</td>
+                                    <td align="right">96.3%</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <p>See <a href="/test_results_details">Test results - details</a> for a description of this test
+                            database BIG_TEST on portal vein thrombosis.</p>
+
+                        <table class="table table-sm">
+                            <caption>Perfomance table</caption>
+                            <thead>
+                                <tr>
+                                    <th>Tool</th>
+                                    <th>Setting</th>
+                                    <th class="text-right">Duplicates found</th>
+                                    <th class="text-right">Duplicates to delete</th>
+                                    <th class="text-right">After deduplication</th>
+                                    <th class="text-right">% kept</th>
+                                </tr>
+                            </thead>
+                            <tr>
+                                <td>EndNote</td>
+                                <td>Author + Year + Title + Reference Type<br />(default setting)</td>
+                                <td class="text-right">32,891</td>
+                                <td class="text-right">19,959</td>
+                                <td class="text-right">32,869</td>
+                                <td class="text-right">62%</td>
+                            </tr>
+                            <tr>
+                                <td>EndNote</td>
+                                <td>Author + Year + Title</td>
+                                <td class="text-right">32,920</td>
+                                <td class="text-right">19,976</td>
+                                <td class="text-right">32,852</td>
+                                <td class="text-right">62%</td>
+                            </tr>
+                            <tr>
+                                <td>EndNote</td>
+                                <td>Author + Year + Title + Secondary Title (Journal)</td>
+                                <td class="text-right">22,120</td>
+                                <td class="text-right">12,333</td>
+                                <td class="text-right">40,495</td>
+                                <td class="text-right">77%</td>
+                            </tr>
+                            <tr>
+                                <td>DedupEndNote</td>
+                                <td></td>
+                                <td class="text-right">38,617</td>
+                                <td class="text-right">24,357</td>
+                                <td class="text-right">28,471</td>
+                                <td class="text-right">54%</td>
+                            </tr>
+                        </table>
+
+                        <!--
+                        <h5>Validation</h5>
+
+                        <p>A general subset of 4926 records was manually checked (150 records without an Author, 79 with
+                            Author
+                            "Anonymous",
+                            the 366 articles with "phase" in the title (because of "Phase I", Phase I/II", ...)
+                            the rest: "Aagaard" ... "Abbitt", "Anoob" ... "Axelrod",
+                            "Liu", "v Koppenfels" ... "von Woellwarth", and some others). Because replies are treated in
+                            a
+                            special way, 130 records with "reply" in the title
+                            which were identified as duplicates, were checked, but only for true and false positives.
+                        </p>
+                        <table class="table table-bordered">
+                            <caption>Performance table 2</caption>
+                            <thead>
+                                <tr>
+                                    <th>Set</th>
+                                    <th>True positive</th>
+                                    <th>False negative</th>
+                                    <th>Sensitivity</th>
+                                    <th>True negative</th>
+                                    <th>False positive</th>
+                                    <th>Specificity</th>
+                                </tr>
+                                <tr>
+                                    <td></td>
+                                    <td>correctly identified duplicates</td>
+                                    <td>missed duplicates</td>
+                                    <td></td>
+                                    <td>correctly identified unique records</td>
+                                    <td>incorrectly identified as duplicates</td>
+                                    <td></td>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>General</td>
+                                    <td>3721</td>
+                                    <td>238</td>
+                                    <td>94.0%</td>
+                                    <td>962</td>
+                                    <td>5</td>
+                                    <td>99.5%</td>
+                                </tr>
+                                <tr>
+                                    <td>Replies</td>
+                                    <td>130</td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td>0</td>
+                                    <td></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    -->
+                        <h5 style="color: red;">TODO: UPDATE examples</h5>
+                        <p>The False Positives are all conference abstracts:</p>
+                        <ul>
+                            <li>wrong DOI in second of 2 EMBASE (OVID) records: same authors, year, title, DOI,
+                                different starting page
+                                <ul>
+                                    <li>Segovia, M. C., et al. (2019). "Combined multivisceral and renal transplant in a
+                                        patient with JAK-2 mutation." Transplantation 103(7 Supplement 2): S143. DOI:
+                                        10.1097/01.tp.0000576288.84252.91
+                                    </li>
+                                    <li>Segovia, M. C., et al. (2019). "Combined multivisceral and renal transplant in a
+                                        patient with JAK-2 mutation." Neurology 92(15 Supplement 1). DOI:
+                                        10.1097/01.tp.0000576288.84252.91</li>
+                                </ul>
+                            </li>
+                            <li>wrong DOI in second of 2 EMBASE (OVID) records: same authors, year, title, DOI,
+                                different starting page <ul>
+                                    <li>Galvao, F. H., et al. (2019). "Intestinal and multivisceral transplantation at
+                                        hospital dasclinicas da faculdade De medicina da universidade De Sao Paulo
+                                        (HC-FMUSP)-Brazil." Transplantation 103(7 Supplement 2): S171. DOI:
+                                        10.1097/01.tp.0000576492.69414.80</li>
+                                    <li>Galvao, F. H., et al. (2019). "Intestinal and multivisceral transplantation at
+                                        hospital dasclinicas da faculdade De medicina da universidade De Sao Paulo
+                                        (HC-FMUSP)-Brazil." Neurology 92(15 Supplement 1). DOI:
+                                        10.1097/01.tp.0000576492.69414.80</li>
+                                </ul>
+                            </li>
+                            <li>reversed title 3 seen as similar to reversed title of 1 and 2: same authors, year,
+                                title, starting page
+                                <ul>
+                                    <li>Cool, J., et al. (2018). "TRENDS IN THE PREVALENCE OF PORTAL VEIN THROMBOSIS AND
+                                        ASSOCIATED MORTALITY IN CIRRHOSIS: ANALYSIS OF A NATIONALLY REPRESENTATIVE
+                                        INPATIENT
+                                        COHORT." Gastroenterology 154(6): S1178-S1178. [Web of Science]</li>
+                                    <li>Cool, J., et al. (2018). "TRENDS IN THE PREVALENCE OF PORTAL VEIN THROMBOSIS AND
+                                        ASSOCIATED MORTALITY IN CIRRHOSIS: ANALYSIS OF A NATIONALLY REPRESENTATIVE
+                                        INPATIENT
+                                        COHORT." Gastroenterology 154(6 Supplement 1): S-1178. DOI:
+                                        10.1016/S0016-5085%2818%2933901-5 [Embase OVID]</li>
+                                    <li>Cool, J., et al. (2018). "THE ASSOCIATION BETWEEN PORTAL VEIN THROMBOSIS AND
+                                        OTHER
+                                        VENOUS THROMBOEMBOLISM IN CIRRHOSIS: ANALYSIS OF A NATIONALLY REPRESENTATIVE
+                                        INPATIENT COHORT." Gastroenterology 154(6): S1178-S1179. [Web of Science]</li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div id="markMode">
+                        <h2 class="bg-success-subtle">Mark mode</h2>
+
+                        <p>If you want to manually merge the records which are duplicates according to DedupEndNote, you
+                            can use Mark mode.</p>
+                        <p>Because Zotero does not work with / does not show record numbers, Mark Mode is not relevant
+                            for Zotero users.</p>
+
+                        <p>In Mark mode the ID of the first record of a set of duplicate records is copied to the label
+                            field ("LB") of all duplicate records. The input file is copied to the output file with the
+                            addition of the Label field if it is not empty. The original content of the Label field is
+                            overwritten! All other fields are copied as is (so no enriching of the output: prescribed
+                            form of DOI, ...).</p>
+
+                        <p>After importing the results file into a new EndNote database, make the Label field visible.
+                            The IDs in the Label field refer to the IDs of the <u>original</u> EndNote database.</p>
+                        <ul>
+                            <li>To see the duplicates, search for "Label" "is greater than" 0, and sort on the label
+                                field.
+                            </li>
+                            <li>To manually merge, change in Preferences / Deduplicate the fields to deduplicate on to
+                                the
+                                Label field, deduplicate (in EndNote) and merge at will</li>
+                        </ul>
+
+                        <p>Comparing the results of deduplication by EndNote itself and DedupEndNote:</p>
+                        <ul>
+                            <li>Import the result file into a new EndNote database</li>
+                            <li>Deduplicate by EndNote itself</li>
+                            <li>Select all records in the "Duplicate References" set, and mark them as Read</li>
+                            <li>Select the "All References" set, limit to the duplicates found by DedupEndNote (search
+                                for
+                                "Label" "is greater than" 0), and sort on the label field.</li>
+                            <li>The records marked as Unread were identified as duplicates by DedupEndNote, but not by
+                                EndNote itself.</li>
+                            <li>Select the "All References" set, limit to the duplicates not found by DedupEndNote
+                                (search
+                                for "Label" "is less than" 0).</li>
+                            <li>The records marked as Read were identified as duplicates by EndNote itself, but not by
+                                DedupEndNote.</li>
+                        </ul>
+
+                    </div>
+
+                    <div id="limitations">
+                        <h2 class="bg-success-subtle">Limitations</h2>
+                        <ul>
+                            <li>Input file size: The maximum size of the input file is limited to 150MB.</li>
+                            <li>Input file format: The program only handles files in RIS format, not in XML or CSV
+                                format.</li>
+                            <li>Input file encoding: The program assumes that the input file is encoded as UTF-8.</li>
+                            <li>If authors AND (all) titles AND (all) journal names for a record use a non-Latin script,
+                                results for this record may be inaccurate.</li>
+                            <li>(when deduplicating one file:) The input file must be an export from ONE EndNote
+                                database: the ID fields are used internally for identifying the records, so they have to
+                                be unique. However, if the RIS file does not have an ID field in the first publication,
+                                DedupEndNote assumes the whole file has no ID fields and gives every publication an ID
+                                (starting with 1). This has only been tested on Zotero files!</li>
+                            <li>The program has been developed and tested for biomedical databases (PubMed, EMBASE, ...)
+                                and some general databases (Web of Science, Scopus). The data sets used were the results
+                                of biomedical queries. Deduplicating records from other databases is not guaranteed to
+                                work, and performance is often very poor, esp. for non journal articles
+                                (see <a href="#effect">Justification. 2.5. Effect of
+                                    insufficient data from one of two records</a>).</li>
+                            <li>The program uses a bibliographic point of view:
+                                <ul>
+                                    <li>an article or conference abstract that has been published in more than one
+                                        (issue of a) journal is not considered a duplicate publication.</li>
+                                    <li>Records for each publication year are compared to records from the same and the
+                                        following year: a record from 2016 is compared to the records from 2015 (when
+                                        treating the records from 2015) and from 2016 and 2017 (when treating the
+                                        records from 2016). A PubMed ahead-of-print record from 2013 and a corresponding
+                                        record from 2017 (when it was 'officially' published) will not be compared (and
+                                        possibly deduplicated).</li>
+                                    <li>Bibliographic databases are not always very accurate in the starting page of a
+                                        publication. Because starting page is part of the comparisons, DedupEndNote
+                                        misses the duplicates when bibliographic databases don't agree on the starting
+                                        page (and one or both records have no DOIs).</li>
+                                </ul>
+                            </li>
+                        </ul>
+
+                    </div>
+
+                    <div id="faq">
+                        <h2 class="bg-success-subtle">FAQ</h2>
+                        <ol>
+                            <li><a href="#endnote">Why only EndNote / Zotero RIS export files?</a></li>
+                            <li><a href="#not_endnote">I don't use EndNote, but ...</a></li>
+                            <li><a href="#groups">I use groups, comments, ... in EndNote and don't
+                                    want to lose them</a></li>
+                            <li><a href="#deletions">I have deleted records in EndNote and don't want
+                                    them to reappear when updating</a></li>
+                            <li><a href="#preferredOrder">I prefer PubMed records above EMBASE
+                                    records</a></li>
+                            <li><a href="#perfect">Is DedupEndNote perfect?</a></li>
+                        </ol>
+
+                        <h3 id="endnote">1. Why only EndNote / Zotero RIS export files?</h3>
+                        <div>EndNote (and Zotero?) is very good at importing export files from many bibliographic
+                            databases. The
+                            RIS export from an EndNote / Zotero database has a standard format,
+                            which makes reading and interpreting records for DedupEndNote a lot easier.</div>
+                        <div>(This version of) DedupEndNote does not read EndNote XML exports, because reading and
+                            writing XML
+                            files is more complex
+                            than reading and writing a RIS file, without offering any benefit (?).</div>
+                        <div>DedupEndNote was developped with EndNote databases and RIS files. Zotero and Zotero RIS
+                            files were
+                            only later taken in consideration.
+                            In 2025 the results from a query in PubMed, Embase and Web of Science were imported into
+                            both
+                            an EndNote and a Zotero database, exported as RIS files, and deduplicated with DedupEndNote.
+                            The results were identical.
+                        </div>
+
+                        <h3 id="not_endnote">2. I don't use EndNote, but ...</h3>
+                        <div>Sorry, the program has been mainly developed and tested with EndNote export files in RIS
+                            format.
+                        </div>
+                        <div>However, the code is available on <a
+                                href="https://github.com/globbestael/DedupEndNote">GitHub</a>.
+                            For other databases the main changes will probably have
+                            to be made only in the functions for reading and writing.</div>
+
+                        <h3 id="groups">3. I use groups, comments, ... in EndNote and don't want to lose them</h3>
+                        <p>EndNote export files in RIS format do not contain grouping information!</p>
+                        <p>If you have groupings, ... in your EndNote database before you started using DedupEndNote:
+                            use DedupEndNote in MarkMode, and deduplicate then within EndNote only on the Label field.
+                        </p>
+
+                        <p>TODO: EXPAND</p>
+
+                        <p>TODO: XML (formatting)</p>
+
+                        <p>However, for new projects the following will work: using a MASTER Database and a WORKING
+                            Database<br />
+                            <i>(The names of the EndNote databases and the RIS files are just examples)</i>
+                        </p>
+                        <ol>
+                            <li>create a MASTER database</li>
+                            <li>import your first set of records from one or more bibliographic databases into the
+                                MASTER
+                                Database</li>
+                            <li>(optionally: clean up the MASTER Database) if the MASTER Database can contain duplicate
+                                records,
+                                export the MASTER Database as a RIS file, deduplicate the file with DedupEndNote,
+                                import the deduplicated results into a NEW_MASTER Database EndNote file, remove the old
+                                MASTER
+                                Database,
+                                and make a copy of the NEW_MASTER database as your MASTER database (File &gt; Save a
+                                Copy ...)
+                            </li>
+                            <li>Make a copy of the MASTER Database as your WORKING Database EndNote file (File &gt; Save
+                                a Copy
+                                ...)</li>
+                            <li><strong>edit, comment, delete, group, ... records only in the WORKING Database!</strong>
+                            </li>
+                        </ol>
+                        <p> </p>
+                        <p>When you have new export files from the same or other bibliographic databases:</p>
+                        <ol>
+                            <li>import these results into a new TEMP Endnote database, export that TEMP EndNote database
+                                into a
+                                RIS file NEW_RECORDS.txt
+                                (overwriting the file if it already exists), and remove the TEMP EndNote database</li>
+                            <li>export the MASTER Database into a RIS file OLD_RECORDS.txt (overwriting the file if it
+                                already
+                                exists)</li>
+                            <li>use <a href="/twofiles">DedupEndNote - deduplicate 2 files</a> with these two files
+                                (results
+                                will be in NEW_RECORDS_deduplicated.txt)</li>
+                            <li>import NEW_RECORDS_deduplicated.txt into the MASTER Database</li>
+                            <li>import NEW_RECORDS_deduplicated.txt into the WORKING Database.<br>
+                                And again: <strong>edit, comment, delete, group, ... records only in the WORKING
+                                    Database!</strong>
+                                <ul>
+                                    <li>because the deleted records from the WORKING Database are still present in the
+                                        MASTER
+                                        Database (and as a consequence also in OLD_RECORDS.txt),
+                                        duplicates for these records in NEW_RECORDS.txt will be recognized by
+                                        DedupEndNote and
+                                        not reappear in NEW_RECORDS_deduplicated.txt</li>
+                                    <li>the existing groupings, edits, ... in the WORKING Database will not be
+                                        overwritten.</li>
+                                </ul>
+                                <p><span style="color: red;">TODO: </span>What about manual adds?</p>
+                                <p><span style="color: red;">TODO: </span>What about updates of ahead-of-print
+                                    publications?</p>
+                            </li>
+                        </ol>
+
+                        <h3 id="deletions">4. I have deleted records in EndNote and don't want them to reappear when
+                            updating
+                        </h3>
+                        <p>See previous question</p>
+
+                        <h3 id="preferredOrder">5. I prefer PubMed records above EMBASE records</h3>
+                        <p>DedupEndNote compares records in the order of the input file, after they are grouped on
+                            publication
+                            year. This makes it possible
+                            to influence the choice of duplicate within a duplicate set.</p>
+                        <p>Suppose all records have the field Database Provider filled in with either "PubMed" or
+                            "EMBASE". If
+                            you order the orginal EndNote database on
+                            the field Database Provider in descending order before exporting to a RIS file, DedupEndNote
+                            will
+                            use a PubMed record if a duplicate set contains one or more PubMed records
+                            and one or more EMBASE records (except if one or more EMBASE records of this duplicate
+                            set has a publication year one year later than all PubMed records). <span
+                                style="color: red;">TODO:
+                            </span>Explain why "later"?</p>
+
+                        <p>Your preference will probably not be the same as the alphabetical order of the names of
+                            database providers ("CINAHL", "Cochrane ...", "EMBASE", ...). You could however change this
+                            field in "1 - PubMed", "2 - EMBASE", "3 - Cochrane", ... and order your EndNote database on
+                            this field (EndNote will order numerically) before exporting to a RIS file, or use another
+                            field with similar content.</p>
+
+                        <h3 id="perfect">6. Is DedupEndNote perfect?</h3>
+                        <p>Of course not.</p>
+
+                        <p>However, DedupEndNote tries to avoid at all costs to wrongly identify records as duplicates.
+                            The MarkMode was specifically developed for this, making comparison between results of
+                            deduplication by EndNote and by DedupEndNote feasible.
+                        </p>
+
+                        <h5>False positives</h5>
+                        <p>There was only 1 false positive found in the validation sets (11,474 validated records):</p>
+                        <ul>
+                            <li>Cytology screening (from SRA-DM, 1856 records, all validated)</li>
+                            <li>Haematology (from SRA-DM, 1415 records, all validated)</li>
+                            <li>Respiratory (from SRA-DM, 1988 records, all validated)</li>
+                            <li>Stroke (from SRA-DM, 1292 records, all validated)</li>
+                            <li>BIG SET (our own test database of 52,828 records, with 4923 records validated)</li>
+                        </ul>
+
+                        <ul>
+                            <li>Cool, J.; Rosenblatt, R.; Kumar, S.; Lucero, C.; Fortune, B.; Crawford, C. V.; Jesudian,
+                                A.:
+                                The Association Between Portal Vein Thrombosis and Other Venous Thromboembolism in
+                                Cirrhosis:
+                                Analysis of a Nationally Representative Inpatient Cohort, in: Gastroenterology 154 (6
+                                Supplement
+                                1), 2018, S-1179</li>
+                            <li>Cool, J.; Rosenblatt, R.; Kumar, S.; Lucero, C.; Fortune, B.; Crawford, C. V.; Jesudian,
+                                A.:
+                                TRENDS IN THE PREVALENCE OF PORTAL VEIN THROMBOSIS AND ASSOCIATED MORTALITY IN
+                                CIRRHOSIS:
+                                ANALYSIS OF A NATIONALLY REPRESENTATIVE INPATIENT COHORT, in: Gastroenterology 154 (6
+                                Supplement
+                                1), 2018, S-1178</li>
+                        </ul>
+
+                        <h5>False negatives</h5>
+                        <p>DedupEndNote will miss some duplicate records, e.g.:</p>
+                        <ol>
+                            <li>Records have different starting pages and not 2 DOIs which are the same</li>
+                            <li>The publication years of duplicate records can be more than 1 year apart. The validated
+                                subset of BIG_SET (4923 records) has 60 examples of duplicate records with different
+                                publication years: differences are 1 year (48), 2 years (8) and 4 years (4).</li>
+                            <li>Journals titles are not identified as similar (e.g. "Jbr-btr" and "Journal Belge de
+                                Radiology" with different or no ISSNs, or "Am J Dig Dis" and "Aaierj.Dio.Dis." (from
+                                EMBASE, definitely a typo), or "J Can Assoc Radiol" and "Canadian Association of
+                                Radiologists Journal")</li>
+                            <li>Replies: Identifying replies by "response" as one of the title words is not accurate
+                                enough (e.g. "Regulation of hepatic blood flow: The hepatic arterial buffer response
+                                revisited") and could wrongly identify duplicates. As a consequence "Incidence and
+                                Natural Course of Portal Vein Thrombosis in Cirrhosis Response" (Web of Science) is not
+                                marked as a duplicate of "Response to Senzolo and García-Pagán" (PubMed, EMBASE and
+                                Scopus) (<a href="https://doi.org/10.1038/ajg.2013.298"
+                                    target="blank">https://doi.org/10.1038/ajg.2013.298</a>).</li>
+                        </ol>
+
+                        <p><strong>After deduplication by DedupEndNote, deduplication with EndNote itself (default
+                                setting: Author, Year, Title) could be worthwhile.</strong> The case of different
+                            starting pages can only be solved by looking up the publication itself, the case of the
+                            missed similar journals by your brain.</p>
+
+                        <p><u>The next results are for version 1.0.0 / these results should be updated for the latest
+                                version:</u><br />
+                            After deduplicating our test database of 52,828 records with DedupEndNote and importing the
+                            result file into a new EndNote database, deduplication with EndNote itself (default setting:
+                            Author, Year, Title) found 260 duplicates. After manual inspection, we found 118 records
+                            which were true duplicates. Some of the "reasons":</p>
+                        <ul>
+                            <li>different starting page: 25</li>
+                            <li>different starting page and DOI: 1</li>
+                            <li>different journals: 7, i.e. DedupEndNote couldn't be expected to recognize these
+                                journals as similar</li>
+                            <li>error in starting page: 1</li>
+                            <li>Database error in Journal name: 12<br />
+                                Scopus sometimes uses the continuation title too early:
+                                <ul>
+                                    <li>"Blood Vessels" (PubMed) vs "Journal of Vascular Research" (Scopus, continuation
+                                        of "Blood Vessels")</li>
+                                    <li>"Acta Pathol Jpn" (PubMed, EMBASE) vs "Pathology International" (Scopus,
+                                        continuation of "Acta Pathol Jpn")</li>
+                                    <li>"Acta Paediatr Jpn" (PubMed) and "Pediatrics International" (Scopus,
+                                        continuation of "Acta Paediatr Jpn")</li>
+                                    <li>"American Journal of Pediatric Hematology/Oncology" (PubMed) and "Journal of
+                                        pediatric hematology/oncology" (Cochrane, Scopus, continuation of "American
+                                        Journal of Pediatric Hematology/Oncology")</li>
+                                    <li>"Z Kinderchir" (PubMed) and "European Journal of Pediatric Surgery" (Scopus,
+                                        continuation of "Z Kinderchir")</li>
+                                    <li>"Cardiovasc Surg" (PubMed) and "Vascular" (Scopus, continuation of "Cardiovasc
+                                        Surg") </li>
+                                    <li>"Int J Addict" (PubMed) and "Substance Use and Misuse" (Scopus, continuation of
+                                        "Int J Addict")</li>
+                                    <li>"Aust Paediatr J" (PubMed) and "Journal of Paediatrics and Child Health"
+                                        (Scopus, continuation of "Aust Paediatr J")</li>
+                                </ul>
+                                <p>2025-08-01: the change in version 1.0.2 (comparison 5 (ISSN and Journal names) is
+                                    skipped when the DOIs are the same) solves some (a lot?) of these problems.
+                                    But: the journal name used in the deduplicated file is the one from the first record
+                                    in the duplicate set.</p>
+                            </li>
+                            <li>DedupEndNote error in Journal name: 3, i.e. DedupEndNote would be expected to recognize
+                                these journals as similar
+                                <ul>
+                                    <li>("Jbr-btr" vs "Journal Belge de Radiologie")</li>
+                                    <li>"Langenbecks Arch Chir Suppl Kongressbd" vs "Langenbecks archiv fur chirurgie.
+                                        Supplement. Kongressband. Deutsche gesellschaft fur chirurgie. Kongress"</li>
+                                    <li>"J Vasc Surg Venous Lymphat Disord" vs "Journal of Vascular Surgery: Venous and
+                                        Lymphatic Disorders"</li>
+                                </ul>
+                            </li>
+                            <li>DedupEndNote parsing error in Starting page: 1 ("S6-97-s6-99" vs "S697-s699",
+                                DedupEndNote used "6" in the first case instead of "697")</li>
+                        </ul>
+
+                        <p>Some cases of duplicate records are "unsolvable" for programs? Take e.g.the following
+                            publication
+                            (<a href="https://www.nejm.org/doi/full/10.1056/NEJM199105303242207)"
+                                target="blank">https://www.nejm.org/doi/full/10.1056/NEJM199105303242207</a>):</p>
+                        <ol>
+                            <li>Cabot RC, Scully RE, Mark EJ, McNeely WF, McNeely BU, Podolsky DK, Lewandrowski KB. Case
+                                22-1991: A 15-Year-Old Boy with Fever of Unknown Origin, Severe Anemia, and Portal-Vein
+                                Thrombosis. New England Journal of Medicine. 1991;324(22):1575-84.</li>
+                            <li>Podolsky DK, Lewandrowski KB. Case records of the Massachusetts General Hospital. New
+                                England Journal of Medicine. 1991;324(22):1575-84.</li>
+                            <li>Podolsky DK, Ferrucci JT, Ellis DS, Mark EJ, Pasternack MS, Huang PL, Lewandrowski KB,
+                                Dowling WJ, Goldfinger SE. A 15-YEAR-OLD BOY WITH FEVER OF UNKNOWN ORIGIN, SEVERE
+                                ANEMIA, AND PORTAL-VEIN THROMBOSIS - APPENDICITIS WITH PERIAPPENDICITIS AND
+                                FOREIGN-BODY GIANT-CELL REACTION CONSISTENT WITH PRIOR RUPTURE - PYLEPHLEBITIS WITH
+                                THROMBOSIS, ACUTE AND CHRONIC TRIADITIS, AND CHOLANGITIS. New England Journal of
+                                Medicine. 1991;324(22):1575-84.</li>
+                            <li>Case records of the Massachusetts General Hospital. Weekly clinicopathological
+                                exercises. Case 22-1991. A 15-year-old boy with fever of unknown origin, severe anemia,
+                                and portal-vein thrombosis. N Engl J Med. 1991;324(22):1575-84.</li>
+                        </ol>
+                        <p>"Cabot RC, Scully RE, Mark EJ, McNeely WF, McNeely BU" in (1) were the (associate) editors of
+                            the NEJM in 1991, "Podolsky DK, Lewandrowski KB" in (2) described the case, all authors in
+                            (3) discussed the case.</p>
+                    </div>
+
+                    <div id="developers">
+                        <h2 class="bg-success-subtle">For developers</h2>
+                        <ol>
+                            <li><a href="#validation">Validation</a></li>
+                            <li><a href="#logging">Logging and log levels</a></li>
+                        </ol>
+                        <div id="validation" style="margin-top: 15px;">
+                            <h3>1. Validation</h3>
+                            <p>A relational database was used for validation.<br />
+                                The RDBM used was MS Access (MS Office 2016):</p>
+                            <ul>
+                                <li>Because MS Access uses 2 types of Text field (short text: max. 255 characters,
+                                    searchable
+                                    and sortable; long text (formerly known as Memo field): unlimited, not sortable, not
+                                    searchable) there are 2 fields for both title and authors</li>
+                                <li>In MS Access the format for all boolean fields was changed to "True/False" (design
+                                    view,
+                                    General tab for these fields)</li>
+                            </ul>
+
+                            <p>The table for a validation set contains the fields:</p>
+                            <table class="table tabled-bordered">
+                                <caption>Format of validation database table</caption>
+                                <thead>
+                                    <tr>
+                                        <th>Field</th>
+                                        <th>Type</th>
+                                        <th>Default</th>
+                                        <th>Content</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>id</td>
+                                        <td>INTEGER</td>
+                                        <td></td>
+                                        <td>The original ID in the EndNote DB. PRIMARY KEY</td>
+                                    </tr>
+                                    <tr>
+                                        <td>dedupid</td>
+                                        <td>INTEGER</td>
+                                        <td>NULL</td>
+                                        <td>Content of the Label field in Mark mode, i.e. the ID of the first record in
+                                            a
+                                            duplicate
+                                            set</td>
+                                    </tr>
+                                    <tr>
+                                        <td>correction</td>
+                                        <td>INTEGER</td>
+                                        <td>NULL</td>
+                                        <td>Manually set for the False Positive (FP) and False Negative (FN) results
+                                            (see below)
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>validated</td>
+                                        <td>BOOLEAN</td>
+                                        <td>FALSE</td>
+                                        <td>Manually set to TRUE if the DedupEndNote result is validated</td>
+                                    </tr>
+                                    <tr>
+                                        <td>tp</td>
+                                        <td>BOOLEAN</td>
+                                        <td>FALSE</td>
+                                        <td>Manually set to TRUE if record is indeed a duplicate of the record with
+                                            DedupID</td>
+                                    </tr>
+                                    <tr>
+                                        <td>tn</td>
+                                        <td>BOOLEAN</td>
+                                        <td>FALSE</td>
+                                        <td>Manually set to TRUE if record has no duplicates</td>
+                                    </tr>
+                                    <tr>
+                                        <td>fp</td>
+                                        <td>BOOLEAN</td>
+                                        <td>FALSE</td>
+                                        <td>Manually set to TRUE if DedupEndNote has wrongly identified the record as a
+                                            duplicate of
+                                            record with DedupID.<br />
+                                            If the record has no duplicates, Correction contains the ID, otherwise the
+                                            ID of the
+                                            true duplicate.</td>
+                                    </tr>
+                                    <tr>
+                                        <td>fn</td>
+                                        <td>BOOLEAN</td>
+                                        <td>FALSE</td>
+                                        <td>Manually set to TRUE if DedupEndNote has not identified the record as a
+                                            duplicate.<br />
+                                            The ID of the missed duplicate is stored in Correction.<br />
+                                            If the record is a False Positive but also has duplicates, it is only marked
+                                            as
+                                            False
+                                            Positive: otherwise TP + TN + FP + FN would be greater
+                                            than the size of the validation set.
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>unsolvable</td>
+                                        <td>BOOLEAN</td>
+                                        <td>FALSE</td>
+                                        <td>???</td>
+                                    </tr>
+                                    <tr>
+                                        <td>authors_truncated</td>
+                                        <td>TEXT</td>
+                                        <td></td>
+                                        <td>
+                                            Authors joined with '; ', truncated at 254 characters<br />
+                                            In an MS Access DB: SHORT TEXT (i.e. max. 255 characters), to make the field
+                                            sortable
+                                            and searchable.
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>authors</td>
+                                        <td>TEXT</td>
+                                        <td></td>
+                                        <td>
+                                            Authors joined with '; '<br />
+                                            In an MS Access DB: LONG TEXT (a.k.a. MEMO), not sortable or searchable.
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>publ_year</td>
+                                        <td>TEXT</td>
+                                        <td></td>
+                                        <td>Publication Year</td>
+                                    </tr>
+                                    <tr>
+                                        <td>title_truncated</td>
+                                        <td>TEXT</td>
+                                        <td></td>
+                                        <td>
+                                            Title, truncated at 254 characters<br />
+                                            In an MS Access DB: SHORT TEXT (i.e. max. 255 characters), to make the field
+                                            sortable
+                                            and searchable.
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>title</td>
+                                        <td>TEXT</td>
+                                        <td></td>
+                                        <td>
+                                            Title<br />
+                                            In an MS Access DB: LONG TEXT (a.k.a. MEMO), not sortable or searchable.
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>title2</td>
+                                        <td>TEXT</td>
+                                        <td></td>
+                                        <td>Journal Title / Book Title</td>
+                                    </tr>
+                                    <tr>
+                                        <td>volume</td>
+                                        <td>TEXT</td>
+                                        <td></td>
+                                        <td>Volume</td>
+                                    </tr>
+                                    <tr>
+                                        <td>issue</td>
+                                        <td>TEXT</td>
+                                        <td></td>
+                                        <td>Issue</td>
+                                    </tr>
+                                    <tr>
+                                        <td>pages</td>
+                                        <td>TEXT</td>
+                                        <td></td>
+                                        <td>Starting Page</td>
+                                    </tr>
+                                    <tr>
+                                        <td>article_number</td>
+                                        <td>TEXT</td>
+                                        <td></td>
+                                        <td>Article Number</td>
+                                    </tr>
+                                    <tr>
+                                        <td>dois</td>
+                                        <td>TEXT</td>
+                                        <td></td>
+                                        <td>DOIs joined with '; '</td>
+                                    </tr>
+                                    <tr>
+                                        <td>publ_type</td>
+                                        <td>TEXT</td>
+                                        <td></td>
+                                        <td>Type of publication. 'type' is a SQL reserved word</td>
+                                    </tr>
+                                    <tr>
+                                        <td>database</td>
+                                        <td>TEXT</td>
+                                        <td></td>
+                                        <td>Database Provider</td>
+                                    </tr>
+                                    <tr>
+                                        <td>number_authors</td>
+                                        <td>INTEGER</td>
+                                        <td></td>
+                                        <td>Number of authors</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+
+                            <div>"ValidationTests.java" can write a tab-delimited file of a DedupEndnote run in Mark
+                                mode.</div>
+                            <ul>
+                                <li>import the file into the RDBM<br />
+                                    <div class="alert alert-danger">When importing this file into MS Access (tab
+                                        delimited, no
+                                        text delimiter) also open the advanced button (and change the encoding to
+                                        UTF-8).
+                                        Without using the advanced button, the "Long text" get truncated, some fields
+                                        are
+                                        considered unparseable, ... Is this the encoding or just the fact that the
+                                        Advanced
+                                        button is used?</div>
+                                </li>
+                                <li>validate a number of records</li>
+                                <li>select the validated records and export them as a tab delimited file. (In MS Access:
+                                    select
+                                    the whole set of validated records, copy, paste in a text editor, save)</li>
+                            </ul>
+                            <div>"ValidationTests.java" has tests for comparing the results of a new version of
+                                DedupEndNote
+                                with the validated set (exported as a tab delimited file).</div>
+                        </div>
+                        <div id="logging" style="margin-top: 15px;">
+                            <h3>2. Logging and log levels</h3>
+                            <ul>
+                                <li>Reading the records
+
+                                    <div>
+                                        <pre>java -Dlogging.level.edu.dedupendnote.services.IOService=DEBUG -jar DedupEndNote-0.9.7b-SNAPSHOT.jar</pre>
+                                        If everythings works, the log should end with "Publications read: ". If not, the
+                                        log
+                                        will end with a message with the Record ID and title of the last publication
+                                        that was
+                                        successfully read.
+                                    </div>
+                                </li>
+                                <li>Converting the records
+
+                                    <div>
+                                        <pre>java -Dlogging.level.edu.dedupendnote.services.IOService=DEBUG -Dlogging.level.edu.dedupendnote.domain.Publication=DEBUG -jar DedupEndNote-0.9.7b-SNAPSHOT.jar</pre>
+                                    </div>
+                                </li>
+                                <li>Deduplicating the records
+                                    <div>
+                                        <pre>java -Dlogging.level.edu.dedupendnote.services=DEBUG -jar DedupEndNote-0.9.7b-SNAPSHOT.jar</pre>
+                                    </div>
+                                </li>
+                            </ul>
+                            <p>Do not set the level to TRACE. The log file will be flooded, and the program may come to
+                                a
+                                halt.<br />
+                                The test file MissedDuplicatesTests.java uses the level TRACE.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
