@@ -55,7 +55,7 @@ public class DeduplicationService {
 				// (see "Abstracts of 16th National Congress of SIGENP" articles in Joost problem set)
 				if (!sufficientStartPages && !sufficientDois) {
 					/*
-					 * EXception within the exception:
+					 * Exception within the exception:
 					 * Conference proceedings (and books?) have no author (AU, maybe A2 which is not used).
 					 * If they have an ISBN, the author comparison without authors returns true.
 					 */
@@ -498,8 +498,9 @@ public class DeduplicationService {
 		boolean bothCochrane = r1.isCochrane() && r2.isCochrane();
 		boolean sufficientStartPages = r1.getPageForComparison() != null && r2.getPageForComparison() != null;
 		boolean sufficientDois = !dois1.isEmpty() && !dois2.isEmpty();
-		// Using OR has less FNs, but also more FPs!
-		boolean bothSeveralPages = r1.isSeveralPages() && r2.isSeveralPages();
+		// If at least ONE of the publications has severalPages, its is assumed that there will be no comparison of TWO
+		// meeting abstracts, and the comparison by DOI before pages is safe
+		boolean atLeastOneSeveralPages = r1.isSeveralPages() || r2.isSeveralPages();
 
 		if (sufficientDois && setsContainSameString(dois1, dois2)) {
 			map.put("sameDois", true);
@@ -523,31 +524,12 @@ public class DeduplicationService {
 			log.trace("- 1. NOT the same startPage or DOI for Cochrane");
 			return false;
 		}
-		// if (sufficientDois) {
-		// if (setsContainSameString(dois1, dois2)) {
-		// log.trace("- 1. DOIs are the same for severalPages");
-		// return true;
-		// // } else {
-		// // log.trace("- 1. DOIs are NOT the same");
-		// // return false;
-		// }
-		// }
-		// if (sufficientStartPages) {
-		// if (r1.getPageForComparison().equals(r2.getPageForComparison())) {
-		// log.trace("- 1. Starting pages are the same for severalPages");
-		// return true;
-		// }
-		// log.trace("- 1. NOT the same startPage or DOI for severalPages");
-		// return false;
-		// }
-		// if (sufficientDois) {
-		// log.trace("- 1. DOIs are NOT the same");
-		// return false;
-		// }
-		// log.trace("- 1. At least one starting page AND at least one DOI are missing, therefore Same");
-		// return true; // no useful comparison possible
 
-		if (bothSeveralPages) {
+		if (!sufficientStartPages && !sufficientDois) {
+			log.trace("- 1. At least one starting page AND at least one DOI are missing, therefore Same");
+			return true; // no useful comparison possible
+		}
+		if (atLeastOneSeveralPages) {
 			if (sufficientDois) {
 				if (setsContainSameString(dois1, dois2)) {
 					log.trace("- 1. DOIs are the same for severalPages");
@@ -564,10 +546,6 @@ public class DeduplicationService {
 			log.trace("- 1. NOT the same startPage or DOI for severalPages");
 			return false;
 		}
-		if (!sufficientStartPages && !sufficientDois) {
-			log.trace("- 1. At least one starting page AND at least one DOI are missing, therefore Same");
-			return true; // no useful comparison possible
-		}
 
 		// suboptimal structure to make tracing messages clearer
 		if (sufficientStartPages) {
@@ -579,6 +557,11 @@ public class DeduplicationService {
 				return false;
 			}
 		}
+
+		/*
+		 * If 2 records have no pages, but have a DOI (the same DOI), they are considered the same.
+		 * This is a case where meeting abstracts with insufficient data (pages) can be a FP.
+		 */
 		// if (sufficientDois) { // superfluous test
 		if (setsContainSameString(dois1, dois2)) {
 			log.trace("- 1. DOIs are the same");
@@ -589,19 +572,6 @@ public class DeduplicationService {
 		}
 		log.trace("- 1. DOIs and starting pages are NOT the same");
 		return false;
-
-		// }
-		// if (sufficientStartPages && r1.getPageForComparison().equals(r2.getPageForComparison())) {
-		// log.trace("- 1. Starting pages are the same");
-		// return true;
-		// } else if (!sufficientStartPages && sufficientDois && setsContainSameString(dois1, dois2)) {
-		// log.trace("- 1. DOIs are the same");
-		// return true;
-		// }
-
-		// log.trace(
-		// "- 1. Both starting pages are not the same, or (with insufficient startingPages) the DOIs are NOT the same");
-		// return false;
 	}
 
 	/**
