@@ -235,9 +235,14 @@ class JaroWinklerAuthorsTest {
 				"Gupta, S. L.; Wijk, K.; Warner, G.; Sarkadi, A.", 
 				0.8, 1.0),
 			arguments(
+				"Pappworth, Isabel Y.; Denton, Mark; Kavanagh, David; Moore, Iain; Strain, Lisa; Barlow, Paul N.; Herbert, Andrew P.; Schmidt, Christoph Q.", 
+				"Kavanagh, D.; Pappworth, I. Y.; Roversi, P.; Tapson, J. S.; Moore, I.; Strain, L.; Lea, S.; Goodship, T. H. J.; Marchbank, K. J.", 
+				0.69, 0.69),
+			arguments(
 				"", 
 				"", 
-				1.0, 1.0));
+				1.0, 1.0)
+		);
 		// @formatter:on
 	}
 
