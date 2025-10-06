@@ -1,7 +1,5 @@
 package edu.dedupendnote.services;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -10,6 +8,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.Test;
 
 import edu.dedupendnote.BaseTest;
@@ -83,8 +82,8 @@ class AuthorsBaseTest extends BaseTest {
 		Stream<String> lines = Files.lines(path);
 		lines.forEach(l -> {
 			String[] parts = l.split("\t");
-			if (Publication.anonymousOrGroupNamePattern.matcher(parts[0]).find()
-					|| Publication.anonymousOrGroupNamePattern.matcher(parts[1]).find()) {
+			if (Publication.ANONYMOUS_OR_GROUPNAME_PATTERN.matcher(parts[0]).find()
+					|| Publication.ANONYMOUS_OR_GROUPNAME_PATTERN.matcher(parts[1]).find()) {
 				return;
 			}
 			Triple triple = new Triple();

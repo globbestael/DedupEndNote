@@ -1,8 +1,5 @@
 package edu.dedupendnote.services;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.fail;
-
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -22,6 +19,8 @@ import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.fail;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -58,11 +57,11 @@ class ValidationTests {
 	// temporary
 	public Map<String, Integer> titleCounter = new HashMap<>();
 
-	private DeduplicationService deduplicationService = new DeduplicationService();
+	DeduplicationService deduplicationService = new DeduplicationService();
 
-	private IOService ioService = new IOService();
+	IOService ioService = new IOService();
 
-	private RecordDBService recordDBService = new RecordDBService();
+	RecordDBService recordDBService = new RecordDBService();
 
 	String homeDir = System.getProperty("user.home");
 
@@ -749,6 +748,8 @@ class ValidationTests {
 		assertThat(1*1).isEqualTo(1);
 	}
 
+	@Disabled("Only needed for initialisation of TRUTH file")
+	@Test
 	void createRisWithTRUTH_SRA2_Cytology_screening() throws IOException {
 		String truthFileName = testdir + "/SRA2/Cytology_screening_TRUTH.txt";
 		String inputFileName = testdir + "/SRA2/Cytology_screening.txt";
@@ -757,11 +758,11 @@ class ValidationTests {
 		createRisWithTRUTH(inputFileName, truthFileName, outputFileName);
 	}
 
-
+	@Disabled("Only needed for initialisation of TRUTH file")
+	@Test
 	private void createRisWithTRUTH(String inputFileName, String truthFileName, String outputFileName) throws IOException {
 		List<PublicationDB> truthRecords = readTruthFile(truthFileName);
 		ioService.writeRisWithTRUTH(truthRecords, inputFileName, outputFileName);
-		
 	}
 
 	/*
