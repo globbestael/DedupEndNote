@@ -89,9 +89,14 @@ public class DedupEndNoteController {
 		return "index";
 	}
 
-	@GetMapping("/justification")
-	public String justification() {
-		return "justification";
+	@GetMapping("/changelog")
+	public String changelog() {
+		return "changelog";
+	}
+
+	@GetMapping("/details")
+	public String details() {
+		return "details";
 	}
 
 	@PostMapping(value = "/startOneFile", produces = "application/json")

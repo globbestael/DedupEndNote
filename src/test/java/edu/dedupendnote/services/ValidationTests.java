@@ -1,9 +1,7 @@
 package edu.dedupendnote.services;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.fail;
-
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -21,6 +19,8 @@ import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.fail;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -57,11 +57,11 @@ class ValidationTests {
 	// temporary
 	public Map<String, Integer> titleCounter = new HashMap<>();
 
-	private DeduplicationService deduplicationService = new DeduplicationService();
+	DeduplicationService deduplicationService = new DeduplicationService();
 
-	private IOService ioService = new IOService();
+	IOService ioService = new IOService();
 
-	private RecordDBService recordDBService = new RecordDBService();
+	RecordDBService recordDBService = new RecordDBService();
 
 	String homeDir = System.getProperty("user.home");
 
@@ -106,31 +106,35 @@ class ValidationTests {
 		withTracing = true;
 		withTitleSplitterOutput = false;
 
+		// @formatter:off
 		// previous results
 		Map<String, ValidationResult> validationResultsMap = List
-				.of(new ValidationResult("ASySD_Cardiac_human", 6753, 20, 2175, 0, 3_700L),
-						new ValidationResult("ASySD_Diabetes", 1816, 18, 11, 0, 1_000L),
-						new ValidationResult("ASySD_Neuroimaging", 2172, 29, 1235, 2, 1_350L),
-						new ValidationResult("ASySD_SRSR_Human", 27897, 120, 24975, 9, 100_000L),
-						new ValidationResult("BIG_SET", 3915, 187, 959, 17, 66_000L),
-						new ValidationResult("McKeown_2021", 2018, 56, 1054, 2, 470L),
-						new ValidationResult("SRA2_Cytology_screening", 1361, 59, 436, 0, 400L),
-						new ValidationResult("SRA2_Haematology", 225, 11, 1177, 2, 300L),
-						new ValidationResult("SRA2_Respiratory", 766, 34, 1184, 4, 800L),
-						new ValidationResult("SRA2_Stroke", 497, 13, 782, 0, 320L),
-						new ValidationResult("TIL", 687, 15, 390, 0, 9_000L),
-						new ValidationResult("TIL_Zotero", 685, 17, 389, 1, 9_000L))
+				.of(
+					new ValidationResult("AI_subset", 491, 0, 2590, 2, 29_000L),	// why so slow?
+					new ValidationResult("ASySD_Cardiac_human", 6756, 17, 2175, 0, 3_700L),
+					new ValidationResult("ASySD_Diabetes", 1816, 18, 11, 0, 1_000L),
+					new ValidationResult("ASySD_Neuroimaging", 2179, 22, 1234, 3, 1_350L),
+					new ValidationResult("ASySD_SRSR_Human", 27918, 99, 24973, 11, 100_000L),
+					new ValidationResult("BIG_SET", 3937, 176, 959, 10, 66_000L),
+					new ValidationResult("Clinical_trials", 219, 0, 0, 0, 190L),
+					new ValidationResult("McKeown_2021", 2018, 56, 1056, 0, 800L),
+					new ValidationResult("SRA2_Cytology_screening", 1361, 59, 436, 0, 400L),
+					new ValidationResult("SRA2_Haematology", 225, 11, 1177, 2, 300L),
+					new ValidationResult("SRA2_Respiratory", 766, 34, 1184, 4, 800L),
+					new ValidationResult("SRA2_Stroke", 497, 13, 782, 0, 320L),
+					new ValidationResult("TIL", 691, 11, 390, 0, 9_000L),
+					new ValidationResult("TIL_Zotero", 685, 17, 389, 1, 9_000L))
 				.stream().collect(Collectors.toMap(ValidationResult::getFileName, Function.identity(), (o1, o2) -> o1,
 						TreeMap::new));
-
-		// @formatter:off
 		Map<String, ValidationResult> resultsMap = List
 				.of(
+					checkResults_AI_subset(),
 					checkResults_ASySD_Cardiac_human(),
 					checkResults_ASySD_Diabetes(),
 					checkResults_ASySD_Neuroimaging(),
 					checkResults_ASySD_SRSR_Human(),
 					checkResults_BIG_SET(),
+					checkResults_Clinical_trials(),
 					checkResults_McKeown_2021(),
 					checkResults_SRA2_Cytology_screening(),
 					checkResults_SRA2_Haematology(),
@@ -144,7 +148,7 @@ class ValidationTests {
 		// @formatter:on
 
 		boolean changed = false;
-		String divider = "|---------|--------------|---------|---------|--------------|---------|---------|--------------|--------------|--------------|-------------|";
+		String divider = "|---------|--------------|---------|---------|--------------|---------|---------|--------------|--------------|--------------|--------------|-------------|";
 		for (String setName : resultsMap.keySet()) {
 			ValidationResult v = validationResultsMap.get(setName);
 			ValidationResult c = resultsMap.get(setName);
@@ -155,32 +159,33 @@ class ValidationTests {
 			double precision = tp * 100.0 / (tp + fp);
 			double sensitivity = tp * 100.0 / (tp + fn); // == recall
 			double specificity = tn * 100.0 / (tn + fp);
+			double accuracy = (tp + tn) * 100.0 / (tp + fn + tn + fp);
 			double f1Score = 2 * precision * sensitivity / (precision + sensitivity);
 			if (v.getFn() == c.getFn() && v.getFp() == c.getFp() && v.getTn() == c.getTn() && v.getTp() == c.getTp()
 					&& (c.getDurationMilliseconds() >= (long) (v.getDurationMilliseconds() * 0.9))
 					&& c.getDurationMilliseconds() <= (long) (v.getDurationMilliseconds() * 1.1)) {
 				System.out.println("\nResults: " + setName);
-				System.out.println("| %7s | %12s | %7s | %7s | %12s | %7s | %7s | %12s | %12s | %12s | %11s |"
+				System.out.println("| %7s | %12s | %7s | %7s | %12s | %7s | %7s | %12s | %12s | %12s | %12s | %11s |"
 						.formatted("TOTAL", "% duplicates", "TP", "FN", "Sensitivity", "TN", "FP", "Specificity",
-								"Precision", "F1-score", "Duration"));
+								"Precision", "Accuracy", "F1-score", "Duration"));
 				System.out.println(divider);
 				System.out.println(
-						"| %7d | %11.2f%% | %7d | %7d | %11.2f%% | %7d | %7d | %11.3f%% | %11.3f%% | %11.3f%% | %11.2f |"
+						"| %7d | %11.2f%% | %7d | %7d | %11.2f%% | %7d | %7d | %11.3f%% | %11.3f%% | %11.3f%% | %11.3f%% | %11.2f |"
 								.formatted(tp + tn + fp + fn, (tp + fn) * 100.0 / (tp + tn + fp + fn), tp, fn,
-										sensitivity, tn, fp, specificity, precision, f1Score,
+										sensitivity, tn, fp, specificity, precision, accuracy, f1Score,
 										(double) (c.getDurationMilliseconds() / 1000.0)));
 				System.out.flush();
 			} else {
 				changed = true;
 				System.err.println("\nResults: " + setName + ": HAS DIFFERENT RESULTS (first new, second old)");
-				System.err.println("| %7s | %12s | %7s | %7s | %12s | %7s | %7s | %12s | %12s | %12s | %11s |"
+				System.err.println("| %7s | %12s | %7s | %7s | %12s | %7s | %7s | %12s | %12s | %12s | %12s | %11s |"
 						.formatted("TOTAL", "% duplicates", "TP", "FN", "Sensitivity", "TN", "FP", "Specificity",
-								"Precision", "F1-score", "Duration"));
+								"Precision", "Accuracy", "F1-score", "Duration"));
 				System.out.println(divider);
 				System.err.println(
-						"| %7d | %11.2f%% | %7d | %7d | %11.2f%% | %7d | %7d | %11.3f%% | %11.3f%% | %11.3f%% | %11.2f |"
+						"| %7d | %11.2f%% | %7d | %7d | %11.2f%% | %7d | %7d | %11.3f%% | %11.3f%% | %11.3f%% | %11.3f%% | %11.2f |"
 								.formatted(tp + tn + fp + fn, (tp + fn) * 100.0 / (tp + tn + fp + fn), tp, fn,
-										sensitivity, tn, fp, specificity, precision, f1Score,
+										sensitivity, tn, fp, specificity, precision, accuracy, f1Score,
 										(double) (c.getDurationMilliseconds() / 1000.0)));
 				tp = v.getTp();
 				fn = v.getFn();
@@ -189,11 +194,12 @@ class ValidationTests {
 				precision = tp * 100.0 / (tp + fp);
 				sensitivity = tp * 100.0 / (tp + fn); // == recall
 				specificity = tn * 100.0 / (tn + fp);
+				accuracy = (tp + tn) * 100.0 / (tp + fn + tn + fp);
 				f1Score = 2 * precision * sensitivity / (precision + sensitivity);
 				System.err.println(
-						"| %7d | %11.2f%% | %7d | %7d | %11.2f%% | %7d | %7d | %11.3f%% | %11.3f%% | %11.3f%% | %11.2f |"
+						"| %7d | %11.2f%% | %7d | %7d | %11.2f%% | %7d | %7d | %11.3f%% | %11.3f%% | %11.3f%% | %11.3f%% | %11.2f |"
 								.formatted(tp + tn + fp + fn, (tp + fn) * 100.0 / (tp + tn + fp + fn), tp, fn,
-										sensitivity, tn, fp, specificity, precision, f1Score,
+										sensitivity, tn, fp, specificity, precision, accuracy, f1Score,
 										(double) (v.getDurationMilliseconds() / 1000.0)));
 				System.err.flush();
 			}
@@ -230,21 +236,29 @@ class ValidationTests {
 		 * files.
 		 */
 
+		// @formatter:off
 		Map<String, ValidationResultASySD> validationResultsMap = List
-				.of(new ValidationResultASySD("Cytology_screening", 1359, 61, 436, 0, 622),
-						new ValidationResultASySD("Haematology", 222, 14, 1179, 0, 106),
-						new ValidationResultASySD("Respiratory", 761, 39, 1188, 0, 354),
-						new ValidationResultASySD("Stroke", 497, 13, 782, 0, 190),
-						new ValidationResultASySD("BIG_SET", 3889, 207, 961, 17, 1416),
-						new ValidationResultASySD("McKeown_2021", 2010, 62, 1058, 0, 816),
-
-						new ValidationResultASySD("ASySD_Cardiac_human", 6748, 25, 2175, 0, 3234),
-						// new ValidationResultASySD("ASySD_Depression", 17389, 576, 61894, 21, 7705),
-						new ValidationResultASySD("ASySD_Diabetes", 1816, 18, 11, 0, 566),
-						new ValidationResultASySD("ASySD_Neuroimaging", 2169, 32, 1235, 2, 890),
-						new ValidationResultASySD("ASySD_SRSR_Human", 27816, 190, 24988, 7, 11087))
+				.of(
+					new ValidationResultASySD("AI_subset", 491, 0, 2590, 2, 210),	// why so slow?
+					new ValidationResultASySD("Cytology_screening", 1361, 59, 436, 0, 623),
+					new ValidationResultASySD("Cytology_screening", 1359, 61, 436, 0, 623),
+					new ValidationResultASySD("Haematology", 225, 11, 1177, 2, 107),
+					new ValidationResultASySD("Respiratory", 766, 34, 1184, 4, 354),
+					new ValidationResultASySD("Stroke", 497, 13, 782, 0, 190),
+					new ValidationResultASySD("BIG_SET", 3937, 176, 959, 10, 1433),
+					new ValidationResultASySD("Clinical_trials", 219, 0, 0, 0, 87),
+					new ValidationResultASySD("McKeown_2021", 2018, 56, 1056, 0, 817),
+					new ValidationResultASySD("ASySD_Cardiac_human", 6753, 20, 2175, 0, 3235),
+					// new ValidationResultASySD("ASySD_Depression", 17389, 576, 61894, 21, 7705),
+					new ValidationResultASySD("ASySD_Diabetes", 1816, 18, 11, 0, 566),
+					new ValidationResultASySD("ASySD_Neuroimaging", 2172, 29, 1235, 2, 891),
+					new ValidationResultASySD("ASySD_SRSR_Human", 27897, 120, 24975, 9, 11111),
+					new ValidationResultASySD("TIL", 687, 15, 390, 0, 258),
+					new ValidationResultASySD("TIL_Zotero", 687, 15, 390, 0, 258)
+				)
 				.stream().collect(Collectors.toMap(ValidationResultASySD::getFileName, Function.identity(),
 						(o1, o2) -> o1, TreeMap::new));
+		// @formatter:on
 
 		for (String setName : validationResultsMap.keySet()) {
 			ValidationResultASySD v = validationResultsMap.get(setName);
@@ -356,6 +370,8 @@ class ValidationTests {
 				 * which are more than 1 year apart, 
 				 * because the test of the pair does not look at the publication years
 				 */
+			new File(inputFileName + "_FP_Analysis.txt").delete();	
+			new File(inputFileName + "_FN_Analysis.txt").delete();	
 			if (! fnPairs.isEmpty()) {
 				validationResult.setFnPairs(fnPairs);
 				writeFNandFPresults(fnPairs, inputFileName + "_FN_Analysis.txt");
@@ -437,14 +453,22 @@ class ValidationTests {
 		}
 	}
 
-	ValidationResult checkResults_ASySD_Cardiac_human() throws IOException {
+	ValidationResult checkResults_AI_subset() throws IOException {
+		String truthFileName = testdir + "/AI_subset/AI_subset_TRUTH.txt";
+		String inputFileName = testdir + "/AI_subset/AI_subset.txt";
+		String outputFileName = testdir + "/AI_subset/AI_subset_to_validate.txt";
+
+		return checkResults("AI_subset", inputFileName, outputFileName, truthFileName);
+	}
+
+		ValidationResult checkResults_ASySD_Cardiac_human() throws IOException {
 		String truthFileName = testdir + "/ASySD/dedupendnote_files/Cardiac_human_TRUTH.txt";
 		String inputFileName = testdir + "/ASySD/dedupendnote_files/Cardiac_human.txt";
 		String outputFileName = testdir + "/ASySD/dedupendnote_files/Cardiac_human_to_validate.txt";
 
 		return checkResults("ASySD_Cardiac_human", inputFileName, outputFileName, truthFileName);
 	}
-	
+
 	// ValidationResult checkResults_ASySD_Depression() throws IOException {
 	// 	String truthFileName = testdir + "/ASySD/dedupendnote_files/Depression_TRUTH.txt";
 	// 	String inputFileName = testdir + "/ASySD/dedupendnote_files/Depression.txt";
@@ -486,6 +510,14 @@ class ValidationTests {
 		String outputFileName = testdir + "/own/BIG_SET_to_validate.txt";
 
 		return checkResults("BIG_SET", inputFileName, outputFileName, truthFileName);
+	}
+
+	ValidationResult checkResults_Clinical_trials() throws IOException {
+		String truthFileName = testdir + "/Clinical_trials/clinicaltrialsdotgov_TRUTH.txt";
+		String inputFileName = testdir + "/Clinical_trials/clinicaltrialsdotgov.txt";
+		String outputFileName = testdir + "/Clinical_trials/clinicaltrialsdotgov_to_validate.txt";
+
+		return checkResults("Clinical_trials", inputFileName, outputFileName, truthFileName);
 	}
 
 	ValidationResult checkResults_McKeown_2021() throws IOException {
@@ -551,6 +583,14 @@ class ValidationTests {
 
 	@Disabled("Only needed for initialisation of TRUTH file")
 	@Test
+	void createInitialTruthFile_AI_subset() {
+		String inputFileName = testdir + "/AI_subset/AI_subset.txt";
+		String outputFileName = testdir + "/AI_subset/AI_subset_for_truth.txt";
+		createInitialTruthFile(inputFileName, outputFileName);
+	}
+
+	@Disabled("Only needed for initialisation of TRUTH file")
+	@Test
 	void createInitialTruthFile_ASySD_Cardiac_human() {
 		String dir = testdir + "/ASySD/dedupendnote_files";
 		String inputFileName = dir + "/Cardiac_human.txt";
@@ -603,7 +643,7 @@ class ValidationTests {
 		createInitialTruthFile(inputFileName, asysdInputfileName, outputFileName);
 	}
 	
-//	@Disabled("Only needed for initialisation of TRUTH file")
+	@Disabled("Only needed for initialisation of TRUTH file")
 	@Test
 	void createInitialTruthFile_CTG() {
 		String dir = testdir + "/clinical_trials";
@@ -708,6 +748,8 @@ class ValidationTests {
 		assertThat(1*1).isEqualTo(1);
 	}
 
+	@Disabled("Only needed for initialisation of TRUTH file")
+	@Test
 	void createRisWithTRUTH_SRA2_Cytology_screening() throws IOException {
 		String truthFileName = testdir + "/SRA2/Cytology_screening_TRUTH.txt";
 		String inputFileName = testdir + "/SRA2/Cytology_screening.txt";
@@ -716,11 +758,11 @@ class ValidationTests {
 		createRisWithTRUTH(inputFileName, truthFileName, outputFileName);
 	}
 
-
+	@Disabled("Only needed for initialisation of TRUTH file")
+	@Test
 	private void createRisWithTRUTH(String inputFileName, String truthFileName, String outputFileName) throws IOException {
 		List<PublicationDB> truthRecords = readTruthFile(truthFileName);
 		ioService.writeRisWithTRUTH(truthRecords, inputFileName, outputFileName);
-		
 	}
 
 	/*

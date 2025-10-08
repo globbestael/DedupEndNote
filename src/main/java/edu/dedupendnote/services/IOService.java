@@ -16,7 +16,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
-
 import edu.dedupendnote.domain.Publication;
 import edu.dedupendnote.domain.PublicationDB;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Service
 public class IOService {
+
 	/*
 	 * Patterns
 	 */
@@ -315,7 +315,13 @@ public class IOService {
 					case "SN":
 						publication.addIssns(line);
 						break;
-					case "TI": // EMBASE original title
+					case "TI":
+						/*
+						 * EMBASE original title.
+						 * There are also cases (ASySD_SRSR_Human test file) for Book Section (TY: CHAP) where the first line contains
+						 * the book series title, and the continuation line the title of the chapter. Not sure if this ASySD_SRSR_Human
+						 * file should be used as an example?
+						 */
 						publication.addTitles(line);
 						break;
 					case "UR":
@@ -418,7 +424,8 @@ public class IOService {
 					default:
 						if (map.containsKey(fieldName)) {
 							if (line.startsWith(fieldName)) {
-								map.put(fieldName, map.get(fieldName) + "\n" + fieldContent);
+//								map.put(fieldName, map.get(fieldName) + "\n" + fieldContent);
+								map.put(fieldName, map.get(fieldName) + "\n" + line);
 							} else {
 								map.put(fieldName, map.get(fieldName) + "\n" + line);
 							}
@@ -552,8 +559,14 @@ public class IOService {
 					String urls = map.get("UR");
 					urlList.addAll(Arrays.asList(urls.split("\n")));
 					urlList.removeIf(u -> u.startsWith("https://clinicaltrials.gov"));
-					urlList.addFirst(url);
-					map.put("UR", urlList.stream().collect(Collectors.joining("\nUR  - ")));
+					if (urlList.isEmpty()) {
+						map.put("UR", url);
+					} else {
+						map.put("UR", url + "\nUR  - " + 
+							urlList.stream()
+								.map(u -> u.replace("UR  - ", ""))
+								.collect(Collectors.joining("\nUR  - ")));
+					}
 				} else {
 					map.put("UR", url);
 				}

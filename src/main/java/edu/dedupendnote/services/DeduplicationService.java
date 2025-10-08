@@ -49,13 +49,20 @@ public class DeduplicationService {
 			boolean sufficientDois = !r1.getDois().isEmpty() && !r2.getDois().isEmpty();
 
 			if (r1.getAllAuthors().isEmpty() || r2.getAllAuthors().isEmpty()) {
-				// Because Anonymous would only compare on journals (and maybe
-				// SP/DOIs) (see "MedGenMed Medscape General Medicine" articles in
-				// Cannabis test set)
-				// Because Anonymous AND no SP or DOI would only compare on title and
-				// journals (see "Abstracts of 16th National Congress of SIGENP" articles
-				// in Joost problem set)
+				// Because Anonymous would only compare on journals (and maybe SP/DOIs)
+				// (see "MedGenMed Medscape General Medicine" articles in Cannabis test set)
+				// Because Anonymous AND no SP or DOI would only compare on title and journals
+				// (see "Abstracts of 16th National Congress of SIGENP" articles in Joost problem set)
 				if (!sufficientStartPages && !sufficientDois) {
+					/*
+					 * Exception within the exception:
+					 * Conference proceedings (and books?) have no author (AU, maybe A2 which is not used).
+					 * If they have an ISBN, the author comparison without authors returns true.
+					 */
+					if (!r1.getIsbns().isEmpty() && !r2.getIsbns().isEmpty()) {
+						log.trace("- 2. No authors, startpages or DOIs, but ISBNs are present, considered the same");
+						return true;
+					}
 					log.trace(
 							"- 2. Not the same because not enough data: One or both authors are empty AND not enough starting pages AND not enough DOIs");
 					return false;
@@ -205,7 +212,24 @@ public class DeduplicationService {
 		return false;
 	}
 
+	/*
+	 * Compares ISBNs if present, else ISSNs.
+	 * Conference proceedings published in a series (e.g. Lecture Notes in Computer Science)
+	 * all share the same ISSN, but have a unique ISBN. In Scopus the DOI is often absent.
+	 * The proceedings can be split over several volumes(several series numbers).
+	 */
 	public boolean compareIssns(Publication r1, Publication r2) {
+		if (!r1.getIsbns().isEmpty() && !r2.getIsbns().isEmpty()) {
+			if (setsContainSameString(r1.getIsbns(), r2.getIsbns())) {
+				log.trace("- 4. ISBNs are the same");
+				return true;
+			} else {
+				if (log.isTraceEnabled()) {
+					log.trace("- 4. ISBNs are NOT the same: {} and {}", r1.getIsbns(), r2.getIsbns());
+				}
+				return false;
+			}
+		}
 		if (setsContainSameString(r1.getIssns(), r2.getIssns())) {
 			log.trace("- 4. ISSNs are the same");
 			return true;
@@ -229,6 +253,12 @@ public class DeduplicationService {
 	 */
 	// @formatter:on
 	public boolean compareJournals(Publication r1, Publication r2) {
+		// Conference proceedings (e.g. Lecture Notes on Computer Science): if both have an ISBN and they are
+		// different, don't compare the journal, but return false. A comparable actions happens when comparing
+		// ISSNs/ISBNs.
+		if (!r1.getIsbns().isEmpty() && !r2.getIsbns().isEmpty()) {
+			return false;
+		}
 		Set<String> set1 = r1.getJournals();
 		Set<String> set2 = r2.getJournals();
 		boolean isReply = r1.isReply() || r2.isReply();
@@ -468,8 +498,9 @@ public class DeduplicationService {
 		boolean bothCochrane = r1.isCochrane() && r2.isCochrane();
 		boolean sufficientStartPages = r1.getPageForComparison() != null && r2.getPageForComparison() != null;
 		boolean sufficientDois = !dois1.isEmpty() && !dois2.isEmpty();
-		// Using OR has less FNs, but also more FPs!
-		boolean bothSeveralPages = r1.isSeveralPages() && r2.isSeveralPages();
+		// If at least ONE of the publications has severalPages, its is assumed that there will be no comparison of TWO
+		// meeting abstracts, and the comparison by DOI before pages is safe
+		boolean atLeastOneSeveralPages = r1.isSeveralPages() || r2.isSeveralPages();
 
 		if (sufficientDois && setsContainSameString(dois1, dois2)) {
 			map.put("sameDois", true);
@@ -493,31 +524,12 @@ public class DeduplicationService {
 			log.trace("- 1. NOT the same startPage or DOI for Cochrane");
 			return false;
 		}
-		// if (sufficientDois) {
-		// if (setsContainSameString(dois1, dois2)) {
-		// log.trace("- 1. DOIs are the same for severalPages");
-		// return true;
-		// // } else {
-		// // log.trace("- 1. DOIs are NOT the same");
-		// // return false;
-		// }
-		// }
-		// if (sufficientStartPages) {
-		// if (r1.getPageForComparison().equals(r2.getPageForComparison())) {
-		// log.trace("- 1. Starting pages are the same for severalPages");
-		// return true;
-		// }
-		// log.trace("- 1. NOT the same startPage or DOI for severalPages");
-		// return false;
-		// }
-		// if (sufficientDois) {
-		// log.trace("- 1. DOIs are NOT the same");
-		// return false;
-		// }
-		// log.trace("- 1. At least one starting page AND at least one DOI are missing, therefore Same");
-		// return true; // no useful comparison possible
 
-		if (bothSeveralPages) {
+		if (!sufficientStartPages && !sufficientDois) {
+			log.trace("- 1. At least one starting page AND at least one DOI are missing, therefore Same");
+			return true; // no useful comparison possible
+		}
+		if (atLeastOneSeveralPages) {
 			if (sufficientDois) {
 				if (setsContainSameString(dois1, dois2)) {
 					log.trace("- 1. DOIs are the same for severalPages");
@@ -534,10 +546,6 @@ public class DeduplicationService {
 			log.trace("- 1. NOT the same startPage or DOI for severalPages");
 			return false;
 		}
-		if (!sufficientStartPages && !sufficientDois) {
-			log.trace("- 1. At least one starting page AND at least one DOI are missing, therefore Same");
-			return true; // no useful comparison possible
-		}
 
 		// suboptimal structure to make tracing messages clearer
 		if (sufficientStartPages) {
@@ -549,6 +557,11 @@ public class DeduplicationService {
 				return false;
 			}
 		}
+
+		/*
+		 * If 2 records have no pages, but have a DOI (the same DOI), they are considered the same.
+		 * This is a case where meeting abstracts with insufficient data (pages) can be a FP.
+		 */
 		// if (sufficientDois) { // superfluous test
 		if (setsContainSameString(dois1, dois2)) {
 			log.trace("- 1. DOIs are the same");
@@ -559,19 +572,6 @@ public class DeduplicationService {
 		}
 		log.trace("- 1. DOIs and starting pages are NOT the same");
 		return false;
-
-		// }
-		// if (sufficientStartPages && r1.getPageForComparison().equals(r2.getPageForComparison())) {
-		// log.trace("- 1. Starting pages are the same");
-		// return true;
-		// } else if (!sufficientStartPages && sufficientDois && setsContainSameString(dois1, dois2)) {
-		// log.trace("- 1. DOIs are the same");
-		// return true;
-		// }
-
-		// log.trace(
-		// "- 1. Both starting pages are not the same, or (with insufficient startingPages) the DOIs are NOT the same");
-		// return false;
 	}
 
 	/**
@@ -787,12 +787,12 @@ public class DeduplicationService {
 				.collect(Collectors.groupingBy(Publication::getLabel));
 		log.debug("Number of duplicate lists {}, and IDs of kept records: {}", labelMap.size(), labelMap.keySet());
 		List<Publication> recordList;
-		if (labelMap.size() > 0) {
+		if (!labelMap.isEmpty()) {
 			for (Map.Entry<String, List<Publication>> entry : labelMap.entrySet()) {
 				recordList = entry.getValue();
 				Publication recordToKeep = recordList.remove(0);
 				log.debug("Kept: {}: {}", recordToKeep.getId(),
-						(recordToKeep.getTitles().size() > 0 ? recordToKeep.getTitles().get(0) : "(no titles found)"));
+						(recordToKeep.getTitles().isEmpty() ? "(no titles found)" : recordToKeep.getTitles().get(0)));
 				// Don't set keptRecord in compareSet(): trouble when multiple duplicates and no publication year
 				recordList.stream().forEach(r -> r.setKeptRecord(false));
 

@@ -6,22 +6,50 @@
 - bib-dedup: data files: https://github.com/CoLRev-Environment/bib-dedupe/tree/main/data These are files which are also used in our ValidationTest (ASYSD_*, SRA2_*)
 - dedupe-sweep: data files: https://github.com/IEBH/dedupe-sweep/tree/master/test
 
-## ClinicalTrials.gov records
-- Available from
-  - http://clinicaltrials.gov (has RIS export)
-  - Cochrane Library
-  - Embase OVID
-  - Embase.com
-- Deduplication will only work after preprocessing?
-  - add T2 from J2 in Embase.com
-  - alter Cochrane journal name of form "https://clinicaltrials.gov/show/NCT02821026" to "clinicaltrials.gov" (or should this be "https://clinicaltrials.gov")?
-  - extract the ClinicalTrials.gov ID from ??? and use it as article number / starting page?
-- some of the preprocessing will also be part of enrichment
-- what about WHO trials (from Cochrane): http://www.who.int/trialsearch/Trial2.aspx?TrialID=EUCTR2019-001806-40-DK
+## Performance data
+- some (a lot?) of the false positives are also bibliographic errors / are caused by bibliographic errors 
+  (e.g. the DOIs are correct by the journal and pages are errors: you can also say that the data of a individual record are in conflict).
+  Should all the cases count as FP's / should there be subtypes: FP - real vs FP conflict?
+
+  In the MS Access database it could be useful to have one or more fields for this information (bibliographic_error BOOLEAN, extra_information).
+  Adding these fields to every TRUTH table?
+  - will be a lot of work
+  - most records will have empty fields
+  - if old fields are refreshed, the data in these new fields can be lost
+  Wouldn't it be better to have a separate table TRUTH_errors with fields:
+  - id
+  - table_name
+  - record_id
+  - bibliographic_error BOOLEAN
+  - performance_error (FP / FN)?
+  - extra information
+And the ..._TRUTH tables should have a column with their table_name (second join field).
+For services.ValidationTest::checkAllTruthFiles 
+- the truth file with the linked new table should be imported
+- writeFNandFPresults should also present the information of this new table
+- ??? performance table should be able to show this information???
+
+Still there is a serious problem: take the case where 
+- DB X has the correct DOI, but the wrong journal, pages, ... AND this record is the first record in the RIS export
+- there are several other records with the correct DOI, journal, pages, ...
+With the current settings (compare by DOI before pages if severalPages) the deduplicated record will have the good DOI, but the wrong journal, pages, ...
+Problems:
+- the order of the export determines the performance
+  UNLESS: records with bibliographic_error are left out of the performance calculation.
+  - Marking the bibliographic_error in FP ("FP: 15 (bibliographic_error: 9)) doesn't solve this problem.
+  - in principle each program could have an optimal order which is different from the order of the other programs.
+  - published performance data of other programs do not say which order was used?
+- does this leaving out of records with bibliographic_error apply to FN as well? and TP and TN?
+- what's the difference between wrong data (bibliographic_error) and missing data?
+  - extreme case: is a missing DOI for an record from 1960 a bibliographic_error?
+- bibliographic_error depends on the algorithm used (this is neutral, not a problem?)
+  - how can one compare the performance of different programs? 
+    Does this mean that all records with bibliographic_error for ANY of the programs must be left out from the test file for ALL compared programs?
+- marking bibliographic_error will probably only be done for the FP and FN of DedupEndNote itself. This is unfair for the other programs.
 
 ## Migraine False Positives
 
-- limit EndNote DB Migraine_ALL_Mark to "Name of database = Cochrane" and "Label > 0"
+- limit EndNote DB own_migarine/Migraine_ALL_Mark to "Name of database = Cochrane" and "Label > 0"
 - find duplicates (with only field Label) 
 - there are false positives, a.o. Label 6288, 6368, 6460, 6616, 6810, ... Are they all conference proceedings?  
 
@@ -36,13 +64,6 @@
 - data files: https://github.com/IEBH/dedupe-sweep/tree/master/test
 - publication: Forbes, C., Greenwood, H., Carter, M. et al. Automation of duplicate record detection for systematic reviews: Deduplicator. Syst Rev 13, 206 (2024). https://doi.org/10.1186/s13643-024-02619-9 https://systematicreviewsjournal.biomedcentral.com/articles/10.1186/s13643-024-02619-9#availability-of-data-and-materials 
 - Upgraded in TERA: https://tera-tools.com/ Has th deupliator been changed in TERA?
-
-## Retractions
-
-- Retracted publications: BIG_SET 7921 set and 42247
-- Article: Shi, Qianling et al., More Consideration is Needed for Retracted Non-Cochrane Systematic Reviews in Medicine: A Systematic Review,
-  in: Journal of Clinical Epidemiology, Volume 0, Issue 0
-  https://www.jclinepi.com/article/S0895-4356(21)00198-0/fulltext#relatedArticles
 
 ## BIG SET
 
@@ -68,26 +89,6 @@ subject (portal vein thrombosis) was chosen after reading https://journals.plos.
   Check on BIG_SET and subset of other files: no cases found
 - "Brain research" with its sections can be solved: regex like "Brain Res.*Brain Res.*"?
 
-## Cochrane reviews
-
-What is preferred way?
-- user should not lose new updates (see also living reviews)
-- since it is is not possible to apply this rule only for the last versions, it applies always
- 
-Prefer DOI above starting page because different versions of a review have different DOIs.
-==> there should be a boolean Cochrane attribute
-Question: are there other journals with similar versions of articles?
-Current practice of comparing starting page (Cd003229) above DOI (10.1002/14651858.cd003229.pub3) merges different versions of same or consecutive years
-
-The BIG_SET database has no examples of Cochrane reviews from Medline_OVID!
-The ASySD_SRSR_Human database has cases for database "Ovid Technologies":
-- issue: CD005488, starting page: empty, DOI: http://dx.doi.org/10.1002/14651858.CD005488.pub2
-- issue: empty, starting page: CD008237, DOI: empty   (is this EMBASE_OVID?)
-
-Using DOI before starting page won't help in all cases:
-- if Cochrane AND starting page empty AND issue LIKE 'CD.*' ==> use ISSUE to starting page (and keep all characters, don't limit to numbers)
-- add PY to starting page ==> with absent DOIs no more merges over consecutive years
-
 ## DOIs: abnormal cases
 
 - additions to base DOI
@@ -104,3 +105,6 @@ Using DOI before starting page won't help in all cases:
 Logging configuration is spread over
 - logback-spring.xml
 - application(...).properties
+
+## Multipart data upload and download
+https://www.baeldung.com/spring-streaming-multipart-data

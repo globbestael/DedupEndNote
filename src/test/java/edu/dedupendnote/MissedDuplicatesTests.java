@@ -58,19 +58,36 @@ class MissedDuplicatesTests extends BaseTest {
 		memoryAppender.start();
 	}
 
+	// @formatter:off
+
+	/*
+	 * Solved cases
+	 * 		//  "'/own/missed_duplicates/9165.txt', 2, 1", // solved
+		//  "'/own/missed_duplicates/Rofo.txt', 3, 1",
+		// Solved: authors in ALL are treated better
+		// "'/ASySD/dedupendnote_files/missed_duplicates/SRSR_Human_52927.txt', 2, 1",
+		// "'/ASySD/dedupendnote_files/missed_duplicates/SRSR_Human_missed_2.txt', 4, 1", // Cochrane, solved
+		// "'/problems/AI_Query_2022_missed_duplicates_1.txt', 2, 1",
+		// "'/problems/AI_Query_2022_missed_duplicates_2.txt', 4, 1",
+		// "'/problems/AI_Query_2022_missed_duplicates_3.txt', 2, 1",
+		// "'/problems/BIG_SET_missed_1.txt', 4, 1", 
+		// "'/problems/BIG_SET_missed_2.txt', 3, 1",
+		// "'/problems/TIL_missed_duplicates.txt', 3, 1",
+		// "'/problems/TIL_missed_duplicates_3.txt', 4, 1", // SOLVED: same pages and DOI, different journal
+		// "'/problems/TIL_missed_duplicates_3.txt', 4, 1", // SOLVED: same pages and DOI, different journal
+		// "'Wilson_Emma_2025/missed_duplicates/Birtele_M.txt', 2, 2" // different pages
+	 */
 	@ParameterizedTest
-	@CsvSource({ "'/own/missed_duplicates/9165.txt', 2, 2", "'/own/missed_duplicates/Rofo.txt', 3, 1",
-			"'/ASySD/dedupendnote_files/missed_duplicates/Cardiac_Human_missed_duplicates_1.txt', 2, 2",
-			// Solved: authors in ALL are treated better
-			"'/ASySD/dedupendnote_files/missed_duplicates/SRSR_Human_52927.txt', 2, 1",
-			"'/ASySD/dedupendnote_files/missed_duplicates/SRSR_Human_missed_1.txt', 6, 2", // Cochrane
-			"'/ASySD/dedupendnote_files/missed_duplicates/SRSR_Human_missed_2.txt', 4, 2", // Cochrane
-			"'/problems/BIG_SET_missed_1.txt', 3, 1", "'/problems/BIG_SET_missed_2.txt', 3, 1",
-			"'/problems/BIG_SET_missed_3.txt', 3, 1", "'/problems/TIL_missed_duplicates.txt', 3, 1",
-			"'/problems/TIL_missed_duplicates_2.txt', 3, 1", // different pages, same DOI
-			"'/problems/TIL_missed_duplicates_3.txt', 4, 1", // SOLVED: same pages and DOI, different journal
-			"'/problems/TIL_missed_duplicates_3.txt', 4, 1", // SOLVED: same pages and DOI, different journal
+	@CsvSource({
+//		"'/problems/AI_Query_2022_missed_duplicates_4.txt', 2, 2", // title too different
+		// "'/problems/AI_Query_2022_missed_duplicates_5.txt', 2, 2", // ISSN same, ISBN different
+		// "'/ASySD/dedupendnote_files/missed_duplicates/Cardiac_Human_missed_duplicates_1.txt', 2, 2",
+		// "'/ASySD/dedupendnote_files/missed_duplicates/SRSR_Human_missed_1.txt', 6, 2", // Cochrane
+		"'/ASySD/dedupendnote_files/missed_duplicates/SRSR_Human_missed_3.txt', 2, 1", // Cochrane
+		// "'/problems/BIG_SET_missed_3.txt', 3, 2", 
+		// "'/problems/TIL_missed_duplicates_2.txt', 3, 2", // different pages, same DOI
 	})
+	// @formatter:on
 	void deduplicateMissedDuplicates(String fileName, int total, int totalWritten) {
 		log.debug("Log level should be debug");
 		String inputFileName = testdir + fileName;

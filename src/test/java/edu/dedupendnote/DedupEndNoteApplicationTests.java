@@ -1,14 +1,11 @@
 package edu.dedupendnote;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
-import java.util.Arrays;
-import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -97,7 +94,7 @@ class DedupEndNoteApplicationTests {
 	}
 
 	@ParameterizedTest
-	@CsvSource({ "'test805.txt', 805, 644",
+	@CsvSource({ "'test805.txt', 805, 631",
 			// "'DedupEndNote_portal_vein_thrombosis_37741.txt', 37741, 24382", // Very slow test
 			"'Non_Latin_input.txt', 2, 2", "'Dedup_PATIJ2_Possibly_missed.txt', 18, 12" })
 	void deduplicateSmallFiles(String fileName, int total, int totalWritten) {
@@ -206,26 +203,4 @@ class DedupEndNoteApplicationTests {
 
 	// FIXME: tests for markMode = true;
 
-	@SafeVarargs
-	public static <T> T coalesce(T... values) {
-		return Arrays.stream(values).filter(Objects::nonNull).findFirst().orElse(null);
-	}
-
-	@Test
-	void checkCoalesce() {
-		// FIXME: make assertions comparing with Apache Commons lang3: ObjectUtils::firstNonNull
-		assertThat(DedupEndNoteApplicationTests.coalesce((Object) null)).isNull();
-		assertThat(DedupEndNoteApplicationTests.coalesce((String) null, "One", (String) null)).isEqualTo("One");
-
-		String[] arrayNulls = { null, null };
-		assertThat(DedupEndNoteApplicationTests.coalesce(arrayNulls, "One")).isEqualTo(arrayNulls);
-
-		String[] arrayNullNonNull = { null, "A" };
-		assertThat(DedupEndNoteApplicationTests.coalesce(arrayNullNonNull, "One")).isEqualTo(arrayNullNonNull);
-
-		String[] arrayNonNull = { null, "A" };
-		assertThat(DedupEndNoteApplicationTests.coalesce(arrayNonNull, "One")).isEqualTo(arrayNonNull);
-
-		fail("laatste 3 resultaten voor coalesce zijn NIET ok");
-	}
 }
