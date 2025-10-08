@@ -1,5 +1,5 @@
 # DedupEndNote
-Deduplication of EndNote RIS files:
+Deduplication of EndNote and Zotero RIS files:
 
 - deduplicate one file: produces a new RIS file with the unique records
 - deduplicate two files (NEW-RECORDS and OLD-RECORDS): deduplicates both files and produces a RIS file with the unique records from NEW-RECORDS
@@ -8,14 +8,14 @@ Deduplication of EndNote RIS files:
 DedupEndNote is available at http://dedupendnote.nl:9777 
 
 ### Actions
-* Export one or two EndNote databases as RIS file(s)
+* Export one or two EndNote or Zotero databases as RIS file(s)
 * Upload the file(s)
 * Choose the action
 * Download the result file (RIS)
-* Import the result file into a new EndNote database
+* Import the result file into a new EndNote or Zotero database
 
 ### Building your own version
-DedupEndNote is a Java web application (Java 21, Spring Boot 3.5.4, fat jar). It can be started locally with:
+DedupEndNote is a Java web application (Java 21, Spring Boot 3.5.6, fat jar). It can be started locally with:
 ```
     java -jar DedupEndNote-[VERSION].jar
 ```
@@ -24,20 +24,21 @@ and the application will be available at
     http://localhost:9777
 ```
 ## Why DedupEndNote?
-Deduplication in EndNote misses many duplicate records.
+Deduplication in EndNote and Zotero misses many duplicate records.
 Building and maintaining a Journals List within Endnote can partly solve this problem,
 but there remain lots of cases where EndNote is too unforgiving when comparing records.
 Some bibliographic databases offer deduplication for their own databases
 (OVID: Medline and EMBASE), but this does not help PubMed, Cochrane or Web of Science users.
 
-DedupEndNote deduplicates an EndNote RIS file and writes a new RIS file with the unique records,
-which can be imported into a new EndNote database.
-It is more forgiving than EndNote itself when comparing records,
+DedupEndNote deduplicates an EndNote or Zotero RIS file and writes a new RIS file with the unique records,
+which can be imported into a new EndNote or Zotero database.
+It is more forgiving than EndNote and Zotero itself when comparing records,
 but tests have shown that it identifies many more duplicates (see below under "Performance").
 
 The program has been tested on EndNote databases with records from:
 
 - CINAHL (EBSCOHost)
+- ClinicalTrials.gov
 - Cochrane Library (Trials)
 - EMBASE (OVID)
 - Medline (OVID)
@@ -47,8 +48,6 @@ The program has been tested on EndNote databases with records from:
 - Web of Science
 
 The program has been tested with files with up to 50.000 records.
-
-
 
 ## What does DedupEndNote do?
 
@@ -80,53 +79,59 @@ Each pair of records is compared in 5 different ways. The general rule is:
 The following comparisons are used (in this order, chosen for performance reasons):
 
 1. __Publication year:__ Are they at most 1 year apart?
-  * Prepocessing: publication years before 1900 are removed (see insufficient data)
+  * Prepocessing: publication years before 1800 are removed (see insufficient data)
   * Insufficient data: Records without a publication year are compared to all records unless they have been identified as a duplicate.
+  * Special cases: Cochrane Reviews are compared for the same publication year only.
 2. __Starting page or DOI:__ Are they the same?<br/>
-If the starting pages are different or one or both are absent, the DOIs are compared.
+If the Starting and Ending page of at least one of the publications are more than 2 pages apart,
+then: the DOIs are compared first. If the DOIs are different or one or both are absent, then the starting pages are compared,
+otherwise: the starting pages are compared first.
   * Preprocessing: Article number is treated as a starting page if starting page itself is empty or contains "-".
   * Preprocessing: Starting pages are compared only for number: "S123" and "123" are considered the same.
   * Preprocessing: In DOIs 'http://dx.doi.org/', 'http://doi.org/', ... are left out. URL- and HTML-encoded DOIs are decoded ('10.1002/(SICI)1098-1063(1998)8:6&amp;lt;627::AID-HIPO5&amp;gt;3.0.CO;2-X' becomes '10.1002/(SICI)1098-1063(1998)8:6<627::AID-HIPO5>3.0.CO;2-X'). DOIs are lowercased.
   * Insufficient data: If one or both DOIs are missing and one or both of the starting pages are missing, the answer is YES.
     This is important because of PubMed ahead of print publications.
+  * Special cases: Cochrane Reviews: if both records have a DOI, only the DOIs are compared, otherwise the starting pages are compared.
 3. __Authors:__ Is the <a href="https://en.wikipedia.org/wiki/Jaro%E2%80%93Winkler_distance" target="_new">Jaro-Winkler similarity</a> of the authors > 0.67?<br/>
   * Preprocessing: The author "Anonymous," is treated as no author.
   * Preprocessing: Group author names are removed. "Author" names which contain "consortium", "grp", "group", "nct" or "study" are considered group author names.
-  * Preprocessing: First names are reduced to initials ("Moorthy, Ranjith K." to "Moorthy, R. K.").
+  * Preprocessing: Only the first 40 authors are retained.
+  * Preprocessing: First names are reduced to initials ("Moorthy, Ranjith K." becomes "Moorthy, R. K.").
   * Preprocessing: All authors from each record are joined by "; ".
   * Insufficient data: If one or both records have no authors, the answer is YES
     (except if one of the records is a reply (see below) and one of the records has no starting page or DOI).
 4. __Title:__ Is the <a href="https://en.wikipedia.org/wiki/Jaro%E2%80%93Winkler_distance" target="_new">Jaro-Winkler similarity</a>
-   of (one of) the normalized titles > 0.9?<br/>
+   of (one of) the normalized titles > 0.89?<br/>
 The fields Original publication (OP), Short Title (ST), Title (TI) and sometimes Book section (T3, see below) are treated as titles.
 Because the Jaro-Winkler similarity algorithm puts a heavy penalty on differences at the beginning of a string, the normalized titles are also reversed.
   * Preprocessing: The titles are normalized (converted to lower case, text between "<...>" removed,
     all characters which are not letters or numbers are replaced by a space character, ...).
-  * Insufficient data: If one of the records is a reply (see below), the titles are not compared / the answer is YES
-    (but the Jaro-Winkler similarity of the authors should be > 0.75 and the comparison between the journals is more strict).
-> *Reply:* a publication is considered a reply if the title (field TI) contains "reply", or contains "author(...)respon(...)",
-or is nothing but "response" (all case insensitive).
-
-> *T3 field:* Especially EMBASE (OVID) uses this field for (1) Conference title (majority of cases),
-(2) an alternative journal title, and (3) original (non English) title.
-Case 1 (identified as containing a number or "Annual", "Conference", "Congress", "Meeting" or "Society") is skipped.
-All other T3 fields are treated as Journals and as titles.
-
-
-5. __ISSN or Journal:__ Are they the same (ISSN) or similar (Journal)?<br/>
-The fields Journal / Book Title (T2), Alternate Journal (J2) and sometimes Book section (T3, see below) are treated as journals, ISBNs as ISSNs.
-All ISSns and journal titles (including abbreviations) in the records are used.
+  * Preprocessing: In the titles of retracted publications all parts which refer to the retraction are removed. "RETRACTED: Response of Breast Cancer Cells and Cancer Stem Cells to Metformin and Hyperthermia Alone or Combined (Retracted article. See vol. 20, 2025)". A publication is considered a retraction if the Title starts with "retracted", "removed" or "withdrawn", or contains "retracted article" (all case insensitive).
+  * Insufficient data: If one of the records is a reply, erratum or comment (see below), the titles are not compared / the answer is YES (but the Jaro-Winkler similarity of the authors should be > 0.75 and the comparison between the journals is more strict).
+5. __ISBN, ISSN or Journal:__ Are they the same (ISBN, ISSN) or similar (Journal)?<br/>
+This rule is skipped if both records have the same DOI (that comparison was made in step 2).<br/>
+The fields Journal / Book Title (T2), Alternate Journal (J2) and sometimes Book section (T3, see below) are treated as journals, ISBNs as ISSNs. All ISBNs, ISSns and journal titles (including abbreviations) in the records are used.<br/>
+If both records have an ISBN, the ISBNs are compared (stop), if both have an ISSN, the ISSns are compared (stop), else the journal titles are compared.<br/>
 Abbreviated and full journal titles are compared in a sensible way (see examples below).
-If the ISSns are different or one or both records have no ISSN, the journals are compared.
-  * Preprocessing:  ISSNs are normalized (dashes are removed, lowercased). For ISBN-10 the first 9 digits are used, for ISBN-13 the 9 digits starting at position 4.
+  * Preprocessing:  ISBNs and ISSNs are normalized (dashes are removed, lowercased). For ISBN-10 the first 9 digits are used, for ISBN-13 the 9 digits starting at position 4.
   * Preprocessing: Journal titles of the form "Zhonghua wai ke za zhi [Chinese journal of surgery]" or
     "Zhonghua wei chang wai ke za zhi = Chinese journal of gastrointestinal surgery" or
     "The Canadian Journal of Neurological Sciences / Le Journal Canadien Des Sciences Neurologiques" are split into 2 journal titles.
   * Preprocessing: the journal titles are normalized (hyphens, dots and apostrophes are replaced with space,
     end part between round or square brackets is removed, initial article is removed, ...).
 
-If two records get 5 YES answers, they are considered duplicates.
-Only the first record of a set of duplicate records is copied to the output file.
+***Remarks:***
+Comment
+: a publication is considered a comment if the title (fields ST and TI) contains words as "comment" or "commentary".
+
+Erratum
+: a publication is considered am erratum if the title (fields ST and TI) contains "Correction", "Corrigendum" or "Erratum".
+
+Reply
+: a publication is considered a reply if the title (fields ST and TI) contains "reply", or contains "author(...)respon(...)", or is nothing but "response" (all case insensitive).
+
+T3 field
+: Especially EMBASE (OVID) uses this field for (1) Conference title (majority of cases), (2) an alternative journal title, and (3) original (non English) title. Case 1 (identified as containing a number or "Annual", "Conference", "Congress", "Meeting" or "Society") is skipped. All other T3 fields are treated as Journals and as titles.
 
 ### 2. Enrich the records
 When writing the output file (except in Mark Mode), the following fields can be changed:
@@ -149,10 +154,10 @@ When writing the output file (except in Mark Mode), the following fields can be 
     * the Pages field gets an unabbreviated form: e.g. "482-91" is rewritten as "482-491".
     * if the ending page is the same as the starting page, only the starting page is written ("192" instead of "192-192").
   * Title (TI):
-    * If the publication is a reply, the title is replaced with the longest title from the duplicates
+    * If the publication is a reply / erratum / comment / retraction, the title is replaced with the longest title from the duplicates
       (e.g. "Reply from the authors" is replaced by "Coagulation parameters and portal vein thrombosis in cirrhosis Reply")
       
-The output file is a new RIS file which can be imported into a new EndNote database.
+The output file is a new RIS file which can be imported into a new EndNote or Zotero database.
 
 DedupEndNote is slower than EndNote in deduplicating records because its comparisons are more time consuming.
 EndNote can deduplicate a EndNote database of ca. 15,000 records in less dan 5 seconds. DedupEndNote needs
@@ -170,7 +175,7 @@ Data are from:
 * [McKeown] McKeown, S., Mir, Z.M.
   Considerations for conducting systematic reviews: evaluating the performance of different methods for de-duplicating references.
   Syst Rev 10, 38 (2021). [https://doi.org/10.1186/s13643-021-01583-y](https://doi.org/10.1186/s13643-021-01583-y)
-* [BIG_SET] Own test database for DedupEndNote on portal vein thrombosis (52,828 records, with 4926 records validated)
+* [BIG_SET] Own test database for DedupEndNote on portal vein thrombosis (52,828 records, with 5078 records validated)
 
 <table border="1">
     <colgroup>
@@ -215,9 +220,9 @@ Data are from:
         </tr>
         <tr>
             <td>DedupEndNote</td>
-            <td align="right">1359</td>
-            <td align="right">61</td>
-            <td align="right"><strong>95.7%</strong></td>
+            <td align="right">1361</td>
+            <td align="right">59</td>
+            <td align="right"><strong>95.8%</strong></td>
             <td align="right">436</td>
             <td align="right">0</td>
             <td align="right"><strong>100.0%</strong></td>
@@ -249,13 +254,13 @@ Data are from:
         </tr>
         <tr>
             <td>DedupEndNote</td>
-            <td align="right">222</td>
-            <td align="right">14</td>
-            <td align="right"><strong>94.1%</strong></td>
-            <td align="right">1179</td>
-            <td align="right">0</td>
-            <td align="right"><strong>100.0%</strong></td>
-            <td align="right"><strong>99.0%</strong></td>
+            <td align="right">225</td>
+            <td align="right">11</td>
+            <td align="right"><strong>95.2%</strong></td>
+            <td align="right">1177</td>
+            <td align="right">2</td>
+            <td align="right"><strong>99.8%</strong></td>
+            <td align="right"><strong>99.1%</strong></td>
         </tr>  
         <tr>
             <td cellspan="9" style="height: 15px;"></td>
@@ -283,13 +288,13 @@ Data are from:
         </tr>  
         <tr>
             <td>DedupEndNote</td>
-            <td align="right">761</td>
-            <td align="right">39</td>
-            <td align="right"><strong>95.2%</strong></td>
-            <td align="right">1188</td>
-            <td align="right">0</td>
-            <td align="right"><strong>100.0%</strong></td>
-            <td align="right"><strong>98.0%</strong></td>
+            <td align="right">766</td>
+            <td align="right">34</td>
+            <td align="right"><strong>95.8%</strong></td>
+            <td align="right">1184</td>
+            <td align="right">4</td>
+            <td align="right">99.7%</td>
+            <td align="right"><strong>98.1%</strong></td>
         </tr>
         <tr>
             <td cellspan="9" style="height: 15px;"></td>
@@ -391,13 +396,13 @@ Data are from:
         </tr>
         <tr>
             <td>DedupEndNote</td>
-            <td align="right">2010</td>
-            <td align="right">62</td>
-            <td align="right">97.0%</td>
-            <td align="right">1058</td>
+            <td align="right">2018</td>
+            <td align="right">56</td>
+            <td align="right">97.3%</td>
+            <td align="right">1056</td>
             <td align="right">0</td>
             <td align="right"><strong>100.0%</strong></td>
-            <td align="right"><strong>98.0%</strong></td>
+            <td align="right"><strong>98.2%</strong></td>
         </tr>
         <tr>
             <td cellspan="9" style="height: 15px;"></td>
@@ -405,18 +410,19 @@ Data are from:
         <tr>
             <td>BIG_SET<br>(4926 rec)</td>
             <td>DedupEndNote</td>
-            <td align="right">3721</td>
-            <td align="right">238</td>
-            <td align="right">94.0%</td>
-            <td align="right">962</td>
-            <td align="right">5</td>
-            <td align="right">99.5%</td>
-            <td align="right">95.0%</td>
+            <td align="right">3737</td>
+            <td align="right">176</td>
+            <td align="right">95.7%</td>
+            <td align="right">959</td>
+            <td align="right">10</td>
+            <td align="right">99.0%</td>
+            <td align="right">96.3%</td>
         </tr>
 	</tbody>
 </table>
 
 ### The false positive cases from BIG_SET:
+***The following list is old (version 1.0.0), and should / will be updated***
 - wrong DOI and journal in second of 2 EMBASE (OVID) records: same authors, year, title, DOI, different journal and starting page
   - Segovia, M. C., et al. (2019). "Combined multivisceral and renal transplant in a patient with JAK-2 mutation." Transplantation 103(7 Supplement 2): S143. DOI: 10.1097/01.tp.0000576288.84252.91
   - Segovia, M. C., et al. (2019). "Combined multivisceral and renal transplant in a patient with JAK-2 mutation." Neurology 92(15 Supplement 1). DOI: 10.1097/01.tp.0000576288.84252.91
@@ -428,6 +434,16 @@ Data are from:
   - Cool, J., et al. (2018). "TRENDS IN THE PREVALENCE OF PORTAL VEIN THROMBOSIS AND ASSOCIATED MORTALITY IN CIRRHOSIS: ANALYSIS OF A NATIONALLY REPRESENTATIVE INPATIENT COHORT." Gastroenterology 154(6 Supplement 1): S-1178. DOI: 10.1016/S0016-5085%2818%2933901-5 [Embase OVID]
   - Cool, J., et al. (2018). "THE ASSOCIATION BETWEEN PORTAL VEIN THROMBOSIS AND OTHER VENOUS THROMBOEMBOLISM IN CIRRHOSIS: ANALYSIS OF A NATIONALLY REPRESENTATIVE INPATIENT COHORT." Gastroenterology 154(6): S1178-S1179. [Web of Science]
 
+## Special cases
+1. ClinicalTrials.gov records
+
+Records from ClinicalTrials.gov are also available within the Cochrane Library and EMBASE, but the format of the data is quite different. DedupEndNote changes the data of these records to a common format when it imports them so that deduplication can work. The deduplicated output is also standardized:
+* Reference Type: Journal Article
+* Authors: (empty)
+* Journal: https://clinicaltrials.gov
+* Pages: the ClinicalTrials.gov ID (e.g. NCT06923007)
+* URL: the first URL is for ClinicalTrials.gov (e.g. https://clinicaltrials.gov/study/NCT06923007)
+* the other fields are from the first record in a deduplication set
 
 ## Limitations
 * Input file size: The maximum size of the input file is limited to 150MB.

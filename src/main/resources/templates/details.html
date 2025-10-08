@@ -155,34 +155,23 @@
                             <li>Preprocessing:
                                 <ul>
                                     <li>The titles are normalized (converted to lower case, text between "&lt;...&gt;"
-                                        removed,
-                                        all diacritical signs/accents, supplemental characters (e.g. "£") and all
-                                        characters
-                                        in
-                                        non-Latin scripts are removed,
-                                        all characters which are not letters or numbers are replaced by a space
-                                        character,
-                                        ...).
+                                        removed, all diacritical signs/accents, supplemental characters (e.g. "£") and
+                                        all characters in non-Latin scripts are removed, all characters which are not
+                                        letters or numbers are replaced by a space character, ...).
                                     </li>
                                     <li>Titles which can be split on ". ", ": " or "? " and have 2 parts of at least 50
-                                        characters, are
-                                        also compared on these parts.</li>
+                                        characters, are also compared on these parts.</li>
                                     <li>In the titles of retracted publications all parts which refer to the retraction
-                                        are
-                                        removed. "<del>RETRACTED: </del>Response of Breast Cancer Cells and Cancer Stem
-                                        Cells to
-                                        Metformin and Hyperthermia Alone or Combined<del> (Retracted article. See vol.
-                                            20,
-                                            2025)</del>".
-                                        A publication is considered a retraction if the Title starts with "retracted",
-                                        "removed"
-                                        or "withdrawn", or contains "retracted article" (all case insensitive).</li>
+                                        are removed. "<del>RETRACTED: </del>Response of Breast Cancer Cells and Cancer
+                                        Stem Cells to Metformin and Hyperthermia Alone or Combined<del> (Retracted
+                                            article. See vol. 20, 2025)</del>". A publication is considered a retraction
+                                        if the Title starts with "retracted", "removed" or "withdrawn", or contains
+                                        "retracted article" (all case insensitive).</li>
                                 </ul>
                             </li>
                             <li>Insufficient data: If one of the records is a reply, erratum or comment (see below), the
                                 titles are not compared / the answer is YES (but the Jaro-Winkler similarity of the
-                                authors
-                                should be &gt; <span
+                                authors should be &gt; <span
                                     th:text="${T(edu.dedupendnote.services.DeduplicationService.DefaultAuthorsComparator).AUTHOR_SIMILARITY_REPLY_SUFFICIENT_STARTPAGES_OR_DOIS}">-0.75</span>
                                 and the comparison between the journals is more strict).</li>
                         </ul>
@@ -194,9 +183,8 @@
                             The fields Journal / Book Title (T2), Alternate Journal (J2) and sometimes Book section (T3,
                             see below) are treated as journals. All ISBNs, ISSns and journal titles
                             (including abbreviations) in the records are used.</p>
-                        <p>If both records have an ISBN, the ISBNs are compared (stop),
-                            if both have an ISSN, the ISSns are compared (stop),
-                            else the journal titles are compared.<br />
+                        <p>If both records have an ISBN, the ISBNs are compared (stop), if both have an ISSN, the ISSns
+                            are compared (stop), else the journal titles are compared.<br />
                             Abbreviated and full journal titles are compared in a sensible way (see <a
                                 href="#examples">Examples of comparisons</a>).</p>
                         <ul>
@@ -225,16 +213,13 @@
                             <dt class="col-sm-2">Comment:</dt>
                             <dd class="col-sm-9">a publication is considered a comment if the title (fields ST and TI)
                                 contains words as "comment" or "commentary".</dd>
-
                             <dt class="col-sm-2">Erratum:</dt>
                             <dd class="col-sm-9">a publication is considered am erratum if the title (fields ST and TI)
                                 contains "Correction", "Corrigendum" or "Erratum".</dd>
-
                             <dt class="col-sm-2">Reply:</dt>
                             <dd class="col-sm-9">a publication is considered a reply if the title (fields ST and TI)
                                 contains "reply", or contains "author(...)respon(...)", or is nothing but "response"
                                 (all case insensitive).</dd>
-
                             <dt class="col-sm-2">T3 field:</dt>
                             <dd class="col-sm-9">Especially EMBASE (OVID) uses this field for (1) Conference title
                                 (majority of cases), (2) an alternative journal title, and (3) original (non English)
