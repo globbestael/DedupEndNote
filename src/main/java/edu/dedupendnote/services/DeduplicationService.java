@@ -13,17 +13,16 @@ import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-
 import org.apache.commons.text.similarity.JaroWinklerSimilarity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.stereotype.Service;
 
 import edu.dedupendnote.domain.Publication;
 import edu.dedupendnote.domain.StompMessage;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-// @Service
-// @SessionScope
+@Service
 public class DeduplicationService {
 
 	public static class DefaultAuthorsComparator implements AuthorsComparator {
@@ -104,20 +103,6 @@ public class DeduplicationService {
 
 	}
 
-	/*
-	 * Thresholds for Jaro-Winkler Similarity The thresholds for AUTHOR are part of
-	 * the AuthorComparator implementations
-	 */
-	public static final Double JOURNAL_SIMILARITY_NO_REPLY = 0.90;
-
-	public static final Double JOURNAL_SIMILARITY_REPLY = 0.93;
-
-	public static final Double TITLE_SIMILARITY_INSUFFICIENT_STARTPAGES_AND_DOIS = 0.94;
-
-	public static final Double TITLE_SIMILARITY_PHASE = 0.96;
-
-	public static final Double TITLE_SIMILARITY_SUFFICIENT_STARTPAGES_OR_DOIS = 0.89;
-
 	protected AuthorsComparator authorsComparator;
 
 	// the DOIs have been lowercased
@@ -126,7 +111,7 @@ public class DeduplicationService {
 
 	private IOService ioService;
 
-	private JaroWinklerSimilarity jws = new JaroWinklerSimilarity();
+	private ComparatorService comparatorService;
 
 	// @formatter:off
 	/*
@@ -183,220 +168,25 @@ public class DeduplicationService {
 	// @Autowired
 	private SimpMessagingTemplate simpMessagingTemplate;
 
-	public DeduplicationService(NormalizationService normalizationService) {
+	public DeduplicationService(NormalizationService normalizationService, ComparatorService comparatorService) {
 		this.authorsComparator = new DefaultAuthorsComparator();
 		this.ioService = new IOService(normalizationService);
+		this.comparatorService = comparatorService;
 	}
 
-	public DeduplicationService(SimpMessagingTemplate simpMessagingTemplate,
-			NormalizationService normalizationService) {
+	public DeduplicationService(SimpMessagingTemplate simpMessagingTemplate, NormalizationService normalizationService,
+			ComparatorService comparatorService) {
 		this.authorsComparator = new DefaultAuthorsComparator();
 		this.ioService = new IOService(normalizationService);
 		this.simpMessagingTemplate = simpMessagingTemplate;
+		this.comparatorService = comparatorService;
 	}
 
-	public DeduplicationService(AuthorsComparator authorsComparator, NormalizationService normalizationService) {
+	public DeduplicationService(AuthorsComparator authorsComparator, NormalizationService normalizationService,
+			ComparatorService comparatorService) {
 		this.authorsComparator = authorsComparator;
 		this.ioService = new IOService(normalizationService);
-	}
-
-	public boolean compareSameDois(Publication r1, Publication r2, boolean sameDois) {
-		if (sameDois) {
-			if (log.isTraceEnabled()) {
-				log.trace("- 4. DOIs are the same (ISSNs and Journals are NOT compared)");
-			}
-			return true;
-		}
-		if (log.isTraceEnabled()) {
-			log.trace("- 4. DOIs are NOT the same: {} and {}", r1.getDois(), r2.getDois());
-		}
-		return false;
-	}
-
-	/*
-	 * Compares ISBNs if present, else ISSNs.
-	 * Conference proceedings published in a series (e.g. Lecture Notes in Computer Science)
-	 * all share the same ISSN, but have a unique ISBN. In Scopus the DOI is often absent.
-	 * The proceedings can be split over several volumes(several series numbers).
-	 */
-	public boolean compareIssns(Publication r1, Publication r2) {
-		if (!r1.getIsbns().isEmpty() && !r2.getIsbns().isEmpty()) {
-			if (setsContainSameString(r1.getIsbns(), r2.getIsbns())) {
-				log.trace("- 4. ISBNs are the same");
-				return true;
-			} else {
-				if (log.isTraceEnabled()) {
-					log.trace("- 4. ISBNs are NOT the same: {} and {}", r1.getIsbns(), r2.getIsbns());
-				}
-				return false;
-			}
-		}
-		if (setsContainSameString(r1.getIssns(), r2.getIssns())) {
-			log.trace("- 4. ISSNs are the same");
-			return true;
-		} else {
-			if (log.isTraceEnabled()) {
-				log.trace("- 4. ISSNs are NOT the same: {} and {}", r1.getIssns(), r2.getIssns());
-			}
-			return false;
-		}
-	}
-
-	// @formatter:off
-	/**
-	 * compareJournals
-	 *
-	 * Paths not chosen:
-	 * - Creation of sets of journalPatterns for the whole set of records. This might be overkill, since the comparison by journal is the last
-	 *   of all comparisons between any two records
-	 * - "AJR American Journal of Radiology": split into "AJR" and "American Journal of Radiology"
-	 *   compareJournals_FirstWithStartingInitialism(...) will create a pattern on A, J en R which will find the second title.
-	 */
-	// @formatter:on
-	public boolean compareJournals(Publication r1, Publication r2) {
-		// Conference proceedings (e.g. Lecture Notes on Computer Science): if both have an ISBN and they are
-		// different, don't compare the journal, but return false. A comparable actions happens when comparing
-		// ISSNs/ISBNs.
-		if (!r1.getIsbns().isEmpty() && !r2.getIsbns().isEmpty()) {
-			return false;
-		}
-		Set<String> set1 = r1.getJournals();
-		Set<String> set2 = r2.getJournals();
-		boolean isReply = r1.isReply() || r2.isReply();
-
-		if (set1.isEmpty() || set2.isEmpty()) {
-			log.trace("- 4. At least 1 of the records has no journal");
-			return false;
-		}
-
-		Set<String> commonJournals = new HashSet<>(set1);
-		commonJournals.retainAll(set2);
-		if (!commonJournals.isEmpty()) {
-			log.trace("- 4. Some journals are the same");
-			return true;
-		}
-
-		for (String s1 : set1) {
-			for (String s2 : set2) {
-				// FIXME: journals with URLs as name should be preprocessed and journal name should be compared
-				// in a normal way (or only exactly the same?)
-				if (s1.startsWith("http") && s2.startsWith("http") && !s1.equals(s2)) {
-					// JaroWinkler 0.9670930232558139 for
-					// 'Https://clinicaltrials.gov/show/nct00830466'
-					// and 'Https://clinicaltrials.gov/show/nct00667472'
-					continue;
-				}
-				Double similarity = jws.apply(s1.toLowerCase(), s2.toLowerCase());
-				// Make comparison stricter for Reply-titles because titles haven't been
-				// compared ("Annals of Hepatology" - "Annals of Oncology": 0.916)
-				if (isReply && similarity > JOURNAL_SIMILARITY_REPLY) {
-					log.trace("- 4. Journal similarity above treshold (reply)");
-					return true;
-				}
-				if (!isReply && similarity > JOURNAL_SIMILARITY_NO_REPLY) {
-					log.trace("- 4. Journal similarity ({}) above treshold (not reply)", similarity);
-					return true;
-				}
-
-				if (s1.toLowerCase().charAt(0) != s2.toLowerCase().charAt(0)) {
-					continue;
-				}
-				/*
-				 * "Hepatology" and "Hepatology International" are considered the same
-				 */
-				// FIXME: the 3 following functions should first compare s1 - s2 and, if false, then s2 - s1
-				if (compareJournals_FirstAsAbbreviation(s1, s2)) {
-					log.trace("- 4. compareJournals_FirstAsAbbreviation(1,2) is true");
-					return true;
-				}
-				if (compareJournals_FirstAsAbbreviation(s2, s1)) {
-					log.trace("- 4. compareJournals_FirstAsAbbreviation(2,2) is true");
-					return true;
-				}
-				/*
-				 * Journals with very long titles produce very long Patterns: limit these cases
-				 * to short journal names. ASySD SRS_Human has journal names in uppercase
-				 */
-				if (s1.length() < 10 && s1.toUpperCase().equals(s1) && compareJournals_FirstAsInitialism(s1, s2)) {
-					log.trace("- 4. compareJournals_FirstAsInitialism(1,2) is true");
-					return true;
-				}
-				if (s2.length() < 10 && s2.toUpperCase().equals(s2) && compareJournals_FirstAsInitialism(s2, s1)) {
-					log.trace("- 4. compareJournals_FirstAsInitialism(2,1) is true");
-					return true;
-				}
-
-				if (compareJournals_FirstWithStartingInitialism(s1, s2)) {
-					log.trace("- 4. compareJournals_FirstWithStartingInitialism(1,2) is true");
-					return true;
-				}
-				if (compareJournals_FirstWithStartingInitialism(s2, s1)) {
-					log.trace("- 4. compareJournals_FirstWithStartingInitialism(2,1) is true");
-					return true;
-				}
-			}
-		}
-		if (log.isTraceEnabled()) {
-			log.trace("- 4. Journals are NOT the same: {} and {}", r1.getJournals(), r2.getJournals());
-		}
-		return false;
-	}
-
-	// Searching 'Ann Fr Anesth Reanim' as "\bAnn.*\bFr.*\bAnesth.*\bReanim.*"
-	private boolean compareJournals_FirstAsAbbreviation(String j1, String j2) {
-		Pattern pattern = Pattern.compile("\\b" + j1.replaceAll("\\s", ".*\\\\b") + ".*", Pattern.CASE_INSENSITIVE);
-		// log.debug("Pattern ABBREVIATION for '{}': {} for '{}'", j1, pattern.toString(), j2);
-		Matcher matcher = pattern.matcher(j2);
-		if (matcher.find()) {
-			// log.debug("Pattern ABBREVIATION found for '{}': {} for '{}'", j1, pattern.toString(), j2);
-			return true;
-		}
-		return false;
-	}
-
-	// Searching 'BMJ' as "\bB.*\bM.*\bJ.*"
-	private boolean compareJournals_FirstAsInitialism(String s1, String s2) {
-		String patternString = s1.chars().mapToObj(c -> String.valueOf((char) c))
-				.collect(Collectors.joining(".*\\b", "\\b", ".*"));
-		Pattern patternShort2 = Pattern.compile(patternString, Pattern.CASE_INSENSITIVE);
-		// log.debug("Pattern INITIALISM for '{}': {} for '{}'", s1, patternShort2.toString(), s2);
-		Matcher matcher = patternShort2.matcher(s2);
-		if (matcher.find()) {
-			// log.debug("Pattern INITIALISM found for '{}': {} for '{}'", s1, patternShort2.toString(), s2);
-			return true;
-		}
-		return false;
-	}
-
-	// Searching 'AJR Am J Roentgenol' as "\bA.*\bJ.*\bR.*"
-	// Searching 'JNCCN Journal of the National Comprehensive Cancer Network' as
-	// "\bJ.*\bN.*\bC.*\bC.*\bN.*"
-	// Searching 'Bmj' as "\bB.*\bm.*\bj.*"
-	private boolean compareJournals_FirstWithStartingInitialism(String s1, String s2) {
-		String[] words = s1.split("\\s");
-		if ("Samj".equals(words[0])) {
-			words[0] = "SAMJ";
-		}
-		if (words[0].length() > 2 && words[0].equals(words[0].toUpperCase())
-				|| words.length == 1 && words[0].length() < 6) {
-			// 20220502: Because the pattern uses only word breaks "\b" and not
-			// alternation "(\b|)", we have to adjust for at least (AJNR <=> American
-			// journal of neuroradiology)
-			if ("AJNR".equals(words[0])) { // AJNR = American Journal of Neuroradiology!
-				words[0] = "AJN";
-			}
-			String patternString = words[0].chars().mapToObj(c -> String.valueOf((char) c))
-					.collect(Collectors.joining(".*\\b", "\\b", ".*"));
-			Pattern patternShort3 = Pattern.compile(patternString, Pattern.CASE_INSENSITIVE);
-			// log.debug("Pattern STARTING_INITIALISM for '{}': {} for '{}'", s1, patternShort3.toString(), s2);
-			Matcher matcher = patternShort3.matcher(s2);
-			if (matcher.find()) {
-				// log.debug("Pattern STARTING_INITIALISM found for '{}': {} for '{}'", s1, patternShort3.toString(),
-				// s2);
-				return true;
-			}
-		}
-		return false;
+		this.comparatorService = comparatorService;
 	}
 
 	public void compareSet(List<Publication> publications, Integer year, boolean descending, String wssessionId) {
@@ -424,9 +214,11 @@ public class DeduplicationService {
 				if (log.isTraceEnabled()) {
 					log.trace("\nStarting comparison {} - {}", publication.getId(), r.getId());
 				}
-				if (compareStartPageOrDoi(r, publication, map) && authorsComparator.compare(r, publication)
-						&& compareTitles(r, publication) && (compareSameDois(r, publication, map.get("sameDois"))
-								|| compareIssns(r, publication) || compareJournals(r, publication))) {
+				if (comparatorService.compareStartPageOrDoi(r, publication, map)
+						&& authorsComparator.compare(r, publication) && comparatorService.compareTitles(r, publication)
+						&& (comparatorService.compareSameDois(r, publication, map.get("sameDois"))
+								|| comparatorService.compareIssns(r, publication)
+								|| comparatorService.compareJournals(r, publication))) {
 
 					noOfDuplicates++;
 					// set the label
@@ -483,181 +275,6 @@ public class DeduplicationService {
 			wsMessage(wssessionId, "Working on %d for %d records (marked %d duplicates)".formatted(year,
 					noOfPublications, noOfDuplicates));
 		}
-	}
-
-	/*
-	 * Comparing starting page before DOI may be faster than the other way around.
-	 * But: a complete set of conference abstracts has the same DOI. So starting
-	 * page MUST be compared before DOI, except for Cochrane Reviews.
-	 * See the comment at {@link edu.dedupendnote.domain.Publication#isCochrane}
-	 */
-	public boolean compareStartPageOrDoi(Publication r1, Publication r2, Map<String, Boolean> map) {
-		// log.debug("Comparing {}: {} to {}: {}", r1.getId(), r1.getPageForComparison(), r2.getId(),
-		// r2.getPageForComparison());
-		Set<String> dois1 = r1.getDois();
-		Set<String> dois2 = r2.getDois();
-		boolean bothCochrane = r1.isCochrane() && r2.isCochrane();
-		boolean sufficientStartPages = r1.getPageForComparison() != null && r2.getPageForComparison() != null;
-		boolean sufficientDois = !dois1.isEmpty() && !dois2.isEmpty();
-		// If at least ONE of the publications has severalPages, its is assumed that there will be no comparison of TWO
-		// meeting abstracts, and the comparison by DOI before pages is safe
-		boolean atLeastOneSeveralPages = r1.isSeveralPages() || r2.isSeveralPages();
-
-		if (sufficientDois && setsContainSameString(dois1, dois2)) {
-			map.put("sameDois", true);
-		}
-
-		if (bothCochrane) {
-			if (r1.getPublicationYear().equals(r2.getPublicationYear())) {
-				if (sufficientDois) {
-					if (setsContainSameString(dois1, dois2)) {
-						log.trace("- 1. DOIs are the same for Cochrane");
-						return true;
-					} else {
-						log.trace("- 1. DOIs are NOT the same for Cochrane");
-						return false;
-					}
-				} else if (sufficientStartPages && r1.getPageForComparison().equals(r2.getPageForComparison())) {
-					log.trace("- 1. Starting pages are the same for Cochrane");
-					return true;
-				}
-			}
-			log.trace("- 1. NOT the same startPage or DOI for Cochrane");
-			return false;
-		}
-
-		if (!sufficientStartPages && !sufficientDois) {
-			log.trace("- 1. At least one starting page AND at least one DOI are missing, therefore Same");
-			return true; // no useful comparison possible
-		}
-		if (atLeastOneSeveralPages) {
-			if (sufficientDois) {
-				if (setsContainSameString(dois1, dois2)) {
-					log.trace("- 1. DOIs are the same for severalPages");
-					return true;
-					// } else {
-					// log.trace("- 1. DOIs are NOT the same");
-					// return false;
-				}
-			}
-			if (sufficientStartPages && r1.getPageForComparison().equals(r2.getPageForComparison())) {
-				log.trace("- 1. Starting pages are the same for severalPages");
-				return true;
-			}
-			log.trace("- 1. NOT the same startPage or DOI for severalPages");
-			return false;
-		}
-
-		// suboptimal structure to make tracing messages clearer
-		if (sufficientStartPages) {
-			if (r1.getPageForComparison().equals(r2.getPageForComparison())) {
-				log.trace("- 1. Starting pages are the same");
-				return true;
-			} else {
-				log.trace("- 1. Starting pages are NOT the same");
-				return false;
-			}
-		}
-
-		/*
-		 * If 2 records have no pages, but have a DOI (the same DOI), they are considered the same.
-		 * This is a case where meeting abstracts with insufficient data (pages) can be a FP.
-		 */
-		// if (sufficientDois) { // superfluous test
-		if (setsContainSameString(dois1, dois2)) {
-			log.trace("- 1. DOIs are the same");
-			return true;
-			// } else {
-			// log.trace("- 1. DOIs are NOT the same");
-			// return false;
-		}
-		log.trace("- 1. DOIs and starting pages are NOT the same");
-		return false;
-	}
-
-	/**
-	 * All unique titles and their reverse are compared
-	 * 
-	 * Paths not chosen: - start with setContainsSameString(titleSet1, titleSet2): @see
-	 * <a href="https://github.com/globbestael/DedupEndNote/issues/20">GitHub issues</a>
-	 */
-	public boolean compareTitles(Publication r1, Publication r2) {
-		// log.debug("Comparing {}: {}\nto {}: {}", r1.getId(), r1.getTitles().get(0), r2.getId(),
-		// r2.getTitles().get(0));
-		if (r1.isReply() || r2.isReply()) {
-			return true;
-		}
-		if (r1.isClinicalTrialGov() && r2.isClinicalTrialGov()) {
-			log.trace("- 3. Both records are from ClinicalTrials.gov");
-			return true;
-		}
-
-		Double similarity = 0.0;
-		List<String> titles1 = r1.getTitles();
-		List<String> titles2 = r2.getTitles();
-		boolean sufficientStartPages = r1.getPageForComparison() != null && r2.getPageForComparison() != null;
-		boolean sufficientDois = !r1.getDois().isEmpty() && !r2.getDois().isEmpty();
-		boolean isPhase = r1.isPhase() || r2.isPhase();
-
-		if (titles1.isEmpty() || titles2.isEmpty()) {
-			log.trace("- 3. No comparison of titles because no titles for at least one publication");
-			return true;
-		}
-		/*
-		 * These 3 used when log.isTraceEnabled()
-		 */
-		Double highestSimilarity = 0.0;
-		String highestTitle1 = "";
-		String highestTitle2 = "";
-
-		for (String title1 : titles1) {
-			for (String title2 : titles2) {
-				similarity = jws.apply(title1, title2);
-				if (log.isTraceEnabled() && similarity > highestSimilarity) {
-					highestSimilarity = similarity;
-					highestTitle1 = title1;
-					highestTitle2 = title2;
-				}
-
-				if (isPhase) { // return result of comparison of only the first title variant
-					// log.debug("{} and {}:\n- {}\n- {}", r1.getId(), r2.getId(), title1, title2);
-					if (similarity > TITLE_SIMILARITY_PHASE) {
-						log.trace("- 3. Title similarity (for Phase) is above threshold");
-						return true;
-					}
-				}
-				if (sufficientStartPages || sufficientDois) {
-					if (similarity > TITLE_SIMILARITY_SUFFICIENT_STARTPAGES_OR_DOIS) {
-						if (log.isTraceEnabled()) {
-							log.trace("- 3. Title similarity (with pages or DOIs) is above threshold: '{}' and '{}'",
-									title1, title2);
-						}
-						return true;
-					}
-				}
-				if (!(sufficientStartPages || sufficientDois)) {
-					if (similarity > TITLE_SIMILARITY_INSUFFICIENT_STARTPAGES_AND_DOIS) {
-						if (log.isTraceEnabled()) {
-							log.trace(
-									"- 3. Title similarity (without sufficient pages or DOIs) is above threshold: '{}' and '{}'",
-									title1, title2);
-						}
-						return true;
-					}
-				}
-			}
-		}
-		/*
-		 * This message gives the LAST similarity of the whole set, NOT the highest similarity with the 2 titles from both sets
-		 */
-		if (log.isTraceEnabled()) {
-			log.trace("- 3. Title similarity {} is below threshold: '{}' and '{}'], subtype {}", highestSimilarity,
-					highestTitle1, highestTitle2,
-					(isPhase ? "Phase"
-							: (sufficientStartPages || sufficientDois) ? "sufficient startPages or DOIs"
-									: "not sufficient startPages or DOIs"));
-		}
-		return false;
 	}
 
 	private boolean containsDuplicateIds(List<Publication> publications) {
@@ -935,14 +552,6 @@ public class DeduplicationService {
 	// }
 
 	// FIXME: is Apache Commons CollectionUtils or Spring CollectionUtils better?
-	private boolean setsContainSameString(Set<String> set1, Set<String> set2) {
-		if (set1.isEmpty() || set2.isEmpty()) {
-			return false;
-		}
-		Set<String> common = new HashSet<>(set1);
-		common.retainAll(set2);
-		return !common.isEmpty();
-	}
 
 	// @formatter:off
 	/*

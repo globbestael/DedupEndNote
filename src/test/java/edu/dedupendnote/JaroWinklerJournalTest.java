@@ -15,6 +15,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.boot.test.context.TestConfiguration;
 
 import edu.dedupendnote.domain.Publication;
+import edu.dedupendnote.services.ComparatorService;
 import edu.dedupendnote.services.DeduplicationService;
 import edu.dedupendnote.services.NormalizationService;
 import lombok.extern.slf4j.Slf4j;
@@ -24,9 +25,10 @@ import lombok.extern.slf4j.Slf4j;
 @TestConfiguration
 class JaroWinklerJournalTest {
 	NormalizationService normalizationService = new NormalizationService();
+	ComparatorService comparatorService = new ComparatorService();
 	JaroWinklerSimilarity jws = new JaroWinklerSimilarity();
 
-	DeduplicationService deduplicationService = new DeduplicationService(normalizationService);
+	DeduplicationService deduplicationService = new DeduplicationService(normalizationService, comparatorService);
 
 	/*
 	 * TODO: Test for splitting journals: e.g
@@ -44,7 +46,7 @@ class JaroWinklerJournalTest {
 		// System.err.println(String.format("- 1: %s\n- 2: %s\n- 3: %s\n- 4: %s\n",
 		// input1, Publication.normalizeJava8(input1), input2,
 		// Publication.normalizeJava8(input2)));
-		assertThat(similarity).isGreaterThan(DeduplicationService.JOURNAL_SIMILARITY_REPLY);
+		assertThat(similarity).isGreaterThan(ComparatorService.JOURNAL_SIMILARITY_REPLY);
 	}
 
 	/*
@@ -57,7 +59,7 @@ class JaroWinklerJournalTest {
 				normalizationService.normalizeJournal(input2));
 		System.err.println("- 1: %s\n- 2: %s\n- 3: %s\n- 4: %s\n".formatted(input1,
 				normalizationService.normalizeTitle(input1), input2, normalizationService.normalizeTitle(input2)));
-		assertThat(similarity).isLessThanOrEqualTo(DeduplicationService.JOURNAL_SIMILARITY_REPLY);
+		assertThat(similarity).isLessThanOrEqualTo(ComparatorService.JOURNAL_SIMILARITY_REPLY);
 	}
 
 	/*
@@ -73,7 +75,7 @@ class JaroWinklerJournalTest {
 		r1.addJournals(input1, normalizationService);
 		r2.addJournals(input2, normalizationService);
 
-		assertThat(deduplicationService.compareJournals(r1, r2))
+		assertThat(comparatorService.compareJournals(r1, r2))
 				.as("Journals are NOT similar: " + r1.getJournals() + " versus " + r2.getJournals()).isTrue();
 	}
 
@@ -88,8 +90,8 @@ class JaroWinklerJournalTest {
 		r1.addJournals(input1, normalizationService);
 		r2.addJournals(input2, normalizationService);
 
-		log.debug("Result: {}", deduplicationService.compareJournals(r1, r2));
-		assertThat(deduplicationService.compareJournals(r1, r2))
+		log.debug("Result: {}", comparatorService.compareJournals(r1, r2));
+		assertThat(comparatorService.compareJournals(r1, r2))
 				.as("Journals are similar: %s versus %s", r1.getJournals(), r2.getJournals()).isFalse();
 	}
 
@@ -108,8 +110,8 @@ class JaroWinklerJournalTest {
 		r1.addJournals("Ann Intern Med", normalizationService);
 		r2.addJournals("ANNALS OF INTERNAL MEDICINE", normalizationService);
 
-		log.debug("Result: {}", deduplicationService.compareJournals(r1, r2));
-		assertThat(deduplicationService.compareJournals(r1, r2))
+		log.debug("Result: {}", comparatorService.compareJournals(r1, r2));
+		assertThat(comparatorService.compareJournals(r1, r2))
 				.as("Journals are similar: %s versus %s", r1.getJournals(), r2.getJournals()).isTrue();
 	}
 

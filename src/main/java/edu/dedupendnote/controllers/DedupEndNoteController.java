@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
+import edu.dedupendnote.services.ComparatorService;
 import edu.dedupendnote.services.DeduplicationService;
 import edu.dedupendnote.services.NormalizationService;
 import edu.dedupendnote.services.UtilitiesService;
@@ -39,10 +40,13 @@ public class DedupEndNoteController {
 
 	private NormalizationService normalizationService;
 
+	private ComparatorService comparatorService;
+
 	public DedupEndNoteController(SimpMessagingTemplate simpMessagingTemplate,
-			NormalizationService normalizationService) {
+			NormalizationService normalizationService, ComparatorService comparatorService) {
 		this.simpMessagingTemplate = simpMessagingTemplate;
 		this.normalizationService = normalizationService;
+		this.comparatorService = comparatorService;
 	}
 
 	// @formatter:off
@@ -111,7 +115,7 @@ public class DedupEndNoteController {
 		String outputFileName = UtilitiesService.createOutputFileName(inputFileName, markMode);
 		String logPrefix = "1F" + (Boolean.TRUE.equals(markMode) ? "M" : "D");
 		DeduplicationService deduplicationService = new DeduplicationService(simpMessagingTemplate,
-				normalizationService);
+				normalizationService, comparatorService);
 
 		try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
 			Future<String> future = executor
@@ -129,7 +133,7 @@ public class DedupEndNoteController {
 
 		String logPrefix = "2F" + (Boolean.TRUE.equals(markMode) ? "M" : "D");
 		DeduplicationService deduplicationService = new DeduplicationService(simpMessagingTemplate,
-				normalizationService);
+				normalizationService, comparatorService);
 
 		try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
 			Future<String> future = executor

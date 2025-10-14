@@ -16,6 +16,7 @@ import org.springframework.boot.test.context.TestConfiguration;
 
 import edu.dedupendnote.domain.Publication;
 import edu.dedupendnote.services.AuthorsComparator;
+import edu.dedupendnote.services.ComparatorService;
 import edu.dedupendnote.services.DeduplicationService;
 import edu.dedupendnote.services.NormalizationService;
 
@@ -24,9 +25,10 @@ import edu.dedupendnote.services.NormalizationService;
 @TestConfiguration
 class JaroWinklerAuthorsTest {
 	NormalizationService normalizationService = new NormalizationService();
+	ComparatorService comparatorService = new ComparatorService();
 	JaroWinklerSimilarity jws = new JaroWinklerSimilarity();
 
-	DeduplicationService service = new DeduplicationService(normalizationService);
+	DeduplicationService service = new DeduplicationService(normalizationService, comparatorService);
 
 	AuthorsComparator authorsComparator = service.getAuthorsComparator();
 

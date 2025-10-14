@@ -22,6 +22,7 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 import edu.dedupendnote.domain.Publication;
+import edu.dedupendnote.services.ComparatorService;
 import edu.dedupendnote.services.DeduplicationService;
 import edu.dedupendnote.services.IOService;
 import edu.dedupendnote.services.NormalizationService;
@@ -32,7 +33,9 @@ import lombok.extern.slf4j.Slf4j;
 @TestConfiguration
 class DedupEndNoteApplicationTests {
 	NormalizationService normalizationService = new NormalizationService();
-	public DeduplicationService deduplicationService = new DeduplicationService(normalizationService);
+	ComparatorService comparatorService = new ComparatorService();
+	public DeduplicationService deduplicationService = new DeduplicationService(normalizationService,
+			comparatorService);
 
 	String homeDir = System.getProperty("user.home");
 
@@ -176,21 +179,21 @@ class DedupEndNoteApplicationTests {
 		r1.addIssns("0000-0000 1111-1111");
 		r2.addIssns("2222-2222 1111-1111");
 
-		assertThat(deduplicationService.compareIssns(r1, r2)).isTrue();
+		assertThat(comparatorService.compareIssns(r1, r2)).isTrue();
 
 		Publication r3 = new Publication();
 		Publication r4 = new Publication();
 		r3.addIssns("0000-0000");
 		r4.addIssns("1111-1111 2222-2222");
 
-		assertThat(deduplicationService.compareIssns(r3, r4)).isFalse();
+		assertThat(comparatorService.compareIssns(r3, r4)).isFalse();
 
 		Publication r5 = new Publication();
 		Publication r6 = new Publication();
 		r5.addIssns("1234-568x (Print)");
 		r6.addIssns("1234568X (ISSN)");
 
-		assertThat(deduplicationService.compareIssns(r5, r6)).isTrue();
+		assertThat(comparatorService.compareIssns(r5, r6)).isTrue();
 	}
 
 	@Test

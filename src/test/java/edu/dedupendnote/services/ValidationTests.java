@@ -57,7 +57,8 @@ class ValidationTests {
 	// temporary
 	public Map<String, Integer> titleCounter = new HashMap<>();
 	NormalizationService normalizationService = new NormalizationService();
-	DeduplicationService deduplicationService = new DeduplicationService(normalizationService);
+	ComparatorService comparatorService = new ComparatorService();
+	DeduplicationService deduplicationService = new DeduplicationService(normalizationService, comparatorService);
 
 	IOService ioService = new IOService(normalizationService);
 

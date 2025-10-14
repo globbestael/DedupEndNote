@@ -23,7 +23,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.boot.test.context.TestConfiguration;
 
 import edu.dedupendnote.domain.Publication;
-import edu.dedupendnote.services.DeduplicationService;
+import edu.dedupendnote.services.ComparatorService;
 import edu.dedupendnote.services.IOService;
 import edu.dedupendnote.services.NormalizationService;
 
@@ -32,6 +32,7 @@ import edu.dedupendnote.services.NormalizationService;
 @TestConfiguration
 class JaroWinklerTitleTest {
 	NormalizationService normalizationService = new NormalizationService();
+	ComparatorService comparatorService = new ComparatorService();
 
 	String homeDir = System.getProperty("user.home");
 
@@ -55,7 +56,7 @@ class JaroWinklerTitleTest {
 				within(0.01));
 		softAssertions.assertThat(similarity)
 				.as("\nTitle1: %s\nTitle2: %s\nGreaterThanOrEqualTo threshold", input1, input2)
-				.isGreaterThanOrEqualTo(DeduplicationService.TITLE_SIMILARITY_SUFFICIENT_STARTPAGES_OR_DOIS);
+				.isGreaterThanOrEqualTo(ComparatorService.TITLE_SIMILARITY_SUFFICIENT_STARTPAGES_OR_DOIS);
 		softAssertions.assertAll();
 	}
 
@@ -84,7 +85,7 @@ class JaroWinklerTitleTest {
 				.isEqualTo(expected, within(0.01));
 		softAssertions.assertThat(highestSimilarity)
 				.as("\nTitle1: %s\nTitle2: %s\nGreaterThanOrEqualTo threshold", p1.getTitles(), p2.getTitles())
-				.isGreaterThanOrEqualTo(DeduplicationService.TITLE_SIMILARITY_SUFFICIENT_STARTPAGES_OR_DOIS);
+				.isGreaterThanOrEqualTo(ComparatorService.TITLE_SIMILARITY_SUFFICIENT_STARTPAGES_OR_DOIS);
 		softAssertions.assertAll();
 	}
 
@@ -96,7 +97,7 @@ class JaroWinklerTitleTest {
 		System.err.println("- 1: %s\n- 2: %s\n- 3: %s\n- 4: %s\n".formatted(input1,
 				normalizationService.normalizeTitle(input1), input2, normalizationService.normalizeTitle(input2)));
 		assertThat(similarity).isEqualTo(expected, within(0.01))
-				.isLessThan(DeduplicationService.TITLE_SIMILARITY_SUFFICIENT_STARTPAGES_OR_DOIS);
+				.isLessThan(ComparatorService.TITLE_SIMILARITY_SUFFICIENT_STARTPAGES_OR_DOIS);
 	}
 
 	static String revertString(String s) {
@@ -131,7 +132,7 @@ class JaroWinklerTitleTest {
 				.isEqualTo(expected, within(0.01));
 		softAssertions.assertThat(highestSimilarity)
 				.as("\nTitle1: %s\nTitle2: %s\nGreaterThanOrEqualTo threshold", highestTitle1, highestTitle2)
-				.isLessThan(DeduplicationService.TITLE_SIMILARITY_SUFFICIENT_STARTPAGES_OR_DOIS);
+				.isLessThan(ComparatorService.TITLE_SIMILARITY_SUFFICIENT_STARTPAGES_OR_DOIS);
 		softAssertions.assertAll();
 	}
 
