@@ -7,12 +7,13 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.TestConfiguration;
 
 import edu.dedupendnote.services.DeduplicationService;
+import edu.dedupendnote.services.NormalizationService;
 import edu.dedupendnote.services.UtilitiesService;
 
 @TestConfiguration
 class TwoFilesTest {
-
-	public DeduplicationService deduplicationService = new DeduplicationService();
+	NormalizationService normalizationService = new NormalizationService();
+	public DeduplicationService deduplicationService = new DeduplicationService(normalizationService);
 
 	String homeDir = System.getProperty("user.home");
 

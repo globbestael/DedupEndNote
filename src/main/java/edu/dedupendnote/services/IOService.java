@@ -16,6 +16,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
+
 import edu.dedupendnote.domain.Publication;
 import edu.dedupendnote.domain.PublicationDB;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +24,12 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Service
 public class IOService {
+
+	private NormalizationService normalizationService;
+
+	public IOService(NormalizationService normalizationService) {
+		this.normalizationService = normalizationService;
+	}
 
 	/*
 	 * Patterns
@@ -163,10 +170,10 @@ public class IOService {
 						if (fieldContent.contains("; ")) {
 							List<String> authors = Arrays.asList(fieldContent.split("; "));
 							for (String author : authors) {
-								publication.addAuthors(author);
+								publication.addAuthors(author, normalizationService);
 							}
 						} else {
-							publication.addAuthors(fieldContent);
+							publication.addAuthors(fieldContent, normalizationService);
 						}
 						break;
 					case "C7": // article number (Scopus and WoS when imported as RIS format)
@@ -206,14 +213,14 @@ public class IOService {
 						// log.debug("Read ID {}", fieldContent);
 						break;
 					case "J2": // Alternate journal
-						publication.addJournals(fieldContent);
+						publication.addJournals(fieldContent, normalizationService);
 						break;
 					case "OP": // in PubMed: original title, in Web of Science (at least for conference papaers):
 								// conference title
 						if ("CONF".equals(publication.getReferenceType())) {
-							publication.addJournals(fieldContent);
+							publication.addJournals(fieldContent, normalizationService);
 						} else {
-							publication.addTitles(fieldContent);
+							publication.addTitles(fieldContent, normalizationService);
 						}
 						break;
 					case "PY": // Publication year
@@ -237,13 +244,13 @@ public class IOService {
 					 * - Scopus: ST and TT?
 					 */
 					case "ST": // Original Title in Scopus
-						publication.addTitles(fieldContent);
+						publication.addTitles(fieldContent, normalizationService);
 						break;
 					case "T2": // Journal title / Book title
 						if (fieldContent.startsWith("https://clinicaltrials.gov")) {
 							publication.setClinicalTrialGov(true);
 						}
-						publication.addJournals(fieldContent);
+						publication.addJournals(fieldContent, normalizationService);
 						break;
 					// @formatter:off
 					/*
@@ -266,15 +273,15 @@ public class IOService {
 					// @formatter:on
 					case "T3": // Book section
 						if (!conferencePattern.matcher(fieldContent).matches()) {
-							publication.addJournals(fieldContent);
-							publication.addTitles(fieldContent);
+							publication.addJournals(fieldContent, normalizationService);
+							publication.addTitles(fieldContent, normalizationService);
 						}
 						break;
 					// ??? in Embase the original title is on the continuation line:
 					// "Een 45-jarige patiente met chronische koliekachtige abdominale
 					// pijn". Not found in test set!
 					case "TI": // Title
-						publication.addTitles(fieldContent);
+						publication.addTitles(fieldContent, normalizationService);
 						// Don't do this in IOService::readRecords because these 2 patterns are only applied to TI
 						// field, not to the other fields which are added to List<String> titles
 						if (replyPattern.matcher(fieldContent.toLowerCase()).matches()
@@ -299,7 +306,7 @@ public class IOService {
 					case "UR":
 						if (fieldContent.startsWith("https://clinicaltrials.gov")) {
 							publication.setClinicalTrialGov(true);
-							publication.addJournals(fieldContent);
+							publication.addJournals(fieldContent, normalizationService);
 						}
 						previousFieldName = fieldName;
 						break;
@@ -322,12 +329,12 @@ public class IOService {
 						 * the book series title, and the continuation line the title of the chapter. Not sure if this ASySD_SRSR_Human
 						 * file should be used as an example?
 						 */
-						publication.addTitles(line);
+						publication.addTitles(line, normalizationService);
 						break;
 					case "UR":
 						if (line.startsWith("https://clinicaltrials.gov")) {
 							publication.setClinicalTrialGov(true);
-							publication.addJournals(line);
+							publication.addJournals(line, normalizationService);
 						}
 						break;
 					default:

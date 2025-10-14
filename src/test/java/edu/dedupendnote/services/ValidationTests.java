@@ -56,10 +56,10 @@ import lombok.extern.slf4j.Slf4j;
 class ValidationTests {
 	// temporary
 	public Map<String, Integer> titleCounter = new HashMap<>();
+	NormalizationService normalizationService = new NormalizationService();
+	DeduplicationService deduplicationService = new DeduplicationService(normalizationService);
 
-	DeduplicationService deduplicationService = new DeduplicationService();
-
-	IOService ioService = new IOService();
+	IOService ioService = new IOService(normalizationService);
 
 	RecordDBService recordDBService = new RecordDBService();
 
@@ -461,7 +461,7 @@ class ValidationTests {
 		return checkResults("AI_subset", inputFileName, outputFileName, truthFileName);
 	}
 
-		ValidationResult checkResults_ASySD_Cardiac_human() throws IOException {
+	ValidationResult checkResults_ASySD_Cardiac_human() throws IOException {
 		String truthFileName = testdir + "/ASySD/dedupendnote_files/Cardiac_human_TRUTH.txt";
 		String inputFileName = testdir + "/ASySD/dedupendnote_files/Cardiac_human.txt";
 		String outputFileName = testdir + "/ASySD/dedupendnote_files/Cardiac_human_to_validate.txt";

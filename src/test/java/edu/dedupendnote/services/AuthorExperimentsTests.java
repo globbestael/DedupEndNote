@@ -16,12 +16,13 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 class AuthorExperimentsTests {
+	NormalizationService normalizationService = new NormalizationService();
 
-	DeduplicationService service = new DeduplicationService();
+	DeduplicationService service = new DeduplicationService(normalizationService);
 
 	AuthorsComparator authorsComparator = new ExperimentalAuthorsComparator();
 
-	DeduplicationService expService = new DeduplicationService(authorsComparator);
+	DeduplicationService expService = new DeduplicationService(authorsComparator, normalizationService);
 
 	String homeDir = System.getProperty("user.home");
 

@@ -27,6 +27,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
+	NormalizationService normalizationService = new NormalizationService();
 
 	@BeforeAll
 	static void beforeAll() {
@@ -247,7 +248,7 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 	private Publication fillPublicationDefault(String authors) {
 		Publication r = new Publication();
 		List<String> authorList1 = Arrays.asList(authors.split("; "));
-		authorList1.stream().forEach(a -> r.addAuthors(a));
+		authorList1.stream().forEach(a -> r.addAuthors(a, normalizationService));
 		r.fillAllAuthors();
 		return r;
 	}

@@ -24,14 +24,15 @@ import ch.qos.logback.classic.LoggerContext;
 import edu.dedupendnote.domain.Publication;
 import edu.dedupendnote.services.DeduplicationService;
 import edu.dedupendnote.services.IOService;
+import edu.dedupendnote.services.NormalizationService;
 import edu.dedupendnote.services.UtilitiesService;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @TestConfiguration
 class DedupEndNoteApplicationTests {
-
-	public DeduplicationService deduplicationService = new DeduplicationService();
+	NormalizationService normalizationService = new NormalizationService();
+	public DeduplicationService deduplicationService = new DeduplicationService(normalizationService);
 
 	String homeDir = System.getProperty("user.home");
 

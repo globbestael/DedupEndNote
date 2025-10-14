@@ -26,7 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @TestConfiguration
 class AuthorComparisonThresholdTest extends AuthorsBaseTest {
-
+	NormalizationService normalizationService = new NormalizationService();
 	List<Triple> triples = new ArrayList<>();
 
 	@BeforeAll
@@ -71,7 +71,7 @@ class AuthorComparisonThresholdTest extends AuthorsBaseTest {
 	private Publication fillRecord(String authors) {
 		Publication r = new Publication();
 		List<String> authorList1 = Arrays.asList(authors.split("; "));
-		authorList1.stream().forEach(a -> r.addAuthors(a));
+		authorList1.stream().forEach(a -> r.addAuthors(a, normalizationService));
 		r.fillAllAuthors();
 		return r;
 	}

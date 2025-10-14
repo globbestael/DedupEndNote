@@ -18,7 +18,7 @@ import org.springframework.boot.test.context.TestConfiguration;
 import com.github.difflib.text.DiffRow;
 import com.github.difflib.text.DiffRowGenerator;
 
-import edu.dedupendnote.domain.Publication;
+import edu.dedupendnote.services.NormalizationService;
 import info.debatty.java.stringsimilarity.RatcliffObershelp;
 
 /*
@@ -29,6 +29,7 @@ import info.debatty.java.stringsimilarity.RatcliffObershelp;
  */
 @TestConfiguration
 class AbstracttextTest {
+	NormalizationService normalizationService = new NormalizationService();
 
 	// @formatter:off
 	/*
@@ -235,7 +236,7 @@ class AbstracttextTest {
 		// remove all characters which are not letters or numbers or spaces
 		text = text.replaceAll("[^\\p{L}\\p{N} ]+", ""); // use "\\p{Nd}" if you want "¼" treated as a number
 		text = text.strip();
-		text = Publication.normalizeToBasicLatin(text);
+		text = normalizationService.normalizeToBasicLatin(text);
 		return text;
 	}
 

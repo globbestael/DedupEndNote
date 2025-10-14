@@ -17,15 +17,16 @@ import org.springframework.boot.test.context.TestConfiguration;
 import edu.dedupendnote.domain.Publication;
 import edu.dedupendnote.services.AuthorsComparator;
 import edu.dedupendnote.services.DeduplicationService;
+import edu.dedupendnote.services.NormalizationService;
 
 //@ExtendWith(TimingExtension.class)
 //@Slf4j
 @TestConfiguration
 class JaroWinklerAuthorsTest {
-
+	NormalizationService normalizationService = new NormalizationService();
 	JaroWinklerSimilarity jws = new JaroWinklerSimilarity();
 
-	DeduplicationService service = new DeduplicationService();
+	DeduplicationService service = new DeduplicationService(normalizationService);
 
 	AuthorsComparator authorsComparator = service.getAuthorsComparator();
 
@@ -110,7 +111,7 @@ class JaroWinklerAuthorsTest {
 	private Publication fillRecord(String authors) {
 		Publication r = new Publication();
 		List<String> authorList1 = Arrays.asList(authors.split("; "));
-		authorList1.stream().forEach(a -> r.addAuthors(a));
+		authorList1.stream().forEach(a -> r.addAuthors(a, normalizationService));
 		r.fillAllAuthors();
 		return r;
 	}

@@ -14,11 +14,12 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.boot.test.context.TestConfiguration;
 
-import edu.dedupendnote.domain.Publication;
 import edu.dedupendnote.services.IOService;
+import edu.dedupendnote.services.NormalizationService;
 
 @TestConfiguration
 class TextNormalizerTest {
+	NormalizationService normalizationService = new NormalizationService();
 
 	/*
 	 * Comparison of different methods to remove accents and diacritics. See also
@@ -56,7 +57,7 @@ class TextNormalizerTest {
 	@ParameterizedTest(name = "{index}: {0}")
 	@MethodSource("argumentProvider")
 	void textNormalizerTest(String input, String own, String commons) {
-		String ownResult = Publication.normalizeToBasicLatin(input);
+		String ownResult = normalizationService.normalizeToBasicLatin(input);
 		String commonsResult = StringUtils.stripAccents(input);
 
 		SoftAssertions softAssertions = new SoftAssertions();

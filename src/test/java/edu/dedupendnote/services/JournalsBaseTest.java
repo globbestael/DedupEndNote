@@ -24,8 +24,8 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 class JournalsBaseTest extends BaseTest {
-
-	DeduplicationService deduplicationService = new DeduplicationService();
+	NormalizationService normalizationService = new NormalizationService();
+	DeduplicationService deduplicationService = new DeduplicationService(normalizationService);
 
 	String homeDir = System.getProperty("user.home");
 
@@ -105,9 +105,9 @@ class JournalsBaseTest extends BaseTest {
 
 		for (Triple triple : triples) {
 			Publication r1 = new Publication();
-			r1.addJournals(triple.getJournal1());
+			r1.addJournals(triple.getJournal1(), normalizationService);
 			Publication r2 = new Publication();
-			r2.addJournals(triple.getJournal2());
+			r2.addJournals(triple.getJournal2(), normalizationService);
 
 			triple.setSimilar(deduplicationService.compareJournals(r1, r2));
 		}

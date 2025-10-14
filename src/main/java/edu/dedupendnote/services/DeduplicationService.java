@@ -183,20 +183,21 @@ public class DeduplicationService {
 	// @Autowired
 	private SimpMessagingTemplate simpMessagingTemplate;
 
-	public DeduplicationService() {
+	public DeduplicationService(NormalizationService normalizationService) {
 		this.authorsComparator = new DefaultAuthorsComparator();
-		this.ioService = new IOService();
+		this.ioService = new IOService(normalizationService);
 	}
 
-	public DeduplicationService(SimpMessagingTemplate simpMessagingTemplate) {
+	public DeduplicationService(SimpMessagingTemplate simpMessagingTemplate,
+			NormalizationService normalizationService) {
 		this.authorsComparator = new DefaultAuthorsComparator();
-		this.ioService = new IOService();
+		this.ioService = new IOService(normalizationService);
 		this.simpMessagingTemplate = simpMessagingTemplate;
 	}
 
-	public DeduplicationService(AuthorsComparator authorsComparator) {
+	public DeduplicationService(AuthorsComparator authorsComparator, NormalizationService normalizationService) {
 		this.authorsComparator = authorsComparator;
-		this.ioService = new IOService();
+		this.ioService = new IOService(normalizationService);
 	}
 
 	public boolean compareSameDois(Publication r1, Publication r2, boolean sameDois) {
