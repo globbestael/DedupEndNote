@@ -168,6 +168,9 @@ public class DeduplicationService {
 	// @Autowired
 	private SimpMessagingTemplate simpMessagingTemplate;
 
+	public DeduplicationService() {
+	}
+
 	public DeduplicationService(NormalizationService normalizationService, ComparatorService comparatorService) {
 		this.authorsComparator = new DefaultAuthorsComparator();
 		this.ioService = new IOService(normalizationService);
