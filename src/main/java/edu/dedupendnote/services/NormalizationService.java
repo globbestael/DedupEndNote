@@ -64,7 +64,7 @@ public class NormalizationService {
 	private static final Pattern NON_ASCII_LOWERCASE_PATTERN = Pattern.compile("[^a-z0-9]");
 
 	/**
-	 * All characters except [a-z] (case insensitive) and [0-: will be replaced by SPACE
+	 * All characters except [a-z] (case insensitive) and [0-9] will be replaced by SPACE
 	 */
 	private static final Pattern NON_ASCII_PATTERN = Pattern.compile("[^a-z0-9]", Pattern.CASE_INSENSITIVE);
 
@@ -195,10 +195,26 @@ public class NormalizationService {
 	private static final Pattern JOURNAL_OTHER_ROUND_BRACKETS_PATTERN = Pattern.compile("[\\)\\(]");
 
 	/**
-	 * ":" or "/" and all following characters: will be removed. E.g. "BJOG: An International Journal of Obstetrics and
-	 * Gynaecology" --> "BJOG"
+	 * ":" or "/"  and SPACE and all following characters: will be removed. 
+	 * E.g. "BJOG: An International Journal of Obstetrics and Gynaecology" --> "BJOG"
+	 * 
+	 * The space is wanted to prevent splitting in types as "Hematology/oncology".
 	 */
-	private static final Pattern JOURNAL_ADDITION_PATTERN = Pattern.compile("[:/].*$");
+	private static final Pattern JOURNAL_ADDITION_PATTERN = Pattern.compile("[:/]\\s.*$");
+
+	/**
+	 * (Suppl|Supplement|Supplementum) and following characters: will be me removed
+	 */
+	public static final Pattern JOURNAL_SUPPLEMENT_PATTERN = Pattern
+			.compile("(\\b(Suppl|Supplement|Supplementum)\\b.*)$", Pattern.CASE_INSENSITIVE);
+
+	/**
+	 * A number or ". Conference" and all following characters: The number and all following characters will be removed.
+	 * E.g.:
+	 * - "Clinical neuropharmacology.12 Suppl 2 ()(pp v-xii; S1-105) 1989.Date of Publication: 1989." --> "Clinical neuropharmacology" 
+	 * - "European Respiratory Journal. Conference: European Respiratory Society Annual Congress" (Cochrane records)
+	 */
+	public static final Pattern JOURNAL_EXTRA_PATTERN = Pattern.compile("^(.+?)((\\d.*|\\. Conference.*))$");
 
 	/**
 	 * Some subtitles of journals ("Technical report", "Electronic resource", ...): will be removed

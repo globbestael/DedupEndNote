@@ -34,6 +34,7 @@ public class IOService {
 	/*
 	 * Patterns
 	 */
+	// FIXME: pattern names should be uppercased
 	/**
 	 * Pattern to identify conferences in the T3 field
 	 */
@@ -215,8 +216,8 @@ public class IOService {
 					case "J2": // Alternate journal
 						publication.addJournals(fieldContent, normalizationService);
 						break;
-					case "OP": // in PubMed: original title, in Web of Science (at least for conference papaers):
-								// conference title
+					case "OP":
+						// in PubMed: original title, in Web of Science (at least for conference papers): conference title
 						if ("CONF".equals(publication.getReferenceType())) {
 							publication.addJournals(fieldContent, normalizationService);
 						} else {

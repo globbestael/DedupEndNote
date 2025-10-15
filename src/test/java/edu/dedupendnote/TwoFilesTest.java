@@ -35,7 +35,7 @@ class TwoFilesTest {
 				markMode, wssessionId);
 		System.err.println(resultString);
 		assertThat(resultString)
-				.startsWith("DONE: DedupEndNote removed 552 records from the new set, and has written 113 records.");
+				.startsWith("DONE: DedupEndNote removed 551 records from the new set, and has written 114 records.");
 	}
 
 	@Disabled("TODO: Why was this disabled")

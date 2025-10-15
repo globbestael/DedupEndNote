@@ -116,7 +116,11 @@ class JournalsBaseTest extends BaseTest {
 		triples.stream().filter(t -> t.getSimilar() == false).forEach(System.err::println);
 		long numberMissed = triples.stream().filter(t -> t.getSimilar() == false).count();
 
-		// 20220528: started with 125 missed, 20250920: 95
+		/*
+		 	20220528: started with 125 missed
+			20250920: 95
+			20251014: 107		TODO: Why more errors than previously?
+		*/
 		assertThat(numberMissed).as(numberMissed + " journal pairs (of " + triples.size()
 				+ ") were not seen as similar by comparison on journal names").isLessThanOrEqualTo(95);
 	}

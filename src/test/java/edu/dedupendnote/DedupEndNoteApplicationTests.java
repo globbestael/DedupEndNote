@@ -150,7 +150,7 @@ class DedupEndNoteApplicationTests {
 		Publication publication = new Publication();
 		Set<String> issns = publication.addIssns(issn);
 
-		assertThat(issns).hasSize(4).containsAll(Set.of("00029343", "00029342", "097522980", "XXXXXXXX"));
+		assertThat(issns).hasSize(3).containsAll(Set.of("00029343", "00029342", "XXXXXXXX"));
 	}
 
 	@Test

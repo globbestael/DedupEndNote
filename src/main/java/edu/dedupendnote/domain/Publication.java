@@ -425,17 +425,16 @@ public class Publication {
 		}
 		// Strip last part of "Clinical neuropharmacology.12 Suppl 2 ()(pp v-xii; S1-105) 1989.Date
 		// of Publication: 1989."
-		// Matcher matcher = JOURNAL_EXTRA_PATTERN.matcher(journal);
-		// while (matcher.find()) {
-		// journal = matcher.group(1);
-		// }
+		Matcher matcher = NormalizationService.JOURNAL_EXTRA_PATTERN.matcher(journal);
+		while (matcher.find()) {
+			journal = matcher.group(1);
+		}
 
 		/*
 		 * replace "\S/\S" with space: "Hematology/Oncology" --> "Hematology Oncology"
 		 * BUT:
 		 * "Chung-Kuo Hsiu Fu Chung Chien Wai Ko Tsa Chih/Chinese Journal of Reparative & Reconstructive Surgery"
-		 * will NOT be split into 2 journals! Same for: Arzneimittel-Forschung/Drug
-		 * Research
+		 * will NOT be split into 2 journals! Same for: Arzneimittel-Forschung/Drug Research
 		 */
 		// matcher = JOURNAL_SLASH_PATTERN.matcher(journal);
 		// while (matcher.find()) {
@@ -443,12 +442,13 @@ public class Publication {
 		// }
 
 		/*
-		 * Split the following cases in separate journals: - ... [...]: Zhonghua wai ke za
-		 * zhi [Chinese journal of surgery] - ... / ...: The Canadian Journal of
-		 * Neurological Sciences / Le Journal Canadien Des Sciences Neurologiques - ... =
-		 * ...: Zhen ci yan jiu = Acupuncture research
+		 * Split the following cases in separate journals: 
+		 * - ... [...]: Zhonghua wai ke za zhi [Chinese journal of surgery] 
+		 * - ... / ...: The Canadian Journal of Neurological Sciences / Le Journal Canadien Des Sciences Neurologiques 
+		 * - ... = ...: Zhen ci yan jiu = Acupuncture research
 		 */
-		String[] parts = journal.split("[\\[\\]=|/]");
+		//		String[] parts = journal.split("[\\[\\]=|/]");
+		String[] parts = journal.split("[\\[\\]]|([=|/] )");
 		List<String> list = new ArrayList<>(Arrays.asList(parts));
 
 		/*
@@ -474,13 +474,13 @@ public class Publication {
 				additional.add(j.replace("ae", "e"));
 			}
 			// if (JOURNAL_SECTION_MARKERS.matcher(journal).matches()) {
-			// additional.add(JOURNAL_SECTION_MARKERS.matcher(journal).replaceAll("$1"));
+			// additional.add(JOURNAL_SECTION_MARKERS.matcher(journal).replaceAll("Matcher"));
 			// }
-			// matcher = JOURNAL_SUPPLEMENT_PATTERN.matcher(journal);
-			// if (matcher.find()) {
-			// log.debug("SupplementMatcher fired for: {}", journal);
-			// additional.add(matcher.replaceAll(""));
-			// }
+			matcher = NormalizationService.JOURNAL_SUPPLEMENT_PATTERN.matcher(journal);
+			if (matcher.find()) {
+				log.debug("SupplementMatcher fired for: {}", journal);
+				additional.add(matcher.replaceAll(""));
+			}
 		}
 
 		if (!additional.isEmpty()) {
