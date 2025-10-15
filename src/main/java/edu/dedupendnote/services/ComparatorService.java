@@ -280,24 +280,26 @@ public class ComparatorService {
 						log.trace("- 3. Title similarity (for Phase) is above threshold");
 						return true;
 					}
-				}
-				if (sufficientStartPages || sufficientDois) {
-					if (similarity > TITLE_SIMILARITY_SUFFICIENT_STARTPAGES_OR_DOIS) {
-						if (log.isTraceEnabled()) {
-							log.trace("- 3. Title similarity (with pages or DOIs) is above threshold: '{}' and '{}'",
-									title1, title2);
+				} else {
+					if (sufficientStartPages || sufficientDois) {
+						if (similarity > TITLE_SIMILARITY_SUFFICIENT_STARTPAGES_OR_DOIS) {
+							if (log.isTraceEnabled()) {
+								log.trace(
+										"- 3. Title similarity (with pages or DOIs) is above threshold: '{}' and '{}'",
+										title1, title2);
+							}
+							return true;
 						}
-						return true;
 					}
-				}
-				if (!(sufficientStartPages || sufficientDois)) {
-					if (similarity > TITLE_SIMILARITY_INSUFFICIENT_STARTPAGES_AND_DOIS) {
-						if (log.isTraceEnabled()) {
-							log.trace(
-									"- 3. Title similarity (without sufficient pages or DOIs) is above threshold: '{}' and '{}'",
-									title1, title2);
+					if (!(sufficientStartPages || sufficientDois)) {
+						if (similarity > TITLE_SIMILARITY_INSUFFICIENT_STARTPAGES_AND_DOIS) {
+							if (log.isTraceEnabled()) {
+								log.trace(
+										"- 3. Title similarity (without sufficient pages or DOIs) is above threshold: '{}' and '{}'",
+										title1, title2);
+							}
+							return true;
 						}
-						return true;
 					}
 				}
 			}
