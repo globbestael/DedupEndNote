@@ -16,18 +16,12 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 class AuthorExperimentsTests {
-	ComparatorService comparatorService = new ComparatorService();
-
-	DeduplicationService service = new DeduplicationService(comparatorService);
-
+	DeduplicationService service = new DeduplicationService();
 	AuthorsComparator authorsComparator = new ExperimentalAuthorsComparator();
-
-	DeduplicationService expService = new DeduplicationService(authorsComparator, comparatorService);
+	DeduplicationService expService = new DeduplicationService(authorsComparator);
 
 	String homeDir = System.getProperty("user.home");
-
 	String testdir = homeDir + "/dedupendnote_files";
-
 	String wssessionId = "";
 
 	public static class ExperimentalAuthorsComparator implements AuthorsComparator {

@@ -16,7 +16,6 @@ import org.springframework.boot.test.context.TestConfiguration;
 
 import edu.dedupendnote.domain.Publication;
 import edu.dedupendnote.services.AuthorsComparator;
-import edu.dedupendnote.services.ComparatorService;
 import edu.dedupendnote.services.DeduplicationService;
 import edu.dedupendnote.services.DefaultAuthorsComparator;
 
@@ -24,10 +23,9 @@ import edu.dedupendnote.services.DefaultAuthorsComparator;
 //@Slf4j
 @TestConfiguration
 class JaroWinklerAuthorsTest {
-	ComparatorService comparatorService = new ComparatorService();
 	JaroWinklerSimilarity jws = new JaroWinklerSimilarity();
 
-	DeduplicationService service = new DeduplicationService(comparatorService);
+	DeduplicationService service = new DeduplicationService();
 
 	AuthorsComparator authorsComparator = service.getAuthorsComparator();
 

@@ -31,8 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @TestConfiguration
 class DedupEndNoteApplicationTests {
-	ComparatorService comparatorService = new ComparatorService();
-	public DeduplicationService deduplicationService = new DeduplicationService(comparatorService);
+	public DeduplicationService deduplicationService = new DeduplicationService();
 
 	String homeDir = System.getProperty("user.home");
 
@@ -176,21 +175,21 @@ class DedupEndNoteApplicationTests {
 		r1.addIssns("0000-0000 1111-1111");
 		r2.addIssns("2222-2222 1111-1111");
 
-		assertThat(comparatorService.compareIssns(r1, r2)).isTrue();
+		assertThat(ComparatorService.compareIssns(r1, r2)).isTrue();
 
 		Publication r3 = new Publication();
 		Publication r4 = new Publication();
 		r3.addIssns("0000-0000");
 		r4.addIssns("1111-1111 2222-2222");
 
-		assertThat(comparatorService.compareIssns(r3, r4)).isFalse();
+		assertThat(ComparatorService.compareIssns(r3, r4)).isFalse();
 
 		Publication r5 = new Publication();
 		Publication r6 = new Publication();
 		r5.addIssns("1234-568x (Print)");
 		r6.addIssns("1234568X (ISSN)");
 
-		assertThat(comparatorService.compareIssns(r5, r6)).isTrue();
+		assertThat(ComparatorService.compareIssns(r5, r6)).isTrue();
 	}
 
 	@Test

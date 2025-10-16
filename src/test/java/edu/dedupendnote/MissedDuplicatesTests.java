@@ -16,7 +16,6 @@ import org.springframework.boot.test.context.TestConfiguration;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
-import edu.dedupendnote.services.ComparatorService;
 import edu.dedupendnote.services.DeduplicationService;
 import edu.dedupendnote.services.UtilitiesService;
 import edu.dedupendnote.utils.MemoryAppender;
@@ -25,8 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @TestConfiguration
 class MissedDuplicatesTests extends BaseTest {
-	ComparatorService comparatorService = new ComparatorService();
-	public DeduplicationService deduplicationService = new DeduplicationService(comparatorService);
+	public DeduplicationService deduplicationService = new DeduplicationService();
 
 	String homeDir = System.getProperty("user.home");
 

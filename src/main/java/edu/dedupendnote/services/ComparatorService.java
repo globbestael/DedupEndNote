@@ -24,9 +24,7 @@ public class ComparatorService {
 	public static final Double TITLE_SIMILARITY_PHASE = 0.96;
 	public static final Double TITLE_SIMILARITY_SUFFICIENT_STARTPAGES_OR_DOIS = 0.89;
 
-	private JaroWinklerSimilarity jws = new JaroWinklerSimilarity();
-
-	public boolean compareSameDois(Publication r1, Publication r2, boolean sameDois) {
+	public static boolean compareSameDois(Publication r1, Publication r2, boolean sameDois) {
 		if (sameDois) {
 			if (log.isTraceEnabled()) {
 				log.trace("- 4. DOIs are the same (ISSNs and Journals are NOT compared)");
@@ -39,7 +37,7 @@ public class ComparatorService {
 		return false;
 	}
 
-	public boolean compareIssns(Publication r1, Publication r2) {
+	public static boolean compareIssns(Publication r1, Publication r2) {
 		if (!r1.getIsbns().isEmpty() && !r2.getIsbns().isEmpty()) {
 			if (setsContainSameString(r1.getIsbns(), r2.getIsbns())) {
 				log.trace("- 4. ISBNs are the same");
@@ -62,7 +60,7 @@ public class ComparatorService {
 		}
 	}
 
-	public boolean compareJournals(Publication r1, Publication r2) {
+	public static boolean compareJournals(Publication r1, Publication r2) {
 		if (!r1.getIsbns().isEmpty() && !r2.getIsbns().isEmpty()) {
 			return false;
 		}
@@ -82,6 +80,7 @@ public class ComparatorService {
 			return true;
 		}
 
+		JaroWinklerSimilarity jws = new JaroWinklerSimilarity();
 		for (String s1 : set1) {
 			for (String s2 : set2) {
 				if (s1.startsWith("http") && s2.startsWith("http") && !s1.equals(s2)) {
@@ -133,7 +132,7 @@ public class ComparatorService {
 		return false;
 	}
 
-	private boolean compareJournals_FirstAsAbbreviation(String j1, String j2) {
+	private static boolean compareJournals_FirstAsAbbreviation(String j1, String j2) {
 		Pattern pattern = Pattern.compile("\\b" + j1.replaceAll("\\s", ".*\\\\b") + ".*", Pattern.CASE_INSENSITIVE);
 		Matcher matcher = pattern.matcher(j2);
 		if (matcher.find()) {
@@ -142,7 +141,7 @@ public class ComparatorService {
 		return false;
 	}
 
-	private boolean compareJournals_FirstAsInitialism(String s1, String s2) {
+	private static boolean compareJournals_FirstAsInitialism(String s1, String s2) {
 		String patternString = s1.chars().mapToObj(c -> String.valueOf((char) c))
 				.collect(Collectors.joining(".*\\b", "\\b", ".*"));
 		Pattern patternShort2 = Pattern.compile(patternString, Pattern.CASE_INSENSITIVE);
@@ -153,7 +152,7 @@ public class ComparatorService {
 		return false;
 	}
 
-	private boolean compareJournals_FirstWithStartingInitialism(String s1, String s2) {
+	private static boolean compareJournals_FirstWithStartingInitialism(String s1, String s2) {
 		String[] words = s1.split("\\s");
 		if ("Samj".equals(words[0])) {
 			words[0] = "SAMJ";
@@ -174,7 +173,7 @@ public class ComparatorService {
 		return false;
 	}
 
-	public boolean compareStartPageOrDoi(Publication r1, Publication r2, Map<String, Boolean> map) {
+	public static boolean compareStartPageOrDoi(Publication r1, Publication r2, Map<String, Boolean> map) {
 		Set<String> dois1 = r1.getDois();
 		Set<String> dois2 = r2.getDois();
 		boolean bothCochrane = r1.isCochrane() && r2.isCochrane();
@@ -242,7 +241,7 @@ public class ComparatorService {
 		return false;
 	}
 
-	public boolean compareTitles(Publication r1, Publication r2) {
+	public static boolean compareTitles(Publication r1, Publication r2) {
 		if (r1.isReply() || r2.isReply()) {
 			return true;
 		}
@@ -265,6 +264,7 @@ public class ComparatorService {
 		Double highestSimilarity = 0.0;
 		String highestTitle1 = "";
 		String highestTitle2 = "";
+		JaroWinklerSimilarity jws = new JaroWinklerSimilarity();
 
 		for (String title1 : titles1) {
 			for (String title2 : titles2) {
@@ -314,7 +314,7 @@ public class ComparatorService {
 		return false;
 	}
 
-	private boolean setsContainSameString(Set<String> set1, Set<String> set2) {
+	private static boolean setsContainSameString(Set<String> set1, Set<String> set2) {
 		if (set1.isEmpty() || set2.isEmpty()) {
 			return false;
 		}

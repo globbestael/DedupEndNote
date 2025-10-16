@@ -56,9 +56,7 @@ import lombok.extern.slf4j.Slf4j;
 class ValidationTests {
 	// temporary
 	public Map<String, Integer> titleCounter = new HashMap<>();
-	ComparatorService comparatorService = new ComparatorService();
-	DeduplicationService deduplicationService = new DeduplicationService(comparatorService);
-
+	DeduplicationService deduplicationService = new DeduplicationService();
 	IOService ioService = new IOService();
 
 	RecordDBService recordDBService = new RecordDBService();

@@ -25,7 +25,7 @@ class ComparatorServiceTest {
 		Publication p2 = new Publication();
 		p2.addTitles(title2);
 
-		boolean result = comparatorService.compareTitles(p1, p2);
+		boolean result = ComparatorService.compareTitles(p1, p2);
 		assertThat(result).as("Not equal: '%s' and '%s'", title1, title2).isEqualTo(expected);
 	}
 
@@ -37,7 +37,7 @@ class ComparatorServiceTest {
 		Publication p2 = new Publication();
 		p2.addJournals(journal2);
 
-		boolean result = comparatorService.compareJournals(p1, p2);
+		boolean result = ComparatorService.compareJournals(p1, p2);
 		assertThat(result).isEqualTo(expected);
 	}
 
@@ -59,7 +59,7 @@ class ComparatorServiceTest {
 		Publication p2 = new Publication();
 		p2.addIssns(issn2);
 
-		boolean result = comparatorService.compareIssns(p1, p2);
+		boolean result = ComparatorService.compareIssns(p1, p2);
 		assertThat(result).isEqualTo(expected);
 	}
 

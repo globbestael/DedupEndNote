@@ -6,14 +6,12 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.TestConfiguration;
 
-import edu.dedupendnote.services.ComparatorService;
 import edu.dedupendnote.services.DeduplicationService;
 import edu.dedupendnote.services.UtilitiesService;
 
 @TestConfiguration
 class TwoFilesTest {
-	ComparatorService comparatorService = new ComparatorService();
-	public DeduplicationService deduplicationService = new DeduplicationService(comparatorService);
+	public DeduplicationService deduplicationService = new DeduplicationService();
 
 	String homeDir = System.getProperty("user.home");
 

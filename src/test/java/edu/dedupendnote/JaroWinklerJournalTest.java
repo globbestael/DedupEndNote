@@ -24,10 +24,8 @@ import lombok.extern.slf4j.Slf4j;
 // @ExtendWith(TimingExtension.class)
 @TestConfiguration
 class JaroWinklerJournalTest {
-	ComparatorService comparatorService = new ComparatorService();
 	JaroWinklerSimilarity jws = new JaroWinklerSimilarity();
-
-	DeduplicationService deduplicationService = new DeduplicationService(comparatorService);
+	DeduplicationService deduplicationService = new DeduplicationService();
 
 	/*
 	 * TODO: Test for splitting journals: e.g
@@ -74,7 +72,7 @@ class JaroWinklerJournalTest {
 		r1.addJournals(input1);
 		r2.addJournals(input2);
 
-		assertThat(comparatorService.compareJournals(r1, r2))
+		assertThat(ComparatorService.compareJournals(r1, r2))
 				.as("Journals are NOT similar: " + r1.getJournals() + " versus " + r2.getJournals()).isTrue();
 	}
 
@@ -89,8 +87,8 @@ class JaroWinklerJournalTest {
 		r1.addJournals(input1);
 		r2.addJournals(input2);
 
-		log.debug("Result: {}", comparatorService.compareJournals(r1, r2));
-		assertThat(comparatorService.compareJournals(r1, r2))
+		log.debug("Result: {}", ComparatorService.compareJournals(r1, r2));
+		assertThat(ComparatorService.compareJournals(r1, r2))
 				.as("Journals are similar: %s versus %s", r1.getJournals(), r2.getJournals()).isFalse();
 	}
 
@@ -109,8 +107,8 @@ class JaroWinklerJournalTest {
 		r1.addJournals("Ann Intern Med");
 		r2.addJournals("ANNALS OF INTERNAL MEDICINE");
 
-		log.debug("Result: {}", comparatorService.compareJournals(r1, r2));
-		assertThat(comparatorService.compareJournals(r1, r2))
+		log.debug("Result: {}", ComparatorService.compareJournals(r1, r2));
+		assertThat(ComparatorService.compareJournals(r1, r2))
 				.as("Journals are similar: %s versus %s", r1.getJournals(), r2.getJournals()).isTrue();
 	}
 

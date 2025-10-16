@@ -24,8 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 class JournalsBaseTest extends BaseTest {
-	ComparatorService comparatorService = new ComparatorService();
-	DeduplicationService deduplicationService = new DeduplicationService(comparatorService);
+	DeduplicationService deduplicationService = new DeduplicationService();
 
 	String homeDir = System.getProperty("user.home");
 
@@ -109,7 +108,7 @@ class JournalsBaseTest extends BaseTest {
 			Publication r2 = new Publication();
 			r2.addJournals(triple.getJournal2());
 
-			triple.setSimilar(comparatorService.compareJournals(r1, r2));
+			triple.setSimilar(ComparatorService.compareJournals(r1, r2));
 		}
 
 		triples.stream().filter(t -> t.getSimilar() == false).forEach(System.err::println);

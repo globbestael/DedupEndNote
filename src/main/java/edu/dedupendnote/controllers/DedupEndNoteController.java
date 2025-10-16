@@ -21,7 +21,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
-import edu.dedupendnote.services.ComparatorService;
 import edu.dedupendnote.services.DeduplicationService;
 import edu.dedupendnote.services.UtilitiesService;
 import jakarta.servlet.http.HttpServletResponse;
@@ -37,11 +36,8 @@ public class DedupEndNoteController {
 
 	private SimpMessagingTemplate simpMessagingTemplate;
 
-	private ComparatorService comparatorService;
-
-	public DedupEndNoteController(SimpMessagingTemplate simpMessagingTemplate, ComparatorService comparatorService) {
+	public DedupEndNoteController(SimpMessagingTemplate simpMessagingTemplate) {
 		this.simpMessagingTemplate = simpMessagingTemplate;
-		this.comparatorService = comparatorService;
 	}
 
 	// @formatter:off
@@ -109,7 +105,7 @@ public class DedupEndNoteController {
 			throws Exception {
 		String outputFileName = UtilitiesService.createOutputFileName(inputFileName, markMode);
 		String logPrefix = "1F" + (Boolean.TRUE.equals(markMode) ? "M" : "D");
-		DeduplicationService deduplicationService = new DeduplicationService(simpMessagingTemplate, comparatorService);
+		DeduplicationService deduplicationService = new DeduplicationService(simpMessagingTemplate);
 
 		try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
 			Future<String> future = executor
@@ -126,7 +122,7 @@ public class DedupEndNoteController {
 			throws InterruptedException, ExecutionException {
 
 		String logPrefix = "2F" + (Boolean.TRUE.equals(markMode) ? "M" : "D");
-		DeduplicationService deduplicationService = new DeduplicationService(simpMessagingTemplate, comparatorService);
+		DeduplicationService deduplicationService = new DeduplicationService(simpMessagingTemplate);
 
 		try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
 			Future<String> future = executor

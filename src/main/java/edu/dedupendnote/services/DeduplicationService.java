@@ -32,8 +32,6 @@ public class DeduplicationService {
 
 	private IOService ioService;
 
-	private ComparatorService comparatorService;
-
 	// @formatter:off
 	/*
 	 * Procedure for 1 file:
@@ -90,25 +88,19 @@ public class DeduplicationService {
 	private SimpMessagingTemplate simpMessagingTemplate;
 
 	public DeduplicationService() {
-	}
-
-	public DeduplicationService(ComparatorService comparatorService) {
 		this.authorsComparator = new DefaultAuthorsComparator();
 		this.ioService = new IOService();
-		this.comparatorService = comparatorService;
 	}
 
-	public DeduplicationService(SimpMessagingTemplate simpMessagingTemplate, ComparatorService comparatorService) {
+	public DeduplicationService(SimpMessagingTemplate simpMessagingTemplate) {
 		this.authorsComparator = new DefaultAuthorsComparator();
 		this.ioService = new IOService();
 		this.simpMessagingTemplate = simpMessagingTemplate;
-		this.comparatorService = comparatorService;
 	}
 
-	public DeduplicationService(AuthorsComparator authorsComparator, ComparatorService comparatorService) {
+	public DeduplicationService(AuthorsComparator authorsComparator) {
 		this.authorsComparator = authorsComparator;
 		this.ioService = new IOService();
-		this.comparatorService = comparatorService;
 	}
 
 	public void compareSet(List<Publication> publications, Integer year, boolean descending, String wssessionId) {
@@ -136,11 +128,11 @@ public class DeduplicationService {
 				if (log.isTraceEnabled()) {
 					log.trace("\nStarting comparison {} - {}", publication.getId(), r.getId());
 				}
-				if (comparatorService.compareStartPageOrDoi(r, publication, map)
-						&& authorsComparator.compare(r, publication) && comparatorService.compareTitles(r, publication)
-						&& (comparatorService.compareSameDois(r, publication, map.get("sameDois"))
-								|| comparatorService.compareIssns(r, publication)
-								|| comparatorService.compareJournals(r, publication))) {
+				if (ComparatorService.compareStartPageOrDoi(r, publication, map)
+						&& authorsComparator.compare(r, publication) && ComparatorService.compareTitles(r, publication)
+						&& (ComparatorService.compareSameDois(r, publication, map.get("sameDois"))
+								|| ComparatorService.compareIssns(r, publication)
+								|| ComparatorService.compareJournals(r, publication))) {
 
 					noOfDuplicates++;
 					// set the label
