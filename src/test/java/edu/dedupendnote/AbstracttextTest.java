@@ -203,7 +203,7 @@ class AbstracttextTest {
 	// create a configured DiffRowGenerator
 	private static DiffRowGenerator generator = DiffRowGenerator.create().showInlineDiffs(true)
 			.mergeOriginalRevised(true).inlineDiffByWord(true).oldTag(f -> "~~") // introduce markdown style for
-																					// strikethrough
+			// strikethrough
 			.newTag(f -> "**") // introduce markdown style for bold
 			.build();
 
@@ -236,7 +236,7 @@ class AbstracttextTest {
 		// remove all characters which are not letters or numbers or spaces
 		text = text.replaceAll("[^\\p{L}\\p{N} ]+", ""); // use "\\p{Nd}" if you want "¼" treated as a number
 		text = text.strip();
-		text = normalizationService.normalizeToBasicLatin(text);
+		text = NormalizationService.normalizeToBasicLatin(text);
 		return text;
 	}
 

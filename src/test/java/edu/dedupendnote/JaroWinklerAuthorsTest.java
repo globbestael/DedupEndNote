@@ -18,17 +18,16 @@ import edu.dedupendnote.domain.Publication;
 import edu.dedupendnote.services.AuthorsComparator;
 import edu.dedupendnote.services.ComparatorService;
 import edu.dedupendnote.services.DeduplicationService;
-import edu.dedupendnote.services.NormalizationService;
+import edu.dedupendnote.services.DefaultAuthorsComparator;
 
 //@ExtendWith(TimingExtension.class)
 //@Slf4j
 @TestConfiguration
 class JaroWinklerAuthorsTest {
-	NormalizationService normalizationService = new NormalizationService();
 	ComparatorService comparatorService = new ComparatorService();
 	JaroWinklerSimilarity jws = new JaroWinklerSimilarity();
 
-	DeduplicationService service = new DeduplicationService(normalizationService, comparatorService);
+	DeduplicationService service = new DeduplicationService(comparatorService);
 
 	AuthorsComparator authorsComparator = service.getAuthorsComparator();
 
@@ -49,7 +48,7 @@ class JaroWinklerAuthorsTest {
 
 		assertThat(similarity).as("\nAuthors1: %s\nAuthors2: %s", r1.getAllAuthors().get(0), r2.getAllAuthors().get(0))
 				.isEqualTo(lowestAcceptedSimilarity, within(0.01))
-				.isGreaterThan(DeduplicationService.DefaultAuthorsComparator.AUTHOR_SIMILARITY_NO_REPLY);
+				.isGreaterThan(DefaultAuthorsComparator.AUTHOR_SIMILARITY_NO_REPLY);
 	}
 
 	/*
@@ -77,7 +76,7 @@ class JaroWinklerAuthorsTest {
 		assertThat(highestSimilarity)
 				.as("\nAuthors1: %s\nAuthors2: %s", r1.getAllAuthors().get(0), r2.getAllAuthors().get(0))
 				.isEqualTo(highSimilarity, within(0.01))
-				.isGreaterThan(DeduplicationService.DefaultAuthorsComparator.AUTHOR_SIMILARITY_NO_REPLY);
+				.isGreaterThan(DefaultAuthorsComparator.AUTHOR_SIMILARITY_NO_REPLY);
 	}
 
 	@ParameterizedTest(name = "{index}: jaroWinkler({0}, {1})={2}")
@@ -90,7 +89,7 @@ class JaroWinklerAuthorsTest {
 		Double similarity = authorsComparator.getSimilarity();
 
 		assertThat(similarity).isEqualTo(expected, within(0.01))
-				.isLessThan(DeduplicationService.DefaultAuthorsComparator.AUTHOR_SIMILARITY_NO_REPLY);
+				.isLessThan(DefaultAuthorsComparator.AUTHOR_SIMILARITY_NO_REPLY);
 	}
 
 	/*
@@ -107,13 +106,13 @@ class JaroWinklerAuthorsTest {
 		Double similarity = jws.apply(r1.getAllAuthors().get(0), r2.getAllAuthors().get(0));
 
 		assertThat(similarity).isEqualTo(expected, within(0.01))
-				.isLessThan(DeduplicationService.DefaultAuthorsComparator.AUTHOR_SIMILARITY_NO_REPLY);
+				.isLessThan(DefaultAuthorsComparator.AUTHOR_SIMILARITY_NO_REPLY);
 	}
 
 	private Publication fillRecord(String authors) {
 		Publication r = new Publication();
 		List<String> authorList1 = Arrays.asList(authors.split("; "));
-		authorList1.stream().forEach(a -> r.addAuthors(a, normalizationService));
+		authorList1.stream().forEach(a -> r.addAuthors(a));
 		r.fillAllAuthors();
 		return r;
 	}

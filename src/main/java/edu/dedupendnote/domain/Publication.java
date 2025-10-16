@@ -22,8 +22,6 @@ import lombok.extern.slf4j.Slf4j;
 @Data
 public class Publication {
 
-	private NormalizationService normalizationService;
-
 	private List<String> allAuthors = new ArrayList<>();
 
 	protected List<String> authors = new ArrayList<>();
@@ -228,7 +226,7 @@ public class Publication {
 	public static final Pattern ANONYMOUS_OR_GROUPNAME_PATTERN = Pattern
 			.compile("\\b(anonymous|consortium|et al|grp|group|nct|study)\\b", Pattern.CASE_INSENSITIVE);
 
-	public void addAuthors(String author, NormalizationService normalizationService) {
+	public void addAuthors(String author) {
 		// skip "Anonymous", "et al" and group authors
 		Matcher matcher = ANONYMOUS_OR_GROUPNAME_PATTERN.matcher(author);
 		if (matcher.find()) {
@@ -239,7 +237,7 @@ public class Publication {
 			return;
 		}
 
-		author = normalizationService.normalizeToBasicLatin(author);
+		author = NormalizationService.normalizeToBasicLatin(author);
 
 		String[] parts = author.split("\\s*,\\s+"); // see testfile Non_Latin_input.txt for " , "
 		if (parts.length < 2) {
@@ -403,7 +401,7 @@ public class Publication {
 		return issns;
 	}
 
-	public Set<String> addJournals(String journal, NormalizationService normalizationService) {
+	public Set<String> addJournals(String journal) {
 		// @formatter:off
 		/*
 		 * General:
@@ -498,7 +496,7 @@ public class Publication {
 					List<String> words = Arrays.asList(j.toLowerCase().split(" "));
 					j = words.stream().map(StringUtils::capitalize).collect(Collectors.joining(" "));
 				}
-				String normalized = normalizationService.normalizeJournal(j);
+				String normalized = NormalizationService.normalizeJournal(j);
 				if (!normalized.isEmpty()) {
 					journals.add(normalized);
 				}
@@ -514,7 +512,7 @@ public class Publication {
 			.compile("((retracted|removed|withdrawn)( article)?[.:] )(.+)", Pattern.CASE_INSENSITIVE);
 	private static final Pattern RETRACTION_END_PATTERN = Pattern.compile("(.+)\\(Retracted [Aa]rticle.*\\)");
 
-	public void addTitles(String title, NormalizationService normalizationService) {
+	public void addTitles(String title) {
 		if (noTitles.contains(title.toLowerCase())) {
 			return;
 		}
@@ -529,7 +527,7 @@ public class Publication {
 			this.title = origTitle;
 			title = startMatcher.group(4);
 		}
-		addTitleWithNormalization(title, normalizationService);
+		addTitleWithNormalization(title);
 
 		boolean splittable = true;
 		String secondPart = title;
@@ -541,11 +539,11 @@ public class Publication {
 				String firstPart = matcher.group(1); // add only the first part (min 50 characters)
 				secondPart = matcher.group(2);
 				if (firstPart.toLowerCase().endsWith("vs")) {
-					addTitleWithNormalization(firstPart + " " + secondPart, normalizationService);
+					addTitleWithNormalization(firstPart + " " + secondPart);
 					// we could set splittable to false, but then 2nd part wont be split
 				} else {
-					addTitleWithNormalization(firstPart, normalizationService);
-					addTitleWithNormalization(secondPart, normalizationService);
+					addTitleWithNormalization(firstPart);
+					addTitleWithNormalization(secondPart);
 				}
 			} else {
 				splittable = false;
@@ -561,8 +559,8 @@ public class Publication {
 		// }
 	}
 
-	private void addTitleWithNormalization(String title, NormalizationService normalizationService) {
-		String normalized = normalizationService.normalizeTitle(title);
+	private void addTitleWithNormalization(String title) {
+		String normalized = NormalizationService.normalizeTitle(title);
 		String[] parts = normalized.split("=");
 		List<String> list = new ArrayList<>(Arrays.asList(parts));
 

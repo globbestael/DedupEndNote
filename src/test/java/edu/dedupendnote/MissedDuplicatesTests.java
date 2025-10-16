@@ -18,7 +18,6 @@ import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 import edu.dedupendnote.services.ComparatorService;
 import edu.dedupendnote.services.DeduplicationService;
-import edu.dedupendnote.services.NormalizationService;
 import edu.dedupendnote.services.UtilitiesService;
 import edu.dedupendnote.utils.MemoryAppender;
 import lombok.extern.slf4j.Slf4j;
@@ -26,10 +25,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @TestConfiguration
 class MissedDuplicatesTests extends BaseTest {
-	NormalizationService normalizationService = new NormalizationService();
 	ComparatorService comparatorService = new ComparatorService();
-	public DeduplicationService deduplicationService = new DeduplicationService(normalizationService,
-			comparatorService);
+	public DeduplicationService deduplicationService = new DeduplicationService(comparatorService);
 
 	String homeDir = System.getProperty("user.home");
 

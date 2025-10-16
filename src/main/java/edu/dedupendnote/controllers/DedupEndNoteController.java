@@ -23,7 +23,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import edu.dedupendnote.services.ComparatorService;
 import edu.dedupendnote.services.DeduplicationService;
-import edu.dedupendnote.services.NormalizationService;
 import edu.dedupendnote.services.UtilitiesService;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
@@ -38,14 +37,10 @@ public class DedupEndNoteController {
 
 	private SimpMessagingTemplate simpMessagingTemplate;
 
-	private NormalizationService normalizationService;
-
 	private ComparatorService comparatorService;
 
-	public DedupEndNoteController(SimpMessagingTemplate simpMessagingTemplate,
-			NormalizationService normalizationService, ComparatorService comparatorService) {
+	public DedupEndNoteController(SimpMessagingTemplate simpMessagingTemplate, ComparatorService comparatorService) {
 		this.simpMessagingTemplate = simpMessagingTemplate;
-		this.normalizationService = normalizationService;
 		this.comparatorService = comparatorService;
 	}
 
@@ -114,8 +109,7 @@ public class DedupEndNoteController {
 			throws Exception {
 		String outputFileName = UtilitiesService.createOutputFileName(inputFileName, markMode);
 		String logPrefix = "1F" + (Boolean.TRUE.equals(markMode) ? "M" : "D");
-		DeduplicationService deduplicationService = new DeduplicationService(simpMessagingTemplate,
-				normalizationService, comparatorService);
+		DeduplicationService deduplicationService = new DeduplicationService(simpMessagingTemplate, comparatorService);
 
 		try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
 			Future<String> future = executor
@@ -132,8 +126,7 @@ public class DedupEndNoteController {
 			throws InterruptedException, ExecutionException {
 
 		String logPrefix = "2F" + (Boolean.TRUE.equals(markMode) ? "M" : "D");
-		DeduplicationService deduplicationService = new DeduplicationService(simpMessagingTemplate,
-				normalizationService, comparatorService);
+		DeduplicationService deduplicationService = new DeduplicationService(simpMessagingTemplate, comparatorService);
 
 		try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
 			Future<String> future = executor

@@ -20,14 +20,14 @@ class NormalizationServiceTest {
 	@ParameterizedTest(name = "{index}: normalizeTitle({0})={1}")
 	@MethodSource("titleArgumentProvider")
 	void normalizeTitleTest(String input, String expected) {
-		String result = normalizationService.normalizeTitle(input);
+		String result = NormalizationService.normalizeTitle(input);
 		assertThat(result).isEqualTo(expected);
 	}
 
 	@ParameterizedTest(name = "{index}: normalizeJournal({0})={1}")
 	@MethodSource("journalArgumentProvider")
 	void normalizeJournalTest(String input, String expected) {
-		String result = normalizationService.normalizeJournal(input);
+		String result = NormalizationService.normalizeJournal(input);
 		assertThat(result).isEqualTo(expected);
 	}
 

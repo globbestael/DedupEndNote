@@ -56,11 +56,10 @@ import lombok.extern.slf4j.Slf4j;
 class ValidationTests {
 	// temporary
 	public Map<String, Integer> titleCounter = new HashMap<>();
-	NormalizationService normalizationService = new NormalizationService();
 	ComparatorService comparatorService = new ComparatorService();
-	DeduplicationService deduplicationService = new DeduplicationService(normalizationService, comparatorService);
+	DeduplicationService deduplicationService = new DeduplicationService(comparatorService);
 
-	IOService ioService = new IOService(normalizationService);
+	IOService ioService = new IOService();
 
 	RecordDBService recordDBService = new RecordDBService();
 

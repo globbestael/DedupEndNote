@@ -6,9 +6,6 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.springframework.stereotype.Service;
-
-@Service
 public class NormalizationService {
 
 	/*
@@ -221,7 +218,7 @@ public class NormalizationService {
 	 */
 	static List<String> excludedJournalsParts = Arrays.asList("electronic resource", "et al.", "technical report");
 
-	public String normalizeTitle(String s) {
+	public static String normalizeTitle(String s) {
 		// FIXME: Why starting with parameter s and later copying s to r?
 		s = normalizeToBasicLatin(s);
 		s = DOUBLE_QUOTES_PATTERN.matcher(s).replaceAll("");
@@ -274,7 +271,7 @@ public class NormalizationService {
 		return r.strip();
 	}
 
-	public String normalizeJournal(String s) {
+	public static String normalizeJournal(String s) {
 		String r = s;
 		r = normalizeToBasicLatin(r);
 		r = AMPERSAND_PATTERN.matcher(r).replaceAll(" "); // we don't want "&" in the patterns
@@ -335,7 +332,7 @@ public class NormalizationService {
 	 * normalizeToBasicLatin: removes accents and diacritics when the base character belongs to the BasicLatin Unicode
 	 * block (U+0000–U+007F) and removes all other characters.
 	 */
-	public String normalizeToBasicLatin(String r) {
+	public static String normalizeToBasicLatin(String r) {
 		if (NON_BASIC_LATIN_PATTERN.matcher(r).find()) {
 			r = Normalizer.normalize(r, Normalizer.Form.NFD);
 			// you can't reuse the existing matcher because r might be changed

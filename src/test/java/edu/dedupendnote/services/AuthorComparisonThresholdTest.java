@@ -26,7 +26,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @TestConfiguration
 class AuthorComparisonThresholdTest extends AuthorsBaseTest {
-	NormalizationService normalizationService = new NormalizationService();
 	List<Triple> triples = new ArrayList<>();
 
 	@BeforeAll
@@ -62,16 +61,16 @@ class AuthorComparisonThresholdTest extends AuthorsBaseTest {
 		}
 		assertThat(percentile(triples, 98))
 				.as("98% of validated authors pairs are above the threshold AUTHOR_SIMILARITY_NO_REPLY")
-				.isGreaterThan(DeduplicationService.DefaultAuthorsComparator.AUTHOR_SIMILARITY_NO_REPLY);
+				.isGreaterThan(DefaultAuthorsComparator.AUTHOR_SIMILARITY_NO_REPLY);
 		assertThat(percentile(triples, 99)).as(
 				"AUTHOR_SIMILARITY_NO_REPLY could have a higher value because 99% of validated authors pairs are above this threshold")
-				.isLessThan(DeduplicationService.DefaultAuthorsComparator.AUTHOR_SIMILARITY_NO_REPLY);
+				.isLessThan(DefaultAuthorsComparator.AUTHOR_SIMILARITY_NO_REPLY);
 	}
 
 	private Publication fillRecord(String authors) {
 		Publication r = new Publication();
 		List<String> authorList1 = Arrays.asList(authors.split("; "));
-		authorList1.stream().forEach(a -> r.addAuthors(a, normalizationService));
+		authorList1.stream().forEach(a -> r.addAuthors(a));
 		r.fillAllAuthors();
 		return r;
 	}

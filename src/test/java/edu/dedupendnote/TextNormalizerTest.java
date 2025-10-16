@@ -19,7 +19,6 @@ import edu.dedupendnote.services.NormalizationService;
 
 @TestConfiguration
 class TextNormalizerTest {
-	NormalizationService normalizationService = new NormalizationService();
 
 	/*
 	 * Comparison of different methods to remove accents and diacritics. See also
@@ -57,7 +56,7 @@ class TextNormalizerTest {
 	@ParameterizedTest(name = "{index}: {0}")
 	@MethodSource("argumentProvider")
 	void textNormalizerTest(String input, String own, String commons) {
-		String ownResult = normalizationService.normalizeToBasicLatin(input);
+		String ownResult = NormalizationService.normalizeToBasicLatin(input);
 		String commonsResult = StringUtils.stripAccents(input);
 
 		SoftAssertions softAssertions = new SoftAssertions();

@@ -24,11 +24,10 @@ import lombok.extern.slf4j.Slf4j;
 // @ExtendWith(TimingExtension.class)
 @TestConfiguration
 class JaroWinklerJournalTest {
-	NormalizationService normalizationService = new NormalizationService();
 	ComparatorService comparatorService = new ComparatorService();
 	JaroWinklerSimilarity jws = new JaroWinklerSimilarity();
 
-	DeduplicationService deduplicationService = new DeduplicationService(normalizationService, comparatorService);
+	DeduplicationService deduplicationService = new DeduplicationService(comparatorService);
 
 	/*
 	 * TODO: Test for splitting journals: e.g
@@ -41,8 +40,8 @@ class JaroWinklerJournalTest {
 	@ParameterizedTest(name = "{index}: jaroWinkler({0}, {1})")
 	@MethodSource("positiveArgumentProvider")
 	void jwPositiveTest(String input1, String input2) {
-		Double similarity = jws.apply(normalizationService.normalizeJournal(input1),
-				normalizationService.normalizeJournal(input2));
+		Double similarity = jws.apply(NormalizationService.normalizeJournal(input1),
+				NormalizationService.normalizeJournal(input2));
 		// System.err.println(String.format("- 1: %s\n- 2: %s\n- 3: %s\n- 4: %s\n",
 		// input1, Publication.normalizeJava8(input1), input2,
 		// Publication.normalizeJava8(input2)));
@@ -55,10 +54,10 @@ class JaroWinklerJournalTest {
 	@ParameterizedTest(name = "{index}: jaroWinkler({0}, {1})")
 	@MethodSource("negativeArgumentProvider")
 	void jwNegativeTest(String input1, String input2) {
-		Double similarity = jws.apply(normalizationService.normalizeJournal(input1),
-				normalizationService.normalizeJournal(input2));
+		Double similarity = jws.apply(NormalizationService.normalizeJournal(input1),
+				NormalizationService.normalizeJournal(input2));
 		System.err.println("- 1: %s\n- 2: %s\n- 3: %s\n- 4: %s\n".formatted(input1,
-				normalizationService.normalizeTitle(input1), input2, normalizationService.normalizeTitle(input2)));
+				NormalizationService.normalizeTitle(input1), input2, NormalizationService.normalizeTitle(input2)));
 		assertThat(similarity).isLessThanOrEqualTo(ComparatorService.JOURNAL_SIMILARITY_REPLY);
 	}
 
@@ -72,8 +71,8 @@ class JaroWinklerJournalTest {
 		Publication r2 = new Publication();
 		log.debug("==================================================================");
 
-		r1.addJournals(input1, normalizationService);
-		r2.addJournals(input2, normalizationService);
+		r1.addJournals(input1);
+		r2.addJournals(input2);
 
 		assertThat(comparatorService.compareJournals(r1, r2))
 				.as("Journals are NOT similar: " + r1.getJournals() + " versus " + r2.getJournals()).isTrue();
@@ -87,8 +86,8 @@ class JaroWinklerJournalTest {
 	void fullNegativeTest(String input1, String input2) {
 		Publication r1 = new Publication();
 		Publication r2 = new Publication();
-		r1.addJournals(input1, normalizationService);
-		r2.addJournals(input2, normalizationService);
+		r1.addJournals(input1);
+		r2.addJournals(input2);
 
 		log.debug("Result: {}", comparatorService.compareJournals(r1, r2));
 		assertThat(comparatorService.compareJournals(r1, r2))
@@ -107,8 +106,8 @@ class JaroWinklerJournalTest {
 		// r2.addJournals("Arthroscopy : the journal of arthroscopic & related surgery :
 		// official publication of the Arthroscopy Association of North America and the
 		// International Arthroscopy Association");
-		r1.addJournals("Ann Intern Med", normalizationService);
-		r2.addJournals("ANNALS OF INTERNAL MEDICINE", normalizationService);
+		r1.addJournals("Ann Intern Med");
+		r2.addJournals("ANNALS OF INTERNAL MEDICINE");
 
 		log.debug("Result: {}", comparatorService.compareJournals(r1, r2));
 		assertThat(comparatorService.compareJournals(r1, r2))
@@ -122,7 +121,7 @@ class JaroWinklerJournalTest {
 	@MethodSource("slashArgumentProvider")
 	void slashTest(String input1, List<String> list) {
 		Publication r1 = new Publication();
-		r1.addJournals(input1, normalizationService);
+		r1.addJournals(input1);
 
 		assertThat(r1.getJournals()).containsAll(list);
 	}
@@ -130,7 +129,7 @@ class JaroWinklerJournalTest {
 	@Test
 	void journalWithSquareBracketsAtEnd() {
 		Publication r1 = new Publication();
-		r1.addJournals("Zhonghua wai ke za zhi [Chinese journal of surgery]", normalizationService);
+		r1.addJournals("Zhonghua wai ke za zhi [Chinese journal of surgery]");
 
 		assertThat(r1.getJournals()).hasSize(2);
 		assertThat(r1.getJournals()).contains("Zhonghua wai ke za zhi");
@@ -141,7 +140,7 @@ class JaroWinklerJournalTest {
 	void journalWithSquareBracketsAtStart() {
 		Publication r1 = new Publication();
 
-		r1.addJournals("[Rinshō ketsueki] The Japanese journal of clinical hematology", normalizationService);
+		r1.addJournals("[Rinshō ketsueki] The Japanese journal of clinical hematology");
 
 		assertThat(r1.getJournals()).hasSize(2);
 		assertThat(r1.getJournals()).contains("Rinsho ketsueki");

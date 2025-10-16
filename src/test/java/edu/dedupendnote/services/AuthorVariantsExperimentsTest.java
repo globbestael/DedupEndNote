@@ -1,7 +1,6 @@
 package edu.dedupendnote.services;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -27,7 +26,6 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
-	NormalizationService normalizationService = new NormalizationService();
 
 	@BeforeAll
 	static void beforeAll() {
@@ -248,7 +246,7 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 	private Publication fillPublicationDefault(String authors) {
 		Publication r = new Publication();
 		List<String> authorList1 = Arrays.asList(authors.split("; "));
-		authorList1.stream().forEach(a -> r.addAuthors(a, normalizationService));
+		authorList1.stream().forEach(a -> r.addAuthors(a));
 		r.fillAllAuthors();
 		return r;
 	}
@@ -300,7 +298,7 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 
 	private void showTripleComparisonDetails(String nameExperiment, List<Triple> triples, boolean onlySummary) {
 		// double threshold = 0.85;
-		double threshold = DeduplicationService.DefaultAuthorsComparator.AUTHOR_SIMILARITY_NO_REPLY;
+		double threshold = DefaultAuthorsComparator.AUTHOR_SIMILARITY_NO_REPLY;
 
 		List<Triple> better = triples.stream().filter(t -> t.getJws() > threshold && t.getExpJws() <= threshold)
 				.collect(Collectors.toList());

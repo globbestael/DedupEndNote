@@ -31,7 +31,6 @@ import edu.dedupendnote.services.NormalizationService;
 //@ExtendWith(TimingExtension.class)
 @TestConfiguration
 class JaroWinklerTitleTest {
-	NormalizationService normalizationService = new NormalizationService();
 	ComparatorService comparatorService = new ComparatorService();
 
 	String homeDir = System.getProperty("user.home");
@@ -46,10 +45,10 @@ class JaroWinklerTitleTest {
 	@ParameterizedTest(name = "{index}: jaroWinkler({0}, {1})={2}")
 	@MethodSource("positiveArgumentProvider")
 	void jwPositiveTest(String input1, String input2, double expected) {
-		Double similarity = jws.apply(normalizationService.normalizeTitle(input1),
-				normalizationService.normalizeTitle(input2));
+		Double similarity = jws.apply(NormalizationService.normalizeTitle(input1),
+				NormalizationService.normalizeTitle(input2));
 		System.err.println("- 1: %s\n- 2: %s\n- 3: %s\n- 4: %s\n".formatted(input1,
-				normalizationService.normalizeTitle(input1), input2, normalizationService.normalizeTitle(input2)));
+				NormalizationService.normalizeTitle(input1), input2, NormalizationService.normalizeTitle(input2)));
 
 		SoftAssertions softAssertions = new SoftAssertions();
 		softAssertions.assertThat(similarity).as("\nTitle1: %s\nTitle2: %s", input1, input2).isEqualTo(expected,
@@ -64,9 +63,9 @@ class JaroWinklerTitleTest {
 	@MethodSource("positiveArgumentProvider")
 	void jwFullPositiveTest(String input1, String input2, double expected) {
 		Publication p1 = new Publication();
-		p1.addTitles(input1, normalizationService);
+		p1.addTitles(input1);
 		Publication p2 = new Publication();
-		p2.addTitles(input2, normalizationService);
+		p2.addTitles(input2);
 
 		Double highestSimilarity = 0.0;
 
@@ -92,10 +91,10 @@ class JaroWinklerTitleTest {
 	@ParameterizedTest(name = "{index}: jaroWinkler({0}, {1})={2}")
 	@MethodSource("negativeArgumentProvider")
 	void jwNegativeTest(String input1, String input2, double expected) {
-		Double similarity = jws.apply(normalizationService.normalizeTitle(input1),
-				normalizationService.normalizeTitle(input2));
+		Double similarity = jws.apply(NormalizationService.normalizeTitle(input1),
+				NormalizationService.normalizeTitle(input2));
 		System.err.println("- 1: %s\n- 2: %s\n- 3: %s\n- 4: %s\n".formatted(input1,
-				normalizationService.normalizeTitle(input1), input2, normalizationService.normalizeTitle(input2)));
+				NormalizationService.normalizeTitle(input1), input2, NormalizationService.normalizeTitle(input2)));
 		assertThat(similarity).isEqualTo(expected, within(0.01))
 				.isLessThan(ComparatorService.TITLE_SIMILARITY_SUFFICIENT_STARTPAGES_OR_DOIS);
 	}
@@ -108,9 +107,9 @@ class JaroWinklerTitleTest {
 	@MethodSource("negativeArgumentProvider")
 	void jwFullNegativeTest(String input1, String input2, double expected) {
 		Publication p1 = new Publication();
-		p1.addTitles(input1, normalizationService);
+		p1.addTitles(input1);
 		Publication p2 = new Publication();
-		p2.addTitles(input2, normalizationService);
+		p2.addTitles(input2);
 
 		Double highestSimilarity = 0.0;
 		String highestTitle1 = "";
@@ -594,35 +593,35 @@ class JaroWinklerTitleTest {
 		Publication publication = new Publication();
 		String t1 = "Severe deficiency of the specific von Willebrand factor-cleaving protease";
 		String t2 = "ADAMTS 13 activity in a subgroup of children with atypical hemolytic uremic syndrome";
-		publication.addTitles(t1 + ": " + t2, normalizationService);
+		publication.addTitles(t1 + ": " + t2);
 		List<String> titles = publication.getTitles();
 
 		System.err.println(titles);
 		assertThat(titles).hasSize(3);
 
 		publication.getTitles().clear();
-		publication.addTitles(t1.substring(0, 10) + ": " + t2, normalizationService);
+		publication.addTitles(t1.substring(0, 10) + ": " + t2);
 		titles = publication.getTitles();
 
 		System.err.println(titles);
 		assertThat(titles).as("First part smaller than 50, no split").hasSize(1);
 
 		publication.getTitles().clear();
-		publication.addTitles(t1 + ": " + t2.substring(0, 10), normalizationService);
+		publication.addTitles(t1 + ": " + t2.substring(0, 10));
 		titles = publication.getTitles();
 
 		System.err.println(titles);
 		assertThat(titles).as("Second part smaller than 50, no split").hasSize(1);
 
 		publication.getTitles().clear();
-		publication.addTitles(t1.substring(0, 10) + ": " + t2.substring(0, 10), normalizationService);
+		publication.addTitles(t1.substring(0, 10) + ": " + t2.substring(0, 10));
 		titles = publication.getTitles();
 
 		System.err.println(titles);
 		assertThat(titles).as("Both parts smaller than 50, no split").hasSize(1);
 
 		publication.getTitles().clear();
-		publication.addTitles(t1 + ": " + t2.substring(0, 10) + ": " + t2.substring(11), normalizationService);
+		publication.addTitles(t1 + ": " + t2.substring(0, 10) + ": " + t2.substring(11));
 		titles = publication.getTitles();
 
 		System.err.println(titles);

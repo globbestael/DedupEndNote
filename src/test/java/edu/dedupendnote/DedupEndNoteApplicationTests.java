@@ -25,17 +25,14 @@ import edu.dedupendnote.domain.Publication;
 import edu.dedupendnote.services.ComparatorService;
 import edu.dedupendnote.services.DeduplicationService;
 import edu.dedupendnote.services.IOService;
-import edu.dedupendnote.services.NormalizationService;
 import edu.dedupendnote.services.UtilitiesService;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @TestConfiguration
 class DedupEndNoteApplicationTests {
-	NormalizationService normalizationService = new NormalizationService();
 	ComparatorService comparatorService = new ComparatorService();
-	public DeduplicationService deduplicationService = new DeduplicationService(normalizationService,
-			comparatorService);
+	public DeduplicationService deduplicationService = new DeduplicationService(comparatorService);
 
 	String homeDir = System.getProperty("user.home");
 
