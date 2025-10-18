@@ -1,4 +1,4 @@
-package edu.dedupendnote;
+package edu.dedupendnote.services;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
@@ -9,8 +9,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.boot.test.context.TestConfiguration;
-
-import edu.dedupendnote.services.NormalizationService;
 
 @TestConfiguration
 class NormalizationServiceTest {
