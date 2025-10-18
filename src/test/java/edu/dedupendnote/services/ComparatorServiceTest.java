@@ -15,8 +15,6 @@ import edu.dedupendnote.domain.Publication;
 @TestConfiguration
 class ComparatorServiceTest {
 
-	ComparatorService comparatorService = new ComparatorService();
-
 	@ParameterizedTest(name = "{index}: compareTitles({0}, {1})={2}")
 	@MethodSource("titleArgumentProvider")
 	void compareTitlesTest(String title1, String title2, boolean expected) {

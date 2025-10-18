@@ -31,8 +31,6 @@ import edu.dedupendnote.services.NormalizationService;
 //@ExtendWith(TimingExtension.class)
 @TestConfiguration
 class JaroWinklerTitleTest {
-	ComparatorService comparatorService = new ComparatorService();
-
 	String homeDir = System.getProperty("user.home");
 
 	String testdir = homeDir + "/dedupendnote_files";
