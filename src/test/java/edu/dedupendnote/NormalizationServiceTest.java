@@ -15,8 +15,6 @@ import edu.dedupendnote.services.NormalizationService;
 @TestConfiguration
 class NormalizationServiceTest {
 
-	NormalizationService normalizationService = new NormalizationService();
-
 	@ParameterizedTest(name = "{index}: normalizeTitle({0})={1}")
 	@MethodSource("titleArgumentProvider")
 	void normalizeTitleTest(String input, String expected) {

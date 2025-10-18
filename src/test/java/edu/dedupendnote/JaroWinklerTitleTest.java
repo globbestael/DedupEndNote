@@ -63,9 +63,9 @@ class JaroWinklerTitleTest {
 	@MethodSource("positiveArgumentProvider")
 	void jwFullPositiveTest(String input1, String input2, double expected) {
 		Publication p1 = new Publication();
-		p1.addTitles(input1);
 		Publication p2 = new Publication();
-		p2.addTitles(input2);
+		IOService.addNormalizedTitle(input1, p1);
+		IOService.addNormalizedTitle(input2, p2);
 
 		Double highestSimilarity = 0.0;
 
@@ -107,9 +107,9 @@ class JaroWinklerTitleTest {
 	@MethodSource("negativeArgumentProvider")
 	void jwFullNegativeTest(String input1, String input2, double expected) {
 		Publication p1 = new Publication();
-		p1.addTitles(input1);
 		Publication p2 = new Publication();
-		p2.addTitles(input2);
+		IOService.addNormalizedTitle(input1, p1);
+		IOService.addNormalizedTitle(input2, p2);
 
 		Double highestSimilarity = 0.0;
 		String highestTitle1 = "";
@@ -377,7 +377,11 @@ class JaroWinklerTitleTest {
 					"RETRACTED: Isolated central retinal artery occlusion as an initial presentation of paroxysmal nocturnal hemoglobinuria and successful long-term prevention of systemic thrombosis with eculizumab (Retracted article. See vol. 58, pg. 307, 2014)",
 					"Isolated central retinal artery occlusion as an initial presentation of paroxysmal nocturnal hemoglobinuria and successful long-term prevention of systemic thrombosis with eculizumab",
 					1.0
-				) // WOS retraction marking with full source
+				), // WOS retraction marking with full source
+				arguments(
+					"A randomized phase 2 study of etaracizumab, a monoclonal antibody against integrin (alpha)v(beta)3, (plus or minus) dacarbazine in patients with stage IV metastatic melanoma",
+					"A randomized phase 2 study of etaracizumab, a monoclonal antibody against integrin alphavbeta3, +/- dacarbazine in patients with stage IV metastatic melanoma",
+					0.95)
 			);
 	}
 	// @formatter:on
@@ -593,39 +597,38 @@ class JaroWinklerTitleTest {
 		Publication publication = new Publication();
 		String t1 = "Severe deficiency of the specific von Willebrand factor-cleaving protease";
 		String t2 = "ADAMTS 13 activity in a subgroup of children with atypical hemolytic uremic syndrome";
-		publication.addTitles(t1 + ": " + t2);
+		IOService.addNormalizedTitle(t1 + ": " + t2, publication);
 		List<String> titles = publication.getTitles();
 
 		System.err.println(titles);
 		assertThat(titles).hasSize(3);
 
 		publication.getTitles().clear();
-		publication.addTitles(t1.substring(0, 10) + ": " + t2);
+		IOService.addNormalizedTitle(t1.substring(0, 10) + ": " + t2, publication);
 		titles = publication.getTitles();
 
 		System.err.println(titles);
 		assertThat(titles).as("First part smaller than 50, no split").hasSize(1);
 
 		publication.getTitles().clear();
-		publication.addTitles(t1 + ": " + t2.substring(0, 10));
+		IOService.addNormalizedTitle(t1 + ": " + t2.substring(0, 10), publication);
 		titles = publication.getTitles();
 
 		System.err.println(titles);
 		assertThat(titles).as("Second part smaller than 50, no split").hasSize(1);
 
 		publication.getTitles().clear();
-		publication.addTitles(t1.substring(0, 10) + ": " + t2.substring(0, 10));
+		IOService.addNormalizedTitle(t1.substring(0, 10) + ": " + t2.substring(0, 10), publication);
 		titles = publication.getTitles();
 
 		System.err.println(titles);
 		assertThat(titles).as("Both parts smaller than 50, no split").hasSize(1);
 
 		publication.getTitles().clear();
-		publication.addTitles(t1 + ": " + t2.substring(0, 10) + ": " + t2.substring(11));
+		IOService.addNormalizedTitle(t1 + ": " + t2.substring(0, 10) + ": " + t2.substring(11), publication);
 		titles = publication.getTitles();
 
 		System.err.println(titles);
 		assertThat(titles).as("Second part has embedded colon").hasSize(3);
-
 	}
 }

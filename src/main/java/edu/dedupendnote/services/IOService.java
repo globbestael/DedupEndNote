@@ -19,14 +19,20 @@ import org.springframework.stereotype.Service;
 
 import edu.dedupendnote.domain.Publication;
 import edu.dedupendnote.domain.PublicationDB;
+import edu.dedupendnote.services.NormalizationService.authorRecord;
+import edu.dedupendnote.services.NormalizationService.isbnIssnRecord;
+import edu.dedupendnote.services.NormalizationService.pageRecord;
+import edu.dedupendnote.services.NormalizationService.titleRecord;
 import lombok.extern.slf4j.Slf4j;
 
+/*
+ * The input method readPublications calls the NormalizationService for some of the field data. 
+ * This IOService class has a couple of methods (addNormalized...) which are used in readPublications 
+ * but also in the fixtures of the unit tests.
+ */
 @Slf4j
 @Service
 public class IOService {
-
-	public IOService() {
-	}
 
 	/*
 	 * Patterns
@@ -102,7 +108,7 @@ public class IOService {
 	private static final Pattern erratumPattern = Pattern.compile(
 			"(^(Correction|Corrigendum|Erratum)( to (?=[A-Z])| to '|( to)?: ).*)|(.*(Correction|Corrigendum|Erratum)$)");
 	public static final Pattern sourcePattern = Pattern.compile(".+(\\(vol \\d+\\D+\\d+\\D+\\d+\\D*\\))");
-	public static Pattern commentPattern = Pattern.compile(
+	public static final Pattern commentPattern = Pattern.compile(
 			"(e)?Comment(|s|ary)\\b.*|.+[cC]omment(|s|ary)( from| on| to)?:? [A-Z'\"].+|.+[Cc]omment(|s|ary)|.+COMMENT");
 
 	/*
@@ -133,7 +139,7 @@ public class IOService {
 		String fieldName = null;
 		String previousFieldName = "XYZ";
 		/*
-		 * With records from clinicaltrials.gov the raw title must be recorded in publication.title. The records
+		 * With publications from clinicaltrials.gov the raw title must be recorded in publication.title. The publications
 		 * can be identified by the content of the T2 or UR field. The first comes before the TI field, 
 		 * the second after the TI field. We need this titleCache field for this second case, but use it after
 		 * reading the ER field
@@ -165,27 +171,28 @@ public class IOService {
 					switch (fieldName) {
 					case "AU": // Authors
 						// XML files can put all authors on 1 line separated by "; "
+						// TODO: Does this occur in RIS files too?
 						if (fieldContent.contains("; ")) {
 							List<String> authors = Arrays.asList(fieldContent.split("; "));
 							for (String author : authors) {
-								publication.addAuthors(author);
+								addNormalizedAuthor(author, publication);
 							}
 						} else {
-							publication.addAuthors(fieldContent);
+							addNormalizedAuthor(fieldContent, publication);
 						}
 						break;
 					case "C7": // article number (Scopus and WoS when imported as RIS format)
-						publication.parsePages(fieldContent, fieldName);
+						addNormalizedPages(fieldContent, fieldName, publication);
 						break;
 					case "DO": // DOI
-						publication.addDois(fieldContent);
+						publication.getDois().addAll(NormalizationService.normalizeInputDois(fieldContent));
 						previousFieldName = fieldName;
 						break;
 					case "ER":
 						if (publication.getId() == null) {
 							publication.setId(Integer.toString(missingId++));
 						}
-						publication.addReversedTitles();
+						addReversedTitles(publication);
 						if (publication.isClinicalTrialGov()) {
 							publication.getAuthors().clear();
 							String journal = publication.getJournals().stream()
@@ -194,14 +201,14 @@ public class IOService {
 								// should handle EndNoe records which have already been standardized
 								String ctgId = journal.substring(journal.length() - 11);
 								if (ctgId.startsWith("NCT")) {
-									publication.parsePages(ctgId, "T2");
+									addNormalizedPages(ctgId, "T2", publication);
 									publication.getJournals().remove(journal);
 									publication.getJournals().add("https://clinicaltrials.gov");
 								}
 							}
 							publication.setTitle(titleCache);
 						}
-						publication.fillAllAuthors();
+						fillAllAuthors(publication);
 						publications.add(publication);
 						log.debug("Publication read with id {} and title: {}", publication.getId(),
 								(publication.getTitles().isEmpty() ? "(none)" : publication.getTitles().get(0)));
@@ -211,21 +218,24 @@ public class IOService {
 						// log.debug("Read ID {}", fieldContent);
 						break;
 					case "J2": // Alternate journal
-						publication.addJournals(fieldContent);
+						addNormalizedJournal(fieldContent, publication);
 						break;
 					case "OP":
 						// in PubMed: original title, in Web of Science (at least for conference papers): conference title
 						if ("CONF".equals(publication.getReferenceType())) {
-							publication.addJournals(fieldContent);
+							addNormalizedJournal(fieldContent, publication);
 						} else {
-							publication.addTitles(fieldContent);
+							addNormalizedTitle(fieldContent, publication);
 						}
 						break;
 					case "PY": // Publication year
-						publication.parsePublicationYear(fieldContent);
+						publication
+								.setPublicationYear(NormalizationService.normalizeInputPublicationYear(fieldContent));
 						break;
 					case "SN": // ISSN / ISBN
-						publication.addIssns(fieldContent);
+						isbnIssnRecord normalized = NormalizationService.normalizeInputIssns(line);
+						publication.getIsbns().addAll(normalized.isbns());
+						publication.getIssns().addAll(normalized.issns());
 						previousFieldName = fieldName;
 						break;
 					// Ovid Medline in RIS export has author address in repeatable M2 field,
@@ -233,7 +243,7 @@ public class IOService {
 					// but export file of such a record has this content in SE field!
 					case "SE": // pages (Embase (which provider?), Ovid PsycINFO: examples in some SRA datasets)
 					case "SP": // pages
-						publication.parsePages(fieldContent, fieldName);
+						addNormalizedPages(fieldContent, fieldName, publication);
 						break;
 					/*
 					 * original non-English titles:
@@ -242,13 +252,13 @@ public class IOService {
 					 * - Scopus: ST and TT?
 					 */
 					case "ST": // Original Title in Scopus
-						publication.addTitles(fieldContent);
+						addNormalizedTitle(fieldContent, publication);
 						break;
 					case "T2": // Journal title / Book title
 						if (fieldContent.startsWith("https://clinicaltrials.gov")) {
 							publication.setClinicalTrialGov(true);
 						}
-						publication.addJournals(fieldContent);
+						addNormalizedJournal(fieldContent, publication);
 						break;
 					// @formatter:off
 					/*
@@ -271,16 +281,16 @@ public class IOService {
 					// @formatter:on
 					case "T3": // Book section
 						if (!conferencePattern.matcher(fieldContent).matches()) {
-							publication.addJournals(fieldContent);
-							publication.addTitles(fieldContent);
+							addNormalizedJournal(fieldContent, publication);
+							addNormalizedTitle(fieldContent, publication);
 						}
 						break;
 					// ??? in Embase the original title is on the continuation line:
 					// "Een 45-jarige patiente met chronische koliekachtige abdominale
 					// pijn". Not found in test set!
 					case "TI": // Title
-						publication.addTitles(fieldContent);
-						// Don't do this in IOService::readRecords because these 2 patterns are only applied to TI
+						addNormalizedTitle(fieldContent, publication);
+						// Don't do this in IOService::readPublications because these 2 patterns are only applied to TI
 						// field, not to the other fields which are added to List<String> titles
 						if (replyPattern.matcher(fieldContent.toLowerCase()).matches()
 								|| erratumPattern.matcher(fieldContent).matches()
@@ -304,7 +314,7 @@ public class IOService {
 					case "UR":
 						if (fieldContent.startsWith("https://clinicaltrials.gov")) {
 							publication.setClinicalTrialGov(true);
-							publication.addJournals(fieldContent);
+							addNormalizedJournal(fieldContent, publication);
 						}
 						previousFieldName = fieldName;
 						break;
@@ -315,10 +325,12 @@ public class IOService {
 				} else { // continuation line
 					switch (previousFieldName) {
 					case "DO":
-						publication.addDois(line);
+						publication.getDois().addAll(NormalizationService.normalizeInputDois(fieldContent));
 						break;
 					case "SN":
-						publication.addIssns(line);
+						isbnIssnRecord normalized = NormalizationService.normalizeInputIssns(line);
+						publication.getIsbns().addAll(normalized.isbns());
+						publication.getIssns().addAll(normalized.issns());
 						break;
 					case "TI":
 						/*
@@ -327,12 +339,12 @@ public class IOService {
 						 * the book series title, and the continuation line the title of the chapter. Not sure if this ASySD_SRSR_Human
 						 * file should be used as an example?
 						 */
-						publication.addTitles(line);
+						addNormalizedTitle(line, publication);
 						break;
 					case "UR":
 						if (line.startsWith("https://clinicaltrials.gov")) {
 							publication.setClinicalTrialGov(true);
-							publication.addJournals(line);
+							addNormalizedJournal(line, publication);
 						}
 						break;
 					default:
@@ -353,6 +365,73 @@ public class IOService {
 		return publications;
 	}
 
+	public static void addNormalizedAuthor(String fieldContent, Publication publication) {
+		authorRecord normalizedAuthor = NormalizationService.normalizeInputAuthors(fieldContent);
+		if (normalizedAuthor.author() != null) {
+			publication.getAuthors().add(normalizedAuthor.author());
+			publication.getAuthorsTransposed().add(normalizedAuthor.authorTransposed());
+			if (normalizedAuthor.authorIsTransposed()) {
+				publication.setAuthorsAreTransposed(true);
+			}
+		}
+	}
+
+	public static void addNormalizedJournal(String fieldContent, Publication publication) {
+		if (fieldContent.toLowerCase().contains("cochrane")) {
+			publication.setCochrane(true);
+		}
+		publication.getJournals().addAll(NormalizationService.normalizeInputJournals(fieldContent));
+	}
+
+	public static void addNormalizedPages(String fieldContent, String fieldName, Publication publication) {
+		pageRecord normalizedPages = NormalizationService.normalizeInputPages(fieldContent, fieldName);
+		if (publication.getPageForComparison() != null && (!normalizedPages.originalPages().contains("-")
+				|| normalizedPages.originalPages().startsWith("1-"))) {
+			;
+		} else {
+			publication.setPageStart(normalizedPages.pageStart());
+			publication.setPageEnd(normalizedPages.pageEnd());
+			publication.setPagesWithComma(normalizedPages.pagesWithComma());
+			publication.setPageForComparison(normalizedPages.pageForComparison());
+			publication.setSeveralPages(normalizedPages.severalPages());
+		}
+	}
+
+	public static void addNormalizedTitle(String fieldContent, Publication publication) {
+		titleRecord normalizedTitle = NormalizationService.normalizeInputTitles(fieldContent);
+		publication.getTitles().addAll(normalizedTitle.titles());
+		if (normalizedTitle.originalTitle() != null) {
+			publication.setTitle(normalizedTitle.originalTitle());
+		}
+	}
+
+	public static void addReversedTitles(Publication publication) {
+		List<String> titles = publication.getTitles();
+		if (!titles.isEmpty()) {
+			List<String> reversed = new ArrayList<>();
+			for (String t : titles) {
+				reversed.add(new StringBuilder(t).reverse().toString());
+			}
+			titles.addAll(reversed);
+		}
+	}
+
+	public static void fillAllAuthors(Publication publication) {
+		List<String> authors = publication.getAuthors();
+		if (authors.isEmpty()) {
+			return;
+		}
+
+		String s = authors.stream().limit(40).collect(Collectors.joining("; "));
+		publication.getAllAuthors().add(s);
+		// DONT: lowercasing the names makes different authors closer to 1.0
+
+		if (publication.isAuthorsAreTransposed()) {
+			publication.getAllAuthors()
+					.add(publication.getAuthorsTransposed().stream().limit(40).collect(Collectors.joining("; ")));
+		}
+	}
+
 	// @formatter:off
 	/**
 	 * - PageStart (PG) and DOIs (DO) are replaced or inserted, but written at the same place as in the input file to
@@ -364,14 +443,14 @@ public class IOService {
 	 * - Absent Journal Name (T2) is copied from J2 (or filed in based on DOI foor SSRN): for embase.com records
 	 *   (but no check on this origin!)
 	 *
-	 * Records are read into a TreeMap, with continuation lines added. 
-	 * writeRecords(...) does the replacements, and writes to the output file.
+	 * Publications are read into a TreeMap, with continuation lines added. 
+	 * writePublications(...) does the replacements, and writes to the output file.
 	 */
 	// @formatter:off
-	public int writeDeduplicatedRecords(List<Publication> publications, String inputFileName, String outputFileName) {
+	public int writeDeduplicatedPublications(List<Publication> publications, String inputFileName, String outputFileName) {
 		log.debug("Start writing to file {}", outputFileName);
-		List<Publication> recordsToKeep = publications.stream().filter(Publication::getKeptRecord).toList();
-		log.debug("Records to be kept: {}", recordsToKeep.size());
+		List<Publication> recordsToKeep = publications.stream().filter(Publication::getKeptPublication).toList();
+		log.debug("Publications to be kept: {}", recordsToKeep.size());
 
 		Map<String, Publication> recordIdMap = publications.stream().filter(r -> !r.getId().startsWith("-"))
 				.collect(Collectors.toMap(Publication::getId, Function.identity()));
@@ -414,8 +493,8 @@ public class IOService {
 								map.put("ID", phantomId.toString());
 							}
 						}
-						if (publication != null && publication.getKeptRecord()) {
-							writeRecord(map, publication, bw, true);
+						if (publication != null && publication.getKeptPublication()) {
+							writePublication(map, publication, bw, true);
 							numberWritten++;
 						}
 						map.clear();
@@ -454,10 +533,10 @@ public class IOService {
 		return numberWritten;
 	}
 
-	public int writeMarkedRecords(List<Publication> publications, String inputFileName, String outputFileName) {
+	public int writeMarkedPublications(List<Publication> publications, String inputFileName, String outputFileName) {
 		log.debug("Start writing to file {}", outputFileName);
-		List<Publication> recordsToKeep = publications.stream().filter(Publication::getKeptRecord).toList();
-		log.debug("Records to be kept: {}", recordsToKeep.size());
+		List<Publication> recordsToKeep = publications.stream().filter(Publication::getKeptPublication).toList();
+		log.debug("Publications to be kept: {}", recordsToKeep.size());
 
 		Map<String, Publication> recordIdMap = publications.stream().filter(r -> !r.getId().startsWith("-"))
 				.collect(Collectors.toMap(Publication::getId, Function.identity()));
@@ -495,12 +574,12 @@ public class IOService {
 							publication.setId(phantomId.toString());
 							map.put("ID", phantomId.toString());
 						}
-						if (publication != null && publication.getKeptRecord()) {
+						if (publication != null && publication.getKeptPublication()) {
 							map.put(fieldName, fieldContent);
 							if (publication.getLabel() != null) {
 								map.put("LB", publication.getLabel());
 							}
-							writeRecord(map, publication, bw, false);
+							writePublication(map, publication, bw, false);
 							numberWritten++;
 						}
 						map.clear();
@@ -537,7 +616,7 @@ public class IOService {
 	 * Ordering of an EndNote export RIS file: the fields are ordered
 	 * alphabetically, except for TY (first), and ID and ER (last fields)
 	 */
-	private void writeRecord(Map<String, String> map, Publication publication, BufferedWriter bw, boolean enhance)
+	private void writePublication(Map<String, String> map, Publication publication, BufferedWriter bw, boolean enhance)
 			throws IOException {
 		if (enhance) {
 			if (!publication.getDois().isEmpty()) {
@@ -666,7 +745,7 @@ public class IOService {
 							} else {
 								map.put("CA", "Unknown");
 							}
-							writeRecord(map, null, bw, false);
+							writePublication(map, null, bw, false);
 							numberWritten++;
 						}
 						map.clear();
@@ -735,7 +814,7 @@ public class IOService {
 							} else {
 								map.put("CA", map.get("CA").toLowerCase());
 							}
-							writeRecord(map, null, bw, false);
+							writePublication(map, null, bw, false);
 							numberWritten++;
 						}
 						map.clear();

@@ -21,9 +21,9 @@ class ComparatorServiceTest {
 	@MethodSource("titleArgumentProvider")
 	void compareTitlesTest(String title1, String title2, boolean expected) {
 		Publication p1 = new Publication();
-		p1.addTitles(title1);
 		Publication p2 = new Publication();
-		p2.addTitles(title2);
+		IOService.addNormalizedTitle(title1, p1);
+		IOService.addNormalizedTitle(title2, p2);
 
 		boolean result = ComparatorService.compareTitles(p1, p2);
 		assertThat(result).as("Not equal: '%s' and '%s'", title1, title2).isEqualTo(expected);
@@ -33,9 +33,9 @@ class ComparatorServiceTest {
 	@MethodSource("journalArgumentProvider")
 	void compareJournalsTest(String journal1, String journal2, boolean expected) {
 		Publication p1 = new Publication();
-		p1.addJournals(journal1);
 		Publication p2 = new Publication();
-		p2.addJournals(journal2);
+		IOService.addNormalizedJournal(journal1, p1);
+		IOService.addNormalizedJournal(journal2, p2);
 
 		boolean result = ComparatorService.compareJournals(p1, p2);
 		assertThat(result).isEqualTo(expected);
@@ -55,9 +55,9 @@ class ComparatorServiceTest {
 	@MethodSource("issnArgumentProvider")
 	void compareIssnsTest(String issn1, String issn2, boolean expected) {
 		Publication p1 = new Publication();
-		p1.addIssns(issn1);
 		Publication p2 = new Publication();
-		p2.addIssns(issn2);
+		p1.getIssns().addAll(NormalizationService.normalizeInputIssns(issn1).issns());
+		p2.getIssns().addAll(NormalizationService.normalizeInputIssns(issn2).issns());
 
 		boolean result = ComparatorService.compareIssns(p1, p2);
 		assertThat(result).isEqualTo(expected);

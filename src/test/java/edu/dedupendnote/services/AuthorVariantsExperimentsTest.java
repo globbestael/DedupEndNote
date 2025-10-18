@@ -41,13 +41,13 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 		// triples.stream().limit(5).forEach(System.err::println);
 
 		for (Triple triple : triples) {
-			Publication r1 = fillPublicationDefault(triple.getAuthors1());
-			Publication r2 = fillPublicationDefault(triple.getAuthors2());
+			Publication r1 = fillPublication(triple.getAuthors1());
+			Publication r2 = fillPublication(triple.getAuthors2());
 
 			triple.setJws(getHighestSimilarity(r1.getAllAuthors(), r2.getAllAuthors()));
 
-			r1 = fillRecordAddAuthorsWithoutPreprocessing(triple.getAuthors1());
-			r2 = fillRecordAddAuthorsWithoutPreprocessing(triple.getAuthors2());
+			r1 = fillPublicationAddAuthorsWithoutPreprocessing(triple.getAuthors1());
+			r2 = fillPublicationAddAuthorsWithoutPreprocessing(triple.getAuthors2());
 			triple.setExpJws(getHighestSimilarity(r1.getAllAuthors(), r2.getAllAuthors()));
 		}
 		// @formatter:off
@@ -80,13 +80,13 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 		// triples.stream().limit(5).forEach(System.err::println);
 
 		for (Triple triple : triples) {
-			Publication r1 = fillPublicationDefault(triple.getAuthors1());
-			Publication r2 = fillPublicationDefault(triple.getAuthors2());
+			Publication r1 = fillPublication(triple.getAuthors1());
+			Publication r2 = fillPublication(triple.getAuthors2());
 
 			triple.setJws(getHighestSimilarity(r1.getAllAuthors(), r2.getAllAuthors()));
 
-			r1 = fillRecordAddAuthorsLimitedToFirstLetters(triple.getAuthors1());
-			r2 = fillRecordAddAuthorsLimitedToFirstLetters(triple.getAuthors2());
+			r1 = fillPublicationAddAuthorsLimitedToFirstLetters(triple.getAuthors1());
+			r2 = fillPublicationAddAuthorsLimitedToFirstLetters(triple.getAuthors2());
 			triple.setExpJws(getHighestSimilarity(r1.getAllAuthors(), r2.getAllAuthors()));
 		}
 
@@ -99,8 +99,8 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 	void explainPoorResults_AuthorsLimitedToFirstLetters() {
 		String author1 = "de Ville de Goyet, J.";
 		String author2 = "Degoyet, J. D.";
-		Publication r1 = fillRecordAddAuthorsLimitedToFirstLetters(author1);
-		Publication r2 = fillRecordAddAuthorsLimitedToFirstLetters(author2);
+		Publication r1 = fillPublicationAddAuthorsLimitedToFirstLetters(author1);
+		Publication r2 = fillPublicationAddAuthorsLimitedToFirstLetters(author2);
 		String a1 = r1.getAllAuthors().get(0);
 		String a2 = r2.getAllAuthors().get(0);
 
@@ -135,8 +135,8 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 		// triples.stream().limit(5).forEach(System.err::println);
 
 		for (Triple triple : triples) {
-			Publication r1 = fillPublicationDefault(triple.getAuthors1());
-			Publication r2 = fillPublicationDefault(triple.getAuthors2());
+			Publication r1 = fillPublication(triple.getAuthors1());
+			Publication r2 = fillPublication(triple.getAuthors2());
 
 			triple.setJws(getHighestSimilarity(r1.getAllAuthors(), r2.getAllAuthors()));
 
@@ -144,8 +144,8 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 			List<String> authorList2 = Arrays.asList(triple.getAuthors2().split("; "));
 			int min = Math.min(authorList1.size(), authorList2.size());
 
-			r1 = fillPublicationDefault(authorList1.subList(0, min).stream().collect(Collectors.joining("; ")));
-			r2 = fillPublicationDefault(authorList2.subList(0, min).stream().collect(Collectors.joining("; ")));
+			r1 = fillPublication(authorList1.subList(0, min).stream().collect(Collectors.joining("; ")));
+			r2 = fillPublication(authorList2.subList(0, min).stream().collect(Collectors.joining("; ")));
 			triple.setExpJws(getHighestSimilarity(r1.getAllAuthors(), r2.getAllAuthors()));
 		}
 
@@ -174,8 +174,8 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 		// triples.stream().limit(5).forEach(System.err::println);
 
 		for (Triple triple : triples) {
-			Publication r1 = fillPublicationDefault(triple.getAuthors1());
-			Publication r2 = fillPublicationDefault(triple.getAuthors2());
+			Publication r1 = fillPublication(triple.getAuthors1());
+			Publication r2 = fillPublication(triple.getAuthors2());
 
 			triple.setJws(getHighestSimilarity(r1.getAllAuthors(), r2.getAllAuthors()));
 
@@ -188,8 +188,8 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 				authorList2 = authorList2.subList(0, limit);
 			}
 
-			r1 = fillPublicationDefault(authorList1.stream().collect(Collectors.joining("; ")));
-			r2 = fillPublicationDefault(authorList2.stream().collect(Collectors.joining("; ")));
+			r1 = fillPublication(authorList1.stream().collect(Collectors.joining("; ")));
+			r2 = fillPublication(authorList2.stream().collect(Collectors.joining("; ")));
 			triple.setExpJws(getHighestSimilarity(r1.getAllAuthors(), r2.getAllAuthors()));
 		}
 
@@ -218,8 +218,8 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 		// triples.stream().limit(5).forEach(System.err::println);
 
 		for (Triple triple : triples) {
-			Publication r1 = fillPublicationDefault(triple.getAuthors1());
-			Publication r2 = fillPublicationDefault(triple.getAuthors2());
+			Publication r1 = fillPublication(triple.getAuthors1());
+			Publication r2 = fillPublication(triple.getAuthors2());
 
 			triple.setJws(getHighestSimilarity(r1.getAllAuthors(), r2.getAllAuthors()));
 
@@ -232,8 +232,8 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 				authorList2 = authorList2.subList(0, limit);
 			}
 
-			r1 = fillPublicationDefault(authorList1.stream().collect(Collectors.joining("; ")));
-			r2 = fillPublicationDefault(authorList2.stream().collect(Collectors.joining("; ")));
+			r1 = fillPublication(authorList1.stream().collect(Collectors.joining("; ")));
+			r2 = fillPublication(authorList2.stream().collect(Collectors.joining("; ")));
 			triple.setExpJws(getHighestSimilarity(r1.getAllAuthors(), r2.getAllAuthors()));
 		}
 
@@ -242,28 +242,19 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 		assertThat(1).isEqualTo(1);
 	}
 
-	// Default implementation
-	private Publication fillPublicationDefault(String authors) {
-		Publication r = new Publication();
-		List<String> authorList1 = Arrays.asList(authors.split("; "));
-		authorList1.stream().forEach(a -> r.addAuthors(a));
-		r.fillAllAuthors();
-		return r;
-	}
-
-	private Publication fillRecordAddAuthorsWithoutPreprocessing(String authors) {
+	private Publication fillPublicationAddAuthorsWithoutPreprocessing(String authors) {
 		PublicationExperiment r = new PublicationExperiment();
 		List<String> authorList1 = Arrays.asList(authors.split("; "));
 		authorList1.stream().forEach(a -> r.addAuthorsWithoutPreprocessing(a));
-		r.fillAllAuthors();
+		IOService.fillAllAuthors(r);
 		return r;
 	}
 
-	private Publication fillRecordAddAuthorsLimitedToFirstLetters(String authors) {
+	private Publication fillPublicationAddAuthorsLimitedToFirstLetters(String authors) {
 		PublicationExperiment r = new PublicationExperiment();
 		List<String> authorList1 = Arrays.asList(authors.split("; "));
 		authorList1.stream().forEach(a -> r.addAuthorsLimitedToFirstLetters(a));
-		r.fillAllAuthors();
+		IOService.fillAllAuthors(r);
 		// System.err.println(r.getAllAuthors().get(0) + " => " + authors);
 		return r;
 	}

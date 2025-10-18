@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -28,6 +29,14 @@ class AuthorsBaseTest extends BaseTest {
 	@Test
 	void fillerTest() {
 		assertThat(1 * 1).isEqualTo(1);
+	}
+
+	protected Publication fillPublication(String authors) {
+		Publication publication = new Publication();
+		List<String> authorList1 = Arrays.asList(authors.split("; "));
+		authorList1.stream().forEach(author -> IOService.addNormalizedAuthor(author, publication));
+		IOService.fillAllAuthors(publication);
+		return publication;
 	}
 
 	@Data
@@ -82,8 +91,8 @@ class AuthorsBaseTest extends BaseTest {
 		Stream<String> lines = Files.lines(path);
 		lines.forEach(l -> {
 			String[] parts = l.split("\t");
-			if (Publication.ANONYMOUS_OR_GROUPNAME_PATTERN.matcher(parts[0]).find()
-					|| Publication.ANONYMOUS_OR_GROUPNAME_PATTERN.matcher(parts[1]).find()) {
+			if (NormalizationService.ANONYMOUS_OR_GROUPNAME_PATTERN.matcher(parts[0]).find()
+					|| NormalizationService.ANONYMOUS_OR_GROUPNAME_PATTERN.matcher(parts[1]).find()) {
 				return;
 			}
 			Triple triple = new Triple();

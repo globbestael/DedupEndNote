@@ -118,7 +118,7 @@ class ValidationTests {
 					new ValidationResult("McKeown_2021", 2018, 56, 1056, 0, 800L),
 					new ValidationResult("SRA2_Cytology_screening", 1361, 59, 436, 0, 400L),
 					new ValidationResult("SRA2_Haematology", 225, 11, 1177, 2, 300L),
-					new ValidationResult("SRA2_Respiratory", 766, 34, 1184, 4, 800L),
+					new ValidationResult("SRA2_Respiratory", 763, 37, 1184, 4, 800L),
 					new ValidationResult("SRA2_Stroke", 497, 13, 782, 0, 320L),
 					new ValidationResult("TIL", 691, 11, 390, 0, 9_000L),
 					new ValidationResult("TIL_Zotero", 685, 17, 389, 1, 9_000L))

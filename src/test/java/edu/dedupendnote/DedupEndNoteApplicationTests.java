@@ -25,6 +25,7 @@ import edu.dedupendnote.domain.Publication;
 import edu.dedupendnote.services.ComparatorService;
 import edu.dedupendnote.services.DeduplicationService;
 import edu.dedupendnote.services.IOService;
+import edu.dedupendnote.services.NormalizationService;
 import edu.dedupendnote.services.UtilitiesService;
 import lombok.extern.slf4j.Slf4j;
 
@@ -119,14 +120,13 @@ class DedupEndNoteApplicationTests {
 				wssessionId);
 
 		assertThat(resultString)
-				.startsWith("ERROR: The IDs of the records of input file " + inputFileName + " are not unique");
+				.startsWith("ERROR: The IDs of the publications of input file " + inputFileName + " are not unique");
 	}
 
 	@Test
 	void addDois() {
 		String doiString = "10.1371/journal.pone.11 onzin http://dx.doi.org/10.1371/journal%2EPONE.22. 10.1371/journal.pone";
-		Publication publication = new Publication();
-		Set<String> dois = publication.addDois(doiString);
+		Set<String> dois = NormalizationService.normalizeInputDois(doiString);
 
 		assertThat(dois).containsOnly("10.1371/journal.pone.11", "10.1371/journal.pone.22", "10.1371/journal.pone");
 	}
@@ -134,8 +134,7 @@ class DedupEndNoteApplicationTests {
 	@Test
 	void addDoisEscaped() {
 		String doiString = "10.1016/S0016-5085(18)34101-5 http://dx.doi.org/10.1016/S0016-5085%2818%2934101-5";
-		Publication publication = new Publication();
-		Set<String> dois = publication.addDois(doiString);
+		Set<String> dois = NormalizationService.normalizeInputDois(doiString);
 
 		assertThat(dois).containsOnly("10.1016/s0016-5085(18)34101-5"); // is lowercased!
 	}
@@ -143,8 +142,8 @@ class DedupEndNoteApplicationTests {
 	@Test
 	void addIssns_valid() {
 		String issn = "0002-9343 (Print) 00029342 (Electronic) 0-9752298-0-X (ISBN) xxxxXXXX (all X-es)";
-		Publication publication = new Publication();
-		Set<String> issns = publication.addIssns(issn);
+
+		Set<String> issns = NormalizationService.normalizeInputIssns(issn).issns();
 
 		assertThat(issns).hasSize(3).containsAll(Set.of("00029343", "00029342", "XXXXXXXX"));
 	}
@@ -152,8 +151,7 @@ class DedupEndNoteApplicationTests {
 	@Test
 	void addIssns_valid2() {
 		String issn = "0001-4079 (Print) 0001-4079";
-		Publication publication = new Publication();
-		Set<String> issns = publication.addIssns(issn);
+		Set<String> issns = NormalizationService.normalizeInputIssns(issn).issns();
 
 		assertThat(issns).hasSize(1).containsAll(Set.of("00014079"));
 	}
@@ -162,8 +160,7 @@ class DedupEndNoteApplicationTests {
 	void addIssns_nonvalid() {
 		String issn = "a002-9343 (with letter) 00029342X (11 characters) 0-12-34567890x (12 characters)";
 
-		Publication publication = new Publication();
-		Set<String> issns = publication.addIssns(issn);
+		Set<String> issns = NormalizationService.normalizeInputIssns(issn).issns();
 
 		assertThat(issns).isEmpty();
 	}
@@ -172,22 +169,22 @@ class DedupEndNoteApplicationTests {
 	void compareIssns() {
 		Publication r1 = new Publication();
 		Publication r2 = new Publication();
-		r1.addIssns("0000-0000 1111-1111");
-		r2.addIssns("2222-2222 1111-1111");
+		r1.getIssns().addAll(NormalizationService.normalizeInputIssns("0000-0000 1111-1111").issns());
+		r2.getIssns().addAll(NormalizationService.normalizeInputIssns("2222-2222 1111-1111").issns());
 
 		assertThat(ComparatorService.compareIssns(r1, r2)).isTrue();
 
 		Publication r3 = new Publication();
 		Publication r4 = new Publication();
-		r3.addIssns("0000-0000");
-		r4.addIssns("1111-1111 2222-2222");
+		r3.getIssns().addAll(NormalizationService.normalizeInputIssns("0000-0000").issns());
+		r4.getIssns().addAll(NormalizationService.normalizeInputIssns("1111-1111 2222-2222").issns());
 
 		assertThat(ComparatorService.compareIssns(r3, r4)).isFalse();
 
 		Publication r5 = new Publication();
 		Publication r6 = new Publication();
-		r5.addIssns("1234-568x (Print)");
-		r6.addIssns("1234568X (ISSN)");
+		r5.getIssns().addAll(NormalizationService.normalizeInputIssns("1234-568x (Print)").issns());
+		r6.getIssns().addAll(NormalizationService.normalizeInputIssns("1234568X (ISSN)").issns());
 
 		assertThat(ComparatorService.compareIssns(r5, r6)).isTrue();
 	}

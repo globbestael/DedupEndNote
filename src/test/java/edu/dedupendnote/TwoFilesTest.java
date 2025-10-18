@@ -29,8 +29,8 @@ class TwoFilesTest {
 		String resultString = deduplicationService.deduplicateTwoFiles(newFileName, oldFileName, outputFileName,
 				markMode, wssessionId);
 		System.err.println(resultString);
-		assertThat(resultString)
-				.startsWith("DONE: DedupEndNote removed 551 records from the new set, and has written 114 records.");
+		assertThat(resultString).startsWith(
+				"DONE: DedupEndNote removed 551 publications from the new set, and has written 114 publications.");
 	}
 
 	@Disabled("TODO: Why was this disabled")

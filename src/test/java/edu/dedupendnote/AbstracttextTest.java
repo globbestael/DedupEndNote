@@ -29,9 +29,6 @@ import info.debatty.java.stringsimilarity.RatcliffObershelp;
  */
 @TestConfiguration
 class AbstracttextTest {
-	NormalizationService normalizationService = new NormalizationService();
-
-	// @formatter:off
 	/*
 	 * This test file tries to find a workable solution for comparing abstracts
 	 * - JaroWinkler - JaroWinkler with cleaning of text
@@ -40,8 +37,6 @@ class AbstracttextTest {
 	 *
 	 * PRELIMINARY RESULTS: no good solution found.
 	 */
-	// @formatter:on
-
 	static Stream<Arguments> negativeArgumentProvider() {
 		return Stream.of(arguments(
 				"to research retrospectively the efficacy of Erenumab's treatment, thus allowing to describe a summary more in line with the reality observed every day in clinical practice, relative to a sample of patients widely heterogeneous. The study aims to confirm the efficacy of Erenumab, in terms of reduction of migraine days per month, from baseline to month 12 of treatment. Additional objectives included a reduction in the number of days of symptomatic drug use and change from baseline in the Migraine Disability Assessment Score Questionnaire (MIDAS); Methods: the analysis included all patients treated for 12 months with Erenumab during the year 2019-2020. The population analyzed consists of twenty-six patients from the Neurology outpatient clinic in Fossombrone. Several quantitative and qualitative variables were recorded by reading the medical records of the patients. The MIDAS was administered to patients to assess the disability related to migraine; Results: at the end of treatment, a statistically significant reduction in the mean number of monthly migraine days, acute medication use per month, and MIDAS questionnaire score was observed; Conclusions: as a preventive treatment of episodic and chronic migraine, our analysis data confirm the efficacy of Erenumab for the prevention of the migraine. The success is achieved in 96% of cases.",

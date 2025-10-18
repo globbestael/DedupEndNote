@@ -37,6 +37,9 @@ public class ComparatorService {
 		return false;
 	}
 
+	/*
+	 * Compares the ISBNs or the ISSNs of 2 publications 
+	 */
 	public static boolean compareIssns(Publication r1, Publication r2) {
 		if (!r1.getIsbns().isEmpty() && !r2.getIsbns().isEmpty()) {
 			if (setsContainSameString(r1.getIsbns(), r2.getIsbns())) {
@@ -69,7 +72,7 @@ public class ComparatorService {
 		boolean isReply = r1.isReply() || r2.isReply();
 
 		if (set1.isEmpty() || set2.isEmpty()) {
-			log.trace("- 4. At least 1 of the records has no journal");
+			log.trace("- 4. At least 1 of the publications has no journal");
 			return false;
 		}
 
@@ -246,7 +249,7 @@ public class ComparatorService {
 			return true;
 		}
 		if (r1.isClinicalTrialGov() && r2.isClinicalTrialGov()) {
-			log.trace("- 3. Both records are from ClinicalTrials.gov");
+			log.trace("- 3. Both publications are from ClinicalTrials.gov");
 			return true;
 		}
 

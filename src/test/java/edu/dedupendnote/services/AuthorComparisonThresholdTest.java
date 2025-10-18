@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
@@ -46,8 +45,8 @@ class AuthorComparisonThresholdTest extends AuthorsBaseTest {
 		// triples.stream().limit(5).forEach(System.err::println);
 
 		for (Triple triple : triples) {
-			Publication r1 = fillRecord(triple.getAuthors1());
-			Publication r2 = fillRecord(triple.getAuthors2());
+			Publication r1 = fillPublication(triple.getAuthors1());
+			Publication r2 = fillPublication(triple.getAuthors2());
 			triple.setJws(getHighestSimilarity(r1.getAllAuthors(), r2.getAllAuthors()));
 		}
 		triples.sort(Comparator.comparing(Triple::getJws).reversed());
@@ -66,13 +65,4 @@ class AuthorComparisonThresholdTest extends AuthorsBaseTest {
 				"AUTHOR_SIMILARITY_NO_REPLY could have a higher value because 99% of validated authors pairs are above this threshold")
 				.isLessThan(DefaultAuthorsComparator.AUTHOR_SIMILARITY_NO_REPLY);
 	}
-
-	private Publication fillRecord(String authors) {
-		Publication r = new Publication();
-		List<String> authorList1 = Arrays.asList(authors.split("; "));
-		authorList1.stream().forEach(a -> r.addAuthors(a));
-		r.fillAllAuthors();
-		return r;
-	}
-
 }

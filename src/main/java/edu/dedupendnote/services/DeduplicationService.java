@@ -37,51 +37,51 @@ public class DeduplicationService {
 	 * Procedure for 1 file:
 	 *
 	 * 1. Do preliminary checks on the input file (EndNote IDs are present and unique) and exit when the checks do not pass.
-	 * 2. Read all EndNote records from inputfile and make Publication objects only with the fields relevant for deduplication.
+	 * 2. Read all EndNote publications from inputfile and make Publication objects only with the fields relevant for deduplication.
 	 *    Normalize fields as much as possible while calling the setters.
 	 *    Normalize the rest as the last field (EndNote ER field) is read.
-	 *    (All records start with kepRecord = true (default))
-	 * 3. Deduplicate the records.
+	 *    (All publications start with kepPublication = true (default))
+	 * 3. Deduplicate the publications.
 	 *    When duplicates are found:
 	 *    - put the id (EndNote ID field) of the first duplicate into the label (EndNote LB field) of all the duplicates
-	 *    - set kepRecord = false for all but the first duplicate
+	 *    - set kepPublication = false for all but the first duplicate
 	 *  4. Enrich the first duplicate with data from the other duplicates (DOI, starting page)
-	 *  5. Read the input file again, extract the ID and get the corresponding record.
-	 *     If the record is keptRecord = true,
-	 *     copy the original content of the fields of this record from the input file to the output file
+	 *  5. Read the input file again, extract the ID and get the corresponding publication.
+	 *     If the publication is keptPublication = true,
+	 *     copy the original content of the fields of this publication from the input file to the output file
 	 *     except for the fields where content is standardized (DOI) or where content is enriched from the duplicates.
 	 *
-	 *   If markMode is set, records are not enriched and ALL records are written back.
-	 *   If a record is a duplicate, the Label field (LB) contains the ID of the first duplicate found.
+	 *   If markMode is set, publications are not enriched and ALL publications are written back.
+	 *   If a publication is a duplicate, the Label field (LB) contains the ID of the first duplicate found.
 	 *
 	 *
 	 * Procedure for 2 files:
 	 *
-	 * 1. Do preliminary checks on input file for old records (EndNote IDs are present and unique) and exit when the checks do not pass.
-	 * 2. Read all EndNote records from this inputfile and make Publication objects only with the fields relevant for deduplication.
+	 * 1. Do preliminary checks on input file for old publications (EndNote IDs are present and unique) and exit when the checks do not pass.
+	 * 2. Read all EndNote publications from this inputfile and make Publication objects only with the fields relevant for deduplication.
 	 *    Normalize fields as much as possible while calling the setters.
 	 *    Normalize the rest as the last field (EndNote ER field) is read.
 	 *    Alter the ID by prefixing them with "-" (to distinguish them from the IDs of the second file and making them unique over both files).
-	 *    All OLD records start with kepRecord = false and presentInOldFile = true.
-	 * 3. Do preliminary checks on input file for new records (EndNote IDs are present and unique) and exit when the checks do not pass.
-	 * 4. Read all EndNote records from this inputfile and make Publication objects only with the fields relevant for deduplication.
+	 *    All OLD publications start with kepPublication = false and presentInOldFile = true.
+	 * 3. Do preliminary checks on input file for new publications (EndNote IDs are present and unique) and exit when the checks do not pass.
+	 * 4. Read all EndNote publications from this inputfile and make Publication objects only with the fields relevant for deduplication.
 	 *    Normalize fields as much as possible while calling the setters.
 	 *    Normalize the rest as the last field (EndNote ER field) is read.
-	 *    All NEW records start with kepRecord = true (default)  and presentInOldFile = false (default).
-	 * 5. Deduplicate the records.
+	 *    All NEW publications start with keptPublication = true (default)  and presentInOldFile = false (default).
+	 * 5. Deduplicate the publications.
 	 *    When duplicates are found:
 	 *    - put the id (EndNote ID field) of the first duplicate into the label (EndNote LB field) of all the duplicates
-	 *    - set kepRecord = false for all but the first duplicate
+	 *    - set keptPublication = false for all but the first duplicate
 	 * 6. Enrich the first duplicate with data from the other duplicates (DOI, starting page)
-	 *    only if the label exists and does not start with "-", i.e. is NOT a duplicate from an OLD record.
-	 * 7. Read the NEW input file again, extract the ID and get the corresponding record.
-	 *    If the record is keptRecord = true,
-	 *    copy the original content of the fields of this record from the input file to the output file
+	 *    only if the label exists and does not start with "-", i.e. is NOT a duplicate from an OLD publication.
+	 * 7. Read the NEW input file again, extract the ID and get the corresponding publication.
+	 *    If the publication is keptPublication = true,
+	 *    copy the original content of the fields of this publication from the input file to the output file
 	 *    except for the fields where content is standardized (DOI) or where content is enriched from the duplicates.
 	 *
-	 *  If markMode is set, records are not enriched and ALL records of the NEW inputfile are written back.
-	 *  If a record is a duplicate, the Label field (LB) contains the ID of the first duplicate found.
-	 *  If the label starts with "-", it is a duplicate from a record from the OLD input file.
+	 *  If markMode is set, publications are not enriched and ALL publications of the NEW inputfile are written back.
+	 *  If a publication is a duplicate, the Label field (LB) contains the ID of the first duplicate found.
+	 *  If the label starts with "-", it is a duplicate from a publication from the OLD input file.
 	 */
 	// @formatter:on
 	// @Autowired
@@ -112,9 +112,9 @@ public class DeduplicationService {
 			// In log messages this publication is called the pivot
 			Publication publication = publications.remove(0);
 			/*
-			 * If descending / OneFile mode: only records of year1 should be compared to records of year1 and year2.
-			 * The records of year2 will be compared in the next pair of years.
-			 * If ascending / TwoFile mode: publicationYear 0 records are at the head of the publicationList!
+			 * If descending / OneFile mode: only publications of year1 should be compared to publications of year1 and year2.
+			 * The publications of year2 will be compared in the next pair of years.
+			 * If ascending / TwoFile mode: publicationYear 0 publications are at the head of the publicationList!
 			 */
 			if ((descending && publication.getPublicationYear() < year) || (!descending
 					&& publication.getPublicationYear() != 0 && publication.getPublicationYear() > year)) {
@@ -162,7 +162,7 @@ public class DeduplicationService {
 						// publication.getId());
 						publication.setLabel(r.getLabel());
 					} else {
-						// log.debug("=== Both pivot {} and pub {} get label {} from the recordId of the pivot {}",
+						// log.debug("=== Both pivot {} and pub {} get label {} from the publicationId of the pivot {}",
 						// publication.getId(), r.getId(), publication.getId(), publication.getId());
 						publication.setLabel(publication.getId());
 						r.setLabel(publication.getId());
@@ -186,7 +186,7 @@ public class DeduplicationService {
 					}
 				}
 			}
-			wsMessage(wssessionId, "Working on %d for %d records (marked %d duplicates)".formatted(year,
+			wsMessage(wssessionId, "Working on %d for %d publications (marked %d duplicates)".formatted(year,
 					noOfPublications, noOfDuplicates));
 		}
 	}
@@ -195,11 +195,11 @@ public class DeduplicationService {
 		return !publications.stream().map(Publication::getId).allMatch(new HashSet<>()::add);
 	}
 
-	private boolean containsOnlyRecordsWithoutPublicationYear(List<Publication> publications) {
+	private boolean containsOnlyPublicationsWithoutPublicationYear(List<Publication> publications) {
 		return publications.stream().filter(r -> r.getPublicationYear() == 0).count() == publications.size();
 	}
 
-	private boolean containsRecordsWithoutId(List<Publication> publications) {
+	private boolean containsPublicationsWithoutId(List<Publication> publications) {
 		return publications.stream().filter(r -> r.getId() == null).count() > 0L;
 	}
 
@@ -217,9 +217,9 @@ public class DeduplicationService {
 		searchYearOneFile(publications, wssessionId);
 
 		if (markMode) { // no enrich(), and add / overwrite LB (label) field
-			int numberWritten = ioService.writeMarkedRecords(publications, inputFileName, outputFileName);
-			long labeledRecords = publications.stream().filter(r -> r.getLabel() != null).count();
-			s = "DONE: DedupEndNote has written " + numberWritten + " records with " + labeledRecords
+			int numberWritten = ioService.writeMarkedPublications(publications, inputFileName, outputFileName);
+			long labeledPublications = publications.stream().filter(r -> r.getLabel() != null).count();
+			s = "DONE: DedupEndNote has written " + numberWritten + " publications with " + labeledPublications
 					+ " duplicates marked in the Label field.";
 			wsMessage(wssessionId, s);
 			return s;
@@ -228,7 +228,7 @@ public class DeduplicationService {
 		wsMessage(wssessionId, "Enriching the " + publications.size() + " deduplicated results");
 		enrich(publications);
 		wsMessage(wssessionId, "Saving the " + publications.size() + " deduplicated results");
-		int numberWritten = ioService.writeDeduplicatedRecords(publications, inputFileName, outputFileName);
+		int numberWritten = ioService.writeDeduplicatedPublications(publications, inputFileName, outputFileName);
 		s = formatResultString(publications.size(), numberWritten);
 		wsMessage(wssessionId, s);
 
@@ -237,7 +237,7 @@ public class DeduplicationService {
 
 	public String deduplicateTwoFiles(String newInputFileName, String oldInputFileName, String outputFileName,
 			boolean markMode, String wssessionId) {
-		// read the old records and mark them as present, then add the new records
+		// read the old publications and mark them as present, then add the new publications
 		log.info("oldInputFileName: {}", oldInputFileName);
 		log.info("newInputFileName: {}", newInputFileName);
 		List<Publication> publications = ioService.readPublications(oldInputFileName);
@@ -248,63 +248,64 @@ public class DeduplicationService {
 			return s;
 		}
 
-		// Put "-" before the IDs of the old records. In this way the labels of the records (used for
-		// identifying duplicate records) will be unique over both lists.
-		// When writing the deduplicated records for the second list, records with label "-..." can
-		// be skipped because they are duplicates of records from the first list.
-		// When markMode is set, these records are written.
-		// Because of this "-", the records which have duplicates in the first file (label = "-...")
-		// can be distinguished from records which have duplicates in the second file.
+		// Put "-" before the IDs of the old publications. In this way the labels of the publications (used for
+		// identifying duplicate publications) will be unique over both lists.
+		// When writing the deduplicated publications for the second list, publications with label "-..." can
+		// be skipped because they are duplicates of publications from the first list.
+		// When markMode is set, these publications are written.
+		// Because of this "-", the publications which have duplicates in the first file (label = "-...")
+		// can be distinguished from publications which have duplicates in the second file.
 		publications.forEach(r -> {
 			r.setId("-" + r.getId());
 			r.setPresentInOldFile(true);
 		});
 
-		List<Publication> newRecords = ioService.readPublications(newInputFileName);
-		s = doSanityChecks(newRecords, newInputFileName);
+		List<Publication> newPublications = ioService.readPublications(newInputFileName);
+		s = doSanityChecks(newPublications, newInputFileName);
 		if (s != null) {
 			wsMessage(wssessionId, s);
 			return s;
 		}
-		publications.addAll(newRecords);
-		log.info("Records read from 2 files: {}", publications.size());
+		publications.addAll(newPublications);
+		log.info("Publications read from 2 files: {}", publications.size());
 
 		searchYearTwoFiles(publications, wssessionId);
 
 		if (markMode) { // no enrich(), and add / overwrite LB (label) field
-			int numberWritten = ioService.writeMarkedRecords(publications, newInputFileName, outputFileName);
-			long numberLabeledRecords = publications.stream()
+			int numberWritten = ioService.writeMarkedPublications(publications, newInputFileName, outputFileName);
+			long numberLabeledPublications = publications.stream()
 					.filter(r -> r.getLabel() != null && !r.isPresentInOldFile()).count();
-			s = "DONE: DedupEndNote has written %s records with %d duplicates marked in the Label field."
-					.formatted(numberWritten, numberLabeledRecords);
+			s = "DONE: DedupEndNote has written %s publications with %d duplicates marked in the Label field."
+					.formatted(numberWritten, numberLabeledPublications);
 			wsMessage(wssessionId, s);
 			return s;
 		}
 
 		enrich(publications);
-		// Get the records from the new file that are not duplicates or not duplicates of records of the old file
-		List<Publication> filteredRecords = publications.stream()
+		// Get the publications from the new file that are not duplicates or not duplicates of publications of the old file
+		List<Publication> filteredPublications = publications.stream()
 				.filter(r -> !r.isPresentInOldFile() && (r.getLabel() == null || !r.getLabel().startsWith("-")))
 				.toList();
-		log.error("Records to write: {}", filteredRecords.size());
-		int numberWritten = ioService.writeDeduplicatedRecords(filteredRecords, newInputFileName, outputFileName);
-		s = "DONE: DedupEndNote removed %d records from the new set, and has written %d records."
-				.formatted((newRecords.size() - numberWritten), numberWritten);
+		log.error("Publications to write: {}", filteredPublications.size());
+		int numberWritten = ioService.writeDeduplicatedPublications(filteredPublications, newInputFileName,
+				outputFileName);
+		s = "DONE: DedupEndNote removed %d publications from the new set, and has written %d publications."
+				.formatted((newPublications.size() - numberWritten), numberWritten);
 		wsMessage(wssessionId, s);
 		return s;
 	}
 
 	public String doSanityChecks(List<Publication> publications, String fileName) {
-		if (containsRecordsWithoutId(publications)) {
+		if (containsPublicationsWithoutId(publications)) {
 			return "ERROR: The input file " + fileName
-					+ " contains records without IDs. The input file is not an Export as RIS-file from an EndNote library!";
+					+ " contains publications without IDs. The input file is not an Export as RIS-file from an EndNote library!";
 		}
-		if (containsOnlyRecordsWithoutPublicationYear(publications)) {
-			return "ERROR: All records of the input file " + fileName
+		if (containsOnlyPublicationsWithoutPublicationYear(publications)) {
+			return "ERROR: All publications of the input file " + fileName
 					+ " have no Publication Year. The input file is not an Export as RIS-file from an EndNote library!";
 		}
 		if (containsDuplicateIds(publications)) {
-			return "ERROR: The IDs of the records of input file " + fileName
+			return "ERROR: The IDs of the publications of input file " + fileName
 					+ " are not unique. The input file is not an Export as RIS-file from 1 EndNote library!";
 		}
 		return null;
@@ -312,83 +313,87 @@ public class DeduplicationService {
 
 	private void enrich(List<Publication> publications) {
 		log.debug("Start enrich");
-		// First the records with duplicates
+		// First the publications with duplicates
 		Map<String, List<Publication>> labelMap = publications.stream()
 				// when comparing 2 files, duplicates from the old file start with "-"
 				.filter(r -> r.getLabel() != null && !r.getLabel().startsWith("-"))
 				.collect(Collectors.groupingBy(Publication::getLabel));
-		log.debug("Number of duplicate lists {}, and IDs of kept records: {}", labelMap.size(), labelMap.keySet());
-		List<Publication> recordList;
+		log.debug("Number of duplicate lists {}, and IDs of kept publications: {}", labelMap.size(), labelMap.keySet());
+		List<Publication> publicationList;
 		if (!labelMap.isEmpty()) {
 			for (Map.Entry<String, List<Publication>> entry : labelMap.entrySet()) {
-				recordList = entry.getValue();
-				Publication recordToKeep = recordList.remove(0);
-				log.debug("Kept: {}: {}", recordToKeep.getId(),
-						(recordToKeep.getTitles().isEmpty() ? "(no titles found)" : recordToKeep.getTitles().get(0)));
-				// Don't set keptRecord in compareSet(): trouble when multiple duplicates and no publication year
-				recordList.stream().forEach(r -> r.setKeptRecord(false));
+				publicationList = entry.getValue();
+				Publication publicationToKeep = publicationList.remove(0);
+				log.debug("Kept: {}: {}", publicationToKeep.getId(),
+						(publicationToKeep.getTitles().isEmpty() ? "(no titles found)"
+								: publicationToKeep.getTitles().get(0)));
+				// Don't set keptPublication in compareSet(): trouble when multiple duplicates and no publication year
+				publicationList.stream().forEach(r -> r.setKeptPublication(false));
 
 				// Reply and Retraction: replace the title with the longest title from the duplicates
-				if (recordToKeep.isReply() || (!recordToKeep.isClinicalTrialGov() && recordToKeep.getTitle() != null)) {
-					log.debug("Publication {} is a reply: ", recordToKeep.getId());
-					String longestTitle = recordList.stream()
+				if (publicationToKeep.isReply()
+						|| (!publicationToKeep.isClinicalTrialGov() && publicationToKeep.getTitle() != null)) {
+					log.debug("Publication {} is a reply: ", publicationToKeep.getId());
+					String longestTitle = publicationList.stream()
 							// .filter(Publication::isReply)
 							.map(r -> {
 								log.debug("Reply {} has title: {}.", r.getId(), r.getTitle());
 								return r.getTitle() != null ? r.getTitle() : r.getTitles().get(0);
 							}).max(Comparator.comparingInt(String::length)).orElse("");
 					// There are cases where not all titles are recognized as replies ->
-					// record.title can be null
-					if (recordToKeep.getTitle() == null || recordToKeep.getTitle().length() < longestTitle.length()) {
-						log.debug("REPLY: changing title {}\nto {}", recordToKeep.getTitle(), longestTitle);
-						recordToKeep.setTitle(longestTitle);
+					// publication.title can be null
+					if (publicationToKeep.getTitle() == null
+							|| publicationToKeep.getTitle().length() < longestTitle.length()) {
+						log.debug("REPLY: changing title {}\nto {}", publicationToKeep.getTitle(), longestTitle);
+						publicationToKeep.setTitle(longestTitle);
 					}
 				}
 				// Clinical trials from ClinicalTrials.gov: replace the title with the shortest title from the
 				// duplicates
-				if (recordToKeep.isClinicalTrialGov()) {
-					log.debug("Publication {} is a trial: ", recordToKeep.getId());
-					String shortestTitle = recordList.stream().map(r -> {
+				if (publicationToKeep.isClinicalTrialGov()) {
+					log.debug("Publication {} is a trial: ", publicationToKeep.getId());
+					String shortestTitle = publicationList.stream().map(r -> {
 						log.debug("Trial {} has title: {}.", r.getId(), r.getTitle());
 						return r.getTitle() != null ? r.getTitle() : r.getTitles().get(0);
 					}).min(Comparator.comparingInt(String::length)).orElse("");
 					// There are cases where not all titles are recognized as replies ->
-					// record.title can be null
-					if (recordToKeep.getTitle() == null || recordToKeep.getTitle().length() > shortestTitle.length()) {
-						log.debug("Trial: changing title {}\nto {}", recordToKeep.getTitle(), shortestTitle);
-						recordToKeep.setTitle(shortestTitle);
+					// publication.title can be null
+					if (publicationToKeep.getTitle() == null
+							|| publicationToKeep.getTitle().length() > shortestTitle.length()) {
+						log.debug("Trial: changing title {}\nto {}", publicationToKeep.getTitle(), shortestTitle);
+						publicationToKeep.setTitle(shortestTitle);
 					}
 				}
 
 				// Gather all the DOIs
-				final Set<String> dois = recordToKeep.getDois();
-				for (Publication p : recordList) {
+				final Set<String> dois = publicationToKeep.getDois();
+				for (Publication p : publicationList) {
 					if (!p.getDois().isEmpty()) {
 						dois.addAll(p.getDois());
 					}
 				}
 				if (!dois.isEmpty()) {
-					recordToKeep.setDois(dois);
+					publicationToKeep.setDois(dois);
 				}
 
 				// Add missing publication year
-				if (recordToKeep.getPublicationYear() == 0) {
-					log.debug("Reached record without publicationYear");
-					recordList.stream().filter(r -> r.getPublicationYear() != 0).findFirst()
-							.ifPresent(r -> recordToKeep.setPublicationYear(r.getPublicationYear()));
+				if (publicationToKeep.getPublicationYear() == 0) {
+					log.debug("Reached publication without publicationYear");
+					publicationList.stream().filter(r -> r.getPublicationYear() != 0).findFirst()
+							.ifPresent(r -> publicationToKeep.setPublicationYear(r.getPublicationYear()));
 				}
 
-				// Cochrane records with duplicates
-				if (recordToKeep.isCochrane()) {
-					replaceCochranePageStart(recordToKeep, recordList);
+				// Cochrane publications with duplicates
+				if (publicationToKeep.isCochrane()) {
+					replaceCochranePageStart(publicationToKeep, publicationList);
 				}
 
 				// Add missing startpages (and endpages)
-				if (recordToKeep.getPageStart() == null) {
-					log.debug("Reached record without pageStart: {}", recordToKeep.getAuthors());
-					recordList.stream().filter(r -> r.getPageStart() != null).findFirst().ifPresent(r -> {
-						recordToKeep.setPageStart(r.getPageStart());
-						recordToKeep.setPageEnd(r.getPageEnd());
+				if (publicationToKeep.getPageStart() == null) {
+					log.debug("Reached publication without pageStart: {}", publicationToKeep.getAuthors());
+					publicationList.stream().filter(r -> r.getPageStart() != null).findFirst().ifPresent(r -> {
+						publicationToKeep.setPageStart(r.getPageStart());
+						publicationToKeep.setPageEnd(r.getPageEnd());
 					});
 				}
 
@@ -397,12 +402,12 @@ public class DeduplicationService {
 				 * 10.2298/sarh0902077c in test database, but the 2 duplicates have not the same
 				 * author forms: "Culafic, D." (WoS) and "Dorde, Ć" (Scopus, error)
 				 * Better example: 4605 in BIG_TEST without authors, 21391 with authors.
-				 * But records can have different authors: in BIG_SET 4226 (none), 21471 (Banks ...), 36519 (Cabot ...)
+				 * But publications can have different authors: in BIG_SET 4226 (none), 21471 (Banks ...), 36519 (Cabot ...)
 				 */
 			}
 		}
 
-		// Then the Cochrane records without duplicates
+		// Then the Cochrane publications without duplicates
 		for (Publication r : publications) {
 			if (r.isCochrane() && r.getLabel() == null) {
 				replaceCochranePageStart(r, Collections.emptyList());
@@ -412,8 +417,8 @@ public class DeduplicationService {
 		log.debug("Finished enrich");
 	}
 
-	private void replaceCochranePageStart(Publication recordToKeep, List<Publication> duplicates) {
-		String pageStart = recordToKeep.getPageStart();
+	private void replaceCochranePageStart(Publication publicationToKeep, List<Publication> duplicates) {
+		String pageStart = publicationToKeep.getPageStart();
 		if (pageStart != null) {
 			pageStart = pageStart.toUpperCase();
 			// C: cochrane reviews nd protocols, E: editorials, M: ???
@@ -423,17 +428,17 @@ public class DeduplicationService {
 		}
 
 		if (pageStart == null) {
-			log.debug("Reached Cochrane record without pageStart, getting it from pageStart of the duplicates: {}",
-					recordToKeep.getAuthors());
+			log.debug("Reached Cochrane publication without pageStart, getting it from pageStart of the duplicates: {}",
+					publicationToKeep.getAuthors());
 			for (Publication r : duplicates) {
 				if (r.getPageStart() != null && r.getPageStart().toUpperCase().matches("^[CEM].+")) {
-					recordToKeep.setPageStart(r.getPageStart().toUpperCase());
+					publicationToKeep.setPageStart(r.getPageStart().toUpperCase());
 					return;
 				}
 			}
-			log.debug("Reached Cochrane record without pageStart, getting it from the DOIs: {}",
-					recordToKeep.getAuthors());
-			for (String doi : recordToKeep.getDois()) {
+			log.debug("Reached Cochrane publication without pageStart, getting it from the DOIs: {}",
+					publicationToKeep.getAuthors());
+			for (String doi : publicationToKeep.getDois()) {
 				Matcher matcher = cochraneIdentifierPattern.matcher(doi);
 				if (matcher.matches()) {
 					pageStart = matcher.group(1);
@@ -442,13 +447,13 @@ public class DeduplicationService {
 			}
 		}
 		if (pageStart != null) {
-			recordToKeep.setPageStart(pageStart.toUpperCase());
+			publicationToKeep.setPageStart(pageStart.toUpperCase());
 		}
 	}
 
 	public String formatResultString(int total, int totalWritten) {
-		return "DONE: DedupEndNote has deduplicated " + total + " records, has removed " + (total - totalWritten)
-				+ " duplicates, and has written " + totalWritten + " records.";
+		return "DONE: DedupEndNote has deduplicated " + total + " publications, has removed " + (total - totalWritten)
+				+ " duplicates, and has written " + totalWritten + " publications.";
 	}
 
 	public AuthorsComparator getAuthorsComparator() {
@@ -492,7 +497,7 @@ public class DeduplicationService {
 				yearSet.addAll(emptyYearlist.stream().filter(r -> r.getLabel() == null).toList());
 			}
 			yearSet.addAll(yearSets.getOrDefault(year - 1, Collections.emptyList()));
-			wsMessage(wssessionId, "Working on " + year + " for " + yearSet.size() + " records");
+			wsMessage(wssessionId, "Working on " + year + " for " + yearSet.size() + " publications");
 			compareSet(yearSet, year, true, wssessionId);
 			wsMessage(wssessionId, "PROGRESS: " + cumulativePercentages.get(year));
 		});
@@ -522,7 +527,7 @@ public class DeduplicationService {
 			}
 			yearSet.addAll(yearSets.get(year));
 			yearSet.addAll(yearSets.getOrDefault(year + 1, Collections.emptyList()));
-			wsMessage(wssessionId, "Working on " + year + " for " + yearSet.size() + " records");
+			wsMessage(wssessionId, "Working on " + year + " for " + yearSet.size() + " publications");
 			compareSet(yearSet, year, false, wssessionId);
 			wsMessage(wssessionId, "PROGRESS: " + cumulativePercentages.get(year));
 		});

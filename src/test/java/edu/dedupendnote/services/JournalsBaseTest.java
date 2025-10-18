@@ -103,12 +103,12 @@ class JournalsBaseTest extends BaseTest {
 		// triples.stream().limit(5).forEach(System.err::println);
 
 		for (Triple triple : triples) {
-			Publication r1 = new Publication();
-			r1.addJournals(triple.getJournal1());
-			Publication r2 = new Publication();
-			r2.addJournals(triple.getJournal2());
+			Publication p1 = new Publication();
+			IOService.addNormalizedJournal(triple.getJournal1(), p1);
+			Publication p2 = new Publication();
+			IOService.addNormalizedJournal(triple.getJournal2(), p2);
 
-			triple.setSimilar(ComparatorService.compareJournals(r1, r2));
+			triple.setSimilar(ComparatorService.compareJournals(p1, p2));
 		}
 
 		triples.stream().filter(t -> t.getSimilar() == false).forEach(System.err::println);

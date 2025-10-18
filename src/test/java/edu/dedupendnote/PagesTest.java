@@ -11,6 +11,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.boot.test.context.TestConfiguration;
 
 import edu.dedupendnote.domain.Publication;
+import edu.dedupendnote.services.IOService;
 
 @TestConfiguration
 class PagesTest {
@@ -18,13 +19,13 @@ class PagesTest {
 	@ParameterizedTest(name = "{index}: parsePages({0})=({1},{2},{3})")
 	@MethodSource("argumentProvider")
 	void parsePagesTest(String pages, String start, String end, String pageForComparison) {
-		Publication r = new Publication();
-		r.parsePages(pages, "DUMMY");
+		Publication p = new Publication();
+		IOService.addNormalizedPages(pages, "DUMMY", p);
 
 		SoftAssertions.assertSoftly(softAssertions -> {
-			softAssertions.assertThat(r.getPageStart()).as("PageStart comparison").isEqualTo(start);
-			softAssertions.assertThat(r.getPageEnd()).as("PageEnd comparison").isEqualTo(end);
-			softAssertions.assertThat(r.getPageForComparison()).as("Input '%s' has wrong pageForComparison", pages)
+			softAssertions.assertThat(p.getPageStart()).as("PageStart comparison").isEqualTo(start);
+			softAssertions.assertThat(p.getPageEnd()).as("PageEnd comparison").isEqualTo(end);
+			softAssertions.assertThat(p.getPageForComparison()).as("Input '%s' has wrong pageForComparison", pages)
 					.isEqualTo(pageForComparison);
 		});
 	}

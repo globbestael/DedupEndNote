@@ -17,6 +17,7 @@ import org.springframework.boot.test.context.TestConfiguration;
 import edu.dedupendnote.domain.Publication;
 import edu.dedupendnote.services.ComparatorService;
 import edu.dedupendnote.services.DeduplicationService;
+import edu.dedupendnote.services.IOService;
 import edu.dedupendnote.services.NormalizationService;
 import lombok.extern.slf4j.Slf4j;
 
@@ -65,15 +66,15 @@ class JaroWinklerJournalTest {
 	@ParameterizedTest(name = "{index}: jaroWinkler({0}, {1})")
 	@MethodSource("fullPositiveArgumentProvider")
 	void fullPositiveTest(String input1, String input2) {
-		Publication r1 = new Publication();
-		Publication r2 = new Publication();
+		Publication p1 = new Publication();
+		Publication p2 = new Publication();
 		log.debug("==================================================================");
 
-		r1.addJournals(input1);
-		r2.addJournals(input2);
+		IOService.addNormalizedJournal(input1, p1);
+		IOService.addNormalizedJournal(input2, p2);
 
-		assertThat(ComparatorService.compareJournals(r1, r2))
-				.as("Journals are NOT similar: " + r1.getJournals() + " versus " + r2.getJournals()).isTrue();
+		assertThat(ComparatorService.compareJournals(p1, p2))
+				.as("Journals are NOT similar: " + p1.getJournals() + " versus " + p2.getJournals()).isTrue();
 	}
 
 	/*
@@ -82,14 +83,14 @@ class JaroWinklerJournalTest {
 	@ParameterizedTest(name = "{index}: jaroWinkler({0}, {1})")
 	@MethodSource("fullNegativeArgumentProvider")
 	void fullNegativeTest(String input1, String input2) {
-		Publication r1 = new Publication();
-		Publication r2 = new Publication();
-		r1.addJournals(input1);
-		r2.addJournals(input2);
+		Publication p1 = new Publication();
+		Publication p2 = new Publication();
+		IOService.addNormalizedJournal(input1, p1);
+		IOService.addNormalizedJournal(input2, p2);
 
-		log.debug("Result: {}", ComparatorService.compareJournals(r1, r2));
-		assertThat(ComparatorService.compareJournals(r1, r2))
-				.as("Journals are similar: %s versus %s", r1.getJournals(), r2.getJournals()).isFalse();
+		log.debug("Result: {}", ComparatorService.compareJournals(p1, p2));
+		assertThat(ComparatorService.compareJournals(p1, p2))
+				.as("Journals are similar: %s versus %s", p1.getJournals(), p2.getJournals()).isFalse();
 	}
 
 	/*
@@ -98,18 +99,18 @@ class JaroWinklerJournalTest {
 	 */
 	@Test
 	void JournalFullCapsTest() {
-		Publication r1 = new Publication();
-		Publication r2 = new Publication();
+		Publication p1 = new Publication();
+		Publication p2 = new Publication();
 		// r1.addJournals("ARTHROSCOPY-THE JOURNAL OF ARTHROSCOPIC AND RELATED SURGERY");
 		// r2.addJournals("Arthroscopy : the journal of arthroscopic & related surgery :
 		// official publication of the Arthroscopy Association of North America and the
 		// International Arthroscopy Association");
-		r1.addJournals("Ann Intern Med");
-		r2.addJournals("ANNALS OF INTERNAL MEDICINE");
+		IOService.addNormalizedJournal("Ann Intern Med", p1);
+		IOService.addNormalizedJournal("ANNALS OF INTERNAL MEDICINE", p2);
 
-		log.debug("Result: {}", ComparatorService.compareJournals(r1, r2));
-		assertThat(ComparatorService.compareJournals(r1, r2))
-				.as("Journals are similar: %s versus %s", r1.getJournals(), r2.getJournals()).isTrue();
+		log.debug("Result: {}", ComparatorService.compareJournals(p1, p2));
+		assertThat(ComparatorService.compareJournals(p1, p2))
+				.as("Journals are similar: %s versus %s", p1.getJournals(), p2.getJournals()).isTrue();
 	}
 
 	/*
@@ -118,31 +119,31 @@ class JaroWinklerJournalTest {
 	@ParameterizedTest(name = "{index}: jaroWinkler({0}, {1})")
 	@MethodSource("slashArgumentProvider")
 	void slashTest(String input1, List<String> list) {
-		Publication r1 = new Publication();
-		r1.addJournals(input1);
+		Publication p1 = new Publication();
+		IOService.addNormalizedJournal(input1, p1);
 
-		assertThat(r1.getJournals()).containsAll(list);
+		assertThat(p1.getJournals()).containsAll(list);
 	}
 
 	@Test
 	void journalWithSquareBracketsAtEnd() {
-		Publication r1 = new Publication();
-		r1.addJournals("Zhonghua wai ke za zhi [Chinese journal of surgery]");
+		Publication p1 = new Publication();
+		IOService.addNormalizedJournal("Zhonghua wai ke za zhi [Chinese journal of surgery]", p1);
 
-		assertThat(r1.getJournals()).hasSize(2);
-		assertThat(r1.getJournals()).contains("Zhonghua wai ke za zhi");
-		assertThat(r1.getJournals()).contains("Chinese journal of surgery");
+		assertThat(p1.getJournals()).hasSize(2);
+		assertThat(p1.getJournals()).contains("Zhonghua wai ke za zhi");
+		assertThat(p1.getJournals()).contains("Chinese journal of surgery");
 	}
 
 	@Test
 	void journalWithSquareBracketsAtStart() {
-		Publication r1 = new Publication();
+		Publication p1 = new Publication();
 
-		r1.addJournals("[Rinshō ketsueki] The Japanese journal of clinical hematology");
+		IOService.addNormalizedJournal("[Rinsho ketsueki] The Japanese journal of clinical hematology", p1);
 
-		assertThat(r1.getJournals()).hasSize(2);
-		assertThat(r1.getJournals()).contains("Rinsho ketsueki");
-		assertThat(r1.getJournals()).contains("Japanese journal of clinical hematology");
+		assertThat(p1.getJournals()).hasSize(2);
+		assertThat(p1.getJournals()).contains("Rinsho ketsueki");
+		assertThat(p1.getJournals()).contains("Japanese journal of clinical hematology");
 	}
 
 	static Stream<Arguments> slashArgumentProvider() {
