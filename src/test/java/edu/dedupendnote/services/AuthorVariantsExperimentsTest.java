@@ -289,7 +289,7 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 
 	private void showTripleComparisonDetails(String nameExperiment, List<Triple> triples, boolean onlySummary) {
 		// double threshold = 0.85;
-		double threshold = DefaultAuthorsComparator.AUTHOR_SIMILARITY_NO_REPLY;
+		double threshold = DefaultAuthorsComparisonService.AUTHOR_SIMILARITY_NO_REPLY;
 
 		List<Triple> better = triples.stream().filter(t -> t.getJws() > threshold && t.getExpJws() <= threshold)
 				.collect(Collectors.toList());

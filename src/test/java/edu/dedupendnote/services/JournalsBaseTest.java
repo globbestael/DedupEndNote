@@ -108,7 +108,7 @@ class JournalsBaseTest extends BaseTest {
 			Publication p2 = new Publication();
 			IOService.addNormalizedJournal(triple.getJournal2(), p2);
 
-			triple.setSimilar(ComparatorService.compareJournals(p1, p2));
+			triple.setSimilar(ComparisonService.compareJournals(p1, p2));
 		}
 
 		triples.stream().filter(t -> t.getSimilar() == false).forEach(System.err::println);

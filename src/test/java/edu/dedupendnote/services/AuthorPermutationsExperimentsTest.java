@@ -72,9 +72,8 @@ class AuthorPermutationsExperimentsTest {
 		List<String> result = new ArrayList<>();
 		generatePermutations(authorsList, result, 0, "");
 
-		List<String> sorted = result.stream()
-			.sorted(Comparator.comparingInt(String::length))
-			.collect(Collectors.toList());
+		List<String> sorted = result.stream().sorted(Comparator.comparingInt(String::length))
+				.collect(Collectors.toList());
 		return sorted;
 	}
 
@@ -134,9 +133,7 @@ class AuthorPermutationsExperimentsTest {
 				System.err.println("Found at " + i);
 			}
 		}
-		assertThat(permutedAuthorLists)
-			.contains(other)
-			.hasSize(2187);
+		assertThat(permutedAuthorLists).contains(other).hasSize(2187);
 		assertThat(3 * 3 * 3 * 3 * 3 * 3 * 3).isEqualTo(2187);
 	}
 
@@ -157,10 +154,7 @@ class AuthorPermutationsExperimentsTest {
 				System.err.println("Found at " + i);
 			}
 		}
-		assertThat(permutedAuthorLists)
-			.contains(other)
-			.hasSize(144)
-			.hasSize(2 * 3 * 2 * 2 * 3 * 2);
+		assertThat(permutedAuthorLists).contains(other).hasSize(144).hasSize(2 * 3 * 2 * 2 * 3 * 2);
 	}
 
 }

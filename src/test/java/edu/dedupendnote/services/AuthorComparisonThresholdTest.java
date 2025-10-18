@@ -60,9 +60,9 @@ class AuthorComparisonThresholdTest extends AuthorsBaseTest {
 		}
 		assertThat(percentile(triples, 98))
 				.as("98% of validated authors pairs are above the threshold AUTHOR_SIMILARITY_NO_REPLY")
-				.isGreaterThan(DefaultAuthorsComparator.AUTHOR_SIMILARITY_NO_REPLY);
+				.isGreaterThan(DefaultAuthorsComparisonService.AUTHOR_SIMILARITY_NO_REPLY);
 		assertThat(percentile(triples, 99)).as(
 				"AUTHOR_SIMILARITY_NO_REPLY could have a higher value because 99% of validated authors pairs are above this threshold")
-				.isLessThan(DefaultAuthorsComparator.AUTHOR_SIMILARITY_NO_REPLY);
+				.isLessThan(DefaultAuthorsComparisonService.AUTHOR_SIMILARITY_NO_REPLY);
 	}
 }

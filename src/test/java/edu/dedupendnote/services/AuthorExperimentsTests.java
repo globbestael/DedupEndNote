@@ -17,14 +17,14 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 class AuthorExperimentsTests {
 	DeduplicationService service = new DeduplicationService();
-	AuthorsComparator authorsComparator = new ExperimentalAuthorsComparator();
-	DeduplicationService expService = new DeduplicationService(authorsComparator);
+	AuthorsComparisonService authorsComparisonService = new ExperimentalAuthorsComparator();
+	DeduplicationService expService = new DeduplicationService(authorsComparisonService);
 
 	String homeDir = System.getProperty("user.home");
 	String testdir = homeDir + "/dedupendnote_files";
 	String wssessionId = "";
 
-	public static class ExperimentalAuthorsComparator implements AuthorsComparator {
+	public static class ExperimentalAuthorsComparator implements AuthorsComparisonService {
 
 		public static final Double AUTHOR_SIMILARITY_NO_REPLY = 0.67 + 0.5;
 

@@ -15,7 +15,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.boot.test.context.TestConfiguration;
 
 import edu.dedupendnote.domain.Publication;
-import edu.dedupendnote.services.ComparatorService;
+import edu.dedupendnote.services.ComparisonService;
 import edu.dedupendnote.services.DeduplicationService;
 import edu.dedupendnote.services.IOService;
 import edu.dedupendnote.services.NormalizationService;
@@ -44,7 +44,7 @@ class JaroWinklerJournalTest {
 		// System.err.println(String.format("- 1: %s\n- 2: %s\n- 3: %s\n- 4: %s\n",
 		// input1, Publication.normalizeJava8(input1), input2,
 		// Publication.normalizeJava8(input2)));
-		assertThat(similarity).isGreaterThan(ComparatorService.JOURNAL_SIMILARITY_REPLY);
+		assertThat(similarity).isGreaterThan(ComparisonService.JOURNAL_SIMILARITY_REPLY);
 	}
 
 	/*
@@ -57,7 +57,7 @@ class JaroWinklerJournalTest {
 				NormalizationService.normalizeJournal(input2));
 		System.err.println("- 1: %s\n- 2: %s\n- 3: %s\n- 4: %s\n".formatted(input1,
 				NormalizationService.normalizeTitle(input1), input2, NormalizationService.normalizeTitle(input2)));
-		assertThat(similarity).isLessThanOrEqualTo(ComparatorService.JOURNAL_SIMILARITY_REPLY);
+		assertThat(similarity).isLessThanOrEqualTo(ComparisonService.JOURNAL_SIMILARITY_REPLY);
 	}
 
 	/*
@@ -73,7 +73,7 @@ class JaroWinklerJournalTest {
 		IOService.addNormalizedJournal(input1, p1);
 		IOService.addNormalizedJournal(input2, p2);
 
-		assertThat(ComparatorService.compareJournals(p1, p2))
+		assertThat(ComparisonService.compareJournals(p1, p2))
 				.as("Journals are NOT similar: " + p1.getJournals() + " versus " + p2.getJournals()).isTrue();
 	}
 
@@ -88,8 +88,8 @@ class JaroWinklerJournalTest {
 		IOService.addNormalizedJournal(input1, p1);
 		IOService.addNormalizedJournal(input2, p2);
 
-		log.debug("Result: {}", ComparatorService.compareJournals(p1, p2));
-		assertThat(ComparatorService.compareJournals(p1, p2))
+		log.debug("Result: {}", ComparisonService.compareJournals(p1, p2));
+		assertThat(ComparisonService.compareJournals(p1, p2))
 				.as("Journals are similar: %s versus %s", p1.getJournals(), p2.getJournals()).isFalse();
 	}
 
@@ -108,8 +108,8 @@ class JaroWinklerJournalTest {
 		IOService.addNormalizedJournal("Ann Intern Med", p1);
 		IOService.addNormalizedJournal("ANNALS OF INTERNAL MEDICINE", p2);
 
-		log.debug("Result: {}", ComparatorService.compareJournals(p1, p2));
-		assertThat(ComparatorService.compareJournals(p1, p2))
+		log.debug("Result: {}", ComparisonService.compareJournals(p1, p2));
+		assertThat(ComparisonService.compareJournals(p1, p2))
 				.as("Journals are similar: %s versus %s", p1.getJournals(), p2.getJournals()).isTrue();
 	}
 

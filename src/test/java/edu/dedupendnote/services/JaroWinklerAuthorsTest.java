@@ -22,7 +22,7 @@ class JaroWinklerAuthorsTest extends AuthorsBaseTest {
 
 	DeduplicationService service = new DeduplicationService();
 
-	AuthorsComparator authorsComparator = service.getAuthorsComparator();
+	AuthorsComparisonService authorsComparisonService = service.getAuthorsComparisonService();
 
 	/*
 	 * Uses the real AuthorComparator and the first similarity above the
@@ -36,12 +36,12 @@ class JaroWinklerAuthorsTest extends AuthorsBaseTest {
 		Publication r1 = fillPublication(input1);
 		Publication r2 = fillPublication(input2);
 
-		authorsComparator.compare(r1, r2);
-		Double similarity = authorsComparator.getSimilarity();
+		authorsComparisonService.compare(r1, r2);
+		Double similarity = authorsComparisonService.getSimilarity();
 
 		assertThat(similarity).as("\nAuthors1: %s\nAuthors2: %s", r1.getAllAuthors().get(0), r2.getAllAuthors().get(0))
 				.isEqualTo(lowestAcceptedSimilarity, within(0.01))
-				.isGreaterThan(DefaultAuthorsComparator.AUTHOR_SIMILARITY_NO_REPLY);
+				.isGreaterThan(DefaultAuthorsComparisonService.AUTHOR_SIMILARITY_NO_REPLY);
 	}
 
 	/*
@@ -69,7 +69,7 @@ class JaroWinklerAuthorsTest extends AuthorsBaseTest {
 		assertThat(highestSimilarity)
 				.as("\nAuthors1: %s\nAuthors2: %s", r1.getAllAuthors().get(0), r2.getAllAuthors().get(0))
 				.isEqualTo(highSimilarity, within(0.01))
-				.isGreaterThan(DefaultAuthorsComparator.AUTHOR_SIMILARITY_NO_REPLY);
+				.isGreaterThan(DefaultAuthorsComparisonService.AUTHOR_SIMILARITY_NO_REPLY);
 	}
 
 	@ParameterizedTest(name = "{index}: jaroWinkler({0}, {1})={2}")
@@ -78,11 +78,11 @@ class JaroWinklerAuthorsTest extends AuthorsBaseTest {
 		Publication r1 = fillPublication(input1);
 		Publication r2 = fillPublication(input2);
 
-		authorsComparator.compare(r1, r2);
-		Double similarity = authorsComparator.getSimilarity();
+		authorsComparisonService.compare(r1, r2);
+		Double similarity = authorsComparisonService.getSimilarity();
 
 		assertThat(similarity).isEqualTo(expected, within(0.01))
-				.isLessThan(DefaultAuthorsComparator.AUTHOR_SIMILARITY_NO_REPLY);
+				.isLessThan(DefaultAuthorsComparisonService.AUTHOR_SIMILARITY_NO_REPLY);
 	}
 
 	/*
@@ -99,7 +99,7 @@ class JaroWinklerAuthorsTest extends AuthorsBaseTest {
 		Double similarity = jws.apply(r1.getAllAuthors().get(0), r2.getAllAuthors().get(0));
 
 		assertThat(similarity).isEqualTo(expected, within(0.01))
-				.isLessThan(DefaultAuthorsComparator.AUTHOR_SIMILARITY_NO_REPLY);
+				.isLessThan(DefaultAuthorsComparisonService.AUTHOR_SIMILARITY_NO_REPLY);
 	}
 
 	// The 3rd argument is JWS score without transposed authors, the 4th argument with

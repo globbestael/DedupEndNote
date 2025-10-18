@@ -13,7 +13,7 @@ import org.springframework.boot.test.context.TestConfiguration;
 import edu.dedupendnote.domain.Publication;
 
 @TestConfiguration
-class ComparatorServiceTest {
+class ComparisonServiceTest {
 
 	@ParameterizedTest(name = "{index}: compareTitles({0}, {1})={2}")
 	@MethodSource("titleArgumentProvider")
@@ -23,7 +23,7 @@ class ComparatorServiceTest {
 		IOService.addNormalizedTitle(title1, p1);
 		IOService.addNormalizedTitle(title2, p2);
 
-		boolean result = ComparatorService.compareTitles(p1, p2);
+		boolean result = ComparisonService.compareTitles(p1, p2);
 		assertThat(result).as("Not equal: '%s' and '%s'", title1, title2).isEqualTo(expected);
 	}
 
@@ -35,7 +35,7 @@ class ComparatorServiceTest {
 		IOService.addNormalizedJournal(journal1, p1);
 		IOService.addNormalizedJournal(journal2, p2);
 
-		boolean result = ComparatorService.compareJournals(p1, p2);
+		boolean result = ComparisonService.compareJournals(p1, p2);
 		assertThat(result).isEqualTo(expected);
 	}
 
@@ -57,7 +57,7 @@ class ComparatorServiceTest {
 		p1.getIssns().addAll(NormalizationService.normalizeInputIssns(issn1).issns());
 		p2.getIssns().addAll(NormalizationService.normalizeInputIssns(issn2).issns());
 
-		boolean result = ComparatorService.compareIssns(p1, p2);
+		boolean result = ComparisonService.compareIssns(p1, p2);
 		assertThat(result).isEqualTo(expected);
 	}
 

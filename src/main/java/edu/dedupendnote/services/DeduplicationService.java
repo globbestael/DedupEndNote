@@ -24,7 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 public class DeduplicationService {
 
-	protected AuthorsComparator authorsComparator;
+	protected AuthorsComparisonService authorsComparisonService;
 
 	// the DOIs have been lowercased
 	private static Pattern cochraneIdentifierPattern = Pattern.compile("^.*10.1002/14651858.([a-z][a-z]\\d+).*",
@@ -88,18 +88,18 @@ public class DeduplicationService {
 	private SimpMessagingTemplate simpMessagingTemplate;
 
 	public DeduplicationService() {
-		this.authorsComparator = new DefaultAuthorsComparator();
+		this.authorsComparisonService = new DefaultAuthorsComparisonService();
 		this.ioService = new IOService();
 	}
 
 	public DeduplicationService(SimpMessagingTemplate simpMessagingTemplate) {
-		this.authorsComparator = new DefaultAuthorsComparator();
+		this.authorsComparisonService = new DefaultAuthorsComparisonService();
 		this.ioService = new IOService();
 		this.simpMessagingTemplate = simpMessagingTemplate;
 	}
 
-	public DeduplicationService(AuthorsComparator authorsComparator) {
-		this.authorsComparator = authorsComparator;
+	public DeduplicationService(AuthorsComparisonService authorsComparisonService) {
+		this.authorsComparisonService = authorsComparisonService;
 		this.ioService = new IOService();
 	}
 
@@ -128,11 +128,12 @@ public class DeduplicationService {
 				if (log.isTraceEnabled()) {
 					log.trace("\nStarting comparison {} - {}", publication.getId(), r.getId());
 				}
-				if (ComparatorService.compareStartPageOrDoi(r, publication, map)
-						&& authorsComparator.compare(r, publication) && ComparatorService.compareTitles(r, publication)
-						&& (ComparatorService.compareSameDois(r, publication, map.get("sameDois"))
-								|| ComparatorService.compareIssns(r, publication)
-								|| ComparatorService.compareJournals(r, publication))) {
+				if (ComparisonService.compareStartPageOrDoi(r, publication, map)
+						&& authorsComparisonService.compare(r, publication)
+						&& ComparisonService.compareTitles(r, publication)
+						&& (ComparisonService.compareSameDois(r, publication, map.get("sameDois"))
+								|| ComparisonService.compareIssns(r, publication)
+								|| ComparisonService.compareJournals(r, publication))) {
 
 					noOfDuplicates++;
 					// set the label
@@ -456,8 +457,8 @@ public class DeduplicationService {
 				+ " duplicates, and has written " + totalWritten + " publications.";
 	}
 
-	public AuthorsComparator getAuthorsComparator() {
-		return authorsComparator;
+	public AuthorsComparisonService getAuthorsComparisonService() {
+		return authorsComparisonService;
 	}
 
 	// FIXME: is Apache Commons CollectionUtils better?

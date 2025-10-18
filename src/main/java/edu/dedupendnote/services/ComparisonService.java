@@ -16,7 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
-public class ComparatorService {
+public class ComparisonService {
 
 	public static final Double JOURNAL_SIMILARITY_NO_REPLY = 0.90;
 	public static final Double JOURNAL_SIMILARITY_REPLY = 0.93;

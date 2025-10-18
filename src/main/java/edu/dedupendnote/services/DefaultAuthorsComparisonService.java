@@ -6,12 +6,10 @@ import edu.dedupendnote.domain.Publication;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class DefaultAuthorsComparator implements AuthorsComparator {
+public class DefaultAuthorsComparisonService implements AuthorsComparisonService {
 
 	public static final Double AUTHOR_SIMILARITY_NO_REPLY = 0.67;
-
 	public static final Double AUTHOR_SIMILARITY_REPLY_INSUFFICIENT_STARTPAGES_AND_DOIS = 0.80;
-
 	public static final Double AUTHOR_SIMILARITY_REPLY_SUFFICIENT_STARTPAGES_OR_DOIS = 0.75;
 
 	private static JaroWinklerSimilarity jws = new JaroWinklerSimilarity();
