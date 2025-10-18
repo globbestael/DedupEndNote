@@ -34,18 +34,14 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 public class IOService {
 
-	/*
-	 * Patterns
-	 */
-	// FIXME: pattern names should be uppercased
 	/**
 	 * Pattern to identify conferences in the T3 field
 	 */
-	private static final Pattern conferencePattern = Pattern
+	private static final Pattern CONFERENCE_PATTERN = Pattern
 			.compile("((^\\d)|(.*(\\d{4}|Annual|Conference|Congress|Meeting|Society|Symposium))).*");
 
 	/** Pattern to identify clinical trials phase (1 ..4, i .. iv) */
-	private static final Pattern phasePattern = Pattern.compile(".*phase\\s[\\di].*", Pattern.CASE_INSENSITIVE);
+	private static final Pattern PHASE_PATTERN = Pattern.compile(".*phase\\s[\\di].*", Pattern.CASE_INSENSITIVE);
 
 	// @formatter:on
 	/*
@@ -103,12 +99,12 @@ public class IOService {
 	 */
 	// @formatter:on
 	// FIXME: Can some of these 4 patterns be merged?
-	private static final Pattern replyPattern = Pattern
+	private static final Pattern REPLY_PATTERN = Pattern
 			.compile("(^C(omment|OMMENT)|^R[Ee]: .+|.*\\breply\\b.*|.*author(.+)respon.*|^response$)");
-	private static final Pattern erratumPattern = Pattern.compile(
+	private static final Pattern ERRATUM_PATTERN = Pattern.compile(
 			"(^(Correction|Corrigendum|Erratum)( to (?=[A-Z])| to '|( to)?: ).*)|(.*(Correction|Corrigendum|Erratum)$)");
-	public static final Pattern sourcePattern = Pattern.compile(".+(\\(vol \\d+\\D+\\d+\\D+\\d+\\D*\\))");
-	public static final Pattern commentPattern = Pattern.compile(
+	public static final Pattern SOURCE_PATTERN = Pattern.compile(".+(\\(vol \\d+\\D+\\d+\\D+\\d+\\D*\\))");
+	public static final Pattern COMMENT_PATTERN = Pattern.compile(
 			"(e)?Comment(|s|ary)\\b.*|.+[cC]omment(|s|ary)( from| on| to)?:? [A-Z'\"].+|.+[Cc]omment(|s|ary)|.+COMMENT");
 
 	/*
@@ -116,7 +112,7 @@ public class IOService {
 	 * NOT "[Fieldname]  - ," (EndNote X9.3.3) This pattern skips that initial
 	 * comma, not the space which may come after that comma!
 	 */
-	public static final Pattern risLinePattern = Pattern.compile("(^[A-Z][A-Z0-9])( {2}-[ ,\\u00A0])(.*)$");
+	public static final Pattern RIS_LINE_PATTERN = Pattern.compile("(^[A-Z][A-Z0-9])( {2}-[ ,\\u00A0])(.*)$");
 
 	/**
 	 * All white space characters within input fields will replaced with a normal SPACE. LINE SEPARATOR and NO-BREAK
@@ -159,7 +155,7 @@ public class IOService {
 			String line;
 			while ((line = br.readLine()) != null) {
 				line = unusualWhiteSpacePattern.matcher(line).replaceAll(" ");
-				Matcher matcher = risLinePattern.matcher(line);
+				Matcher matcher = RIS_LINE_PATTERN.matcher(line);
 				if (matcher.matches()) {
 					fieldName = matcher.group(1);
 					fieldContent = matcher.group(3).strip();
@@ -280,7 +276,7 @@ public class IOService {
 					 */
 					// @formatter:on
 					case "T3": // Book section
-						if (!conferencePattern.matcher(fieldContent).matches()) {
+						if (!CONFERENCE_PATTERN.matcher(fieldContent).matches()) {
 							addNormalizedJournal(fieldContent, publication);
 							addNormalizedTitle(fieldContent, publication);
 						}
@@ -292,14 +288,14 @@ public class IOService {
 						addNormalizedTitle(fieldContent, publication);
 						// Don't do this in IOService::readPublications because these 2 patterns are only applied to TI
 						// field, not to the other fields which are added to List<String> titles
-						if (replyPattern.matcher(fieldContent.toLowerCase()).matches()
-								|| erratumPattern.matcher(fieldContent).matches()
-								|| (fieldContent.endsWith(")") && sourcePattern.matcher(fieldContent).matches())
-								|| commentPattern.matcher(fieldContent).matches()) {
+						if (REPLY_PATTERN.matcher(fieldContent.toLowerCase()).matches()
+								|| ERRATUM_PATTERN.matcher(fieldContent).matches()
+								|| (fieldContent.endsWith(")") && SOURCE_PATTERN.matcher(fieldContent).matches())
+								|| COMMENT_PATTERN.matcher(fieldContent).matches()) {
 							publication.setReply(true);
 							publication.setTitle(fieldContent);
 						}
-						if (phasePattern.matcher(fieldContent.toLowerCase()).matches()) {
+						if (PHASE_PATTERN.matcher(fieldContent.toLowerCase()).matches()) {
 							publication.setPhase(true);
 						}
 						titleCache = fieldContent;
@@ -477,7 +473,7 @@ public class IOService {
 			while ((line = br.readLine()) != null) {
 				lineNumber++;
 				line = unusualWhiteSpacePattern.matcher(line).replaceAll(" ");
-				Matcher matcher = risLinePattern.matcher(line);
+				Matcher matcher = RIS_LINE_PATTERN.matcher(line);
 				if (matcher.matches()) {
 					fieldName = matcher.group(1);
 					fieldContent = matcher.group(3);
@@ -561,7 +557,7 @@ public class IOService {
 
 			while ((line = br.readLine()) != null) {
 				line = unusualWhiteSpacePattern.matcher(line).replaceAll(" ");
-				Matcher matcher = risLinePattern.matcher(line);
+				Matcher matcher = RIS_LINE_PATTERN.matcher(line);
 				if (matcher.matches()) {
 					fieldName = matcher.group(1);
 					fieldContent = matcher.group(3);
@@ -724,7 +720,7 @@ public class IOService {
 			Integer id = null;
 			while ((line = br.readLine()) != null) {
 				line = unusualWhiteSpacePattern.matcher(line).replaceAll(" ");
-				Matcher matcher = risLinePattern.matcher(line);
+				Matcher matcher = RIS_LINE_PATTERN.matcher(line);
 				if (matcher.matches()) {
 					fieldName = matcher.group(1);
 					fieldContent = matcher.group(3);
@@ -794,7 +790,7 @@ public class IOService {
 			Integer id = null;
 			while ((line = br.readLine()) != null) {
 				line = unusualWhiteSpacePattern.matcher(line).replaceAll(" ");
-				Matcher matcher = risLinePattern.matcher(line);
+				Matcher matcher = RIS_LINE_PATTERN.matcher(line);
 				if (matcher.matches()) {
 					fieldName = matcher.group(1);
 					fieldContent = matcher.group(3);

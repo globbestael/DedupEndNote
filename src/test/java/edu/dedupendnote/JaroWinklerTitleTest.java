@@ -15,7 +15,7 @@ import java.util.stream.Stream;
 
 import org.apache.commons.text.similarity.JaroWinklerSimilarity;
 import org.assertj.core.api.SoftAssertions;
-import org.junit.jupiter.api.Disabled;
+// import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -35,27 +35,6 @@ class JaroWinklerTitleTest {
 
 	String testdir = homeDir + "/dedupendnote_files";
 	JaroWinklerSimilarity jws = new JaroWinklerSimilarity();
-
-	/*
-	 * This test is not useful because it uses only the input title itself, not it's variants (main title, subtitles)
-	 */
-	@Disabled("Compares only full title, not the parts")
-	@ParameterizedTest(name = "{index}: jaroWinkler({0}, {1})={2}")
-	@MethodSource("positiveArgumentProvider")
-	void jwPositiveTest(String input1, String input2, double expected) {
-		Double similarity = jws.apply(NormalizationService.normalizeTitle(input1),
-				NormalizationService.normalizeTitle(input2));
-		System.err.println("- 1: %s\n- 2: %s\n- 3: %s\n- 4: %s\n".formatted(input1,
-				NormalizationService.normalizeTitle(input1), input2, NormalizationService.normalizeTitle(input2)));
-
-		SoftAssertions softAssertions = new SoftAssertions();
-		softAssertions.assertThat(similarity).as("\nTitle1: %s\nTitle2: %s", input1, input2).isEqualTo(expected,
-				within(0.01));
-		softAssertions.assertThat(similarity)
-				.as("\nTitle1: %s\nTitle2: %s\nGreaterThanOrEqualTo threshold", input1, input2)
-				.isGreaterThanOrEqualTo(ComparisonService.TITLE_SIMILARITY_SUFFICIENT_STARTPAGES_OR_DOIS);
-		softAssertions.assertAll();
-	}
 
 	@ParameterizedTest(name = "{index}: jaroWinkler({0}, {1})={2}")
 	@MethodSource("positiveArgumentProvider")
@@ -494,7 +473,7 @@ class JaroWinklerTitleTest {
 		List<String> results = new ArrayList<>();
 
 		for (String line : lines) {
-			Matcher matcher = IOService.sourcePattern.matcher(line);
+			Matcher matcher = IOService.SOURCE_PATTERN.matcher(line);
 			if (matcher.matches()) {
 				System.err.println("\t- " + matcher.group(1));
 				results.add(matcher.group(1));
@@ -505,7 +484,7 @@ class JaroWinklerTitleTest {
 		assertThat(lines).as("There are more than 100 lines").hasSizeGreaterThan(100);
 	}
 
-	@Disabled("While refactoring")
+	// @Disabled("While refactoring")
 	@Test
 	void testPositiveCommentsFromFile() throws IOException {
 		String fileName = testdir + "/all/All__comment__positive_examples.txt";
@@ -516,7 +495,7 @@ class JaroWinklerTitleTest {
 		List<String> positiveResults = new ArrayList<>();
 
 		for (String line : lines) {
-			Matcher matcher = IOService.commentPattern.matcher(line);
+			Matcher matcher = IOService.COMMENT_PATTERN.matcher(line);
 			if (matcher.matches()) {
 				System.err.println("- Positive comment caught: " + line);
 				positiveResults.add(line);
@@ -535,7 +514,7 @@ class JaroWinklerTitleTest {
 		softAssertions.assertAll();
 	}
 
-	@Disabled("While refactoring")
+	// 	@Disabled("While refactoring")
 	@Test
 	void testNegativeCommentsFromFile() throws IOException {
 		String fileName = testdir + "/all/All__comment__negative_examples.txt";
@@ -545,7 +524,7 @@ class JaroWinklerTitleTest {
 		List<String> negativeResults = new ArrayList<>();
 
 		for (String line : lines) {
-			Matcher matcher = IOService.commentPattern.matcher(line);
+			Matcher matcher = IOService.COMMENT_PATTERN.matcher(line);
 			if (matcher.matches()) {
 				System.err.println("- Negative comment passed: " + line);
 				negativeResults.add(line);
@@ -560,7 +539,7 @@ class JaroWinklerTitleTest {
 		softAssertions.assertAll();
 	}
 
-	@Disabled("While refactoring")
+	//	@Disabled("While refactoring")
 	@Test
 	void testPositiveCommentsAndRepliesFromFile() throws IOException {
 		String fileName = testdir + "/all/All__comment_AND_reply__positive_examples.txt";
@@ -571,7 +550,7 @@ class JaroWinklerTitleTest {
 		List<String> positiveResults = new ArrayList<>();
 
 		for (String line : lines) {
-			Matcher matcher = IOService.commentPattern.matcher(line);
+			Matcher matcher = IOService.COMMENT_PATTERN.matcher(line);
 			if (matcher.matches()) {
 				System.err.println("- Positive comment caught: " + line);
 				positiveResults.add(line);

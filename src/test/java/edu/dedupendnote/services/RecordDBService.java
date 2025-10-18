@@ -81,7 +81,7 @@ public class RecordDBService {
 			Publication publication = null;
 			while ((line = br.readLine()) != null) {
 				line = IOService.unusualWhiteSpacePattern.matcher(line).replaceAll(" ");
-				Matcher matcher = IOService.risLinePattern.matcher(line);
+				Matcher matcher = IOService.RIS_LINE_PATTERN.matcher(line);
 				if (matcher.matches()) {
 					fieldName = matcher.group(1);
 					fieldContent = matcher.group(3);

@@ -68,12 +68,12 @@ class DedupEndNoteApplicationTests {
 		}
 
 		// LINE SEPARATOR messes with '.*$'
-		Matcher matcher = IOService.risLinePattern.matcher(line);
+		Matcher matcher = IOService.RIS_LINE_PATTERN.matcher(line);
 		assertThat(matcher.matches()).as("LINE SEPARATOR messes with '.*$'").isFalse();
 
 		// Replacing the LINE SEPARATOR is necessary
 		line = line.replaceAll("\\u2028", " ");
-		matcher = IOService.risLinePattern.matcher(line);
+		matcher = IOService.RIS_LINE_PATTERN.matcher(line);
 
 		assertThat(matcher.matches()).isTrue();
 		assertThat(matcher.group(1)).isEqualTo("ST");
