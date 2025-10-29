@@ -21,7 +21,7 @@ import edu.dedupendnote.domain.Publication;
 import edu.dedupendnote.domain.PublicationDB;
 import edu.dedupendnote.services.NormalizationService.authorRecord;
 import edu.dedupendnote.services.NormalizationService.isbnIssnRecord;
-import edu.dedupendnote.services.NormalizationService.pageRecord;
+import edu.dedupendnote.services.NormalizationService.PageRecord;
 import edu.dedupendnote.services.NormalizationService.titleRecord;
 import lombok.extern.slf4j.Slf4j;
 
@@ -217,7 +217,8 @@ public class IOService {
 						addNormalizedJournal(fieldContent, publication);
 						break;
 					case "OP":
-						// in PubMed: original title, in Web of Science (at least for conference papers): conference title
+						// in PubMed: original title, in Web of Science (at least for conference papers): conference
+						// title
 						if ("CONF".equals(publication.getReferenceType())) {
 							addNormalizedJournal(fieldContent, publication);
 						} else {
@@ -380,15 +381,16 @@ public class IOService {
 	}
 
 	public static void addNormalizedPages(String fieldContent, String fieldName, Publication publication) {
-		pageRecord normalizedPages = NormalizationService.normalizeInputPages(fieldContent, fieldName);
+		PageRecord normalizedPages = NormalizationService.normalizeInputPages(fieldContent, fieldName);
 		if (publication.getPageForComparison() != null && (!normalizedPages.originalPages().contains("-")
 				|| normalizedPages.originalPages().startsWith("1-"))) {
 			;
 		} else {
 			publication.setPageStart(normalizedPages.pageStart());
 			publication.setPageEnd(normalizedPages.pageEnd());
-			publication.setPagesWithComma(normalizedPages.pagesWithComma());
+			// publication.setPagesWithComma(normalizedPages.pagesWithComma());
 			publication.setPageForComparison(normalizedPages.pageForComparison());
+			publication.setPagesOutput(normalizedPages.pagesOutput());
 			publication.setSeveralPages(normalizedPages.severalPages());
 		}
 	}
@@ -619,13 +621,21 @@ public class IOService {
 				map.put("DO", "https://doi.org/"
 						+ publication.getDois().stream().collect(Collectors.joining("\nhttps://doi.org/")));
 			}
-			if (publication.getPageStart() != null) {
-				if (publication.getPageEnd() != null && !publication.getPageEnd().equals(publication.getPageStart())) {
-					map.put("SP", publication.getPageStart() + (publication.isPagesWithComma() ? ", " : "-") + publication.getPageEnd());
+			// FIXME: should look at pagesOutput field
+			if (publication.getPagesOutput() != null) {
+				if (publication.getPagesOutput().isEmpty()) {
+					map.remove("SP");
 				} else {
-					map.put("SP", publication.getPageStart());
+					map.put("SP", publication.getPagesOutput());
 				}
 			}
+			// if (publication.getPageStart() != null) {
+			// 	if (publication.getPageEnd() != null && !publication.getPageEnd().equals(publication.getPageStart())) {
+			// 		map.put("SP", publication.getPageStart() + (publication.isPagesWithComma() ? ", " : "-") + publication.getPageEnd());
+			// 	} else {
+			// 		map.put("SP", publication.getPageStart());
+			// 	}
+			// }
 			if (publication.isReply() || publication.getTitle() != null) {
 				map.put("TI", publication.getTitle());
 				map.put("ST", publication.getTitle());

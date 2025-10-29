@@ -24,19 +24,6 @@ public class ComparisonService {
 	public static final Double TITLE_SIMILARITY_PHASE = 0.96;
 	public static final Double TITLE_SIMILARITY_SUFFICIENT_STARTPAGES_OR_DOIS = 0.89;
 
-	public static boolean compareSameDois(Publication r1, Publication r2, boolean sameDois) {
-		if (sameDois) {
-			if (log.isTraceEnabled()) {
-				log.trace("- 4. DOIs are the same (ISSNs and Journals are NOT compared)");
-			}
-			return true;
-		}
-		if (log.isTraceEnabled()) {
-			log.trace("- 4. DOIs are NOT the same: {} and {}", r1.getDois(), r2.getDois());
-		}
-		return false;
-	}
-
 	/*
 	 * Compares the ISBNs or the ISSNs of 2 publications 
 	 */
@@ -176,7 +163,23 @@ public class ComparisonService {
 		return false;
 	}
 
-	public static boolean compareStartPageOrDoi(Publication r1, Publication r2, Map<String, Boolean> map) {
+	/*
+	 * Does NOT compare the DOIs of 2 publications, but the field map.sameDois in the compareSet method
+	 */
+	public static boolean compareSameDois(Publication r1, Publication r2, boolean sameDois) {
+		if (sameDois) {
+			if (log.isTraceEnabled()) {
+				log.trace("- 4. DOIs are the same (ISSNs and Journals are NOT compared)");
+			}
+			return true;
+		}
+		if (log.isTraceEnabled()) {
+			log.trace("- 4. DOIs are NOT the same: {} and {}", r1.getDois(), r2.getDois());
+		}
+		return false;
+	}
+
+	public static boolean compareStartPagesOrDois(Publication r1, Publication r2, Map<String, Boolean> map) {
 		Set<String> dois1 = r1.getDois();
 		Set<String> dois2 = r2.getDois();
 		boolean bothCochrane = r1.isCochrane() && r2.isCochrane();

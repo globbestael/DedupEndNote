@@ -24,21 +24,15 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 class JournalsBaseTest extends BaseTest {
-	DeduplicationService deduplicationService = new DeduplicationService();
-
 	String homeDir = System.getProperty("user.home");
-
 	String testdir = homeDir + "/dedupendnote_files";
-
 	List<Triple> localTriples = new ArrayList<>();
 
 	@Data
 	public class Triple {
 
 		String journal1;
-
 		String journal2;
-
 		Boolean similar = false;
 
 		public String toString() {
@@ -98,7 +92,7 @@ class JournalsBaseTest extends BaseTest {
 	}
 
 	@Test
-	void compareJournalsTest() throws IOException {
+	void fnCompareJournalsTest() throws IOException {
 		List<Triple> triples = getValidatedJournalPairs();
 		// triples.stream().limit(5).forEach(System.err::println);
 

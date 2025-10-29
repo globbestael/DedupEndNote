@@ -21,8 +21,6 @@ import org.springframework.boot.test.context.TestConfiguration;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
-import edu.dedupendnote.domain.Publication;
-import edu.dedupendnote.services.ComparisonService;
 import edu.dedupendnote.services.DeduplicationService;
 import edu.dedupendnote.services.IOService;
 import edu.dedupendnote.services.NormalizationService;
@@ -163,30 +161,6 @@ class DedupEndNoteApplicationTests {
 		Set<String> issns = NormalizationService.normalizeInputIssns(issn).issns();
 
 		assertThat(issns).isEmpty();
-	}
-
-	@Test
-	void compareIssns() {
-		Publication r1 = new Publication();
-		Publication r2 = new Publication();
-		r1.getIssns().addAll(NormalizationService.normalizeInputIssns("0000-0000 1111-1111").issns());
-		r2.getIssns().addAll(NormalizationService.normalizeInputIssns("2222-2222 1111-1111").issns());
-
-		assertThat(ComparisonService.compareIssns(r1, r2)).isTrue();
-
-		Publication r3 = new Publication();
-		Publication r4 = new Publication();
-		r3.getIssns().addAll(NormalizationService.normalizeInputIssns("0000-0000").issns());
-		r4.getIssns().addAll(NormalizationService.normalizeInputIssns("1111-1111 2222-2222").issns());
-
-		assertThat(ComparisonService.compareIssns(r3, r4)).isFalse();
-
-		Publication r5 = new Publication();
-		Publication r6 = new Publication();
-		r5.getIssns().addAll(NormalizationService.normalizeInputIssns("1234-568x (Print)").issns());
-		r6.getIssns().addAll(NormalizationService.normalizeInputIssns("1234568X (ISSN)").issns());
-
-		assertThat(ComparisonService.compareIssns(r5, r6)).isTrue();
 	}
 
 	@Test

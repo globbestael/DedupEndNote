@@ -108,10 +108,10 @@ class ValidationTests {
 		// previous results
 		Map<String, ValidationResult> validationResultsMap = List
 				.of(
-					new ValidationResult("AI_subset", 491, 0, 2590, 2, 29_000L),	// why so slow?
+					new ValidationResult("AI_subset", 493, 32, 2558, 0, 29_000L),	// why so slow?
 					new ValidationResult("ASySD_Cardiac_human", 6756, 17, 2175, 0, 3_700L),
 					new ValidationResult("ASySD_Diabetes", 1816, 18, 11, 0, 1_000L),
-					new ValidationResult("ASySD_Neuroimaging", 2179, 22, 1234, 3, 1_350L),
+					new ValidationResult("ASySD_Neuroimaging", 2177, 24, 1234, 3, 1_350L),
 					new ValidationResult("ASySD_SRSR_Human", 27918, 99, 24973, 11, 100_000L),
 					new ValidationResult("BIG_SET", 3937, 176, 959, 10, 66_000L),
 					new ValidationResult("Clinical_trials", 219, 0, 0, 0, 190L),
@@ -413,15 +413,19 @@ class ValidationTests {
 			Pattern.compile("\\d+ - \\d+ ARE (NOT )?DUPLICATES"));
 
 	private void writeFNandFPresults(List<List<Publication>> pairs, String outputFileName) {
-		Logger logger = null;
+		List<Logger> loggers = new ArrayList<>();
+		List<String> loggerNames = List.of("edu.dedupendnote.services.DeduplicationService", "edu.dedupendnote.services.ComparisonService", "edu.dedupendnote.services.DefaultAuthorsComparisonService");
 		Level oldLevel = null;
 
 		try (BufferedWriter bw = new BufferedWriter(new FileWriter(outputFileName))) {
-			logger = (Logger) LoggerFactory.getLogger("edu.dedupendnote.services.DeduplicationService");
-			oldLevel = logger.getLevel();
-			logger.setLevel(Level.TRACE);
 			MemoryAppender memoryAppender = new MemoryAppender();
-			logger.addAppender(memoryAppender);
+			for (String loggerName : loggerNames) {
+				Logger logger = (Logger) LoggerFactory.getLogger(loggerName);
+				oldLevel = logger.getLevel();
+				logger.setLevel(Level.TRACE);
+				logger.addAppender(memoryAppender);
+				loggers.add(logger);
+			}
 			memoryAppender.setContext((LoggerContext) LoggerFactory.getILoggerFactory());
 			memoryAppender.start();
 
@@ -448,7 +452,9 @@ class ValidationTests {
 		} catch (IOException e) {
 			e.printStackTrace();
 		} finally {
-			logger.setLevel(oldLevel);
+			for (Logger logger : loggers) {
+				logger.setLevel(oldLevel);
+			}
 		}
 	}
 

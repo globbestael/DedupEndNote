@@ -17,7 +17,7 @@ public class BaseTest {
 
 	protected JaroWinklerSimilarity jws = new JaroWinklerSimilarity();
 
-	protected Double getHighestSimilarity(List<String> listAuthors1, List<String> listAuthors2) {
+	protected Double getHighestSimilarityForAuthors(List<String> listAuthors1, List<String> listAuthors2) {
 		Double highestSimilarity = 0.0;
 
 		for (String authors1 : listAuthors1) {

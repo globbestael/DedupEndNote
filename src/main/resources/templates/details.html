@@ -48,11 +48,11 @@
                                     they the same?</a></li>
                             <li><a href="#authors" class="link-underline-light">Authors: Is the Jaro-Winkler similarity
                                     of the first 40 authors &gt; <span
-                                        th:text="${T(edu.dedupendnote.services.DeduplicationService.DefaultAuthorsComparator).AUTHOR_SIMILARITY_NO_REPLY}">-0.67?</span></a>
+                                        th:text="${T(edu.dedupendnote.services.DefaultAuthorsComparisonService).AUTHOR_SIMILARITY_NO_REPLY}">-0.67?</span></a>
                             </li>
                             <li><a href="#titles" class="link-underline-light">Title: Is the Jaro-Winkler similarity of
                                     (one of) the normalized titles &gt; <span
-                                        th:text="${T(edu.dedupendnote.services.DeduplicationService).TITLE_SIMILARITY_SUFFICIENT_STARTPAGES_OR_DOIS}">-0.90</span>?</a>
+                                        th:text="${T(edu.dedupendnote.services.ComparisonService).TITLE_SIMILARITY_SUFFICIENT_STARTPAGES_OR_DOIS}">-0.90</span>?</a>
                             </li>
                             <li><a href="#isbn_issn_journal" class="link-underline-light">ISBN, ISSN or Journal: Are
                                     they the same (ISBN, ISSN) or similar (Journal)?</a></li>
@@ -102,7 +102,7 @@
                         </ul>
 
                         <h3 id="authors">3. Authors: Is the Jaro-Winkler similarity of the first 40 authors &gt; <span
-                                th:text="${T(edu.dedupendnote.services.DeduplicationService.DefaultAuthorsComparator).AUTHOR_SIMILARITY_NO_REPLY}">-0.67</span>?
+                                th:text="${T(edu.dedupendnote.services.DefaultAuthorsComparisonService).AUTHOR_SIMILARITY_NO_REPLY}">-0.67</span>?
                         </h3>
                         <p>Jaro-Winkler similarity: See this <a
                                 href="https://en.wikipedia.org/wiki/Jaro%E2%80%93Winkler_distance"
@@ -143,7 +143,7 @@
 
                         <h3 id="titles">4. Title: Is the Jaro-Winkler similarity of (one of) the normalized titles &gt;
                             <span
-                                th:text="${T(edu.dedupendnote.services.DeduplicationService).TITLE_SIMILARITY_SUFFICIENT_STARTPAGES_OR_DOIS}">-0.90</span>?
+                                th:text="${T(edu.dedupendnote.services.ComparisonService).TITLE_SIMILARITY_SUFFICIENT_STARTPAGES_OR_DOIS}">-0.90</span>?
                         </h3>
                         <p>The fields Original publication (OP), Short Title (ST), Title (TI) and sometimes Book section
                             (T3,
@@ -172,7 +172,7 @@
                             <li>Insufficient data: If one of the records is a reply, erratum or comment (see below), the
                                 titles are not compared / the answer is YES (but the Jaro-Winkler similarity of the
                                 authors should be &gt; <span
-                                    th:text="${T(edu.dedupendnote.services.DeduplicationService.DefaultAuthorsComparator).AUTHOR_SIMILARITY_REPLY_SUFFICIENT_STARTPAGES_OR_DOIS}">-0.75</span>
+                                    th:text="${T(edu.dedupendnote.services.DefaultAuthorsComparisonService).AUTHOR_SIMILARITY_REPLY_SUFFICIENT_STARTPAGES_OR_DOIS}">-0.75</span>
                                 and the comparison between the journals is more strict).</li>
                         </ul>
 
@@ -1106,21 +1106,21 @@
                                             <td rowspan="3">Authors</td>
                                             <td>default (i.e. not a Reply)</td>
                                             <td
-                                                th:text="${T(edu.dedupendnote.services.DeduplicationService.DefaultAuthorsComparator).AUTHOR_SIMILARITY_NO_REPLY}">
+                                                th:text="${T(edu.dedupendnote.services.DefaultAuthorsComparisonService).AUTHOR_SIMILARITY_NO_REPLY}">
                                                 -0.67</td>
                                             <td></td>
                                         </tr>
                                         <tr>
                                             <td>Reply and sufficient Start Pages</td>
                                             <td
-                                                th:text="${T(edu.dedupendnote.services.DeduplicationService.DefaultAuthorsComparator).AUTHOR_SIMILARITY_REPLY_SUFFICIENT_STARTPAGES_OR_DOIS}">
+                                                th:text="${T(edu.dedupendnote.services.DefaultAuthorsComparisonService).AUTHOR_SIMILARITY_REPLY_SUFFICIENT_STARTPAGES_OR_DOIS}">
                                                 -0.75</td>
                                             <td>When a Reply the titles are not compared</td>
                                         </tr>
                                         <tr>
                                             <td>Reply and insufficient Start Pages</td>
                                             <td
-                                                th:text="${T(edu.dedupendnote.services.DeduplicationService.DefaultAuthorsComparator).AUTHOR_SIMILARITY_REPLY_INSUFFICIENT_STARTPAGES_AND_DOIS}">
+                                                th:text="${T(edu.dedupendnote.services.DefaultAuthorsComparisonService).AUTHOR_SIMILARITY_REPLY_INSUFFICIENT_STARTPAGES_AND_DOIS}">
                                                 -0.80</td>
                                             <td>When a Reply the titles are not compared</td>
                                         </tr>
@@ -1143,14 +1143,14 @@
                                             <td rowspan="2">Title</td>
                                             <td>Sufficient Start Pages or DOIs</td>
                                             <td
-                                                th:text="${T(edu.dedupendnote.services.DeduplicationService).TITLE_SIMILARITY_SUFFICIENT_STARTPAGES_OR_DOIS}">
+                                                th:text="${T(edu.dedupendnote.services.ComparisonService).TITLE_SIMILARITY_SUFFICIENT_STARTPAGES_OR_DOIS}">
                                                 -0.90</td>
                                             <td></td>
                                         </tr>
                                         <tr>
                                             <td>Insufficient Start Pages and DOIs</td>
                                             <td
-                                                th:text="${T(edu.dedupendnote.services.DeduplicationService).TITLE_SIMILARITY_INSUFFICIENT_STARTPAGES_AND_DOIS}">
+                                                th:text="${T(edu.dedupendnote.services.ComparisonService).TITLE_SIMILARITY_INSUFFICIENT_STARTPAGES_AND_DOIS}">
                                                 -0.94</td>
                                             <td></td>
                                         </tr>

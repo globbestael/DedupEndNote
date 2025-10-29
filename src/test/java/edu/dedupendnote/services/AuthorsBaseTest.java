@@ -71,13 +71,12 @@ class AuthorsBaseTest extends BaseTest {
 	 *   AND ((BIG_SET_TRUTH.Validated)=True));
 	 *
 	 * The whole file validated_authors_pairs.txt is created on the TRUTH files for
-	 * BIG_SET, SRA2_Cytology_screening, SRA2_Haematology, SRA2_Respiratory. 
+	 * BIG_SET, SRA2_Cytology_screening, SRA2_Haematology, SRA2_Respiratory, TIL.
+	 *  
 	 * The whole file validated_authors_pairs_2.txt is created on the TRUTH files for 
-	 * BIG_SET, SRA2_Cytology_screening, SRA2_Haematology, SRA2_Respiratory, ASySD_SRSR_Human,
-	 * McKeown_2021. 
+	 * BIG_SET, SRA2_Cytology_screening, SRA2_Haematology, SRA2_Respiratory, ASySD_SRSR_Human, McKeown_2021. 
 	 * But both last files have often bad format for authors (no ';' etc).
-	 * McKeown: authors run together as 1 aithor name: records from database cctr
-	 * (Cochrane Central?) e.g.:
+	 * McKeown: authors run together as 1 aithor name: records from database cctr (Cochrane Central?) e.g.:
 	 * "Heekeren K, Daumann J. Neukirch A. Stock C. Kawohl W. Norra C. Waberski T. D. Gouzoulis-Mayfrank E."
 	 *
 	 * Because of MS Access limitations (authors is a Long Text / Memo field) the file
@@ -91,10 +90,6 @@ class AuthorsBaseTest extends BaseTest {
 		Stream<String> lines = Files.lines(path);
 		lines.forEach(l -> {
 			String[] parts = l.split("\t");
-			if (NormalizationService.ANONYMOUS_OR_GROUPNAME_PATTERN.matcher(parts[0]).find()
-					|| NormalizationService.ANONYMOUS_OR_GROUPNAME_PATTERN.matcher(parts[1]).find()) {
-				return;
-			}
 			Triple triple = new Triple();
 			localTriples.add(triple);
 			triple.setAuthors1(parts[0]);
@@ -103,7 +98,7 @@ class AuthorsBaseTest extends BaseTest {
 		lines.close();
 		log.error("There were {} triples", localTriples.size());
 		// deduplicate
-		localTriples = localTriples.stream().distinct().collect(Collectors.toList());
+		//		localTriples = localTriples.stream().distinct().collect(Collectors.toList());
 		log.error("There are {} distinct triples", localTriples.size());
 
 		assertThat(localTriples).as("There are more than 100 authors pairs").hasSizeGreaterThan(100);

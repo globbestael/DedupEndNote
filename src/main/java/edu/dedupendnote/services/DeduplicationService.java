@@ -128,7 +128,7 @@ public class DeduplicationService {
 				if (log.isTraceEnabled()) {
 					log.trace("\nStarting comparison {} - {}", publication.getId(), r.getId());
 				}
-				if (ComparisonService.compareStartPageOrDoi(r, publication, map)
+				if (ComparisonService.compareStartPagesOrDois(r, publication, map)
 						&& authorsComparisonService.compare(r, publication)
 						&& ComparisonService.compareTitles(r, publication)
 						&& (ComparisonService.compareSameDois(r, publication, map.get("sameDois"))
@@ -283,7 +283,8 @@ public class DeduplicationService {
 		}
 
 		enrich(publications);
-		// Get the publications from the new file that are not duplicates or not duplicates of publications of the old file
+		// Get the publications from the new file that are not duplicates or not duplicates of publications of the old
+		// file
 		List<Publication> filteredPublications = publications.stream()
 				.filter(r -> !r.isPresentInOldFile() && (r.getLabel() == null || !r.getLabel().startsWith("-")))
 				.toList();

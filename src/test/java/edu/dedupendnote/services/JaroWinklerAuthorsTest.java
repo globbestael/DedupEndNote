@@ -36,11 +36,13 @@ class JaroWinklerAuthorsTest extends AuthorsBaseTest {
 		Publication r1 = fillPublication(input1);
 		Publication r2 = fillPublication(input2);
 
+		// assertThat(lowestAcceptedSimilarity).isEqualTo(highestSimilarity);
 		authorsComparisonService.compare(r1, r2);
 		Double similarity = authorsComparisonService.getSimilarity();
 
 		assertThat(similarity).as("\nAuthors1: %s\nAuthors2: %s", r1.getAllAuthors().get(0), r2.getAllAuthors().get(0))
-				.isEqualTo(lowestAcceptedSimilarity, within(0.01))
+				// .isEqualTo(lowestAcceptedSimilarity, within(0.01))
+				.isEqualTo(highestSimilarity, within(0.01))
 				.isGreaterThan(DefaultAuthorsComparisonService.AUTHOR_SIMILARITY_NO_REPLY);
 	}
 
@@ -150,7 +152,7 @@ class JaroWinklerAuthorsTest extends AuthorsBaseTest {
 			arguments(
 				"Lv, Y; Qi, X; Xia, J; Fan, D; Han, G", 
 				"Lv, Y; Qi, XS; Xia, JL; Fan, DM; Han, GH", 
-				0.98,0.98), // when initials get form "JK" instead of "J. K.": 0.89 --> 0.98
+				0.98, 0.98), // when initials get form "JK" instead of "J. K.": 0.89 --> 0.98
 			arguments(
 				"Lv, Y.; Qi, X.; Xia, J.; Fan, D.; Han, G.",
 				"Lv, Y.; Qi, X. S.; Xia, J. L.; Fan, D. M.; Han, G. H.", 

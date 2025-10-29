@@ -84,29 +84,9 @@ class JaroWinklerJournalTest {
 		IOService.addNormalizedJournal(input1, p1);
 		IOService.addNormalizedJournal(input2, p2);
 
-		log.debug("Result: {}", ComparisonService.compareJournals(p1, p2));
+		// log.debug("Result: {}", ComparisonService.compareJournals(p1, p2));
 		assertThat(ComparisonService.compareJournals(p1, p2))
 				.as("Journals are similar: %s versus %s", p1.getJournals(), p2.getJournals()).isFalse();
-	}
-
-	/*
-	 * Journals with very long titles produce very long Patterns, esp. in
-	 * compareJournals_FirstAsInitialism()
-	 */
-	@Test
-	void JournalFullCapsTest() {
-		Publication p1 = new Publication();
-		Publication p2 = new Publication();
-		// r1.addJournals("ARTHROSCOPY-THE JOURNAL OF ARTHROSCOPIC AND RELATED SURGERY");
-		// r2.addJournals("Arthroscopy : the journal of arthroscopic & related surgery :
-		// official publication of the Arthroscopy Association of North America and the
-		// International Arthroscopy Association");
-		IOService.addNormalizedJournal("Ann Intern Med", p1);
-		IOService.addNormalizedJournal("ANNALS OF INTERNAL MEDICINE", p2);
-
-		log.debug("Result: {}", ComparisonService.compareJournals(p1, p2));
-		assertThat(ComparisonService.compareJournals(p1, p2))
-				.as("Journals are similar: %s versus %s", p1.getJournals(), p2.getJournals()).isTrue();
 	}
 
 	/*

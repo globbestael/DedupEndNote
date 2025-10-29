@@ -44,11 +44,11 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 			Publication r1 = fillPublication(triple.getAuthors1());
 			Publication r2 = fillPublication(triple.getAuthors2());
 
-			triple.setJws(getHighestSimilarity(r1.getAllAuthors(), r2.getAllAuthors()));
+			triple.setJws(getHighestSimilarityForAuthors(r1.getAllAuthors(), r2.getAllAuthors()));
 
 			r1 = fillPublicationAddAuthorsWithoutPreprocessing(triple.getAuthors1());
 			r2 = fillPublicationAddAuthorsWithoutPreprocessing(triple.getAuthors2());
-			triple.setExpJws(getHighestSimilarity(r1.getAllAuthors(), r2.getAllAuthors()));
+			triple.setExpJws(getHighestSimilarityForAuthors(r1.getAllAuthors(), r2.getAllAuthors()));
 		}
 		// @formatter:off
 		/*
@@ -83,11 +83,11 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 			Publication r1 = fillPublication(triple.getAuthors1());
 			Publication r2 = fillPublication(triple.getAuthors2());
 
-			triple.setJws(getHighestSimilarity(r1.getAllAuthors(), r2.getAllAuthors()));
+			triple.setJws(getHighestSimilarityForAuthors(r1.getAllAuthors(), r2.getAllAuthors()));
 
 			r1 = fillPublicationAddAuthorsLimitedToFirstLetters(triple.getAuthors1());
 			r2 = fillPublicationAddAuthorsLimitedToFirstLetters(triple.getAuthors2());
-			triple.setExpJws(getHighestSimilarity(r1.getAllAuthors(), r2.getAllAuthors()));
+			triple.setExpJws(getHighestSimilarityForAuthors(r1.getAllAuthors(), r2.getAllAuthors()));
 		}
 
 		showTripleComparisonDetails("AuthorsLimitedToFirstLetters", triples, true);
@@ -138,7 +138,7 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 			Publication r1 = fillPublication(triple.getAuthors1());
 			Publication r2 = fillPublication(triple.getAuthors2());
 
-			triple.setJws(getHighestSimilarity(r1.getAllAuthors(), r2.getAllAuthors()));
+			triple.setJws(getHighestSimilarityForAuthors(r1.getAllAuthors(), r2.getAllAuthors()));
 
 			List<String> authorList1 = Arrays.asList(triple.getAuthors1().split("; "));
 			List<String> authorList2 = Arrays.asList(triple.getAuthors2().split("; "));
@@ -146,7 +146,7 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 
 			r1 = fillPublication(authorList1.subList(0, min).stream().collect(Collectors.joining("; ")));
 			r2 = fillPublication(authorList2.subList(0, min).stream().collect(Collectors.joining("; ")));
-			triple.setExpJws(getHighestSimilarity(r1.getAllAuthors(), r2.getAllAuthors()));
+			triple.setExpJws(getHighestSimilarityForAuthors(r1.getAllAuthors(), r2.getAllAuthors()));
 		}
 
 		showTripleComparisonDetails("compareSameNumberOfAuthors", triples, true);
@@ -177,7 +177,7 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 			Publication r1 = fillPublication(triple.getAuthors1());
 			Publication r2 = fillPublication(triple.getAuthors2());
 
-			triple.setJws(getHighestSimilarity(r1.getAllAuthors(), r2.getAllAuthors()));
+			triple.setJws(getHighestSimilarityForAuthors(r1.getAllAuthors(), r2.getAllAuthors()));
 
 			List<String> authorList1 = Arrays.asList(triple.getAuthors1().split("; "));
 			if (authorList1.size() > limit) {
@@ -190,7 +190,7 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 
 			r1 = fillPublication(authorList1.stream().collect(Collectors.joining("; ")));
 			r2 = fillPublication(authorList2.stream().collect(Collectors.joining("; ")));
-			triple.setExpJws(getHighestSimilarity(r1.getAllAuthors(), r2.getAllAuthors()));
+			triple.setExpJws(getHighestSimilarityForAuthors(r1.getAllAuthors(), r2.getAllAuthors()));
 		}
 
 		showTripleComparisonDetails("compareOnlyFirst10Authors", triples, true);
@@ -221,7 +221,7 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 			Publication r1 = fillPublication(triple.getAuthors1());
 			Publication r2 = fillPublication(triple.getAuthors2());
 
-			triple.setJws(getHighestSimilarity(r1.getAllAuthors(), r2.getAllAuthors()));
+			triple.setJws(getHighestSimilarityForAuthors(r1.getAllAuthors(), r2.getAllAuthors()));
 
 			List<String> authorList1 = Arrays.asList(triple.getAuthors1().split("; "));
 			if (authorList1.size() > limit) {
@@ -234,7 +234,7 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 
 			r1 = fillPublication(authorList1.stream().collect(Collectors.joining("; ")));
 			r2 = fillPublication(authorList2.stream().collect(Collectors.joining("; ")));
-			triple.setExpJws(getHighestSimilarity(r1.getAllAuthors(), r2.getAllAuthors()));
+			triple.setExpJws(getHighestSimilarityForAuthors(r1.getAllAuthors(), r2.getAllAuthors()));
 		}
 
 		showTripleComparisonDetails("compareOnlyFirst5Authors", triples, false);

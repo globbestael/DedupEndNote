@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -29,8 +30,8 @@ public class NormalizationService {
 	private static final Pattern DOI_PATTERN = Pattern.compile("\\b(10.\\d{4,9}/[-._;()<>/:a-z0-9]+)\\b");
 
 	/**
-	 * ISSN/ISBN pattern: very crude pattern for ISSN, ISBN-10 and ISBN-13. 
-	 * Will accept invalid input: 1234-x567, "-1-2-30x4", ISBN-13 with a "X" check digit
+	 * ISSN/ISBN pattern: very crude pattern for ISSN, ISBN-10 and ISBN-13. Will accept invalid input: 1234-x567,
+	 * "-1-2-30x4", ISBN-13 with a "X" check digit
 	 */
 	private static final Pattern ISSN_ISBN_PATTERN = Pattern.compile("\\b([-\\dxX]{8,17})\\b");
 
@@ -52,9 +53,15 @@ public class NormalizationService {
 	 * "UNSP ..." (and variants) should be cleaned from the C7 field (WoS). Import may have changed UNSP" Into "Unsp".
 	 * "author..." (reply etc): delete rest of string
 	 */
-	private static final Pattern PAGES_ADDITIONS_PATTERN = Pattern.compile("((UNSP|Unsp)\\s*|; author.+$)");
+	// private static final Pattern PAGES_ADDITIONS_PATTERN = Pattern.compile("(^(UNSP|Article)\\s*|; author.+$)",
+	// Pattern.CASE_INSENSITIVE);
+	private static final Pattern PAGES_ADDITIONS_PATTERN = Pattern.compile("^(UNSP|Article)\\s*",
+			Pattern.CASE_INSENSITIVE);
 
-	private static final Pattern PAGES_DATE_PATTERN = Pattern
+	/**
+	 * Month names as part of pages field
+	 */
+	private static final Pattern PAGES_MONTH_PATTERN = Pattern
 			.compile("\\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\\b");
 
 	private static final Pattern FIRST_PAGES_GROUP = Pattern.compile("^([^-,;]+)([,;])(.*)$");
@@ -229,8 +236,8 @@ public class NormalizationService {
 	private static final Pattern JOURNAL_OTHER_ROUND_BRACKETS_PATTERN = Pattern.compile("[\\)\\(]");
 
 	/**
-	 * ":" or "/"  and SPACE and all following characters: will be removed. 
-	 * E.g. "BJOG: An International Journal of Obstetrics and Gynaecology" --> "BJOG"
+	 * ":" or "/" and SPACE and all following characters: will be removed. E.g. "BJOG: An International Journal of
+	 * Obstetrics and Gynaecology" --> "BJOG"
 	 * 
 	 * The space is wanted to prevent splitting in types as "Hematology/oncology".
 	 */
@@ -258,9 +265,9 @@ public class NormalizationService {
 
 	/**
 	 * A number or ". Conference" and all following characters: The number and all following characters will be removed.
-	 * E.g.:
-	 * - "Clinical neuropharmacology.12 Suppl 2 ()(pp v-xii; S1-105) 1989.Date of Publication: 1989." --> "Clinical neuropharmacology" 
-	 * - "European Respiratory Journal. Conference: European Respiratory Society Annual Congress" (Cochrane publications)
+	 * E.g.: - "Clinical neuropharmacology.12 Suppl 2 ()(pp v-xii; S1-105) 1989.Date of Publication: 1989." -->
+	 * "Clinical neuropharmacology" - "European Respiratory Journal. Conference: European Respiratory Society Annual
+	 * Congress" (Cochrane publications)
 	 */
 	public static final Pattern JOURNAL_EXTRA_PATTERN = Pattern.compile("^(.+?)((\\d.*|\\. Conference.*))$");
 
@@ -339,8 +346,8 @@ public class NormalizationService {
 	public record isbnIssnRecord(Set<String> isbns, Set<String> issns) {
 	};
 
-	public record pageRecord(String originalPages, String pageStart, String pageEnd, String pageForComparison,
-			boolean pagesWithComma, boolean severalPages) {
+	public record PageRecord(String originalPages, String pageStart, String pageEnd, String pageForComparison,
+			String pagesOutput, boolean severalPages) {
 	};
 
 	public record titleRecord(String originalTitle, List<String> titles) {
@@ -562,7 +569,7 @@ public class NormalizationService {
 		 * - ... / ...: The Canadian Journal of Neurological Sciences / Le Journal Canadien Des Sciences Neurologiques 
 		 * - ... = ...: Zhen ci yan jiu = Acupuncture research
 		 */
-		//		String[] parts = journal.split("[\\[\\]=|/]");
+		// String[] parts = journal.split("[\\[\\]=|/]");
 		String[] parts = journal.split("[\\[\\]]|([=|/] )");
 		List<String> list = new ArrayList<>(Arrays.asList(parts));
 
@@ -624,17 +631,17 @@ public class NormalizationService {
 	}
 
 	/**
-	 * normalizeInputPages: parses the different input strings with page numbers / article numbers to the fields pageStart,
-	 * pageEnd and pageStartForComparison.
+	 * normalizeInputPages: parses the different input strings with page numbers / article numbers to the fields
+	 * pageStart, pageEnd and pageStartForComparison.
 	 *
 	 * See also issues https://github.com/globbestael/DedupEndnote/issues/2 and
 	 * https://github.com/globbestael/DedupEndnote/issues/3
 	 */
-	public static pageRecord normalizeInputPages(String pages, String fieldName) {
+	public static PageRecord normalizeInputPagesOld(String pages, String fieldName) {
 		String originalPages = pages;
 		pages = PAGES_ADDITIONS_PATTERN.matcher(pages).replaceAll("").strip();
 		// if Pages contains a date string, omit the pages
-		Matcher matcher = PAGES_DATE_PATTERN.matcher(pages);
+		Matcher matcher = PAGES_MONTH_PATTERN.matcher(pages);
 		while (matcher.find()) {
 			pages = null;
 		}
@@ -647,7 +654,7 @@ public class NormalizationService {
 		// @formatter:on
 		if (pages == null || pages.isEmpty() || pages.length() > 30
 				|| (fieldName.equals("C7") && pages.contains(" "))) {
-			return new pageRecord(originalPages, null, null, null, false, false);
+			return new PageRecord(originalPages, null, null, null, null, false);
 		}
 		// @formatter:off
 
@@ -684,7 +691,7 @@ public class NormalizationService {
 		}
 
 		// if (pageForComparison != null && (!pages.contains("-") || pages.startsWith("1-"))) {
-		// 	return;
+		// return;
 		// }
 
 		// normalize starting page: W-22 --> 22
@@ -715,9 +722,13 @@ public class NormalizationService {
 			pageStart = pages.substring(0, indexOf);
 			pageStart = pageStart.replaceAll("^0+", "");
 			pageEnd = pages.substring(indexOf + 1);
-			pageEnd = pageEnd.replaceAll("^0+", "");
-			if (pageStart.length() > pageEnd.length()) {
-				pageEnd = pageStart.substring(0, pageStart.length() - pageEnd.length()) + pageEnd;
+			if ("+".equals(pageEnd)) {
+				pageEnd = null;
+			} else {
+				pageEnd = pageEnd.replaceAll("^0+", "");
+				if (pageStart.length() > pageEnd.length()) {
+					pageEnd = pageStart.substring(0, pageStart.length() - pageEnd.length()) + pageEnd;
+				}
 			}
 		} else {
 			pageStart = pages;
@@ -768,7 +779,180 @@ public class NormalizationService {
 				pageForComparison = null;
 			}
 		}
-		return new pageRecord(originalPages, pageStart, pageEnd, pageForComparison, pagesWithComma, severalPages);
+		return new PageRecord(originalPages, pageStart, pageEnd, pageForComparison, null, severalPages);
+	}
+
+	/**
+	 * normalizeInputPages: parses the different input strings with page numbers / article numbers to the fields
+	 * pageStart, pageEnd and pageStartForComparison.
+	 *
+	 * C7 (Article Number) should sometimes overrule / overwrite SP (starting and ending page) because when C7 is
+	 * present, SP often contains the number of pages, and in a few cases relative pages (1-10 for a 10 pages article).
+	 * 
+	 * SE (Starting Ending Page) should sometimes overrule / overwrite SP (SE: 1746-1746, SP: 19)
+	 *
+	 * C7 and SE occur before the SP field in an EndNote RIS file.
+	 *
+	 * Solution: - treat C7 as pages - if C7 has already been called AND SE is a range of pages (except "1-..."), then
+	 * SE can overwrite the C7 data. - if C7 or SE has already been called AND SP is a range of pages (except "1-...")
+	 * (e.g. C7: Pmid 29451177, and SP: 3-4) then SP can overwrite the C7 data. The test if fieldName ... has already
+	 * been called / pagesForComparison is not null, is NOT part of this method, but is handled in
+	 * IOService::readPublications (and addNormalizedPages).
+	 *
+	 * See also issues https://github.com/globbestael/DedupEndnote/issues/2 and
+	 * https://github.com/globbestael/DedupEndnote/issues/3
+	 */
+	public static PageRecord normalizeInputPages(String pages, String fieldName) {
+		pages = PAGES_ADDITIONS_PATTERN.matcher(pages).replaceAll("").strip();
+		String originalPages = pages;
+		// if Pages contains a month name string, omit these month names
+		Matcher matcher = PAGES_MONTH_PATTERN.matcher(pages);
+		while (matcher.find()) {
+			pages = null;
+		}
+		// @formatter:off
+		/*
+		 * - Ovid Medline in RIS format puts author address in M2 field, which is exported as SP
+		 * - WoS has in Article Number field (AR) cases as 'Pmid 29451177' and 'Pii s0016-5107(03)01975-8'. These article numbers
+		 *   with a space can be skipped
+		 */
+		// @formatter:on
+		if (pages == null || pages.isEmpty() || pages.length() > 30
+				|| (fieldName.equals("C7") && pages.contains(" "))) {
+			return new PageRecord(originalPages, null, null, null, null, false);
+		}
+
+		boolean severalPages = false;
+		String pagesOutput = null;
+		String pageStart = null;
+		String pageEnd = null;
+		String pageForComparison = null;
+
+		// Cochrane uses hyphen characters instead of minus
+		pages = pages.replaceAll("[\\u2010\\u00ad]", "-");
+		pages = pages.toLowerCase();
+
+		if ((fieldName.equals("C7")) || (pages.startsWith("e") && !pages.contains("-"))) {
+			severalPages = true;
+			pagesOutput = originalPages;
+		}
+
+		if (pages.endsWith("+")) {
+			pages.substring(0, pages.length() - 1);
+		}
+		List<String> pagesParts = Arrays.asList(pages.split("[+,;]\\s*"));
+		// @formatter:off
+		Map<Boolean, List<String>> resultMap = pagesParts.stream()
+			.map(p -> p.replaceAll("[Vv]\\d+:(\\d)", "$1"))		// clean "V2:553-V2:616" to "553-616" (book chapter in multivolume book)
+			// originally filtered for roman numerals, but also aN, eN, sN. But too many other cases got left out (Cochrane review numbers, Am J Phsyiol pages, ...)
+			// .filter(p -> p.matches("[ivxIVXaAeEsS\\d\\-\\s]+"))				// roman numerals, but also aN, eN, sN
+			// replacing "ii218-ii228" by "218-228" not necessary any more since partitioning uses Roman instead of Arabic number pattern
+			//.map(p -> p.replaceAll("(?<!\\d+)([ivxIVXaAeEsS]+)-(\\d+)", "$1$2"))
+			.map(p -> p.replaceAll("([a-zA-Z]+)(\\d+)", "$2")) 	// roman numbers don't have arabic numbers at the end
+			.collect(Collectors.partitioningBy(p -> p.matches("[ivxlcm\\-]+")));
+		// @formatter:on
+
+		if (resultMap.get(false).isEmpty()) { // there are no Arabic numbers, possibly Roman numbers
+			if (!resultMap.get(true).isEmpty()) {
+				String[] parts = resultMap.get(true).getFirst().split("-");
+				pageStart = String.valueOf(UtilitiesService.romanToArabic(parts[0]));
+				if (parts.length > 1) {
+					pageEnd = String.valueOf(UtilitiesService.romanToArabic(parts[1]));
+				}
+			}
+		} else if (!resultMap.get(false).isEmpty()) { // there are Arabic numbers
+			// Clean "1165A"
+			String first = resultMap.get(false).getFirst().replaceAll("[^\\d\\-]", "");
+			if ("-".equals(first)) { // e.g. with "N.PAG-N.PAG"
+				pagesOutput = "";
+				return new PageRecord(originalPages, null, null, null, pagesOutput, false);
+			}
+			String[] parts = first.split("-");
+			pageStart = parts[0];
+			if (parts.length > 1) {
+				pageEnd = parts[1];
+				severalPages = true;
+				pageEnd = pageEnd.replaceAll("^0+", "");
+				if (pageStart.length() > pageEnd.length()) {
+					if (pagesOutput == null && originalPages.equals(pageStart + "-" + pageEnd)) {
+						// if the whole pages string is the same pageStart - pageEnd, record the long form
+						pagesOutput = pageStart + "-" + pageStart.substring(0, pageStart.length() - pageEnd.length())
+								+ pageEnd;
+					}
+					pageEnd = pageStart.substring(0, pageStart.length() - pageEnd.length()) + pageEnd;
+				}
+			}
+		} else {
+			return new PageRecord(originalPages, null, null, null, null, false);
+		}
+		pageStart = cleanUpPage(pageStart);
+		pageEnd = cleanUpPage(pageEnd);
+		Integer pageStartInt = null;
+		Integer pageEndInt = null;
+		if (pageStart != null) {
+			try {
+				pageStartInt = Integer.valueOf(pageStart);
+				pageStart = pageStartInt.toString();
+			} catch (NumberFormatException e) {
+				// log.error("- pageStart {} is NOT an integer", pageStart);
+				// pageStart = null;
+				// pageStartInt = null;
+			}
+		}
+		if (pageEnd != null) {
+			try {
+				pageEndInt = Integer.valueOf(pageEnd);
+				pageEnd = pageEndInt.toString();
+				if (pageStart == null) {
+					pageStart = pageEnd;
+					pageEnd = null;
+				}
+			} catch (NumberFormatException e) {
+				// log.error("- pageEnd {} is NOT an integer", pageEnd);
+				// pageEnd = null;
+				// pageEndInt = null;
+			}
+		}
+		if (pageStartInt != null && pageEndInt != null) {
+			severalPages = pageEndInt - pageStartInt > 1;
+			if ((pageStartInt == 1 && pageEndInt >= 100)) {
+				pageStart = pageEnd;
+				pageEnd = null;
+				pageStartInt = pageEndInt;
+				pageEndInt = null;
+			}
+		}
+		if (pageStartInt != null && pageStartInt == 0) {
+			if (pageEndInt == null) {
+				pageStart = null;
+				pageStartInt = null;
+			} else {
+				pageStart = pageEnd;
+				pageEnd = null;
+				pageStartInt = pageEndInt;
+				pageEndInt = null;
+			}
+		}
+
+		if (severalPages == false) {
+			if (resultMap.get(true).size() + resultMap.get(false).size() > 1) {
+				severalPages = true;
+			}
+		}
+
+		pageForComparison = pageStart;
+
+		return new PageRecord(originalPages, pageStart, pageEnd, pageForComparison, pagesOutput, severalPages);
+	}
+
+	private static String cleanUpPage(String page) {
+		if (page != null) {
+			page = page.replaceAll("^(0+)", "");
+		}
+		if ("".equals(page)) {
+			page = null;
+		}
+		return page;
 	}
 
 	public static Integer normalizeInputPublicationYear(String input) {
@@ -906,15 +1090,17 @@ public class NormalizationService {
 	}
 
 	// static public String normalizeJournalJava9Plus(String s) {
-	// 	return s.replaceAll("&", " ") // we don't want "&" in the patterns
-	// 			.replaceAll("Jpn", "Japanese") // irregular abbreviations
-	// 			.replaceAll("Dtsch", "Deutsch").replaceAll("Natl", "National").replaceAll("Geneeskd", "Geneeskunde")
-	// 			.replaceAll("-", "").replaceAll("^(The|Le|La|Der|Die|Das|Il) ", "") // article as start
-	// 			.replaceAll("\\(([^\\)]*)\\)$", "") // "Ann Med Interne (Paris)" --> "Ann Med	Interne", or "J Med Ultrason (2001)"
-	// 			.replaceAll(".\\[[^\\\\]+\\]", "") // "Zhonghua wai ke za zhi [Chinese journal of	surgery]" --> "Zhonghua wai ke za zhi"
-	// 			.replaceAll("(\\]|\\[)", "") // "[Technical report] SAM-TR" --> "Technical report	SAM-TR"
-	// 			.replaceAll("(:|/) .*$", "") // "BJOG: An International Journal of Obstetrics and	Gynaecology" --> "BJOG"
-	// 			.replaceAll("\\s{2,}", " ").trim();
+	// return s.replaceAll("&", " ") // we don't want "&" in the patterns
+	// .replaceAll("Jpn", "Japanese") // irregular abbreviations
+	// .replaceAll("Dtsch", "Deutsch").replaceAll("Natl", "National").replaceAll("Geneeskd", "Geneeskunde")
+	// .replaceAll("-", "").replaceAll("^(The|Le|La|Der|Die|Das|Il) ", "") // article as start
+	// .replaceAll("\\(([^\\)]*)\\)$", "") // "Ann Med Interne (Paris)" --> "Ann Med Interne", or "J Med Ultrason
+	// (2001)"
+	// .replaceAll(".\\[[^\\\\]+\\]", "") // "Zhonghua wai ke za zhi [Chinese journal of surgery]" --> "Zhonghua wai ke
+	// za zhi"
+	// .replaceAll("(\\]|\\[)", "") // "[Technical report] SAM-TR" --> "Technical report SAM-TR"
+	// .replaceAll("(:|/) .*$", "") // "BJOG: An International Journal of Obstetrics and Gynaecology" --> "BJOG"
+	// .replaceAll("\\s{2,}", " ").trim();
 	// }
 
 	public static String normalizeTitle(String s) {
@@ -979,17 +1165,17 @@ public class NormalizationService {
 	 *  - align the Java9Plus versions with the Java8 versions!!! the Java9Plus versions are old.
 	 */
 	// static public String normalizeTitleJava9Plus(String s) {
-	// 	String r = s.replaceAll(".\\[[^\\\\]+\\]$", "") // remove non initial "[...]"
-	// 			.replaceAll("<[^>]+>", "") // remove "<...>"
-	// 			.replaceAll("[\\(\\)]", "") // remove "(" and ")"
-	// 			.toLowerCase().replaceAll("[^a-z0-9]", " ").trim().replaceAll("\\s{2,}", " ")
-	// 			.replaceAll("^(the|a|an) ", "").trim();
-	// 	// System.err.println(r);
-	// 	if (r.equals("")) {
-	// 		System.err.println("Title is empty: " + s);
-	// 		throw new RuntimeErrorException(new Error("Empty title"));
-	// 	}
-	// 	return r;
+	// String r = s.replaceAll(".\\[[^\\\\]+\\]$", "") // remove non initial "[...]"
+	// .replaceAll("<[^>]+>", "") // remove "<...>"
+	// .replaceAll("[\\(\\)]", "") // remove "(" and ")"
+	// .toLowerCase().replaceAll("[^a-z0-9]", " ").trim().replaceAll("\\s{2,}", " ")
+	// .replaceAll("^(the|a|an) ", "").trim();
+	// // System.err.println(r);
+	// if (r.equals("")) {
+	// System.err.println("Title is empty: " + s);
+	// throw new RuntimeErrorException(new Error("Empty title"));
+	// }
+	// return r;
 	// }
 
 	/**
