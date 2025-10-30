@@ -1128,14 +1128,14 @@
                                             <td rowspan="2">Journals *</td>
                                             <td>default (i.e. not a Reply)</td>
                                             <td
-                                                th:text="${T(edu.dedupendnote.services.DeduplicationService).JOURNAL_SIMILARITY_NO_REPLY}">
+                                                th:text="${T(edu.dedupendnote.services.ComparisonService).JOURNAL_SIMILARITY_NO_REPLY}">
                                                 -0.90</td>
                                             <td></td>
                                         </tr>
                                         <tr>
                                             <td>Reply</td>
                                             <td
-                                                th:text="${T(edu.dedupendnote.services.DeduplicationService).JOURNAL_SIMILARITY_REPLY}">
+                                                th:text="${T(edu.dedupendnote.services.ComparisonService).JOURNAL_SIMILARITY_REPLY}">
                                                 -0.93</td>
                                             <td></td>
                                         </tr>
@@ -1281,26 +1281,14 @@
                                     <li>Ascending order:
                                         <ul>
                                             <li>when encountering an ahead of print publication of e.g. 2018 in the OLD
-                                                file
-                                                and
-                                                a
-                                                corresponding final record of 2018 or 2019 in the NEW file, the NEW
-                                                record
-                                                will
-                                                be
-                                                seen as a duplicate of the OLD record and not be saved. Saving that
-                                                record
-                                                would
-                                                create a duplicate</li>
+                                                file and a corresponding final record of 2018 or 2019 in the NEW file,
+                                                the NEW record will be seen as a duplicate of the OLD record and not be
+                                                saved. Saving that record would create a duplicate</li>
                                             <li>when encountering a record without a publication year in the OLD file
-                                                and a
-                                                corresponding record with a publication year in the NEW file, the record
-                                                with
-                                                the
-                                                publication year will be seen as a duplicate of the OLD record and not
-                                                be
-                                                saved.
-                                                Saving that record would create a duplicate</li>
+                                                and a corresponding record with a publication year in the NEW file, the
+                                                record with the publication year will be seen as a duplicate of the OLD
+                                                record and not be saved. Saving that record would create a duplicate
+                                            </li>
                                         </ul>
                                     </li>
                                 </ul>
@@ -1310,33 +1298,23 @@
                                 <h5>2.5. Effect of 'insufficient data from one of two records'</h5>
 
                                 <p>The 5th comparison (ISSN or Journal: Are they the same (ISSN) or similar (Journal)?)
-                                    looks at
-                                    first sight to only compare journal articles (with the additional effect that no
-                                    publications of
-                                    another type can ever be a duplicate). This is not completely true:</p>
+                                    looks at first sight to only compare journal articles (with the additional effect
+                                    that no publications of another type can ever be a duplicate). This is not
+                                    completely true:</p>
                                 <ul>
                                     <li>ISBN is treated the same way as a ISSN</li>
                                     <li>The EndNote fields T2, J2, OP and T3 can also be used with other publications
-                                        types
-                                    </li>
+                                        types</li>
                                 </ul>
                                 <p>However: the general rule treats 2 records / field sets as different if
                                     <strong>both</strong>
                                     records have insufficient data for that comparison. Two book records with the same
-                                    authors,
-                                    publication year and book title will be considered duplicates only if both have the
-                                    same
-                                    / a
-                                    similar ISBN.
+                                    authors, publication year and book title will be considered duplicates only if both
+                                    have the same / a similar ISBN.
                                 </p>
                                 <p>Relaxing this general rule (so that comparisons with insufficient data in one or both
-                                    records
-                                    are
-                                    treated the same way: UNKNOWN, so go on to the next comparison) would result in a
-                                    lot
-                                    more
-                                    False
-                                    Positives.</p>
+                                    records are treated the same way: UNKNOWN, so go on to the next comparison) would
+                                    result in a lot more False Positives.</p>
                             </div>
                         </div>
 
@@ -1346,55 +1324,41 @@
                             <p><u><strong>Justification:</strong></u></p>
                             <ul>
                                 <li>(all cases): the enriched data are copied from existing duplicate records or occur
-                                    in a
-                                    lot
-                                    of records (empty author, full pages form, omitted same ending page)</li>
+                                    in a lot of records (empty author, full pages form, omitted same ending page)</li>
                                 <li>Author "Anonymous": There is no reason to use 2 forms (Author "Anonymous" and no
-                                    Author)
-                                    for
-                                    this case</li>
+                                    Author) for this case</li>
                                 <li>DOI - adding from other duplicates: Considered a useful addition</li>
                                 <li>DOI - standardized form: Considered a useful addition (clickable in EndNote)</li>
                                 <li>Publication year - missing added from other duplicates: Records without publication
-                                    year
-                                    are
-                                    subpar</li>
+                                    year are subpar</li>
                                 <li>Starting page and Article number:
                                     <ul>
                                         <li>Some bibliographic databases (e.g. PubMed) treat them the same way, others
-                                            (e.g.
-                                            Scopus, Web of Science) don't</li>
+                                            (e.g. Scopus, Web of Science) don't</li>
                                         <li>EndNote output formats (e.g. Vancouver style) can't handle Article numbers
                                         </li>
                                     </ul>
                                 </li>
                                 <li>Starting page - missing added from other duplicates: Records without starting page
-                                    are
-                                    subpar
-                                </li>
+                                    are subpar</li>
                                 <li>Starting page - standardized to full form:
                                     <ul>
                                         <li>EndNote deduplication treats "492-5" and "492-495" as different values</li>
                                         <li>EndNote output formats (e.g. Vancouver style) handle this full form
-                                            gracefully
-                                            (emit
-                                            "492-5" for pages "492-495")</li>
+                                            gracefully (emit "492-5" for pages "492-495")</li>
                                     </ul>
                                 </li>
                                 <li>Starting page - omitting same end page:
                                     <ul>
                                         <li>Some bibliographic databases (esp. Web of Science) sometimes use this form
-                                            (e.g.
-                                            "211-211")</li>
+                                            (e.g. "211-211")</li>
                                         <li>EndNote deduplication treats "211" and "211-211" as different values</li>
                                         <li>EndNote output formats (e.g. Vancouver style) emit "211-" for pages
-                                            "211-211"
-                                        </li>
+                                            "211-211"</li>
                                     </ul>
                                 </li>
                                 <li>Title - Reply / Erratum / Comment / Retraction: Inconsistent use of bibliographic
-                                    databases.
-                                    The longest title holds most information</li>
+                                    databases. The longest title holds most information</li>
                             </ul>
                         </div>
                     </div>

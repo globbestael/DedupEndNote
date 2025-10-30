@@ -21,7 +21,7 @@ import edu.dedupendnote.domain.StompMessage;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@Service
+// @Service
 public class DeduplicationService {
 
 	protected AuthorsComparisonService authorsComparisonService;
@@ -393,10 +393,19 @@ public class DeduplicationService {
 				// Add missing startpages (and endpages)
 				if (publicationToKeep.getPageStart() == null) {
 					log.debug("Reached publication without pageStart: {}", publicationToKeep.getAuthors());
-					publicationList.stream().filter(r -> r.getPageStart() != null).findFirst().ifPresent(r -> {
+					publicationList.stream().filter(r -> r.getPagesOutput() != null).findFirst().ifPresent(r -> {
 						publicationToKeep.setPageStart(r.getPageStart());
 						publicationToKeep.setPageEnd(r.getPageEnd());
+						publicationToKeep.setPagesOutput(r.getPagesOutput());
 					});
+					if (publicationToKeep.getPageStart() == null) {
+						publicationList.stream().filter(r -> r.getPageStart() != null).findFirst().ifPresent(r -> {
+							publicationToKeep.setPageStart(r.getPageStart());
+							publicationToKeep.setPageEnd(r.getPageEnd());
+							publicationToKeep.setPagesOutput(
+									r.getPageStart() + (r.getPageEnd() == null ? "" : "-" + r.getPageEnd()));
+						});
+					}
 				}
 
 				/*

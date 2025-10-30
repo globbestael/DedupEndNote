@@ -41,15 +41,15 @@ class PagesTest {
 			arguments("12-4", "12", "14", "12", "12-14"), 
 			arguments("1251-4", "1251", "1254", "1251", "1251-1254"),
 			arguments("12-14", "12", "14", "12", null), 
-			arguments("12-4; author reply 15", "12", "14", "12", null),
+			arguments("12-4; author reply 15", "12", "14", "12", "12-14; author reply 15"),
 			arguments("12; author reply 15", "12", null, "12", null),
 			arguments("11; author reply 11-2", "11", null, "11", null),
-			arguments("1252-3; author reply 1252-3", "1252", "1253", "1252", null),
-			arguments("1469-87; discussion 1487-9", "1469", "87; discussion 1487-9", "1469", null),
+			arguments("1252-3; author reply 1252-3", "1252", "1253", "1252", "1252-1253; author reply 1252-3"),
+			arguments("1469-87; discussion 1487-9", "1469", "87; discussion 1487-9", "1469", "1469-1487; discussion 1487-9"),
 			arguments("11; discussion 11-2", "11", "discussion 11-2", "11", null),
 			arguments("12-14, 17-18", "12", "14, 17-18", "12", null), 
-			arguments("S12-14", "S12", "S14", "12", null),
-			arguments("S12-4", "S12", "S14", "12", null),
+			arguments("S12-14", "S12", "S14", "12", "S12-S14"),
+			arguments("S12-4", "S12", "S14", "12", "S12-S14"),
 			arguments("S12-S14", "S12", "S14", "12", null), 
 			arguments("S99-103", "S99", "103", "99", null),
 			arguments("S-12", "S12", null, "12", null), 
@@ -70,9 +70,9 @@ class PagesTest {
 			arguments("A1-A099", "A1", "A099", "1", null), 
 			arguments("i-A19", "A19", null, "19", null),
 			arguments("ED01-ED03", "ED01", "ED03", "1", null), 
-			arguments("0-3", "3", null, "3", null),
-			arguments("000-003", "3", null, "3", null), 
-			arguments("000", "000", null, null, null),
+			arguments("0-3", "3", null, "3", "3"),
+			arguments("000-003", "3", null, "3", "3"), 
+			arguments("000", "000", null, null, ""),
 			arguments("1469-1487", "1469", "1487", "1469", null),
 			arguments("AA59-AA60", "AA59", "AA60", "59", null),
 			// with plus sign
@@ -89,24 +89,25 @@ class PagesTest {
 			arguments("viii", "viii", null, "8", null),
 			arguments("ii22-ii33", "ii22", "ii33", "22", null), 
 			arguments("ii-ix", "ii", "ix", "2", null),
-			arguments("II206-13", "ii206", "13", "206", null),
+			arguments("II206-13", "ii206", "13", "206", "II206-II213"),
 			arguments("II-221-5; discussion II-225-6", "II-221", "5", "221", null),
-			arguments("IX/101-8", "101", "8", "101", null),
+			arguments("IX/101-8", "101", "8", "101", "IX/101-IX/108"),
 			arguments( "iii-iv, 1-134", "1", "134", "134", null),
 			arguments("iii-iv, ix-xi, 1-93", "1", "93", "1", null),
 			arguments("III-VIII, 1-101, back cover", "1", "101", "101", null),
 			arguments("IV-138-IV-152", "IV-138", "IV-152", "138", null),
 			arguments("ITC1", "ITC1", null, "1", null),
-			arguments("ITC3-1", "ITC3", "1", "3", null), // this is wrong: it is interpreted as a range
-			arguments("IV4-12", "IV4", "12", "4", null),
+			arguments("ITC3-1", "ITC3", "1", "3", "ITC3-ITC1"), // this is wrong: it is interpreted as a range
+			arguments("IV4-12", "IV4", "12", "4", "IV4-I12"),	// this is wrong
 			// volume number within pages, in multi-volume books
 			arguments("V2:553-V2:616", "V2:553", "V2:616", "553", null),
-			arguments("H1753-8", "H1753", "8", "1753", null),
+			arguments("H1753-8", "H1753", "8", "1753", "H1753-H1758"),
 			arguments("Cd010073", "Cd010073", null, "10073", null),
 			arguments("CD010073", "CD010073", null, "10073", null),
 			arguments("N.PAG-N.PAG", null, null, null, ""),
-			// The following case will not have pagesOutput "s0003394402007769/sco" unless the output field is C7
-			arguments("Unsp s0003394402007769/sco", "0003394402007769", null, "3394402007769", null)
+			// // The following case will not have pagesOutput "s0003394402007769/sco" unless the output field is C7
+			arguments("Unsp s0003394402007769/sco", "s0003394402007769", null, "3394402007769", null),
+			arguments("1252-3; author reply 1252-3", "1252", "3", "1252", "1252-1253; author reply 1252-3")
 			// Do we have cases of "945-+", "945-945", "945-5"?
 			);
 	}

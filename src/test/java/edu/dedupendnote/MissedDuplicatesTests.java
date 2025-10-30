@@ -78,6 +78,7 @@ class MissedDuplicatesTests extends BaseTest {
 	 */
 	@ParameterizedTest
 	@CsvSource({
+		"'/own/missed_duplicates/SP_C7_none.txt', 3, 1", // after refactoring pages: record with SP, C7 and none
 		// "'/problems/AI_Query_2022_missed_duplicates_4.txt', 2, 2", // title too different
 		// "'/problems/AI_Query_2022_missed_duplicates_5.txt', 2, 2", // ISSN same, ISBN different
 		// "'/ASySD/dedupendnote_files/missed_duplicates/Cardiac_Human_missed_duplicates_1.txt', 2, 2",

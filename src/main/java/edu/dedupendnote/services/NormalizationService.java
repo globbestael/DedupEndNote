@@ -830,26 +830,29 @@ public class NormalizationService {
 
 		// Cochrane uses hyphen characters instead of minus
 		pages = pages.replaceAll("[\\u2010\\u00ad]", "-");
-		pages = pages.toLowerCase();
+		// Do not lowercase the pages yet
+		// pages = pages.toLowerCase();
 
-		if ((fieldName.equals("C7")) || (pages.startsWith("e") && !pages.contains("-"))) {
+		if ((fieldName.equals("C7")) || ((pages.startsWith("e") || pages.startsWith("E")) && !pages.contains("-"))) {
 			severalPages = true;
 			pagesOutput = originalPages;
 		}
 
 		if (pages.endsWith("+")) {
-			pages.substring(0, pages.length() - 1);
+			pages = pages.substring(0, pages.length() - 1);
 		}
 		List<String> pagesParts = Arrays.asList(pages.split("[+,;]\\s*"));
 		// @formatter:off
 		Map<Boolean, List<String>> resultMap = pagesParts.stream()
+			// FIXME: this mapping should be done in the arabic branch
 			.map(p -> p.replaceAll("[Vv]\\d+:(\\d)", "$1"))		// clean "V2:553-V2:616" to "553-616" (book chapter in multivolume book)
 			// originally filtered for roman numerals, but also aN, eN, sN. But too many other cases got left out (Cochrane review numbers, Am J Phsyiol pages, ...)
 			// .filter(p -> p.matches("[ivxIVXaAeEsS\\d\\-\\s]+"))				// roman numerals, but also aN, eN, sN
-			// replacing "ii218-ii228" by "218-228" not necessary any more since partitioning uses Roman instead of Arabic number pattern
+			// replacing "ii-218-ii-228" by "ii218-ii228" not necessary any more because ???
 			//.map(p -> p.replaceAll("(?<!\\d+)([ivxIVXaAeEsS]+)-(\\d+)", "$1$2"))
-			.map(p -> p.replaceAll("([a-zA-Z]+)(\\d+)", "$2")) 	// roman numbers don't have arabic numbers at the end
-			.collect(Collectors.partitioningBy(p -> p.matches("[ivxlcm\\-]+")));
+			// replacing "ii218-ii228" by "218-228" not necessary any more because partitioning uses Roman instead of Arabic number pattern
+			//.map(p -> p.replaceAll("([a-zA-Z]+)(\\d+)", "$2")) 	// roman numbers don't have arabic numbers at the end
+			.collect(Collectors.partitioningBy(p -> p.matches("[ivxlcmIVXLCM\\-]+")));
 		// @formatter:on
 
 		if (resultMap.get(false).isEmpty()) { // there are no Arabic numbers, possibly Roman numbers
@@ -861,23 +864,29 @@ public class NormalizationService {
 				}
 			}
 		} else if (!resultMap.get(false).isEmpty()) { // there are Arabic numbers
-			// Clean "1165A"
-			String first = resultMap.get(false).getFirst().replaceAll("[^\\d\\-]", "");
-			if ("-".equals(first)) { // e.g. with "N.PAG-N.PAG"
-				pagesOutput = "";
-				return new PageRecord(originalPages, null, null, null, pagesOutput, false);
-			}
+			// Clean "1165A" to "1165", and "ii108" to "108"
+			// String first = resultMap.get(false).getFirst().replaceAll("[^\\d\\-]", "");
+			String first = resultMap.get(false).removeFirst();
 			String[] parts = first.split("-");
 			pageStart = parts[0];
 			if (parts.length > 1) {
 				pageEnd = parts[1];
-				severalPages = true;
+				pageStart = pageStart.replaceAll("^0+", "");
 				pageEnd = pageEnd.replaceAll("^0+", "");
-				if (pageStart.length() > pageEnd.length()) {
-					if (pagesOutput == null && originalPages.equals(pageStart + "-" + pageEnd)) {
+				if ("".equals(pageStart)) {
+					pageStart = pageEnd;
+					pageEnd = null;
+					pagesOutput = composePagesOutput(pageStart, pageEnd, resultMap);
+				} else if (pageStart.length() > pageEnd.length()) {
+					/*
+					 * The test on pagesOutput == null because for C7 field pagesOutput has aleady been set.
+					 * The test "originalPages.equals(pageStart + "-" + pageEnd)" assumes there is only 1 range in the orginalPages
+					 * But should reassemble the orginal parts
+					 */
+					// if (pagesOutput == null && originalPages.equals(pageStart + "-" + pageEnd)) {
+					if (pagesOutput == null) {
 						// if the whole pages string is the same pageStart - pageEnd, record the long form
-						pagesOutput = pageStart + "-" + pageStart.substring(0, pageStart.length() - pageEnd.length())
-								+ pageEnd;
+						pagesOutput = composePagesOutput(pageStart, pageEnd, resultMap);
 					}
 					pageEnd = pageStart.substring(0, pageStart.length() - pageEnd.length()) + pageEnd;
 				}
@@ -913,6 +922,9 @@ public class NormalizationService {
 				// pageEndInt = null;
 			}
 		}
+		if (pageStart == null && pageEnd == null) {
+			pagesOutput = "";
+		}
 		if (pageStartInt != null && pageEndInt != null) {
 			severalPages = pageEndInt - pageStartInt > 1;
 			if ((pageStartInt == 1 && pageEndInt >= 100)) {
@@ -945,8 +957,21 @@ public class NormalizationService {
 		return new PageRecord(originalPages, pageStart, pageEnd, pageForComparison, pagesOutput, severalPages);
 	}
 
+	private static String composePagesOutput(String pageStart, String pageEnd, Map<Boolean, List<String>> resultMap) {
+		List<String> pageRanges = new ArrayList<>();
+		pageRanges.addAll(resultMap.get(true));
+		if (pageEnd == null) {
+			pageRanges.add(pageStart);
+		} else {
+			pageRanges.add(pageStart + "-" + pageStart.substring(0, pageStart.length() - pageEnd.length()) + pageEnd);
+		}
+		pageRanges.addAll(resultMap.get(false));
+		return pageRanges.stream().collect(Collectors.joining("; "));
+	}
+
 	private static String cleanUpPage(String page) {
 		if (page != null) {
+			page = page.replaceAll("[^\\d]", "");
 			page = page.replaceAll("^(0+)", "");
 		}
 		if ("".equals(page)) {
