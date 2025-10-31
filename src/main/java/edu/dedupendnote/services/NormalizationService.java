@@ -64,7 +64,8 @@ public class NormalizationService {
 	private static final Pattern PAGES_MONTH_PATTERN = Pattern
 			.compile("\\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\\b");
 
-	private static final Pattern FIRST_PAGES_GROUP = Pattern.compile("^([^-,;]+)([,;])(.*)$");
+	// FIXME: Not used any more in normalizeInputPages
+	// private static final Pattern FIRST_PAGES_GROUP = Pattern.compile("^([^-,;]+)([,;])(.*)$");
 
 	/**
 	 * All characters between "<" and ">", including the pointy brackets
@@ -281,7 +282,8 @@ public class NormalizationService {
 	public static final Pattern ANONYMOUS_OR_GROUPNAME_PATTERN = Pattern
 			.compile("\\b(anonymous|consortium|et al|grp|group|nct|study)\\b", Pattern.CASE_INSENSITIVE);
 
-	private static final Pattern NUMBERS_WITHIN_PATTERN = Pattern.compile(".*\\d+.*");
+	// FIXME: Not used any more in normalizeInputPages
+	// private static final Pattern NUMBERS_WITHIN_PATTERN = Pattern.compile(".*\\d+.*");
 
 	// @formatter:off
 	/*
@@ -346,8 +348,7 @@ public class NormalizationService {
 	public record isbnIssnRecord(Set<String> isbns, Set<String> issns) {
 	};
 
-	public record PageRecord(String originalPages, String pageStart, String pageEnd, String pageForComparison,
-			String pagesOutput, boolean severalPages) {
+	public record PageRecord(String originalPages, String pageStart, String pagesOutput, boolean severalPages) {
 	};
 
 	public record titleRecord(String originalTitle, List<String> titles) {
@@ -634,158 +635,6 @@ public class NormalizationService {
 	 * normalizeInputPages: parses the different input strings with page numbers / article numbers to the fields
 	 * pageStart, pageEnd and pageStartForComparison.
 	 *
-	 * See also issues https://github.com/globbestael/DedupEndnote/issues/2 and
-	 * https://github.com/globbestael/DedupEndnote/issues/3
-	 */
-	public static PageRecord normalizeInputPagesOld(String pages, String fieldName) {
-		String originalPages = pages;
-		pages = PAGES_ADDITIONS_PATTERN.matcher(pages).replaceAll("").strip();
-		// if Pages contains a date string, omit the pages
-		Matcher matcher = PAGES_MONTH_PATTERN.matcher(pages);
-		while (matcher.find()) {
-			pages = null;
-		}
-		// @formatter:off
-		/*
-		 * - Ovid Medline in RIS format puts author address in M2 field, which is exported as SP
-		 * - WoS has in Article Number field (AR) cases as 'Pmid 29451177' and 'Pii s0016-5107(03)01975-8'. These article numbers
-		 *   with a space can be skipped
-		 */
-		// @formatter:on
-		if (pages == null || pages.isEmpty() || pages.length() > 30
-				|| (fieldName.equals("C7") && pages.contains(" "))) {
-			return new PageRecord(originalPages, null, null, null, null, false);
-		}
-		// @formatter:off
-
-		boolean severalPages = false;
-		boolean pagesWithComma = false;
-		String pageStart = null;
-		String pageEnd = null;
-		String pageForComparison = null;
-
-		/*
-		 *  C7 (Article Number) should sometimes overrule / overwrite SP (starting and ending page)
-		 *  because when C7 is present, SP often contains the number of pages, and in a few cases relative pages (1-10 for a 10 pages article).
-		 *
-		 *  SE (Starting Ending Page) should sometimes overrule / overwrite SP (SE: 1746-1746, SP: 19)
-		 *
-		 *  C7 and SE occur before the SP field in an EndNote RIS file.
-		 *
-		 *  Solution:
-		 *  - treat C7 as pages
-		 *  - if C7 has already been called AND SE is a range of pages (except "1-..."), then SE can overwrite the C7 data.
-		 *  - if C7 or SE has already been called AND SP is a range of pages (except "1-...") 
-		 * 	  (e.g. C7: Pmid 29451177, and SP: 3-4) then SP can overwrite the C7 data.
-		 */
-		// @formatter:on
-		// Cochrane uses hyphen characters instead of minus
-		pages = pages.replaceAll("[\\u2010\\u00ad]", "-");
-
-		if (fieldName.equals("C7")) {
-			severalPages = true;
-		} else {
-			if ((pages.startsWith("e") || pages.startsWith("E")) && !pages.contains("-")) {
-				severalPages = true;
-			}
-		}
-
-		// if (pageForComparison != null && (!pages.contains("-") || pages.startsWith("1-"))) {
-		// return;
-		// }
-
-		// normalize starting page: W-22 --> 22
-		pages = pages.replaceAll("^([^\\d]+)\\-(\\d+)", "$1$2");
-
-		// @formatter:off
-		/*
-		 * First check for "[,;] before any "-"
-		 * - if "," then there is another (discontinuous?) page or an addition
-		 * - if ";" the there is an addition 
-		 * In both cases: consider it as NOT a meeting abstract, and severalPages = true
-		 */ 
-		// @formatter:on
-		Matcher firstPagesGroupMatcher = FIRST_PAGES_GROUP.matcher(pages);
-		if (firstPagesGroupMatcher.matches()) {
-			severalPages = true;
-			pageStart = firstPagesGroupMatcher.group(1);
-			if (",".equals(firstPagesGroupMatcher.group(2))) {
-				pagesWithComma = true;
-			}
-			pageEnd = firstPagesGroupMatcher.group(3).strip();
-			if (pageEnd.equals("")) {
-				pageEnd = null;
-			}
-		} else if (pages.contains("-")) {
-			severalPages = true;
-			int indexOf = pages.indexOf("-");
-			pageStart = pages.substring(0, indexOf);
-			pageStart = pageStart.replaceAll("^0+", "");
-			pageEnd = pages.substring(indexOf + 1);
-			if ("+".equals(pageEnd)) {
-				pageEnd = null;
-			} else {
-				pageEnd = pageEnd.replaceAll("^0+", "");
-				if (pageStart.length() > pageEnd.length()) {
-					pageEnd = pageStart.substring(0, pageStart.length() - pageEnd.length()) + pageEnd;
-				}
-			}
-		} else {
-			pageStart = pages;
-		}
-		if (!NUMBERS_WITHIN_PATTERN.matcher(pageStart).matches() && pageEnd != null
-				&& NUMBERS_WITHIN_PATTERN.matcher(pageEnd).matches()) {
-			pageStart = pageEnd;
-			pageEnd = null;
-		}
-		if (NUMBERS_WITHIN_PATTERN.matcher(pageStart).matches()) {
-			/**
-			 * Books, reports, ... all start with page 1, therefore the ending page is used if available. BUT: Because
-			 * Publication type is not available, pages range >= 100 is used as a criterion.
-			 */
-			pageForComparison = pageStart;
-			// @formatter:off
-			/**
-			 * normalize starting page: W22 --> 22, 22S --> 22 
-			 * 
-			 * - Cochrane "page numbers" (or really article number) in form "CD010546" can no longer be recognized 
-			 *   as Cochrane identifiers: "10546"
-			 * - FIXME: arXiv page numbers ("arXiv:2107.12817v1") will be reduced to publication year and month ("2107"), 
-			 *   which may result in False Positives. 
-			 * See https://github.com/globbestael/DedupEndnote/issues/4 for preprint publications.
-			 */
-			// @formatter:on
-			pageForComparison = pageForComparison.replaceAll("^([^1-9]*)([\\d]+)(.*)$", "$2");
-			// Use pageEnd instead of pageStart for books (criteria: start = 1, end >= 100)
-			if ("1".equals(pageForComparison) && pageEnd != null && pageEnd.length() > 2) {
-				log.debug("Long pageEnd used for pageForComparison {}", pageEnd);
-				String pageEndForComparison = pageEnd.replaceAll("^([^1-9]*)([\\d]+)(.*)$", "$2");
-				if (pageEndForComparison.length() > 2) {
-					pageForComparison = pageEndForComparison;
-				}
-			}
-			if (pageForComparison.length() < 11 && pageEnd != null) {
-				try {
-					int pageStartInt = Integer.valueOf(pageForComparison);
-					String pageEndForComparison = pageEnd.replaceAll("^([^1-9]*)([\\d]+)(.*)$", "$2");
-					int pageEndInt = Integer.valueOf(pageEndForComparison);
-					int pageRange = pageEndInt - pageStartInt;
-					severalPages = pageRange > 1;
-				} catch (NumberFormatException e) {
-					log.debug("Input {} could not be parsed as an Integer", pageForComparison);
-				}
-			}
-			if ("0".equals(pageForComparison)) {
-				pageForComparison = null;
-			}
-		}
-		return new PageRecord(originalPages, pageStart, pageEnd, pageForComparison, null, severalPages);
-	}
-
-	/**
-	 * normalizeInputPages: parses the different input strings with page numbers / article numbers to the fields
-	 * pageStart, pageEnd and pageStartForComparison.
-	 *
 	 * C7 (Article Number) should sometimes overrule / overwrite SP (starting and ending page) because when C7 is
 	 * present, SP often contains the number of pages, and in a few cases relative pages (1-10 for a 10 pages article).
 	 * 
@@ -804,6 +653,9 @@ public class NormalizationService {
 	 */
 	public static PageRecord normalizeInputPages(String pages, String fieldName) {
 		pages = PAGES_ADDITIONS_PATTERN.matcher(pages).replaceAll("").strip();
+		// replace "ii-218-ii-228" by "ii218-ii228", and "S-12" by "S12"
+		pages = pages.replaceAll("(?<!\\d+)([a-zA-Z]+)-(\\d+)", "$1$2");
+
 		String originalPages = pages;
 		// if Pages contains a month name string, omit these month names
 		Matcher matcher = PAGES_MONTH_PATTERN.matcher(pages);
@@ -819,14 +671,13 @@ public class NormalizationService {
 		// @formatter:on
 		if (pages == null || pages.isEmpty() || pages.length() > 30
 				|| (fieldName.equals("C7") && pages.contains(" "))) {
-			return new PageRecord(originalPages, null, null, null, null, false);
+			return new PageRecord(originalPages, null, null, false);
 		}
 
 		boolean severalPages = false;
 		String pagesOutput = null;
 		String pageStart = null;
 		String pageEnd = null;
-		String pageForComparison = null;
 
 		// Cochrane uses hyphen characters instead of minus
 		pages = pages.replaceAll("[\\u2010\\u00ad]", "-");
@@ -845,7 +696,7 @@ public class NormalizationService {
 		// @formatter:off
 		Map<Boolean, List<String>> resultMap = pagesParts.stream()
 			// FIXME: this mapping should be done in the arabic branch
-			.map(p -> p.replaceAll("[Vv]\\d+:(\\d)", "$1"))		// clean "V2:553-V2:616" to "553-616" (book chapter in multivolume book)
+			//.map(p -> p.replaceAll("[Vv]\\d+:(\\d)", "$1"))		// clean "V2:553-V2:616" to "553-616" (book chapter in multivolume book)
 			// originally filtered for roman numerals, but also aN, eN, sN. But too many other cases got left out (Cochrane review numbers, Am J Phsyiol pages, ...)
 			// .filter(p -> p.matches("[ivxIVXaAeEsS\\d\\-\\s]+"))				// roman numerals, but also aN, eN, sN
 			// replacing "ii-218-ii-228" by "ii218-ii228" not necessary any more because ???
@@ -857,42 +708,56 @@ public class NormalizationService {
 
 		if (resultMap.get(false).isEmpty()) { // there are no Arabic numbers, possibly Roman numbers
 			if (!resultMap.get(true).isEmpty()) {
-				String[] parts = resultMap.get(true).getFirst().split("-");
-				pageStart = String.valueOf(UtilitiesService.romanToArabic(parts[0]));
-				if (parts.length > 1) {
-					pageEnd = String.valueOf(UtilitiesService.romanToArabic(parts[1]));
+				String[] parts = resultMap.get(true).removeFirst().split("-");
+				try {
+					pageStart = String.valueOf(UtilitiesService.romanToArabic(parts[0]));
+					if (parts.length > 1) {
+						pageEnd = String.valueOf(UtilitiesService.romanToArabic(parts[1]));
+					}
+				} catch (java.lang.IllegalArgumentException e) {
+					pageStart = null;
+					pageEnd = null;
+					pagesOutput = originalPages;
 				}
 			}
 		} else if (!resultMap.get(false).isEmpty()) { // there are Arabic numbers
 			// Clean "1165A" to "1165", and "ii108" to "108"
 			// String first = resultMap.get(false).getFirst().replaceAll("[^\\d\\-]", "");
-			String first = resultMap.get(false).removeFirst();
+			String first = resultMap.get(false).removeFirst().replaceAll("(?<!\\d+)([a-zA-Z]+)-(\\d+)", "$1$2");
 			String[] parts = first.split("-");
 			pageStart = parts[0];
 			if (parts.length > 1) {
 				pageEnd = parts[1];
-				pageStart = pageStart.replaceAll("^0+", "");
-				pageEnd = pageEnd.replaceAll("^0+", "");
+				pageStart = pageStart.replaceAll("^(0+|N\\.PAG)", "");
+				pageEnd = pageEnd.replaceAll("^(0+|N\\.PAG)", "");
+			}
+			if ("".equals(pageStart)) {
+				pageStart = pageEnd;
 				if ("".equals(pageStart)) {
-					pageStart = pageEnd;
-					pageEnd = null;
+					pageStart = null;
+				}
+				pageEnd = null;
+				pagesOutput = composePagesOutput(pageStart, pageEnd, resultMap);
+				// pagesOutput = "";
+			} else if (pageStart.matches("[Vv]\\d+:\\d+")) {
+				pageStart = pageStart.replaceAll("[Vv]\\d+:(\\d)", "$1");
+				pageEnd = pageEnd.replaceAll("[Vv]\\d+:(\\d)", "$1");
+				pagesOutput = originalPages;
+			} else if ((pageEnd != null && pageStart.length() >= pageEnd.length())
+					|| (resultMap.get(false).size() + resultMap.get(true).size() > 0)) {
+				/*
+				 * The test on pagesOutput == null because for C7 field pagesOutput has already been set.
+				 */
+				if (pagesOutput == null) {
+					// if the whole pages string is the same pageStart - pageEnd, record the long form
 					pagesOutput = composePagesOutput(pageStart, pageEnd, resultMap);
-				} else if (pageStart.length() > pageEnd.length()) {
-					/*
-					 * The test on pagesOutput == null because for C7 field pagesOutput has aleady been set.
-					 * The test "originalPages.equals(pageStart + "-" + pageEnd)" assumes there is only 1 range in the orginalPages
-					 * But should reassemble the orginal parts
-					 */
-					// if (pagesOutput == null && originalPages.equals(pageStart + "-" + pageEnd)) {
-					if (pagesOutput == null) {
-						// if the whole pages string is the same pageStart - pageEnd, record the long form
-						pagesOutput = composePagesOutput(pageStart, pageEnd, resultMap);
-					}
+				}
+				if (pageEnd != null && pageStart.length() >= pageEnd.length()) {
 					pageEnd = pageStart.substring(0, pageStart.length() - pageEnd.length()) + pageEnd;
 				}
 			}
 		} else {
-			return new PageRecord(originalPages, null, null, null, null, false);
+			return new PageRecord(originalPages, null, null, false);
 		}
 		pageStart = cleanUpPage(pageStart);
 		pageEnd = cleanUpPage(pageEnd);
@@ -922,7 +787,7 @@ public class NormalizationService {
 				// pageEndInt = null;
 			}
 		}
-		if (pageStart == null && pageEnd == null) {
+		if (pagesOutput == null && (pageStart == null && pageEnd == null)) {
 			pagesOutput = "";
 		}
 		if (pageStartInt != null && pageEndInt != null) {
@@ -947,23 +812,29 @@ public class NormalizationService {
 		}
 
 		if (severalPages == false) {
-			if (resultMap.get(true).size() + resultMap.get(false).size() > 1) {
+			if (resultMap.get(true).size() + resultMap.get(false).size() > 0) {
 				severalPages = true;
 			}
 		}
-
-		pageForComparison = pageStart;
-
-		return new PageRecord(originalPages, pageStart, pageEnd, pageForComparison, pagesOutput, severalPages);
+		if (pagesOutput == null) {
+			pagesOutput = originalPages;
+		}
+		return new PageRecord(originalPages, pageStart, pagesOutput, severalPages);
 	}
 
 	private static String composePagesOutput(String pageStart, String pageEnd, Map<Boolean, List<String>> resultMap) {
 		List<String> pageRanges = new ArrayList<>();
 		pageRanges.addAll(resultMap.get(true));
 		if (pageEnd == null) {
-			pageRanges.add(pageStart);
-		} else {
+			if (pageStart == null) {
+				pageRanges.add("");
+			} else {
+				pageRanges.add(pageStart);
+			}
+		} else if (pageStart.length() >= pageEnd.length()) {
 			pageRanges.add(pageStart + "-" + pageStart.substring(0, pageStart.length() - pageEnd.length()) + pageEnd);
+		} else {
+			pageRanges.add(pageStart + "-" + pageEnd);
 		}
 		pageRanges.addAll(resultMap.get(false));
 		return pageRanges.stream().collect(Collectors.joining("; "));

@@ -40,7 +40,7 @@ class AuthorExperimentsTests {
 		public boolean compare(Publication r1, Publication r2) {
 			log.error("Using the experimental AuthorComparator");
 			boolean isReply = (r1.isReply() || r2.isReply());
-			boolean sufficientStartPages = (r1.getPageForComparison() != null && r2.getPageForComparison() != null);
+			boolean sufficientStartPages = (r1.getPageStart() != null && r2.getPageStart() != null);
 			boolean sufficientDois = (!r1.getDois().isEmpty() && !r2.getDois().isEmpty());
 
 			if (r1.getAllAuthors().isEmpty() || r2.getAllAuthors().isEmpty()) {

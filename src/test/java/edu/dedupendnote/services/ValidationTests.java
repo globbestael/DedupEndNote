@@ -108,17 +108,17 @@ class ValidationTests {
 		// previous results
 		Map<String, ValidationResult> validationResultsMap = List
 				.of(
-					new ValidationResult("AI_subset", 493, 32, 2558, 0, 29_000L),	// why so slow?
+					new ValidationResult("AI_subset", 497, 28, 2558, 0, 29_000L),	// why so slow?
 					new ValidationResult("ASySD_Cardiac_human", 6756, 17, 2175, 0, 3_700L),
-					new ValidationResult("ASySD_Diabetes", 1816, 18, 11, 0, 1_000L),
+					new ValidationResult("ASySD_Diabetes", 1813, 21, 11, 0, 1_000L),
 					new ValidationResult("ASySD_Neuroimaging", 2177, 24, 1234, 3, 1_350L),
-					new ValidationResult("ASySD_SRSR_Human", 27918, 99, 24973, 11, 100_000L),
-					new ValidationResult("BIG_SET", 3937, 176, 959, 10, 66_000L),
+					new ValidationResult("ASySD_SRSR_Human", 27924, 93, 24973, 11, 100_000L),
+					new ValidationResult("BIG_SET", 3934, 178, 958, 12, 66_000L),
 					new ValidationResult("Clinical_trials", 219, 0, 0, 0, 190L),
 					new ValidationResult("McKeown_2021", 2018, 56, 1056, 0, 800L),
 					new ValidationResult("SRA2_Cytology_screening", 1361, 59, 436, 0, 400L),
 					new ValidationResult("SRA2_Haematology", 225, 11, 1177, 2, 300L),
-					new ValidationResult("SRA2_Respiratory", 763, 37, 1184, 4, 800L),
+					new ValidationResult("SRA2_Respiratory", 761, 39, 1184, 4, 800L),
 					new ValidationResult("SRA2_Stroke", 497, 13, 782, 0, 320L),
 					new ValidationResult("TIL", 691, 11, 390, 0, 9_000L),
 					new ValidationResult("TIL_Zotero", 685, 17, 389, 1, 9_000L))

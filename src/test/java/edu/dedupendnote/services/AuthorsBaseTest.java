@@ -6,7 +6,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -98,7 +97,7 @@ class AuthorsBaseTest extends BaseTest {
 		lines.close();
 		log.error("There were {} triples", localTriples.size());
 		// deduplicate
-		//		localTriples = localTriples.stream().distinct().collect(Collectors.toList());
+		// localTriples = localTriples.stream().distinct().collect(Collectors.toList());
 		log.error("There are {} distinct triples", localTriples.size());
 
 		assertThat(localTriples).as("There are more than 100 authors pairs").hasSizeGreaterThan(100);

@@ -23,7 +23,7 @@ public class DefaultAuthorsComparisonService implements AuthorsComparisonService
 	public boolean compare(Publication r1, Publication r2) {
 		similarity = 0.0;
 		boolean isReply = r1.isReply() || r2.isReply();
-		boolean sufficientStartPages = r1.getPageForComparison() != null && r2.getPageForComparison() != null;
+		boolean sufficientStartPages = r1.getPageStart() != null && r2.getPageStart() != null;
 		boolean sufficientDois = !r1.getDois().isEmpty() && !r2.getDois().isEmpty();
 
 		if (r1.getAllAuthors().isEmpty() || r2.getAllAuthors().isEmpty()) {
@@ -48,7 +48,8 @@ public class DefaultAuthorsComparisonService implements AuthorsComparisonService
 			log.trace("- 2. One or both authors are empty");
 			return true;
 		}
-		// FIXME: the lowest similarity is often used. Does this make the results of AuthorComparisonThresholdTest invalid?
+		// FIXME: the lowest similarity is often used. Does this make the results of AuthorComparisonThresholdTest
+		// invalid?
 		for (String authors1 : r1.getAllAuthors()) {
 			for (String authors2 : r2.getAllAuthors()) {
 				similarity = jws.apply(authors1, authors2);

@@ -14,14 +14,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.stereotype.Service;
 
 import edu.dedupendnote.domain.Publication;
 import edu.dedupendnote.domain.StompMessage;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-// @Service
 public class DeduplicationService {
 
 	protected AuthorsComparisonService authorsComparisonService;
@@ -432,7 +430,7 @@ public class DeduplicationService {
 		String pageStart = publicationToKeep.getPageStart();
 		if (pageStart != null) {
 			pageStart = pageStart.toUpperCase();
-			// C: cochrane reviews nd protocols, E: editorials, M: ???
+			// C: cochrane reviews and protocols, E: editorials, M: ???
 			if (!(pageStart.startsWith("C") || pageStart.startsWith("E") || pageStart.startsWith("M"))) {
 				pageStart = null;
 			}

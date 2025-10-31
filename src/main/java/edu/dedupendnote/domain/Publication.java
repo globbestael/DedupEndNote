@@ -46,17 +46,13 @@ public class Publication {
 
 	private String pageStart;
 
-	private String pageForComparison;
-
 	/*
-	 * Used for replacing the input pages field in the output file(except for markMode).
+	 * Used for replacing the input pages field in the output file (except for markMode).
 	 * - if null: use the input pages
 	 * - if empty string: do not output any pages field
 	 * - else: use this field instead (typically the long form "102-118" instead of "102-18")
 	 */
 	private String pagesOutput;
-	// FIXME: will be removed
-	private boolean pagesWithComma = false;
 
 	private boolean presentInOldFile = false; // used when comparing 2 files
 

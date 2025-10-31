@@ -129,6 +129,13 @@ public class IOService {
 	public static final Pattern unusualWhiteSpacePattern = Pattern
 			.compile("[\\p{Zs}\\p{Zl}\\p{Zp}\\u0009\\u000A\\u000B\\u000C\\u000D&&[^ ]]");
 
+	/*
+	 * readPublications: called in the first phase (before the comparison of publications), includes normalization of data.
+	 * 
+	 * There are several public write... methods in this class which read the publications:
+	 * - no / harldy any normalization
+	 * - result stored in a Map<String, String>
+	 */
 	public List<Publication> readPublications(String inputFileName) {
 		List<Publication> publications = new ArrayList<>();
 		String fieldContent = null;
@@ -382,14 +389,11 @@ public class IOService {
 
 	public static void addNormalizedPages(String fieldContent, String fieldName, Publication publication) {
 		PageRecord normalizedPages = NormalizationService.normalizeInputPages(fieldContent, fieldName);
-		if (publication.getPageForComparison() != null && (!normalizedPages.originalPages().contains("-")
+		if (publication.getPageStart() != null && (!normalizedPages.originalPages().contains("-")
 				|| normalizedPages.originalPages().startsWith("1-"))) {
 			;
 		} else {
 			publication.setPageStart(normalizedPages.pageStart());
-			publication.setPageEnd(normalizedPages.pageEnd());
-			// publication.setPagesWithComma(normalizedPages.pagesWithComma());
-			publication.setPageForComparison(normalizedPages.pageForComparison());
 			publication.setPagesOutput(normalizedPages.pagesOutput());
 			publication.setSeveralPages(normalizedPages.severalPages());
 		}
@@ -621,21 +625,11 @@ public class IOService {
 				map.put("DO", "https://doi.org/"
 						+ publication.getDois().stream().collect(Collectors.joining("\nhttps://doi.org/")));
 			}
-			// FIXME: should look at pagesOutput field
-			if (publication.getPagesOutput() != null) {
-				if (publication.getPagesOutput().isEmpty()) {
-					map.remove("SP");
-				} else {
-					map.put("SP", publication.getPagesOutput());
-				}
+			if (publication.getPagesOutput().isEmpty()) {
+				map.remove("SP");
+			} else {
+				map.put("SP", publication.getPagesOutput());
 			}
-			// if (publication.getPageStart() != null) {
-			// 	if (publication.getPageEnd() != null && !publication.getPageEnd().equals(publication.getPageStart())) {
-			// 		map.put("SP", publication.getPageStart() + (publication.isPagesWithComma() ? ", " : "-") + publication.getPageEnd());
-			// 	} else {
-			// 		map.put("SP", publication.getPageStart());
-			// 	}
-			// }
 			if (publication.isReply() || publication.getTitle() != null) {
 				map.put("TI", publication.getTitle());
 				map.put("ST", publication.getTitle());

@@ -183,7 +183,7 @@ public class ComparisonService {
 		Set<String> dois1 = r1.getDois();
 		Set<String> dois2 = r2.getDois();
 		boolean bothCochrane = r1.isCochrane() && r2.isCochrane();
-		boolean sufficientStartPages = r1.getPageForComparison() != null && r2.getPageForComparison() != null;
+		boolean sufficientStartPages = r1.getPageStart() != null && r2.getPageStart() != null;
 		boolean sufficientDois = !dois1.isEmpty() && !dois2.isEmpty();
 		boolean atLeastOneSeveralPages = r1.isSeveralPages() || r2.isSeveralPages();
 
@@ -201,7 +201,7 @@ public class ComparisonService {
 						log.trace("- 1. DOIs are NOT the same for Cochrane");
 						return false;
 					}
-				} else if (sufficientStartPages && r1.getPageForComparison().equals(r2.getPageForComparison())) {
+				} else if (sufficientStartPages && r1.getPageStart().equals(r2.getPageStart())) {
 					log.trace("- 1. Starting pages are the same for Cochrane");
 					return true;
 				}
@@ -221,7 +221,7 @@ public class ComparisonService {
 					return true;
 				}
 			}
-			if (sufficientStartPages && r1.getPageForComparison().equals(r2.getPageForComparison())) {
+			if (sufficientStartPages && r1.getPageStart().equals(r2.getPageStart())) {
 				log.trace("- 1. Starting pages are the same for severalPages");
 				return true;
 			}
@@ -230,7 +230,7 @@ public class ComparisonService {
 		}
 
 		if (sufficientStartPages) {
-			if (r1.getPageForComparison().equals(r2.getPageForComparison())) {
+			if (r1.getPageStart().equals(r2.getPageStart())) {
 				log.trace("- 1. Starting pages are the same");
 				return true;
 			} else {
@@ -259,7 +259,7 @@ public class ComparisonService {
 		Double similarity = 0.0;
 		List<String> titles1 = r1.getTitles();
 		List<String> titles2 = r2.getTitles();
-		boolean sufficientStartPages = r1.getPageForComparison() != null && r2.getPageForComparison() != null;
+		boolean sufficientStartPages = r1.getPageStart() != null && r2.getPageStart() != null;
 		boolean sufficientDois = !r1.getDois().isEmpty() && !r2.getDois().isEmpty();
 		boolean isPhase = r1.isPhase() || r2.isPhase();
 
