@@ -42,10 +42,6 @@ public class Publication {
 	 */
 	private String label;
 
-	private String pageEnd;
-
-	private String pageStart;
-
 	/*
 	 * Used for replacing the input pages field in the output file (except for markMode).
 	 * - if null: use the input pages
@@ -53,6 +49,7 @@ public class Publication {
 	 * - else: use this field instead (typically the long form "102-118" instead of "102-18")
 	 */
 	private String pagesOutput;
+	private String pageStart;
 
 	private boolean presentInOldFile = false; // used when comparing 2 files
 

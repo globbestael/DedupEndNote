@@ -211,6 +211,9 @@ public class IOService {
 							}
 							publication.setTitle(titleCache);
 						}
+						if (publication.isCochrane() && publication.getPageStart() == null) {
+							fillCochranePages(publication);
+						}
 						fillAllAuthors(publication);
 						publications.add(publication);
 						log.debug("Publication read with id {} and title: {}", publication.getId(),
@@ -625,7 +628,7 @@ public class IOService {
 				map.put("DO", "https://doi.org/"
 						+ publication.getDois().stream().collect(Collectors.joining("\nhttps://doi.org/")));
 			}
-			if (publication.getPagesOutput().isEmpty()) {
+			if (publication.getPagesOutput() == null || publication.getPagesOutput().isEmpty()) {
 				map.remove("SP");
 			} else {
 				map.put("SP", publication.getPagesOutput());
@@ -841,4 +844,31 @@ public class IOService {
 		}
 		log.debug("Finished writing to file. # records: {}", numberWritten);
 	}
+
+	private void fillCochranePages(Publication publication) {
+		String pageStart = publication.getPageStart();
+		if (pageStart != null) {
+			pageStart = pageStart.toUpperCase();
+			// C: cochrane reviews and protocols, E: editorials, M: ???
+			// if (!(pageStart.startsWith("C") || pageStart.startsWith("E") || pageStart.startsWith("M"))) {
+			// 	pageStart = null;
+			// }
+		}
+
+		if (pageStart == null) {
+			log.debug("Reached Cochrane publication without pageStart, getting it from the DOIs: {}", publication.getAuthors());
+			for (String doi : publication.getDois()) {
+				Matcher matcher = DeduplicationService.COCHRANE_DOI_PATTERN.matcher(doi);
+				if (matcher.matches()) {
+					pageStart = matcher.group(1);
+					break;
+				}
+			}
+		}
+		if (pageStart != null) {
+			publication.setPageStart(pageStart.replaceAll("[\\^d]+", ""));
+			publication.setPagesOutput(pageStart.toUpperCase());
+		}
+	}
+
 }

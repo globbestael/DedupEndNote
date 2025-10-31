@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -25,7 +24,7 @@ public class DeduplicationService {
 	protected AuthorsComparisonService authorsComparisonService;
 
 	// the DOIs have been lowercased
-	private static Pattern cochraneIdentifierPattern = Pattern.compile("^.*10.1002/14651858.([a-z][a-z]\\d+).*",
+	public static Pattern COCHRANE_DOI_PATTERN = Pattern.compile("^.*10.1002/14651858.([a-z][a-z]\\d+).*",
 			Pattern.CASE_INSENSITIVE);
 
 	private IOService ioService;
@@ -340,8 +339,7 @@ public class DeduplicationService {
 								log.debug("Reply {} has title: {}.", r.getId(), r.getTitle());
 								return r.getTitle() != null ? r.getTitle() : r.getTitles().get(0);
 							}).max(Comparator.comparingInt(String::length)).orElse("");
-					// There are cases where not all titles are recognized as replies ->
-					// publication.title can be null
+					// There are cases where not all titles are recognized as replies -> publication.title can be null
 					if (publicationToKeep.getTitle() == null
 							|| publicationToKeep.getTitle().length() < longestTitle.length()) {
 						log.debug("REPLY: changing title {}\nto {}", publicationToKeep.getTitle(), longestTitle);
@@ -356,8 +354,7 @@ public class DeduplicationService {
 						log.debug("Trial {} has title: {}.", r.getId(), r.getTitle());
 						return r.getTitle() != null ? r.getTitle() : r.getTitles().get(0);
 					}).min(Comparator.comparingInt(String::length)).orElse("");
-					// There are cases where not all titles are recognized as replies ->
-					// publication.title can be null
+					// There are cases where publication.title can be null (??)
 					if (publicationToKeep.getTitle() == null
 							|| publicationToKeep.getTitle().length() > shortestTitle.length()) {
 						log.debug("Trial: changing title {}\nto {}", publicationToKeep.getTitle(), shortestTitle);
@@ -383,27 +380,19 @@ public class DeduplicationService {
 							.ifPresent(r -> publicationToKeep.setPublicationYear(r.getPublicationYear()));
 				}
 
-				// Cochrane publications with duplicates
-				if (publicationToKeep.isCochrane()) {
-					replaceCochranePageStart(publicationToKeep, publicationList);
+				if (publicationToKeep.isCochrane() && publicationToKeep.getPagesOutput() != null) {
+					// replaceCochranePageStart(publicationToKeep, publicationList);
+					publicationToKeep.setPagesOutput(publicationToKeep.getPagesOutput().toUpperCase());
 				}
 
 				// Add missing startpages (and endpages)
-				if (publicationToKeep.getPageStart() == null) {
-					log.debug("Reached publication without pageStart: {}", publicationToKeep.getAuthors());
+				if (publicationToKeep.getPagesOutput() == null || publicationToKeep.getPagesOutput().isEmpty()) {
+					log.debug("Reached publication without pagesOutput: {}", publicationToKeep.getId());
 					publicationList.stream().filter(r -> r.getPagesOutput() != null).findFirst().ifPresent(r -> {
-						publicationToKeep.setPageStart(r.getPageStart());
-						publicationToKeep.setPageEnd(r.getPageEnd());
+						// publicationToKeep.setPageStart(r.getPageStart());
+						// publicationToKeep.setPageEnd(r.getPageEnd());
 						publicationToKeep.setPagesOutput(r.getPagesOutput());
 					});
-					if (publicationToKeep.getPageStart() == null) {
-						publicationList.stream().filter(r -> r.getPageStart() != null).findFirst().ifPresent(r -> {
-							publicationToKeep.setPageStart(r.getPageStart());
-							publicationToKeep.setPageEnd(r.getPageEnd());
-							publicationToKeep.setPagesOutput(
-									r.getPageStart() + (r.getPageEnd() == null ? "" : "-" + r.getPageEnd()));
-						});
-					}
 				}
 
 				/*
@@ -418,47 +407,49 @@ public class DeduplicationService {
 
 		// Then the Cochrane publications without duplicates
 		for (Publication r : publications) {
-			if (r.isCochrane() && r.getLabel() == null) {
-				replaceCochranePageStart(r, Collections.emptyList());
+			if (r.isCochrane() && r.getLabel() == null && r.getPagesOutput() != null) {
+				// replaceCochranePageStart(r, Collections.emptyList());
+				r.setPagesOutput(r.getPagesOutput().toUpperCase());
 			}
 		}
 
 		log.debug("Finished enrich");
 	}
 
-	private void replaceCochranePageStart(Publication publicationToKeep, List<Publication> duplicates) {
-		String pageStart = publicationToKeep.getPageStart();
-		if (pageStart != null) {
-			pageStart = pageStart.toUpperCase();
-			// C: cochrane reviews and protocols, E: editorials, M: ???
-			if (!(pageStart.startsWith("C") || pageStart.startsWith("E") || pageStart.startsWith("M"))) {
-				pageStart = null;
-			}
-		}
+	// Pat of this function is moved to IOService::fillCochranePages
+	// private void replaceCochranePageStart(Publication publicationToKeep, List<Publication> duplicates) {
+	// String pageStart = publicationToKeep.getPageStart();
+	// if (pageStart != null) {
+	// pageStart = pageStart.toUpperCase();
+	// // C: cochrane reviews and protocols, E: editorials, M: ???
+	// if (!(pageStart.startsWith("C") || pageStart.startsWith("E") || pageStart.startsWith("M"))) {
+	// pageStart = null;
+	// }
+	// }
 
-		if (pageStart == null) {
-			log.debug("Reached Cochrane publication without pageStart, getting it from pageStart of the duplicates: {}",
-					publicationToKeep.getAuthors());
-			for (Publication r : duplicates) {
-				if (r.getPageStart() != null && r.getPageStart().toUpperCase().matches("^[CEM].+")) {
-					publicationToKeep.setPageStart(r.getPageStart().toUpperCase());
-					return;
-				}
-			}
-			log.debug("Reached Cochrane publication without pageStart, getting it from the DOIs: {}",
-					publicationToKeep.getAuthors());
-			for (String doi : publicationToKeep.getDois()) {
-				Matcher matcher = cochraneIdentifierPattern.matcher(doi);
-				if (matcher.matches()) {
-					pageStart = matcher.group(1);
-					break;
-				}
-			}
-		}
-		if (pageStart != null) {
-			publicationToKeep.setPageStart(pageStart.toUpperCase());
-		}
-	}
+	// if (pageStart == null) {
+	// log.debug("Reached Cochrane publication without pageStart, getting it from pageStart of the duplicates: {}",
+	// publicationToKeep.getAuthors());
+	// for (Publication r : duplicates) {
+	// if (r.getPageStart() != null && r.getPageStart().toUpperCase().matches("^[CEM].+")) {
+	// publicationToKeep.setPageStart(r.getPageStart().toUpperCase());
+	// return;
+	// }
+	// }
+	// log.debug("Reached Cochrane publication without pageStart, getting it from the DOIs: {}",
+	// publicationToKeep.getAuthors());
+	// for (String doi : publicationToKeep.getDois()) {
+	// Matcher matcher = COCHRANE_DOI_PATTERN.matcher(doi);
+	// if (matcher.matches()) {
+	// pageStart = matcher.group(1);
+	// break;
+	// }
+	// }
+	// }
+	// if (pageStart != null) {
+	// publicationToKeep.setPageStart(pageStart.toUpperCase());
+	// }
+	// }
 
 	public String formatResultString(int total, int totalWritten) {
 		return "DONE: DedupEndNote has deduplicated " + total + " publications, has removed " + (total - totalWritten)

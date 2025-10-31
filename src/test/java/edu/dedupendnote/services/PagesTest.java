@@ -104,17 +104,20 @@ class PagesTest {
 	@MethodSource("argumentProvider")
 	void parsePagesTest(String pages, String pageStart, String pagesOutput, boolean severalPages) {
 		PageRecord normalizedPages = NormalizationService.normalizeInputPages(pages, "DUMMY");
-		log.error("- {}", normalizedPages);
-		assertThat(normalizedPages.pageStart()).as("PageStart comparison for " + pages).isEqualTo(pageStart);
-		assertThat(normalizedPages.pagesOutput()).as("PagesOutput comparison for " + pages).isEqualTo(pagesOutput);
-		assertThat(normalizedPages.severalPages()).as("SeveralPages comparison for " + pages).isEqualTo(severalPages);
-		// assertThat(start).isEqualTo(pageForComparison);
-		// assertThat(endingPage).as("PageEnd comparison").isEqualTo(end);
-		// SoftAssertions.assertSoftly(softAssertions -> {
-		// softAssertions.assertThat(normalizedPages.pageStart()).as("PageStart comparison").isEqualTo(start);
-		// softAssertions.assertThat(normalizedPages.pageEnd()).as("PageEnd comparison").isEqualTo(end);
-		// softAssertions.assertThat(normalizedPages.pageForComparison())
-		// .as("Input '%s' has wrong pageForComparison", pages).isEqualTo(pageForComparison);
-		// });
+		// log.error("- {}", normalizedPages);
+
+		// assertThat(normalizedPages.pageStart()).as("PageStart comparison for " + pages).isEqualTo(pageStart);
+		// assertThat(normalizedPages.pagesOutput()).as("PagesOutput comparison for " + pages).isEqualTo(pagesOutput);
+		// assertThat(normalizedPages.severalPages()).as("SeveralPages comparison for " +
+		// pages).isEqualTo(severalPages);
+
+		SoftAssertions.assertSoftly(softAssertions -> {
+			softAssertions.assertThat(normalizedPages.pageStart()).as("PageStart comparison for " + pages)
+					.isEqualTo(pageStart);
+			softAssertions.assertThat(normalizedPages.pagesOutput()).as("PagesOutput comparison for " + pages)
+					.isEqualTo(pagesOutput);
+			softAssertions.assertThat(normalizedPages.severalPages()).as("SeveralPages comparison for " + pages)
+					.isEqualTo(severalPages);
+		});
 	}
 }
