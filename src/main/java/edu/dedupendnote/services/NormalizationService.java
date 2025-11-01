@@ -631,7 +631,7 @@ public class NormalizationService {
 		return journals;
 	}
 
-	/**
+	/*
 	 * normalizeInputPages: parses the different input strings with page numbers / article numbers to the fields
 	 * pageStart, pageEnd and pageStartForComparison.
 	 *
@@ -642,14 +642,16 @@ public class NormalizationService {
 	 *
 	 * C7 and SE occur before the SP field in an EndNote RIS file.
 	 *
-	 * Solution: - treat C7 as pages - if C7 has already been called AND SE is a range of pages (except "1-..."), then
-	 * SE can overwrite the C7 data. - if C7 or SE has already been called AND SP is a range of pages (except "1-...")
-	 * (e.g. C7: Pmid 29451177, and SP: 3-4) then SP can overwrite the C7 data. The test if fieldName ... has already
-	 * been called / pagesForComparison is not null, is NOT part of this method, but is handled in
+	 * Solution: 
+	 * - treat C7 as pages 
+	 * - if C7 has already been called AND SE is a range of pages (except "1-..."), then SE can overwrite the C7 data. 
+	 * - if C7 or SE has already been called AND SP is a range of pages (except "1-...") (e.g. C7: Pmid 29451177, and SP: 3-4) 
+	 *   then SP can overwrite the C7 data. 
+	 * 
+	 * The test if fieldName ... has already been called / pagesOutput is not null, is NOT part of this method, but is handled in
 	 * IOService::readPublications (and addNormalizedPages).
 	 *
-	 * See also issues https://github.com/globbestael/DedupEndnote/issues/2 and
-	 * https://github.com/globbestael/DedupEndnote/issues/3
+	 * See also issues https://github.com/globbestael/DedupEndnote/issues/2 and https://github.com/globbestael/DedupEndnote/issues/3
 	 */
 	public static PageRecord normalizeInputPages(String pages, String fieldName) {
 		pages = PAGES_ADDITIONS_PATTERN.matcher(pages).replaceAll("").strip();
@@ -657,18 +659,16 @@ public class NormalizationService {
 		pages = pages.replaceAll("(?<!\\d+)([a-zA-Z]+)-(\\d+)", "$1$2");
 
 		String originalPages = pages;
-		// if Pages contains a month name string, omit these month names
+		// if Pages contains a month name string (e.g. "01 June"), omit the whole pages
 		Matcher matcher = PAGES_MONTH_PATTERN.matcher(pages);
 		while (matcher.find()) {
 			pages = null;
 		}
-		// @formatter:off
 		/*
 		 * - Ovid Medline in RIS format puts author address in M2 field, which is exported as SP
 		 * - WoS has in Article Number field (AR) cases as 'Pmid 29451177' and 'Pii s0016-5107(03)01975-8'. These article numbers
 		 *   with a space can be skipped
 		 */
-		// @formatter:on
 		if (pages == null || pages.isEmpty() || pages.length() > 30
 				|| (fieldName.equals("C7") && pages.contains(" "))) {
 			return new PageRecord(originalPages, null, null, false);
@@ -694,15 +694,9 @@ public class NormalizationService {
 		}
 		List<String> pagesParts = Arrays.asList(pages.split("[+,;]\\s*"));
 		// @formatter:off
+		// Split into (1) group with only Roman numbers, and (2) others (could be Arabic numbers, combined Roman+Arabic ("ii208-212"),
+		// combined Arabic+text ("S12-23", "CD123456". "67A-69A", text, ...)
 		Map<Boolean, List<String>> resultMap = pagesParts.stream()
-			// FIXME: this mapping should be done in the arabic branch
-			//.map(p -> p.replaceAll("[Vv]\\d+:(\\d)", "$1"))		// clean "V2:553-V2:616" to "553-616" (book chapter in multivolume book)
-			// originally filtered for roman numerals, but also aN, eN, sN. But too many other cases got left out (Cochrane review numbers, Am J Phsyiol pages, ...)
-			// .filter(p -> p.matches("[ivxIVXaAeEsS\\d\\-\\s]+"))				// roman numerals, but also aN, eN, sN
-			// replacing "ii-218-ii-228" by "ii218-ii228" not necessary any more because ???
-			//.map(p -> p.replaceAll("(?<!\\d+)([ivxIVXaAeEsS]+)-(\\d+)", "$1$2"))
-			// replacing "ii218-ii228" by "218-228" not necessary any more because partitioning uses Roman instead of Arabic number pattern
-			//.map(p -> p.replaceAll("([a-zA-Z]+)(\\d+)", "$2")) 	// roman numbers don't have arabic numbers at the end
 			.collect(Collectors.partitioningBy(p -> p.matches("[ivxlcmIVXLCM\\-]+")));
 		// @formatter:on
 
@@ -769,8 +763,6 @@ public class NormalizationService {
 				pageStart = pageStartInt.toString();
 			} catch (NumberFormatException e) {
 				// log.error("- pageStart {} is NOT an integer", pageStart);
-				// pageStart = null;
-				// pageStartInt = null;
 			}
 		}
 		if (pageEnd != null) {
@@ -783,8 +775,6 @@ public class NormalizationService {
 				}
 			} catch (NumberFormatException e) {
 				// log.error("- pageEnd {} is NOT an integer", pageEnd);
-				// pageEnd = null;
-				// pageEndInt = null;
 			}
 		}
 		if (pagesOutput == null && (pageStart == null && pageEnd == null)) {

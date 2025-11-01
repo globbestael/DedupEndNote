@@ -211,7 +211,7 @@ public class IOService {
 							}
 							publication.setTitle(titleCache);
 						}
-						if (publication.isCochrane() && publication.getPageStart() == null) {
+						if (publication.isCochrane() && publication.getPagesOutput() == null) {
 							fillCochranePages(publication);
 						}
 						fillAllAuthors(publication);
@@ -390,9 +390,10 @@ public class IOService {
 		publication.getJournals().addAll(NormalizationService.normalizeInputJournals(fieldContent));
 	}
 
+	// See the comment at NormalizationService::normalizeInputPages for explanation of the if-else
 	public static void addNormalizedPages(String fieldContent, String fieldName, Publication publication) {
 		PageRecord normalizedPages = NormalizationService.normalizeInputPages(fieldContent, fieldName);
-		if (publication.getPageStart() != null && (!normalizedPages.originalPages().contains("-")
+		if (publication.getPagesOutput() != null && (!normalizedPages.originalPages().contains("-")
 				|| normalizedPages.originalPages().startsWith("1-"))) {
 			;
 		} else {
@@ -847,14 +848,6 @@ public class IOService {
 
 	private void fillCochranePages(Publication publication) {
 		String pageStart = publication.getPageStart();
-		if (pageStart != null) {
-			pageStart = pageStart.toUpperCase();
-			// C: cochrane reviews and protocols, E: editorials, M: ???
-			// if (!(pageStart.startsWith("C") || pageStart.startsWith("E") || pageStart.startsWith("M"))) {
-			// 	pageStart = null;
-			// }
-		}
-
 		if (pageStart == null) {
 			log.debug("Reached Cochrane publication without pageStart, getting it from the DOIs: {}", publication.getAuthors());
 			for (String doi : publication.getDois()) {

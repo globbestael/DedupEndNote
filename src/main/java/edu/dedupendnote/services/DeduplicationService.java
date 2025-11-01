@@ -385,7 +385,7 @@ public class DeduplicationService {
 					publicationToKeep.setPagesOutput(publicationToKeep.getPagesOutput().toUpperCase());
 				}
 
-				// Add missing startpages (and endpages)
+				// Add missing pagesOutput
 				if (publicationToKeep.getPagesOutput() == null || publicationToKeep.getPagesOutput().isEmpty()) {
 					log.debug("Reached publication without pagesOutput: {}", publicationToKeep.getId());
 					publicationList.stream().filter(r -> r.getPagesOutput() != null).findFirst().ifPresent(r -> {
@@ -416,41 +416,6 @@ public class DeduplicationService {
 		log.debug("Finished enrich");
 	}
 
-	// Pat of this function is moved to IOService::fillCochranePages
-	// private void replaceCochranePageStart(Publication publicationToKeep, List<Publication> duplicates) {
-	// String pageStart = publicationToKeep.getPageStart();
-	// if (pageStart != null) {
-	// pageStart = pageStart.toUpperCase();
-	// // C: cochrane reviews and protocols, E: editorials, M: ???
-	// if (!(pageStart.startsWith("C") || pageStart.startsWith("E") || pageStart.startsWith("M"))) {
-	// pageStart = null;
-	// }
-	// }
-
-	// if (pageStart == null) {
-	// log.debug("Reached Cochrane publication without pageStart, getting it from pageStart of the duplicates: {}",
-	// publicationToKeep.getAuthors());
-	// for (Publication r : duplicates) {
-	// if (r.getPageStart() != null && r.getPageStart().toUpperCase().matches("^[CEM].+")) {
-	// publicationToKeep.setPageStart(r.getPageStart().toUpperCase());
-	// return;
-	// }
-	// }
-	// log.debug("Reached Cochrane publication without pageStart, getting it from the DOIs: {}",
-	// publicationToKeep.getAuthors());
-	// for (String doi : publicationToKeep.getDois()) {
-	// Matcher matcher = COCHRANE_DOI_PATTERN.matcher(doi);
-	// if (matcher.matches()) {
-	// pageStart = matcher.group(1);
-	// break;
-	// }
-	// }
-	// }
-	// if (pageStart != null) {
-	// publicationToKeep.setPageStart(pageStart.toUpperCase());
-	// }
-	// }
-
 	public String formatResultString(int total, int totalWritten) {
 		return "DONE: DedupEndNote has deduplicated " + total + " publications, has removed " + (total - totalWritten)
 				+ " duplicates, and has written " + totalWritten + " publications.";
@@ -460,19 +425,6 @@ public class DeduplicationService {
 		return authorsComparisonService;
 	}
 
-	// FIXME: is Apache Commons CollectionUtils better?
-	// private boolean listsContainSameString(List<String> list1, List<String> list2) {
-	// if (list1.isEmpty() || list2.isEmpty()) {
-	// return false;
-	// }
-	// List<String> common = new ArrayList<>(list1);
-	// common.retainAll(list2);
-	// return !common.isEmpty();
-	// }
-
-	// FIXME: is Apache Commons CollectionUtils or Spring CollectionUtils better?
-
-	// @formatter:off
 	/*
 	 * For 1 file:
 	 * - order year descending
@@ -481,7 +433,6 @@ public class DeduplicationService {
 	 * Reason: we prefer the data (duplicate kept) which is most recent (e.g. complete publication BEFORE ahead
 	 * of print which is possibly from earlier year or without a year).
 	 */
-	// @formatter:on
 	public void searchYearOneFile(List<Publication> publications, String wssessionId) {
 		Map<Integer, List<Publication>> yearSets = publications.stream()
 				.collect(Collectors.groupingBy(Publication::getPublicationYear, TreeMap::new, Collectors.toList()))
