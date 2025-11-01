@@ -3,15 +3,15 @@ package edu.dedupendnote;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.boot.test.context.SpringBootTest;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
@@ -22,9 +22,9 @@ import edu.dedupendnote.utils.MemoryAppender;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@TestConfiguration
+@SpringBootTest
 class MissedDuplicatesTests extends BaseTest {
-	public DeduplicationService deduplicationService = new DeduplicationService();
+	DeduplicationService deduplicationService = new DeduplicationService();
 
 	String homeDir = System.getProperty("user.home");
 
@@ -36,23 +36,37 @@ class MissedDuplicatesTests extends BaseTest {
 
 	static Logger logger = null;
 
-	@BeforeAll
-	static void setup() {
-		logger = (Logger) LoggerFactory.getLogger("edu.dedupendnote.services.DeduplicationService");
-		logger.setLevel(Level.TRACE);
-	}
+	List<Pattern> tracePatterns = List.of(Pattern.compile("- (1|2|3|4). .+"),
+			Pattern.compile("\\d+ - \\d+ ARE (NOT )?DUPLICATES"));
+
+	// @BeforeAll
+	// static void setup() {
+	// logger = (Logger) LoggerFactory.getLogger("edu.dedupendnote.services.DeduplicationService");
+	// logger.setLevel(Level.TRACE);
+	// }
 
 	/*
 	 * For each source in the @ParameterizedTest a new memoryAppender is added.
 	 * 
 	 * Trying to reuse the memoryAppender (even by giving it a name) doesn't work.
+	 * 
+	 * FIXME: There is a big overlap with ValidationTests::writeFNandFPresults in initialization of the memoryAppender
 	 */
 	@BeforeEach
 	void addMemoryAppender() {
-		// memoryAppender.setName("The_memoryAppender");
-		// String appenderName = memoryAppender.getName();
-		// System.err.println("MemoryAppender with name " + appenderName);
-		logger.addAppender(memoryAppender);
+		List<Logger> loggers = new ArrayList<>();
+		List<String> loggerNames = List.of("edu.dedupendnote.services.DeduplicationService",
+				"edu.dedupendnote.services.ComparisonService",
+				"edu.dedupendnote.services.DefaultAuthorsComparisonService");
+		Level oldLevel = null;
+
+		for (String loggerName : loggerNames) {
+			Logger logger = (Logger) LoggerFactory.getLogger(loggerName);
+			oldLevel = logger.getLevel();
+			logger.setLevel(Level.TRACE);
+			logger.addAppender(memoryAppender);
+			loggers.add(logger);
+		}
 		memoryAppender.setContext((LoggerContext) LoggerFactory.getILoggerFactory());
 		memoryAppender.start();
 	}
@@ -79,6 +93,7 @@ class MissedDuplicatesTests extends BaseTest {
 	@ParameterizedTest
 	@CsvSource({
 		"'/own/missed_duplicates/SP_C7_none.txt', 3, 1", // after refactoring pages: record with SP, C7 and none
+		"'/problems/test805_missed_duplicates_1.txt', 2, 1", 
 		// "'/problems/AI_Query_2022_missed_duplicates_4.txt', 2, 2", // title too different
 		// "'/problems/AI_Query_2022_missed_duplicates_5.txt', 2, 2", // ISSN same, ISBN different
 		// "'/ASySD/dedupendnote_files/missed_duplicates/Cardiac_Human_missed_duplicates_1.txt', 2, 2",
@@ -86,7 +101,6 @@ class MissedDuplicatesTests extends BaseTest {
 		// "'/ASySD/dedupendnote_files/missed_duplicates/SRSR_Human_missed_3.txt', 2, 2", // book chapters
 		// "'/problems/Semaglutide_wrong_duplicates.txt', 4, 2",
 		// "'/problems/BIG_SET_missed_3.txt', 3, 2", 
-		"'/problems/test805_missed_duplicates_1.txt', 2, 1", 
 		// "'/problems/TIL_missed_duplicates_2.txt', 3, 1", // different pages, same DOI
 	})
 	// @formatter:on
@@ -101,6 +115,7 @@ class MissedDuplicatesTests extends BaseTest {
 				wssessionId);
 
 		// System.err.println("Number of events " + memoryAppender.getSize());
+		// log.error("Number of events {}", memoryAppender.getSize());
 		// assertThat(memoryAppender.contains("1. Starting pages are the same", Level.DEBUG)).isTrue();
 		// Pattern pattern = Pattern.compile("- (1|2|3|4). .+");
 		// System.err.println("Messages: " + memoryAppender.filterByPattern(pattern, Level.DEBUG));
@@ -108,13 +123,10 @@ class MissedDuplicatesTests extends BaseTest {
 		// .isGreaterThan(0);
 		// assertThat(memoryAppender.containsPattern(Pattern.compile(".+ (1|2|3|4). .+"), Level.DEBUG)).isTrue();
 
-		System.err.println("Messages: " + memoryAppender.filterByPatterns(patterns, Level.TRACE));
-		assertThat(memoryAppender.filterByPatterns(patterns, Level.TRACE).size()).isGreaterThan(0);
+		System.err.println("Messages: " + memoryAppender.filterByPatterns(tracePatterns, Level.TRACE));
+		assertThat(memoryAppender.filterByPatterns(tracePatterns, Level.TRACE).size()).isGreaterThan(0);
 		assertThat(resultString).isEqualTo(deduplicationService.formatResultString(total, totalWritten));
 	}
-
-	List<Pattern> patterns = List.of(Pattern.compile("- (1|2|3|4). .+"),
-			Pattern.compile("\\d+ - \\d+ ARE (NOT )?DUPLICATES"));
 
 	// FIXME: tests for markMode = true;
 
