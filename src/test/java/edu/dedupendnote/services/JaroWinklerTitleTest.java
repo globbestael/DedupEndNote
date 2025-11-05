@@ -262,14 +262,13 @@ class JaroWinklerTitleTest {
 				// treatment of metastatic breast cancer (MBC)",
 				// "Phase one one one/two two two trial of ixabepilone (Ixa) and dasatinib
 				// (D) for treatment of metastatic breast cancer (MBC)",
-				// 0.9052), // example of False Positive, with "I" and "II" translated and	tripled
+				// 0.9052), // example of False Positive, with "I" and "II" translated
 				// arguments(
 				// revertString("Phase one one one trial of ixabepilone (IXA) and
 				// dasatinib (D) for treatment of metastatic breast cancer (MBC)"),
 				// revertString("Phase one one one/two two two trial of ixabepilone (Ixa)
 				// and dasatinib (D) for treatment of metastatic breast cancer (MBC)"),
-				// 0.9716), // example of False Positive, with "I" and "II" translated and
-				// tripled
+				// 0.9716), // example of False Positive, with "I" and "II" translated 
 				// arguments(
 				// revertString("Phase one one one one trial of ixabepilone (IXA) and
 				// dasatinib (D) for treatment of metastatic breast cancer (MBC)"),
