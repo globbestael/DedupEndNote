@@ -20,9 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 class AuthorsBaseTest extends BaseTest {
 
 	String homeDir = System.getProperty("user.home");
-
 	String testdir = homeDir + "/dedupendnote_files";
-
 	List<Triple> localTriples = new ArrayList<>();
 
 	@Test
@@ -42,11 +40,8 @@ class AuthorsBaseTest extends BaseTest {
 	public class Triple {
 
 		String authors1;
-
 		String authors2;
-
 		double jws = 0.0;
-
 		double expJws = 0.0;
 
 		public String toString() {

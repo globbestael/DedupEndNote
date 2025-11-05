@@ -12,22 +12,27 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.stereotype.Service;
+import org.springframework.web.context.annotation.RequestScope;
 
 import edu.dedupendnote.domain.Publication;
 import edu.dedupendnote.domain.StompMessage;
 import lombok.extern.slf4j.Slf4j;
 
+@Service
+@RequestScope
 @Slf4j
 public class DeduplicationService {
 
-	protected AuthorsComparisonService authorsComparisonService;
+	private AuthorsComparisonService authorsComparisonService;
+	private final IOService ioService;
+	private final SimpMessagingTemplate simpMessagingTemplate;
 
 	// the DOIs have been lowercased
 	public static Pattern COCHRANE_DOI_PATTERN = Pattern.compile("^.*10.1002/14651858.([a-z][a-z]\\d+).*",
 			Pattern.CASE_INSENSITIVE);
-
-	private IOService ioService;
 
 	// @formatter:off
 	/*
@@ -81,22 +86,10 @@ public class DeduplicationService {
 	 *  If the label starts with "-", it is a duplicate from a publication from the OLD input file.
 	 */
 	// @formatter:on
-	// @Autowired
-	private SimpMessagingTemplate simpMessagingTemplate;
-
-	public DeduplicationService() {
-		this.authorsComparisonService = new DefaultAuthorsComparisonService();
-		this.ioService = new IOService();
-	}
 
 	public DeduplicationService(SimpMessagingTemplate simpMessagingTemplate) {
-		this.authorsComparisonService = new DefaultAuthorsComparisonService();
-		this.ioService = new IOService();
 		this.simpMessagingTemplate = simpMessagingTemplate;
-	}
-
-	public DeduplicationService(AuthorsComparisonService authorsComparisonService) {
-		this.authorsComparisonService = authorsComparisonService;
+		this.authorsComparisonService = new DefaultAuthorsComparisonService();
 		this.ioService = new IOService();
 	}
 
@@ -246,13 +239,15 @@ public class DeduplicationService {
 			return s;
 		}
 
-		// Put "-" before the IDs of the old publications. In this way the labels of the publications (used for
-		// identifying duplicate publications) will be unique over both lists.
-		// When writing the deduplicated publications for the second list, publications with label "-..." can
-		// be skipped because they are duplicates of publications from the first list.
-		// When markMode is set, these publications are written.
-		// Because of this "-", the publications which have duplicates in the first file (label = "-...")
-		// can be distinguished from publications which have duplicates in the second file.
+		/*
+		 * Put "-" before the IDs of the old publications. In this way the labels of the publications (used for
+		 * identifying duplicate publications) will be unique over both lists.
+		 * When writing the deduplicated publications for the second list, publications with label "-..." can
+		 * be skipped because they are duplicates of publications from the first list.
+		 * When markMode is set, these publications are written.
+		 * Because of this "-", the publications which have duplicates in the first file (label = "-...")
+		 * can be distinguished from publications which have duplicates in the second file.
+		 */
 		publications.forEach(r -> {
 			r.setId("-" + r.getId());
 			r.setPresentInOldFile(true);
@@ -502,6 +497,10 @@ public class DeduplicationService {
 		if (simpMessagingTemplate != null) {
 			simpMessagingTemplate.convertAndSend("/topic/messages-" + wssessionId, new StompMessage(message));
 		}
+	}
+
+	public void setAuthorsComparisonService(AuthorsComparisonService authorsComparisonService) {
+		this.authorsComparisonService = authorsComparisonService;
 	}
 
 }

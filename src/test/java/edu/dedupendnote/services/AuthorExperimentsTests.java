@@ -3,7 +3,12 @@ package edu.dedupendnote.services;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.commons.text.similarity.JaroWinklerSimilarity;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import edu.dedupendnote.domain.Publication;
 import lombok.extern.slf4j.Slf4j;
@@ -11,29 +16,40 @@ import lombok.extern.slf4j.Slf4j;
 /*
  * Test for comparing different implementations of author comparisons; VERY INCOMPLETE
  *
- * The current ExperimentalAuthorsComparator just uses higher values for AUTHOR_SIMILARITY_... and compares deduplication results with the
- * production version.
+ * The current ExperimentalAuthorsComparator just uses higher values for AUTHOR_SIMILARITY_... 
+ * and compares deduplication results with the production version.
  */
+@SpringBootTest
 @Slf4j
 class AuthorExperimentsTests {
-	DeduplicationService service = new DeduplicationService();
+
+	@Autowired
+	DeduplicationService service;
+
+	@MockitoBean
+	SimpMessagingTemplate simpMessagingTemplate;
+
 	AuthorsComparisonService authorsComparisonService = new ExperimentalAuthorsComparator();
-	DeduplicationService expService = new DeduplicationService(authorsComparisonService);
+
+	// @Autowired
+	private DeduplicationService expService = new DeduplicationService(simpMessagingTemplate);
 
 	String homeDir = System.getProperty("user.home");
 	String testdir = homeDir + "/dedupendnote_files";
 	String wssessionId = "";
 
-	public static class ExperimentalAuthorsComparator implements AuthorsComparisonService {
+	@BeforeEach
+	void beforeEach() {
+		expService.setAuthorsComparisonService(authorsComparisonService);
+	}
+
+	public class ExperimentalAuthorsComparator implements AuthorsComparisonService {
 
 		public static final Double AUTHOR_SIMILARITY_NO_REPLY = 0.67 + 0.5;
-
 		public static final Double AUTHOR_SIMILARITY_REPLY_SUFFICIENT_STARTPAGES_OR_DOIS = 0.75 + 0.2;
-
 		public static final Double AUTHOR_SIMILARITY_REPLY_INSUFFICIENT_STARTPAGES_AND_DOIS = 0.80 + 0.2;
 
 		private JaroWinklerSimilarity jws = new JaroWinklerSimilarity();
-
 		Double similarity = 0.0;
 
 		@Override

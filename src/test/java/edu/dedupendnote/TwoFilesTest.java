@@ -4,19 +4,24 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import edu.dedupendnote.services.DeduplicationService;
 import edu.dedupendnote.services.UtilitiesService;
 
-@TestConfiguration
+@SpringBootTest
 class TwoFilesTest {
-	public DeduplicationService deduplicationService = new DeduplicationService();
+	@Autowired
+	DeduplicationService deduplicationService;
+
+	@MockitoBean
+	SimpMessagingTemplate simpMessagingTemplate;
 
 	String homeDir = System.getProperty("user.home");
-
 	String testdir = homeDir + "/dedupendnote_files/experiments/";
-
 	String wssessionId = "";
 
 	@Test

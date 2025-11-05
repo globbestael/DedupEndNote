@@ -96,7 +96,7 @@ class AbstracttextTest {
 	@Nested
 	class JwsAbstracttextTest {
 		@ParameterizedTest(name = "{index}: jaroWinkler({0}, {1})={2}")
-		@MethodSource("edu.dedupendnote.AbstracttextTest#negativeArgumentProvider")
+		@MethodSource("edu.dedupendnote.services.AbstracttextTest#negativeArgumentProvider")
 		void jwNegativeTest(String input1, String input2, double expected) {
 			String t1 = cleanAbstracttext(input1);
 			String t2 = cleanAbstracttext(input2);
@@ -114,7 +114,7 @@ class AbstracttextTest {
 		}
 
 		@ParameterizedTest(name = "{index}: jaroWinkler({0}, {1})={2}")
-		@MethodSource("edu.dedupendnote.AbstracttextTest#positiveArgumentProvider")
+		@MethodSource("edu.dedupendnote.services.AbstracttextTest#positiveArgumentProvider")
 		void jwPositiveTest(String input1, String input2, double expected) {
 			// String diffsOfRawInput = getDiffs(input1, input2);
 			String t1 = cleanAbstracttext(input1);

@@ -25,6 +25,10 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.MappingIterator;
@@ -53,22 +57,26 @@ import lombok.extern.slf4j.Slf4j;
  * See http://localhost:9777/developers for a description of the database.
  */
 @Slf4j
+@SpringBootTest
 class ValidationTests {
-	// temporary
-	public Map<String, Integer> titleCounter = new HashMap<>();
-	DeduplicationService deduplicationService = new DeduplicationService();
-	IOService ioService = new IOService();
+	@Autowired
+	DeduplicationService deduplicationService;
 
-	RecordDBService recordDBService = new RecordDBService();
+	@MockitoBean
+	SimpMessagingTemplate simpMessagingTemplate;
+
+	@Autowired
+	IOService ioService;
+
+	@Autowired
+	RecordDBService recordDBService;
 
 	String homeDir = System.getProperty("user.home");
-
 	String testdir = homeDir + "/dedupendnote_files";
-
+	Map<String, Integer> titleCounter = new HashMap<>();
 	String wssessionId = "";
 
 	private static Logger rootLogger;
-
 	private boolean withTracing = false;
 	private boolean withTitleSplitterOutput = false;
 

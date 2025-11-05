@@ -11,7 +11,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
@@ -24,26 +27,22 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @SpringBootTest
 class MissedDuplicatesTests extends BaseTest {
-	DeduplicationService deduplicationService = new DeduplicationService();
+	@Autowired
+	DeduplicationService deduplicationService;
 
-	String homeDir = System.getProperty("user.home");
+	@MockitoBean
+	SimpMessagingTemplate simpMessagingTemplate;
 
 	private final MemoryAppender memoryAppender = new MemoryAppender();
 
+	String homeDir = System.getProperty("user.home");
 	String testdir = homeDir + "/dedupendnote_files/";
-
 	String wssessionId = "";
 
 	static Logger logger = null;
 
 	List<Pattern> tracePatterns = List.of(Pattern.compile("- (1|2|3|4). .+"),
 			Pattern.compile("\\d+ - \\d+ ARE (NOT )?DUPLICATES"));
-
-	// @BeforeAll
-	// static void setup() {
-	// logger = (Logger) LoggerFactory.getLogger("edu.dedupendnote.services.DeduplicationService");
-	// logger.setLevel(Level.TRACE);
-	// }
 
 	/*
 	 * For each source in the @ParameterizedTest a new memoryAppender is added.

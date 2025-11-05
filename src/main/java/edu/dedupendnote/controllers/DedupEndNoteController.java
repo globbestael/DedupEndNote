@@ -14,11 +14,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.context.request.RequestAttributes;
+import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.multipart.MultipartFile;
 
 import edu.dedupendnote.services.DeduplicationService;
@@ -34,10 +35,10 @@ public class DedupEndNoteController {
 	@Value("${upload-dir}")
 	private String uploadDir;
 
-	private SimpMessagingTemplate simpMessagingTemplate;
+	private final DeduplicationService deduplicationService;
 
-	public DedupEndNoteController(SimpMessagingTemplate simpMessagingTemplate) {
-		this.simpMessagingTemplate = simpMessagingTemplate;
+	public DedupEndNoteController(DeduplicationService deduplicationService) {
+		this.deduplicationService = deduplicationService;
 	}
 
 	// @formatter:off
@@ -99,18 +100,27 @@ public class DedupEndNoteController {
 		return "details";
 	}
 
+	/*
+	 * The use of RequestContextHolder within the executor\Service.submit is necessary to prevent the error
+	 * 		Scope 'request' is not active for the current thread; consider defining a scoped proxy 
+	 * 
+	 * Explanation and solution in 
+	 * 		https://blog.stackademic.com/how-to-overcome-spring-request-scope-issue-for-child-threads-ad3e2a30bf42
+	 */
 	@PostMapping(value = "/startOneFile", produces = "application/json")
 	public ResponseEntity<String> startOneFile(@RequestParam("fileName_1") String inputFileName,
 			@RequestParam(required = false, defaultValue = "false") Boolean markMode, @RequestParam String wssessionId)
 			throws Exception {
 		String outputFileName = UtilitiesService.createOutputFileName(inputFileName, markMode);
 		String logPrefix = "1F" + (Boolean.TRUE.equals(markMode) ? "M" : "D");
-		DeduplicationService deduplicationService = new DeduplicationService(simpMessagingTemplate);
 
 		try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
-			Future<String> future = executor
-					.submit(() -> deduplicationService.deduplicateOneFile(uploadDir + File.separator + inputFileName,
-							uploadDir + File.separator + outputFileName, markMode, wssessionId));
+			RequestAttributes requestAttributes = RequestContextHolder.currentRequestAttributes();
+			Future<String> future = executor.submit(() -> {
+				RequestContextHolder.setRequestAttributes(requestAttributes);
+				return deduplicationService.deduplicateOneFile(uploadDir + File.separator + inputFileName,
+						uploadDir + File.separator + outputFileName, markMode, wssessionId);
+			});
 			log.info("Writing to result: {}: {}", logPrefix, future.get());
 			return ResponseEntity.ok("{ \"result\": " + future.get());
 		}
@@ -122,14 +132,16 @@ public class DedupEndNoteController {
 			throws InterruptedException, ExecutionException {
 
 		String logPrefix = "2F" + (Boolean.TRUE.equals(markMode) ? "M" : "D");
-		DeduplicationService deduplicationService = new DeduplicationService(simpMessagingTemplate);
 
 		try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
-			Future<String> future = executor
-					.submit(() -> deduplicationService.deduplicateTwoFiles(uploadDir + File.separator + newFile,
-							uploadDir + File.separator + oldFile,
-							uploadDir + File.separator + UtilitiesService.createOutputFileName(newFile, markMode),
-							markMode, wssessionId));
+			RequestAttributes requestAttributes = RequestContextHolder.currentRequestAttributes();
+			Future<String> future = executor.submit(() -> {
+				RequestContextHolder.setRequestAttributes(requestAttributes);
+				return deduplicationService.deduplicateTwoFiles(uploadDir + File.separator + newFile,
+						uploadDir + File.separator + oldFile,
+						uploadDir + File.separator + UtilitiesService.createOutputFileName(newFile, markMode), markMode,
+						wssessionId);
+			});
 			log.info("Writing to result: {}: {}", logPrefix, future.get());
 			return ResponseEntity.ok("{ \"result\": " + future.get());
 		}
