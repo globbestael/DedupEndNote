@@ -6,6 +6,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -63,11 +64,31 @@ class AuthorsBaseTest extends BaseTest {
 	 *   AND ((BIG_SET_TRUTH_1.id) <> [BIG_SET_TRUTH].[id] 
 	 *   AND (BIG_SET_TRUTH_1.id) > [BIG_SET_TRUTH].[id]) 
 	 *   AND ((BIG_SET_TRUTH.Validated)=True));
+	 * 
+	 * Cleaning up the query (using the query for another test database will require only a change in the FROM and INNER JOIN line)
+	 * 
+	 * SELECT DISTINCT t1.authors, t2.authors
+	 * FROM SRA2_Haematology_TRUTH AS t1
+	 * INNER JOIN SRA2_Haematology_TRUTH AS t2 ON t1.dedupid = t2.dedupid
+	 * WHERE t1.authors_truncated <> t2.authors_truncated
+	 *   AND t1.id > 0
+	 *   AND t1.id <> t2.id  
+	 *   AND t1.id < t2.id
+	 *   AND t1.Validated = true;
 	 *
-	 * The whole file validated_authors_pairs.txt is created on the TRUTH files for
-	 * BIG_SET, SRA2_Cytology_screening, SRA2_Haematology, SRA2_Respiratory, TIL.
+	 * The file validated_authors_pairs.txt is created on the TRUTH files for
+	 * AI_subset_TRUTH
+	 * ASySD_Cardiac_human_TRUTH
+	 * ASySD_Diabetes_TRUTH
+	 * ASySD_Neuroimaging_TRUTH
+	 * ASySD_SRSR_Human_TRUTH
+	 * BIG_SET_TRUTH
+	 * SRA2_Cytology_screening_TRUTH
+	 * SRA2_Haematology_TRUTH
+	 * SRA2_Respiratory_TRUTH
+	 * TIL_TRUTH
 	 *  
-	 * The whole file validated_authors_pairs_2.txt is created on the TRUTH files for 
+	 * The file validated_authors_pairs_2.txt is created on the TRUTH files for 
 	 * BIG_SET, SRA2_Cytology_screening, SRA2_Haematology, SRA2_Respiratory, ASySD_SRSR_Human, McKeown_2021. 
 	 * But both last files have often bad format for authors (no ';' etc).
 	 * McKeown: authors run together as 1 aithor name: records from database cctr (Cochrane Central?) e.g.:
@@ -92,7 +113,7 @@ class AuthorsBaseTest extends BaseTest {
 		lines.close();
 		log.error("There were {} triples", localTriples.size());
 		// deduplicate
-		// localTriples = localTriples.stream().distinct().collect(Collectors.toList());
+		localTriples = localTriples.stream().distinct().collect(Collectors.toList());
 		log.error("There are {} distinct triples", localTriples.size());
 
 		assertThat(localTriples).as("There are more than 100 authors pairs").hasSizeGreaterThan(100);

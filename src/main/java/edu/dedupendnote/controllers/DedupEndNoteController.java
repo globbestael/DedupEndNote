@@ -109,7 +109,7 @@ public class DedupEndNoteController {
 	 */
 	@PostMapping(value = "/startOneFile", produces = "application/json")
 	public ResponseEntity<String> startOneFile(@RequestParam("fileName_1") String inputFileName,
-			@RequestParam(required = false, defaultValue = "false") Boolean markMode, @RequestParam String wssessionId)
+			@RequestParam(required = false, defaultValue = "false") boolean markMode, @RequestParam String wssessionId)
 			throws Exception {
 		String outputFileName = UtilitiesService.createOutputFileName(inputFileName, markMode);
 		String logPrefix = "1F" + (Boolean.TRUE.equals(markMode) ? "M" : "D");
@@ -128,7 +128,7 @@ public class DedupEndNoteController {
 
 	@PostMapping(value = "/startTwoFiles", produces = "application/json")
 	public ResponseEntity<String> startTwoFiles(@RequestParam String oldFile, @RequestParam String newFile,
-			@RequestParam(required = false, defaultValue = "false") Boolean markMode, @RequestParam String wssessionId)
+			@RequestParam(required = false, defaultValue = "false") boolean markMode, @RequestParam String wssessionId)
 			throws InterruptedException, ExecutionException {
 
 		String logPrefix = "2F" + (Boolean.TRUE.equals(markMode) ? "M" : "D");

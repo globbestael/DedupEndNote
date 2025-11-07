@@ -51,13 +51,9 @@ public class Publication {
 	private String pagesOutput;
 	private String pageStart;
 
-	private boolean presentInOldFile = false; // used when comparing 2 files
-
 	private Integer publicationYear = 0;
 
 	private String referenceType;
-
-	public boolean severalPages;
 
 	private String title; // only set for Reply-titles
 
@@ -65,30 +61,25 @@ public class Publication {
 
 	private boolean isClinicalTrialGov = false;
 
-	// @formatter:off
 	/**
-	 * Cochrane publications need a slightly different comparison. 
-	 * The starting page is the Cochrane number of the review which doesn't change for different versions of the review. 
-	 * Each version of the review has a unique DOI (e.g. "10.1002/14651858.cd008759.pub2"), but the first version has no ".pub" part, AND
-	 * bibliographic databases sometimes use the common DOI / DOI of first version for all versions. 
-	 * Therefore:
-	 * - with other publications starting pages are compared BEFORE the DOIs. For Cochrane publications if both have a DOI, then only the DOIs are compared 
-	 * - publication year must be the same
+	 * Cochrane publications need a slightly different comparison. The starting page is the Cochrane number of the
+	 * review which doesn't change for different versions of the review. Each version of the review has a unique DOI
+	 * (e.g. "10.1002/14651858.cd008759.pub2"), but the first version has no ".pub" part, AND bibliographic databases
+	 * sometimes use the common DOI / DOI of first version for all versions. Therefore: - with other publications
+	 * starting pages are compared BEFORE the DOIs. For Cochrane publications if both have a DOI, then only the DOIs are
+	 * compared - publication year must be the same
 	 */
-	// @formatter:on
 	private boolean isCochrane = false;
-
+	private boolean isKeptPublication = true;
 	private boolean isPhase = false;
+	private boolean isPresentInOldFile = false; // used when comparing 2 files
 
-	// @formatter:off
 	/*
 	 * Publications which are replies need special treatment. See the Pattern in the {@link IOService.replyPattern} 
 	 * - publication pairs where one of them is isReply == true, aren't compared for title (always true)
 	 * - journals are compared stricter (see DeduplicationService.JOURNAL_SIMILARITY_NO_REPLY < DeduplicationService.JOURNAL_SIMILARITY_NO_REPLY)
 	 * - in enrich() the longest title of a duplicate set is used
 	 */
-	// @formatter:on
 	private boolean isReply = false;
-
-	private Boolean keptPublication = true;
+	public boolean isSeveralPages;
 }

@@ -90,7 +90,7 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 			triple.setExpJws(getHighestSimilarityForAuthors(r1.getAllAuthors(), r2.getAllAuthors()));
 		}
 
-		showTripleComparisonDetails("AuthorsLimitedToFirstLetters", triples, true);
+		showTripleComparisonDetails("AuthorsLimitedToFirstLetters", triples, false);
 
 		assertThat(1).isEqualTo(1);
 	}
@@ -144,12 +144,14 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 			List<String> authorList2 = Arrays.asList(triple.getAuthors2().split("; "));
 			int min = Math.min(authorList1.size(), authorList2.size());
 
-			r1 = fillPublication(authorList1.subList(0, min).stream().collect(Collectors.joining("; ")));
-			r2 = fillPublication(authorList2.subList(0, min).stream().collect(Collectors.joining("; ")));
+			// r1 = fillPublication(authorList1.subList(0, min).stream().collect(Collectors.joining("; ")));
+			// r2 = fillPublication(authorList2.subList(0, min).stream().collect(Collectors.joining("; ")));
+			r1 = fillPublication(authorList1.stream().limit(min).collect(Collectors.joining("; ")));
+			r2 = fillPublication(authorList2.stream().limit(min).collect(Collectors.joining("; ")));
 			triple.setExpJws(getHighestSimilarityForAuthors(r1.getAllAuthors(), r2.getAllAuthors()));
 		}
 
-		showTripleComparisonDetails("compareSameNumberOfAuthors", triples, true);
+		showTripleComparisonDetails("compareSameNumberOfAuthors", triples, false);
 
 		assertThat(1).isEqualTo(1);
 	}
@@ -242,6 +244,16 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 		assertThat(1).isEqualTo(1);
 	}
 
+	/*
+	 * Using only the first letters if uppercased
+	 * 
+	 * Sorting he first letters:
+	 * - good results for when first and last names are switched
+	 * 		Real errors: "Clifford, M.; Leah, M.; Charles, N." vs "Mwita, C.; Mwai, L.; Newton, C."
+	 * 		Chinese names: "Zheng, H. P.; Hu, Z. P.; Lu, W." vs "Haiping, Zheng; Zhiping, Hu; Wei, Lu"
+	 * - bad results with short author lists with differeent conventions, esp when sorting
+	 * 		"Weller, S. C." vs "WELLER, SC"		(WSC vs WS, sorting: CSW vs SW)
+	 */
 	private Publication fillPublicationAddAuthorsWithoutPreprocessing(String authors) {
 		PublicationExperiment r = new PublicationExperiment();
 		List<String> authorList1 = Arrays.asList(authors.split("; "));

@@ -10,8 +10,17 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.boot.test.context.TestConfiguration;
 
+import edu.dedupendnote.services.NormalizationService.AuthorRecord;
+
 @TestConfiguration
 class NormalizationServiceTest {
+
+	@ParameterizedTest(name = "{index}: normalizeAuthor({0})={1}, {2}")
+	@MethodSource("authorArgumentProvider")
+	void normalizeAuthorTest(String input, AuthorRecord expected) {
+		AuthorRecord result = NormalizationService.normalizeInputAuthors(input);
+		assertThat(result).isEqualTo(expected);
+	}
 
 	@ParameterizedTest(name = "{index}: normalizeTitle({0})={1}")
 	@MethodSource("titleArgumentProvider")
@@ -25,6 +34,16 @@ class NormalizationServiceTest {
 	void normalizeJournalTest(String input, String expected) {
 		String result = NormalizationService.normalizeJournal(input);
 		assertThat(result).isEqualTo(expected);
+	}
+
+	static Stream<Arguments> authorArgumentProvider() {
+		// @formatter:off
+		return Stream.of(
+			arguments("Smith, Arthur", new AuthorRecord("Smith A", "Smith A", false)),
+			arguments("Smith, Arthur J. C.", new AuthorRecord("Smith AJC", "Smith AJC", false)),
+			arguments("Smith Jones, Arthur", new AuthorRecord("Smith Jones A", "Jones AS", true))
+		);
+		// @formatter:on
 	}
 
 	static Stream<Arguments> journalArgumentProvider() {

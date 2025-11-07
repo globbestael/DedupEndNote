@@ -1,7 +1,6 @@
 package edu.dedupendnote.services;
 
 import static org.junit.jupiter.params.provider.Arguments.arguments;
-import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.stream.Stream;
 
@@ -116,7 +115,7 @@ class PagesTest {
 					.isEqualTo(pageStart);
 			softAssertions.assertThat(normalizedPages.pagesOutput()).as("PagesOutput comparison for " + pages)
 					.isEqualTo(pagesOutput);
-			softAssertions.assertThat(normalizedPages.severalPages()).as("SeveralPages comparison for " + pages)
+			softAssertions.assertThat(normalizedPages.isSeveralPages()).as("SeveralPages comparison for " + pages)
 					.isEqualTo(severalPages);
 		});
 	}

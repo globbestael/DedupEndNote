@@ -19,10 +19,10 @@ import org.springframework.stereotype.Service;
 
 import edu.dedupendnote.domain.Publication;
 import edu.dedupendnote.domain.PublicationDB;
-import edu.dedupendnote.services.NormalizationService.authorRecord;
-import edu.dedupendnote.services.NormalizationService.isbnIssnRecord;
+import edu.dedupendnote.services.NormalizationService.AuthorRecord;
+import edu.dedupendnote.services.NormalizationService.IsbnIssnRecord;
 import edu.dedupendnote.services.NormalizationService.PageRecord;
-import edu.dedupendnote.services.NormalizationService.titleRecord;
+import edu.dedupendnote.services.NormalizationService.TitleRecord;
 import lombok.extern.slf4j.Slf4j;
 
 /*
@@ -240,7 +240,7 @@ public class IOService {
 								.setPublicationYear(NormalizationService.normalizeInputPublicationYear(fieldContent));
 						break;
 					case "SN": // ISSN / ISBN
-						isbnIssnRecord normalized = NormalizationService.normalizeInputIssns(line);
+						IsbnIssnRecord normalized = NormalizationService.normalizeInputIssns(line);
 						publication.getIsbns().addAll(normalized.isbns());
 						publication.getIssns().addAll(normalized.issns());
 						previousFieldName = fieldName;
@@ -335,7 +335,7 @@ public class IOService {
 						publication.getDois().addAll(NormalizationService.normalizeInputDois(fieldContent));
 						break;
 					case "SN":
-						isbnIssnRecord normalized = NormalizationService.normalizeInputIssns(line);
+						IsbnIssnRecord normalized = NormalizationService.normalizeInputIssns(line);
 						publication.getIsbns().addAll(normalized.isbns());
 						publication.getIssns().addAll(normalized.issns());
 						break;
@@ -373,11 +373,11 @@ public class IOService {
 	}
 
 	public static void addNormalizedAuthor(String fieldContent, Publication publication) {
-		authorRecord normalizedAuthor = NormalizationService.normalizeInputAuthors(fieldContent);
+		AuthorRecord normalizedAuthor = NormalizationService.normalizeInputAuthors(fieldContent);
 		if (normalizedAuthor.author() != null) {
 			publication.getAuthors().add(normalizedAuthor.author());
 			publication.getAuthorsTransposed().add(normalizedAuthor.authorTransposed());
-			if (normalizedAuthor.authorIsTransposed()) {
+			if (normalizedAuthor.isAuthorTransposed()) {
 				publication.setAuthorsAreTransposed(true);
 			}
 		}
@@ -399,12 +399,12 @@ public class IOService {
 		} else {
 			publication.setPageStart(normalizedPages.pageStart());
 			publication.setPagesOutput(normalizedPages.pagesOutput());
-			publication.setSeveralPages(normalizedPages.severalPages());
+			publication.setSeveralPages(normalizedPages.isSeveralPages());
 		}
 	}
 
 	public static void addNormalizedTitle(String fieldContent, Publication publication) {
-		titleRecord normalizedTitle = NormalizationService.normalizeInputTitles(fieldContent);
+		TitleRecord normalizedTitle = NormalizationService.normalizeInputTitles(fieldContent);
 		publication.getTitles().addAll(normalizedTitle.titles());
 		if (normalizedTitle.originalTitle() != null) {
 			publication.setTitle(normalizedTitle.originalTitle());
@@ -455,7 +455,7 @@ public class IOService {
 	// @formatter:off
 	public int writeDeduplicatedPublications(List<Publication> publications, String inputFileName, String outputFileName) {
 		log.debug("Start writing to file {}", outputFileName);
-		List<Publication> recordsToKeep = publications.stream().filter(Publication::getKeptPublication).toList();
+		List<Publication> recordsToKeep = publications.stream().filter(Publication::isKeptPublication).toList();
 		log.debug("Publications to be kept: {}", recordsToKeep.size());
 
 		Map<String, Publication> recordIdMap = publications.stream().filter(r -> !r.getId().startsWith("-"))
@@ -499,7 +499,7 @@ public class IOService {
 								map.put("ID", phantomId.toString());
 							}
 						}
-						if (publication != null && publication.getKeptPublication()) {
+						if (publication != null && publication.isKeptPublication()) {
 							writePublication(map, publication, bw, true);
 							numberWritten++;
 						}
@@ -541,7 +541,7 @@ public class IOService {
 
 	public int writeMarkedPublications(List<Publication> publications, String inputFileName, String outputFileName) {
 		log.debug("Start writing to file {}", outputFileName);
-		List<Publication> recordsToKeep = publications.stream().filter(Publication::getKeptPublication).toList();
+		List<Publication> recordsToKeep = publications.stream().filter(Publication::isKeptPublication).toList();
 		log.debug("Publications to be kept: {}", recordsToKeep.size());
 
 		Map<String, Publication> recordIdMap = publications.stream().filter(r -> !r.getId().startsWith("-"))
@@ -580,7 +580,7 @@ public class IOService {
 							publication.setId(phantomId.toString());
 							map.put("ID", phantomId.toString());
 						}
-						if (publication != null && publication.getKeptPublication()) {
+						if (publication != null && publication.isKeptPublication()) {
 							map.put(fieldName, fieldContent);
 							if (publication.getLabel() != null) {
 								map.put("LB", publication.getLabel());

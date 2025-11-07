@@ -57,11 +57,11 @@ class MissedDuplicatesTests extends BaseTest {
 		List<String> loggerNames = List.of("edu.dedupendnote.services.DeduplicationService",
 				"edu.dedupendnote.services.ComparisonService",
 				"edu.dedupendnote.services.DefaultAuthorsComparisonService");
-		Level oldLevel = null;
+		// Level oldLevel = null;
 
 		for (String loggerName : loggerNames) {
 			Logger logger = (Logger) LoggerFactory.getLogger(loggerName);
-			oldLevel = logger.getLevel();
+			// oldLevel = logger.getLevel();
 			logger.setLevel(Level.TRACE);
 			logger.addAppender(memoryAppender);
 			loggers.add(logger);

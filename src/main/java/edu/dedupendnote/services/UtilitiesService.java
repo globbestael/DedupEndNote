@@ -36,7 +36,7 @@ public class UtilitiesService {
 		return hasBom;
 	}
 
-	public static String createOutputFileName(String fileName, Boolean markMode) {
+	public static String createOutputFileName(String fileName, boolean markMode) {
 		String extension = StringUtils.getFilenameExtension(fileName);
 		return fileName.replaceAll("." + extension + "$",
 				(Boolean.TRUE.equals(markMode) ? "_mark." : "_deduplicated.") + extension);

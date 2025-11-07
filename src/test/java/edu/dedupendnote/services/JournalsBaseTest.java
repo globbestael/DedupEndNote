@@ -7,6 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import static java.util.function.Predicate.not;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -33,7 +34,7 @@ class JournalsBaseTest extends BaseTest {
 
 		String journal1;
 		String journal2;
-		Boolean similar = false;
+		boolean similar = false;
 
 		public String toString() {
 			return "- " + journal1 + "\n- " + journal2 + "\n";
@@ -105,8 +106,10 @@ class JournalsBaseTest extends BaseTest {
 			triple.setSimilar(ComparisonService.compareJournals(p1, p2));
 		}
 
-		triples.stream().filter(t -> t.getSimilar() == false).forEach(System.err::println);
-		long numberMissed = triples.stream().filter(t -> t.getSimilar() == false).count();
+		// triples.stream().filter(t -> t.isSimilar() == false).forEach(System.err::println);
+		// long numberMissed = triples.stream().filter(t -> t.isSimilar() == false).count();
+		triples.stream().filter(not(Triple::isSimilar)).forEach(System.err::println);
+		long numberMissed = triples.stream().filter(not(Triple::isSimilar)).count();
 
 		/*
 		 	20220528: started with 125 missed

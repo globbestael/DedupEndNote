@@ -342,25 +342,25 @@ public class NormalizationService {
 
 	private static final Pattern EXCEPT_CAPITALS_PATTERN = Pattern.compile("[^A-Z]");
 
-	public record authorRecord(String author, String authorTransposed, boolean authorIsTransposed) {
+	public record AuthorRecord(String author, String authorTransposed, boolean isAuthorTransposed) {
 	}
 
-	public record isbnIssnRecord(Set<String> isbns, Set<String> issns) {
+	public record IsbnIssnRecord(Set<String> isbns, Set<String> issns) {
 	};
 
-	public record PageRecord(String originalPages, String pageStart, String pagesOutput, boolean severalPages) {
+	public record PageRecord(String originalPages, String pageStart, String pagesOutput, boolean isSeveralPages) {
 	};
 
-	public record titleRecord(String originalTitle, List<String> titles) {
+	public record TitleRecord(String originalTitle, List<String> titles) {
 	};
 
-	public static authorRecord normalizeInputAuthors(String authorInput) {
+	public static AuthorRecord normalizeInputAuthors(String authorInput) {
 		String authorResult = null;
 
 		// skip "Anonymous", "et al" and group authors
 		Matcher matcher = ANONYMOUS_OR_GROUPNAME_PATTERN.matcher(authorInput);
 		if (matcher.find()) {
-			return new authorRecord(null, null, false);
+			return new AuthorRecord(null, null, false);
 		}
 
 		authorInput = NormalizationService.normalizeToBasicLatin(authorInput);
@@ -368,7 +368,7 @@ public class NormalizationService {
 		String[] parts = authorInput.split("\\s*,\\s+"); // see testfile Non_Latin_input.txt for " , "
 		if (parts.length < 2) {
 			log.debug("Author {} cannot be split", authorInput);
-			return new authorRecord(authorInput, null, false);
+			return new AuthorRecord(authorInput, null, false);
 		}
 		String lastName = parts[0];
 		String firstNames = parts[1];
@@ -438,12 +438,12 @@ public class NormalizationService {
 			if (!lastNameParts.isEmpty()) {
 				initials += lastNameParts.stream().map(p -> p.substring(0, 1)).collect(Collectors.joining());
 				log.debug("Author {} is transposed as {} {}", authorInput, lastPart, initials);
-				return new authorRecord(authorResult, lastPart + " " + initials, true);
+				return new AuthorRecord(authorResult, lastPart + " " + initials, true);
 			} else {
-				return new authorRecord(authorResult, lastName + " " + initials, false);
+				return new AuthorRecord(authorResult, lastName + " " + initials, false);
 			}
 		} else {
-			return new authorRecord(authorResult, lastName + " " + initials, false);
+			return new AuthorRecord(authorResult, lastName + " " + initials, false);
 		}
 	}
 
@@ -497,10 +497,10 @@ public class NormalizationService {
 	 * large data files should prove its extra value.
 	 */
 	// @formatter:on
-	public static isbnIssnRecord normalizeInputIssns(String issn) {
+	public static IsbnIssnRecord normalizeInputIssns(String issn) {
 		Set<String> normalizedIsbns = new HashSet<>();
 		Set<String> normalizedIssns = new HashSet<>();
-		isbnIssnRecord result = new isbnIssnRecord(normalizedIsbns, normalizedIssns);
+		IsbnIssnRecord result = new IsbnIssnRecord(normalizedIsbns, normalizedIssns);
 
 		Matcher matcher = ISSN_ISBN_PATTERN.matcher(issn.toUpperCase());
 		while (matcher.find()) {
@@ -855,9 +855,9 @@ public class NormalizationService {
 		return year;
 	}
 
-	public static titleRecord normalizeInputTitles(String title) {
+	public static TitleRecord normalizeInputTitles(String title) {
 		if (NO_TITLES.contains(title.toLowerCase())) {
-			return new titleRecord(null, new ArrayList<>());
+			return new TitleRecord(null, new ArrayList<>());
 		}
 		String cachedTitle = title;
 		String originalTitle = null;
@@ -901,7 +901,7 @@ public class NormalizationService {
 		// addTitleWithNormalization(firstPart);
 		// // do not add the subtitle: titles.add(matcher.group(2));
 		// }
-		return new titleRecord(originalTitle, normalizedTitles);
+		return new TitleRecord(originalTitle, normalizedTitles);
 	}
 
 	private static List<String> addTitleWithNormalization(String title) {
