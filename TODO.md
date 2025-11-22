@@ -1,5 +1,18 @@
 # TODO
 
+## Performance
+- if both are isSeveralPages = false, then use a higher threshold for authors and/or title?
+- if both are isSeveralPages = false, then do not use the reversed title?
+- FP because label is copied from the publication that is ***not*** the pivot: see comments in DeduplicationService::compareSet
+  e.g. BIG_SET 23819 - 13006, 24143 - 13006, ASySD_SRSR_Human 20282 - 36439
++ Should "^review( article)?:" be removed from the title? 180 cases in All.txt
+- FP in BIG_SET for 8111 - 36423: 1. SP same, 2 Same because one AU is empty, NO 3 (TI comparison) because reply, 4 same Journal. One of PY = 0
+- FN where id = dedupId must be changed from FN=true to FN=false (and TP=true) (and correction should be moved to dedup_id?)
+  This will cause a big change in the performance data
+  Is there a corollary change for FP?
+
+
+
 ## More and more recent test files?
 
 - Emma Wilson SynGAP: https://github.com/emma-wilson/syngap-sr/tree/main
