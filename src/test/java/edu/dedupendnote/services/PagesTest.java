@@ -2,6 +2,7 @@ package edu.dedupendnote.services;
 
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
+import java.util.Map;
 import java.util.stream.Stream;
 
 import org.assertj.core.api.SoftAssertions;
@@ -93,7 +94,9 @@ class PagesTest {
 			// // The following case will not have pagesOutput "s0003394402007769/sco" unless the output field is C7
 			arguments("Unsp s0003394402007769/sco", "3394402007769", "s0003394402007769/sco", false),
 			arguments("1252-3; author reply 1252-3", "1252", "1252-1253; author reply 1252-3", true),
-			arguments("iiv", null, "iiv", false) // invalid Roman number
+			arguments("iiv", null, "iiv", false), // invalid Roman number
+			arguments("3S38-3S42", "338", "3S38-3S42", true),
+			arguments("S6-97-s6-99", "697", "S697-s699", true)
 			// Do we have cases of "945-+", "945-945", "945-5"?
 			);
 	}
@@ -102,7 +105,8 @@ class PagesTest {
 	@ParameterizedTest(name = "{index}: parsePages({0})=({1},{2},{3})")
 	@MethodSource("argumentProvider")
 	void parsePagesTest(String pages, String pageStart, String pagesOutput, boolean severalPages) {
-		PageRecord normalizedPages = NormalizationService.normalizeInputPages(pages, "DUMMY");
+
+		PageRecord normalizedPages = NormalizationService.normalizeInputPages(Map.of("SP", pages), "1");
 		// log.error("- {}", normalizedPages);
 
 		// assertThat(normalizedPages.pageStart()).as("PageStart comparison for " + pages).isEqualTo(pageStart);

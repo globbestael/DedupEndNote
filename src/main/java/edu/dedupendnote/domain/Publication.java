@@ -82,4 +82,5 @@ public class Publication {
 	 */
 	private boolean isReply = false;
 	public boolean isSeveralPages;
+	private String pagesInput = null;
 }

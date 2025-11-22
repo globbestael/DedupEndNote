@@ -95,6 +95,31 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 		assertThat(1).isEqualTo(1);
 	}
 
+	/*
+	 * - take the first letters of the last name, and the first letter of the first initial
+	 * - take the first letter of the first initial, and the first letters of the last name (kid of transposition but for all names)
+	 */
+	@Test
+	void compareAuthorsLimitedToFirstLetters_2_Test() throws IOException {
+		List<Triple> triples = getValidatedAuthorsPairs();
+		// triples.stream().limit(5).forEach(System.err::println);
+
+		for (Triple triple : triples) {
+			Publication r1 = fillPublication(triple.getAuthors1());
+			Publication r2 = fillPublication(triple.getAuthors2());
+
+			triple.setJws(getHighestSimilarityForAuthors(r1.getAllAuthors(), r2.getAllAuthors()));
+
+			r1 = fillPublicationAddAuthorsLimitedToFirstLetters_2(triple.getAuthors1());
+			r2 = fillPublicationAddAuthorsLimitedToFirstLetters_2(triple.getAuthors2());
+			triple.setExpJws(getHighestSimilarityForAuthors(r1.getAllAuthors(), r2.getAllAuthors()));
+		}
+
+		showTripleComparisonDetails("AuthorsLimitedToFirstLetters_2", triples, false);
+
+		assertThat(1).isEqualTo(1);
+	}
+
 	@Test
 	void explainPoorResults_AuthorsLimitedToFirstLetters() {
 		String author1 = "de Ville de Goyet, J.";
@@ -137,6 +162,11 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 		for (Triple triple : triples) {
 			Publication r1 = fillPublication(triple.getAuthors1());
 			Publication r2 = fillPublication(triple.getAuthors2());
+
+			if (r1.getAllAuthors().isEmpty() || r2.getAllAuthors().isEmpty()) {
+				triples.remove(triple);
+				continue;
+			}
 
 			triple.setJws(getHighestSimilarityForAuthors(r1.getAllAuthors(), r2.getAllAuthors()));
 
@@ -266,6 +296,15 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 		PublicationExperiment r = new PublicationExperiment();
 		List<String> authorList1 = Arrays.asList(authors.split("; "));
 		authorList1.stream().forEach(a -> r.addAuthorsLimitedToFirstLetters(a));
+		IOService.fillAllAuthors(r);
+		// System.err.println(r.getAllAuthors().get(0) + " => " + authors);
+		return r;
+	}
+
+	private Publication fillPublicationAddAuthorsLimitedToFirstLetters_2(String authors) {
+		PublicationExperiment r = new PublicationExperiment();
+		List<String> authorList1 = Arrays.asList(authors.split("; "));
+		authorList1.stream().forEach(a -> r.addAuthorsLimitedToFirstLetters_2(a));
 		IOService.fillAllAuthors(r);
 		// System.err.println(r.getAllAuthors().get(0) + " => " + authors);
 		return r;

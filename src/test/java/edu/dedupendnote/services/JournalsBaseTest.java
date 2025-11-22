@@ -57,6 +57,17 @@ class JournalsBaseTest extends BaseTest {
 	 *   AND (BIG_SET_TRUTH_1.id) > [BIG_SET_TRUTH].[id]) 
 	 *   AND ((BIG_SET_TRUTH.Validated)=True));
 	 *
+	 * Cleaning up the query (using the query for another test database will require only a change in the FROM and INNER JOIN line)
+	 * 
+SELECT DISTINCT t1.title2, t2.title2 
+FROM BIG_SET_TRUTH AS t1
+INNER JOIN BIG_SET_TRUTH AS t2 ON t1.dedupid = t2.dedupid 
+WHERE t1.title2 <> t2.title2 
+  AND t1.id > 0 
+  AND t1.id <> t2.id 
+  AND t1.id < t2.id
+  AND t1.Validated = True;
+
 	 * The whole file validated_authors_pairs.txt is created on the TRUTH files for
 	 * BIG_SET, ASySD_SRSR_Human.
 	 */

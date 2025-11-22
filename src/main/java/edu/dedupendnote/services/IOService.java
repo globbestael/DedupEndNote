@@ -7,6 +7,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -140,6 +141,7 @@ public class IOService {
 		List<Publication> publications = new ArrayList<>();
 		String fieldContent = null;
 		String fieldName = null;
+		Map<String, String> pagesInputMap = new HashMap<>();
 		String previousFieldName = "XYZ";
 		/*
 		 * With publications from clinicaltrials.gov the raw title must be recorded in publication.title. The publications
@@ -185,7 +187,7 @@ public class IOService {
 						}
 						break;
 					case "C7": // article number (Scopus and WoS when imported as RIS format)
-						addNormalizedPages(fieldContent, fieldName, publication);
+						pagesInputMap.put(fieldName, fieldContent);
 						break;
 					case "DO": // DOI
 						publication.getDois().addAll(NormalizationService.normalizeInputDois(fieldContent));
@@ -204,7 +206,7 @@ public class IOService {
 								// should handle EndNoe records which have already been standardized
 								String ctgId = journal.substring(journal.length() - 11);
 								if (ctgId.startsWith("NCT")) {
-									addNormalizedPages(ctgId, "T2", publication);
+									pagesInputMap.put("SP", ctgId);
 									publication.getJournals().remove(journal);
 									publication.getJournals().add("https://clinicaltrials.gov");
 								}
@@ -215,7 +217,11 @@ public class IOService {
 							fillCochranePages(publication);
 						}
 						fillAllAuthors(publication);
+						addNormalizedPages(pagesInputMap, publication);
 						publications.add(publication);
+						titleCache = null;
+						publication = new Publication();
+						pagesInputMap.clear();
 						log.debug("Publication read with id {} and title: {}", publication.getId(),
 								(publication.getTitles().isEmpty() ? "(none)" : publication.getTitles().get(0)));
 						break;
@@ -250,7 +256,7 @@ public class IOService {
 					// but export file of such a record has this content in SE field!
 					case "SE": // pages (Embase (which provider?), Ovid PsycINFO: examples in some SRA datasets)
 					case "SP": // pages
-						addNormalizedPages(fieldContent, fieldName, publication);
+						pagesInputMap.put(fieldName, fieldContent);
 						break;
 					/*
 					 * original non-English titles:
@@ -391,16 +397,12 @@ public class IOService {
 	}
 
 	// See the comment at NormalizationService::normalizeInputPages for explanation of the if-else
-	public static void addNormalizedPages(String fieldContent, String fieldName, Publication publication) {
-		PageRecord normalizedPages = NormalizationService.normalizeInputPages(fieldContent, fieldName);
-		if (publication.getPagesOutput() != null && (!normalizedPages.originalPages().contains("-")
-				|| normalizedPages.originalPages().startsWith("1-"))) {
-			;
-		} else {
-			publication.setPageStart(normalizedPages.pageStart());
-			publication.setPagesOutput(normalizedPages.pagesOutput());
-			publication.setSeveralPages(normalizedPages.isSeveralPages());
-		}
+	public static void addNormalizedPages(Map<String, String> pagesInputMap, Publication publication) {
+		publication.setPagesInput(pagesInputMap.toString());
+		PageRecord normalizedPages = NormalizationService.normalizeInputPages(pagesInputMap, publication.getId());
+		publication.setPageStart(normalizedPages.pageStart());
+		publication.setPagesOutput(normalizedPages.pagesOutput());
+		publication.setSeveralPages(normalizedPages.isSeveralPages());
 	}
 
 	public static void addNormalizedTitle(String fieldContent, Publication publication) {
@@ -846,6 +848,10 @@ public class IOService {
 		log.debug("Finished writing to file. # records: {}", numberWritten);
 	}
 
+	/**
+	 * Tries to extract pageStart and pagesOutput from the DOI of Cochrane publications if these fields couldn't be filled
+	 * from the normal fields C7, SE and SP
+	 */
 	private void fillCochranePages(Publication publication) {
 		String pageStart = publication.getPageStart();
 		if (pageStart == null) {

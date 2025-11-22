@@ -130,6 +130,8 @@ public class NormalizationService {
 	private static final Pattern LANGUAGE_PATTERN = Pattern
 			.compile("(\\(?(chinese|dutch|french|german|italian|japanese|polish|russian|spanish)( text)?\\)?)$");
 
+	private static final Pattern TRANSLATION_PATTERN = Pattern.compile("(\\(author's transl\\))$");
+
 	/**
 	 * All characters outside the BasicLatin Unicode block (\u0000 – \u007F). After Normalization with canonical
 	 * decomposition (Normalizer.Form.NFD) all combining accents and diacritics, supplemental characters (e.g. "£") and
@@ -253,7 +255,7 @@ public class NormalizationService {
 	private static final List<String> NO_TITLES = List.of("not available", "[not available]", "untitled");
 
 	private static final Pattern RETRACTION_START_PATTERN = Pattern
-			.compile("((retracted|removed|withdrawn)( article)?[.:] )(.+)", Pattern.CASE_INSENSITIVE);
+			.compile("((retracted|removed|review|withdrawn)( article)?[.:] )(.+)", Pattern.CASE_INSENSITIVE);
 	private static final Pattern RETRACTION_END_PATTERN = Pattern.compile("(.+)\\(Retracted [Aa]rticle.*\\)");
 
 	private static final Pattern TITLE_AND_SUBTITLE_PATTERN = Pattern.compile("^(.{50,}?)[:.?] (.{50,})$");
@@ -264,13 +266,13 @@ public class NormalizationService {
 	*/
 	private static final Pattern PUBLICATION_YEAR_PATTERN = Pattern.compile("(^|\\D)(\\d{4})(\\D|$)");
 
-	/**
+	/*
 	 * A number or ". Conference" and all following characters: The number and all following characters will be removed.
-	 * E.g.: - "Clinical neuropharmacology.12 Suppl 2 ()(pp v-xii; S1-105) 1989.Date of Publication: 1989." -->
-	 * "Clinical neuropharmacology" - "European Respiratory Journal. Conference: European Respiratory Society Annual
-	 * Congress" (Cochrane publications)
+	 * E.g.: 
+	 * - "Clinical neuropharmacology.12 Suppl 2 ()(pp v-xii; S1-105) 1989.Date of Publication: 1989." --> "Clinical neuropharmacology" 
+	 * - "European Respiratory Journal. Conference: European Respiratory Society Annual Congress" (Cochrane publications) --> "European Respiratory Journal"
 	 */
-	public static final Pattern JOURNAL_EXTRA_PATTERN = Pattern.compile("^(.+?)((\\d.*|\\. Conference.*))$");
+	public static final Pattern JOURNAL_EXTRA_PATTERN = Pattern.compile("^(.+?)((\\d+|\\. Conference.*))$");
 
 	/**
 	 * Some subtitles of journals ("Technical report", "Electronic resource", ...): will be removed
@@ -549,7 +551,7 @@ public class NormalizationService {
 		// Strip last part of "Clinical neuropharmacology.12 Suppl 2 ()(pp v-xii; S1-105) 1989.Date
 		// of Publication: 1989."
 		Matcher matcher = NormalizationService.JOURNAL_EXTRA_PATTERN.matcher(journal);
-		while (matcher.find()) {
+		if (matcher.matches()) {
 			journal = matcher.group(1);
 		}
 
@@ -633,8 +635,14 @@ public class NormalizationService {
 
 	/*
 	 * normalizeInputPages: parses the different input strings with page numbers / article numbers to the fields
-	 * pageStart, pageEnd and pageStartForComparison.
+	 * pageStart, pageEnd and pagesOutput.
+	 * 
+	 * Originally IOService::readPublications called this function for the fields C7, SE and SP (sometimes skipped depending on
+	 * the fields set in a previous all). This has been changed to:
+	 * - IOService::readPublications gathers the fieldContent for these fields in a map
+	 * - IOService::readPublications calls this parsing function when the last field (ER) is encountered
 	 *
+	 * The following information should be adjusted:
 	 * C7 (Article Number) should sometimes overrule / overwrite SP (starting and ending page) because when C7 is
 	 * present, SP often contains the number of pages, and in a few cases relative pages (1-10 for a 10 pages article).
 	 * 
@@ -653,52 +661,113 @@ public class NormalizationService {
 	 *
 	 * See also issues https://github.com/globbestael/DedupEndnote/issues/2 and https://github.com/globbestael/DedupEndnote/issues/3
 	 */
-	public static PageRecord normalizeInputPages(String pages, String fieldName) {
-		pages = PAGES_ADDITIONS_PATTERN.matcher(pages).replaceAll("").strip();
-		// replace "ii-218-ii-228" by "ii218-ii228", and "S-12" by "S12"
-		pages = pages.replaceAll("(?<!\\d+)([a-zA-Z]+)-(\\d+)", "$1$2");
-
-		String originalPages = pages;
-		// if Pages contains a month name string (e.g. "01 June"), omit the whole pages
-		Matcher matcher = PAGES_MONTH_PATTERN.matcher(pages);
-		while (matcher.find()) {
-			pages = null;
-		}
-		/*
-		 * - Ovid Medline in RIS format puts author address in M2 field, which is exported as SP
-		 * - WoS has in Article Number field (AR) cases as 'Pmid 29451177' and 'Pii s0016-5107(03)01975-8'. These article numbers
-		 *   with a space can be skipped
-		 */
-		if (pages == null || pages.isEmpty() || pages.length() > 30
-				|| (fieldName.equals("C7") && pages.contains(" "))) {
-			return new PageRecord(originalPages, null, null, false);
-		}
-
-		boolean severalPages = false;
+	public static PageRecord normalizeInputPages(Map<String, String> pagesInputMap, String publicationId) {
+		String c7Pages = pagesInputMap.get("C7");
+		String sePages = pagesInputMap.get("SE");
+		String spPages = pagesInputMap.get("SP");
+		String pages = null;
+		String originalPages = null;
+		boolean isSeveralPages = false;
 		String pagesOutput = null;
 		String pageStart = null;
 		String pageEnd = null;
 
-		// Cochrane uses hyphen characters instead of minus
-		pages = pages.replaceAll("[\\u2010\\u00ad]", "-");
-		// Do not lowercase the pages yet
-		// pages = pages.toLowerCase();
-
-		if ((fieldName.equals("C7")) || ((pages.startsWith("e") || pages.startsWith("E")) && !pages.contains("-"))) {
-			severalPages = true;
-			pagesOutput = originalPages;
+		if (c7Pages != null) {
+			c7Pages = PAGES_ADDITIONS_PATTERN.matcher(c7Pages).replaceAll("").strip();
+			// replace "ii-218-ii-228" by "ii218-ii228", and "S-12" by "S12"
+			c7Pages = c7Pages.replaceAll("(?<!\\d+)([a-zA-Z]+)-(\\d+)", "$1$2");
+			originalPages = c7Pages;
+			// if Pages contains a month name string (e.g. "01 June"), omit the whole pages
+			Matcher matcher = PAGES_MONTH_PATTERN.matcher(c7Pages);
+			while (matcher.find()) {
+				c7Pages = null;
+			}
+			if (c7Pages.contains(" ")) {
+				c7Pages = null;
+			} else {
+				// a value like "10007431(2019)02-0126-07" (part of DOI) is changed to a number, which sets
+				// isSeveralPages to true.
+				c7Pages = c7Pages.replaceAll("\\D", "");
+			}
+			if (c7Pages != null && c7Pages.isBlank()) {
+				c7Pages = null;
+			}
+			if (c7Pages == null) {
+				if (sePages == null && spPages == null) {
+					return new PageRecord(originalPages, null, null, false);
+				}
+			} else {
+				isSeveralPages = true;
+				pagesOutput = originalPages;
+			}
 		}
 
-		if (pages.endsWith("+")) {
-			pages = pages.substring(0, pages.length() - 1);
+		if (sePages != null) {
+			if (c7Pages != null) {
+				log.error("Found a case with both C7 %s and SE %s(publication ID %s)".formatted(pagesInputMap.get("C7"),
+						pagesInputMap.get("SE"), publicationId));
+			}
+			if (sePages.length() > 30) {
+				sePages = null;
+			} else {
+				// replace "ii-218-ii-228" by "ii218-ii228", and "S-12" by "S12"
+				sePages = sePages.replaceAll("(?<!\\d+)([a-zA-Z]+)-(\\d+)", "$1$2");
+				originalPages = sePages;
+				Matcher matcher = PAGES_MONTH_PATTERN.matcher(sePages);
+				while (matcher.find()) {
+					sePages = null;
+				}
+			}
 		}
+
+		if (spPages != null) {
+			spPages = PAGES_ADDITIONS_PATTERN.matcher(spPages).replaceAll("").strip();
+			// replace "S6-97-s6-99" by "S697-s699"
+			spPages = spPages.replaceAll("(?<!\\d+)([a-zA-Z0-9]+)-(\\d+)-([a-zA-Z0-9]+)-(\\d+)", "$1$2-$3$4");
+			// replace "ii-218-ii-228" by "ii218-ii228", and "S-12" by "S12"
+			spPages = spPages.replaceAll("(?<!\\d+)([a-zA-Z]+)-(\\d+)", "$1$2");
+			originalPages = spPages;
+			Matcher matcher = PAGES_MONTH_PATTERN.matcher(spPages);
+			while (matcher.find()) {
+				spPages = null;
+			}
+			if (spPages != null) {
+				// Cochrane uses hyphen characters instead of minus
+				spPages = spPages.replaceAll("[\\u2010\\u00ad]", "-");
+				if ((spPages.startsWith("e") || spPages.startsWith("E")) && !spPages.contains("-")) {
+					isSeveralPages = true;
+					pagesOutput = originalPages;
+				}
+				if (spPages.endsWith("+")) {
+					spPages = spPages.substring(0, spPages.length() - 1);
+				}
+			}
+		}
+
+		if (c7Pages != null) {
+			isSeveralPages = true;
+			// FIXME: C7: 82, SP: 171-172: only 2 pages, should take C7 and isSeveralPages true?
+			// take SP only if C7 == pageStart from SP???
+			if (spPages != null
+					&& (spPages.startsWith(c7Pages) || (spPages.contains("-") && !spPages.startsWith("1-")))) {
+				pages = spPages;
+			} else {
+				pages = c7Pages;
+			}
+		} else if (spPages != null) {
+			pages = spPages;
+		} else if (sePages != null) {
+			pages = sePages;
+		} else {
+			return new PageRecord(originalPages, null, null, false);
+		}
+
 		List<String> pagesParts = Arrays.asList(pages.split("[+,;]\\s*"));
-		// @formatter:off
-		// Split into (1) group with only Roman numbers, and (2) others (could be Arabic numbers, combined Roman+Arabic ("ii208-212"),
+		// Split into (1) group with only Roman numbers, and (2) others (could be Arabic numbers, combined Roman+Arabic
+		// ("ii208-212"),
 		// combined Arabic+text ("S12-23", "CD123456". "67A-69A", text, ...)
 		Map<Boolean, List<String>> resultMap = pagesParts.stream()
-			.collect(Collectors.partitioningBy(p -> p.matches("[ivxlcmIVXLCM\\-]+")));
-		// @formatter:on
+				.collect(Collectors.partitioningBy(p -> p.matches("[ivxlcmIVXLCM\\-]+")));
 
 		if (resultMap.get(false).isEmpty()) { // there are no Arabic numbers, possibly Roman numbers
 			if (!resultMap.get(true).isEmpty()) {
@@ -781,7 +850,9 @@ public class NormalizationService {
 			pagesOutput = "";
 		}
 		if (pageStartInt != null && pageEndInt != null) {
-			severalPages = pageEndInt - pageStartInt > 1;
+			if (isSeveralPages == false) {
+				isSeveralPages = pageEndInt - pageStartInt > 1;
+			}
 			if ((pageStartInt == 1 && pageEndInt >= 100)) {
 				pageStart = pageEnd;
 				pageEnd = null;
@@ -801,15 +872,15 @@ public class NormalizationService {
 			}
 		}
 
-		if (severalPages == false) {
+		if (isSeveralPages == false) {
 			if (resultMap.get(true).size() + resultMap.get(false).size() > 0) {
-				severalPages = true;
+				isSeveralPages = true;
 			}
 		}
 		if (pagesOutput == null) {
 			pagesOutput = originalPages;
 		}
-		return new PageRecord(originalPages, pageStart, pagesOutput, severalPages);
+		return new PageRecord(originalPages, pageStart, pagesOutput, isSeveralPages);
 	}
 
 	private static String composePagesOutput(String pageStart, String pageEnd, Map<Boolean, List<String>> resultMap) {
@@ -846,7 +917,7 @@ public class NormalizationService {
 		Matcher matcher = PUBLICATION_YEAR_PATTERN.matcher(input);
 		if (matcher.find()) {
 			year = Integer.valueOf(matcher.group(2));
-			if (year < 1800) {
+			if (year < 1850) {
 				year = 0;
 			}
 		} else {
@@ -1011,6 +1082,7 @@ public class NormalizationService {
 		 */
 		String r = s.toLowerCase();
 		r = LANGUAGE_PATTERN.matcher(r).replaceAll("");
+		r = TRANSLATION_PATTERN.matcher(r).replaceAll("");
 		r = NON_INITIAL_SQUARE_BRACKETS_PATTERN.matcher(r).replaceAll("");
 		r = POINTY_BRACKETS_PATTERN.matcher(r).replaceAll("");
 		// Checks for the pointyBracketsPattern (the path not chosen)
