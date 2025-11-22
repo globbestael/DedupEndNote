@@ -274,7 +274,16 @@ public class ComparisonService {
 
 		for (String title1 : titles1) {
 			for (String title2 : titles2) {
-				similarity = jws.apply(title1, title2);
+				int minLength = Math.min(title1.length(), title2.length()) - 1;
+				if (minLength < 1) {
+					log.error("For publ {} or {} the titles are too short: '{}' or {}", r1.getId(), r2.getId(), title1,
+							title2);
+					similarity = jws.apply(title1, title2);
+				} else {
+					similarity = jws.apply(title1.substring(0, minLength), title2.substring(0, minLength));
+				}
+
+				// similarity = jws.apply(title1, title2);
 				if (log.isTraceEnabled() && similarity > highestSimilarity) {
 					highestSimilarity = similarity;
 					highestTitle1 = title1;

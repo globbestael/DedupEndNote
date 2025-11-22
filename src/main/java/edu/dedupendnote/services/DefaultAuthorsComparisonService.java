@@ -64,7 +64,7 @@ public class DefaultAuthorsComparisonService implements AuthorsComparisonService
 						return true;
 					}
 				} else if (similarity > AUTHOR_SIMILARITY_NO_REPLY) {
-					log.trace("- 2. Author similarity is above threshold");
+					log.trace("- 2. Author similarity {} is above threshold", similarity);
 					return true;
 				}
 			}

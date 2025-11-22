@@ -141,12 +141,29 @@ public class DeduplicationService {
 						 * - in loop N + 1 with pivot W
 						 *   - publication X is seen as similar and its label V is promoted to label of pivot W
 						 * 
-						 * V W X SP 1-26 291-316 (None) DOI + + +
+						 * 		V 		W 		X 
+						 * SP	1-26	291-316	(None) 
+						 * DOI 	+ 		+ 		+
 						 * 
-						 * Loop N (V) - W.SP != V.SP -> W.label = NULL - X.DOI = V.DOI -> X.label = V Loop N + 1 (W) -
-						 * W.DOi = X.DOI -> W.lavel = X
+						 * Loop N (V) 
+						 * - W.SP != V.SP -> W.label = NULL 
+						 * - X.DOI = V.DOI -> X.label = V 
+						 * Loop N + 1 (W) 
+						 * - W.DOi = X.DOI -> W.lavel = X (=V)
 						 * 
 						 * Another reason can be that pivot W has more journal name variants than pivot V
+						 * 
+						 * But this can cause False Positives
+						 * Take 3 cochrane reviews, different versions (different DOIs) but same review number
+l						 * 		V 		W 		X 
+						 * DOI 	d1 		d2 		(None)
+						 * SP	C26		C26		C26 
+						 * 
+						 * Loop N (V) 
+						 * - W.DOI != V.dois 	-> W.label = NULL 
+						 * - X.SP = V.SP 		-> X.label = V 
+						 * Loop N + 1 (W) 
+						 * - W.SP = X.SP 		-> W.label = X (=V)
 						 */
 						// @formatter:on
 						// log.debug("=== pub {} SETs label {} in pivot {}", r.getId(), r.getLabel(),
