@@ -982,7 +982,7 @@ public class NormalizationService {
 		List<String> titles = new ArrayList<>();
 
 		for (String t : list) {
-			if (!titles.contains(t.strip())) {
+			if (!t.isBlank() && !titles.contains(t.strip())) {
 				titles.add(normalized);
 			}
 		}

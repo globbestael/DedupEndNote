@@ -1,7 +1,8 @@
 package edu.dedupendnote.domain;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 import lombok.Data;
 
@@ -15,8 +16,8 @@ public class ValidationResult {
 	int fp;
 	long durationMilliseconds;
 
-	List<List<Publication>> fnPairs = new ArrayList<>();
-	List<List<Publication>> fpPairs = new ArrayList<>();
+	Map<Integer, List<Publication>> fnPairs = new TreeMap<>();
+	Map<Integer, List<Publication>> fpPairs = new TreeMap<>();
 
 	public ValidationResult(String fileName, int tp, int fn, int tn, int fp, long durationMilliseconds) {
 		this.fileName = fileName;

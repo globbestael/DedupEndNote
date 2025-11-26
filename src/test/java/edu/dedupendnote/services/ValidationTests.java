@@ -116,20 +116,20 @@ class ValidationTests {
 		// previous results
 		Map<String, ValidationResult> validationResultsMap = List
 				.of(
-					new ValidationResult("AI_subset", 497, 28, 2558, 0, 29_000L),	// why so slow?
-					new ValidationResult("ASySD_Cardiac_human", 6756, 17, 2175, 0, 3_700L),
-					new ValidationResult("ASySD_Diabetes", 1813, 21, 11, 0, 1_000L),
-					new ValidationResult("ASySD_Neuroimaging", 2177, 24, 1234, 3, 1_350L),
-					new ValidationResult("ASySD_SRSR_Human", 27924, 93, 24973, 11, 100_000L),
-					new ValidationResult("BIG_SET", 3934, 178, 958, 12, 66_000L),
+					new ValidationResult("AI_subset", 502, 23, 250, 0, 29_000L),	// why so slow?
+					new ValidationResult("ASySD_Cardiac_human", 6762, 7, 2179, 1, 3_700L),
+					new ValidationResult("ASySD_Diabetes", 1811, 11, 21, 2, 1_000L),
+					new ValidationResult("ASySD_Neuroimaging", 2179, 14, 1242, 3, 1_350L),
+					new ValidationResult("ASySD_SRSR_Human", 27944, 48, 25000, 9, 100_000L),
+					new ValidationResult("BIG_SET", 3967, 90, 1017, 8, 66_000L),
 					new ValidationResult("Clinical_trials", 219, 0, 0, 0, 190L),
-					new ValidationResult("McKeown_2021", 2018, 56, 1056, 0, 800L),
-					new ValidationResult("SRA2_Cytology_screening", 1361, 59, 436, 0, 400L),
-					new ValidationResult("SRA2_Haematology", 225, 11, 1177, 2, 300L),
-					new ValidationResult("SRA2_Respiratory", 761, 39, 1184, 4, 800L),
-					new ValidationResult("SRA2_Stroke", 497, 13, 782, 0, 320L),
-					new ValidationResult("TIL", 691, 11, 390, 0, 9_000L),
-					new ValidationResult("TIL_Zotero", 685, 17, 389, 1, 9_000L))
+					new ValidationResult("McKeown_2021", 2023, 34, 1073, 0, 800L),
+					new ValidationResult("SRA2_Cytology_screening", 1361, 33, 462, 0, 400L),
+					new ValidationResult("SRA2_Haematology", 225, 7, 1181, 2, 300L),
+					new ValidationResult("SRA2_Respiratory", 767, 20, 1199, 2, 800L),
+					new ValidationResult("SRA2_Stroke", 497, 7, 788, 0, 320L),
+					new ValidationResult("TIL", 697, 3, 392, 0, 9_000L),
+					new ValidationResult("TIL_Zotero", 689, 9, 393, 1, 9_000L))
 				.stream().collect(Collectors.toMap(ValidationResult::getFileName, Function.identity(), (o1, o2) -> o1,
 						TreeMap::new));
 		Map<String, ValidationResult> resultsMap = List
@@ -210,11 +210,12 @@ class ValidationTests {
 				System.err.flush();
 			}
 		}
-		System.out.println("FP can be found with regex: \\ttrue\\tfalse\\tfalse\\ttrue\\tfalse\\t");
-		System.out.println("FN can be found with regex: \\d\\ttrue\\tfalse\\tfalse\\tfalse\\ttrue\\t");
-		System.out.println(
-				"FN solvable can be found with regex: ^\\d+\\t\\t\\d+\\ttrue\\tfalse\\tfalse\\tfalse\\ttrue\\tfalse");
-		System.out.println("TP which will be kept can be found with regex: ^(\\d+)\\t\\1\\t\\ttrue\\ttrue\\t");
+		System.out.println("""
+				FP can be found with regex: \\ttrue\\tfalse\\tfalse\\ttrue\\tfalse\\t
+				FN can be found with regex: \\d\\ttrue\\tfalse\\tfalse\\tfalse\\ttrue\\t
+				FN solvable can be found with regex: ^\\d+\\t\\t\\d+\\ttrue\\tfalse\\tfalse\\tfalse\\ttrue\\tfalse
+				TP which will be kept can be found with regex: ^(\\d+)\\t\\1\\t\\ttrue\\ttrue\\t
+				""");
 
 		Map<String, Integer> sortedTitleMap = titleCounter.entrySet().stream()
 				.sorted((c1, c2) -> c2.getValue().compareTo(c1.getValue())).collect(Collectors.toMap(Map.Entry::getKey,
@@ -327,8 +328,8 @@ class ValidationTests {
 		int tns = 0, tps = 0, fps = 0, fns = 0;
 		List<String> errors = new ArrayList<>();
 		Map<Integer, Integer> fpErrors = new HashMap<>();
-		List<List<Publication>> fnPairs = new ArrayList<>();
-		List<List<Publication>> fpPairs = new ArrayList<>();
+		Map<Integer, List<Publication>> fnPairs = new TreeMap<>();
+		Map<Integer, List<Publication>> fpPairs = new TreeMap<>();
 		
 		for (PublicationDB t : truthRecords) {
 			PublicationDB v = validationMap.get(t.getId());
@@ -338,7 +339,7 @@ class ValidationTests {
 			Integer vDedupId = v.getDedupid();
 			log.debug("Comparing {} with truth {} and validation {}", t.getId(), t.getDedupid(), v.getDedupid());
 			if (vDedupId == null) {
-				if (tDedupId == null) {
+				if (tDedupId == null || t.getId().equals(tDedupId)) {
 					v.setTrueNegative(true);
 					tns++;
 				} else {
@@ -349,10 +350,11 @@ class ValidationTests {
 						List<Publication> pair = new ArrayList<>();
 						pair.add(publicationMap.get(t.getId().toString()));
 						pair.add(publicationMap.get(tDedupId.toString()));
-						fnPairs.add(pair);
+						pair = pair.stream().sorted((p1,p2) -> Integer.valueOf(p1.getId()).compareTo(Integer.valueOf(p2.getId()))).toList();
+						fnPairs.put(Integer.valueOf(pair.get(0).getId()), new ArrayList<>(pair));
 					}
 				}
-			} else if (trueDuplicateSets.containsKey(tDedupId) && trueDuplicateSets.get(tDedupId).contains(vDedupId)) {
+			} else if ((trueDuplicateSets.containsKey(tDedupId) && trueDuplicateSets.get(tDedupId).contains(vDedupId)) || v.getId().equals(vDedupId)) {
 				v.setTruePositive(true);
 				tps++;
 			} else {
@@ -365,7 +367,8 @@ class ValidationTests {
 					List<Publication> pair = new ArrayList<>();
 					pair.add(publicationMap.get(v.getId().toString()));
 					pair.add(publicationMap.get(vDedupId.toString()));
-					fpPairs.add(pair);
+					pair = pair.stream().sorted((p1,p2) -> Integer.valueOf(p1.getId()).compareTo(Integer.valueOf(p2.getId()))).toList();
+					fpPairs.put(Integer.valueOf(pair.get(0).getId()), new ArrayList<>(pair));
 				}
 			}
 		}
@@ -420,7 +423,7 @@ class ValidationTests {
 	List<Pattern> tracePatterns = List.of(Pattern.compile("- (1|2|3|4). .+"),
 			Pattern.compile("\\d+ - \\d+ ARE (NOT )?DUPLICATES"));
 
-	private void writeFNandFPresults(List<List<Publication>> pairs, String outputFileName) {
+	private void writeFNandFPresults(Map<Integer, List<Publication>> pairs, String outputFileName) {
 		List<Logger> loggers = new ArrayList<>();
 		List<String> loggerNames = List.of("edu.dedupendnote.services.DeduplicationService", "edu.dedupendnote.services.ComparisonService", "edu.dedupendnote.services.DefaultAuthorsComparisonService");
 		Level oldLevel = null;
@@ -437,7 +440,7 @@ class ValidationTests {
 			memoryAppender.setContext((LoggerContext) LoggerFactory.getILoggerFactory());
 			memoryAppender.start();
 
-			for (List<Publication> pair : pairs) {
+			for (List<Publication> pair : pairs.values()) {
 				bw.write(pair.get(0).toString());
 				bw.write("\n");
 				if (pair.size() < 2) {

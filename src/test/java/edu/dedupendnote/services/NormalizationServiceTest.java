@@ -188,7 +188,11 @@ class NormalizationServiceTest {
 				arguments("Zbl. Chir.", "Zentralbl Chir"),
 				arguments("Jbr-btr", "JBR BTR"),
 				arguments("Rofo", "Rofo"),
-				arguments("Gastro-Enterology", "Gastroenterology")
+				arguments("Gastro-Enterology", "Gastroenterology"),
+		arguments("Molecular Imaging and Contrast Agent Database (MICAD)", "Molecular Imaging and Contrast Agent Database"),
+		arguments("Natl Cancer Inst Carcinog Tech Rep Ser", "National Cancer Inst Carcinog Tech Rep Ser"),
+		arguments("Natl Toxicol Program Tech Rep Ser", "National Toxicol Program Tech Rep Ser"),
+		arguments("Ont Health Technol Assess Ser", "Ont Health Technol Assess Ser")
 		);
 		// @formatter:on
 	}

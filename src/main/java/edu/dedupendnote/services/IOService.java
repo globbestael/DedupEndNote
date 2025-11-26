@@ -10,6 +10,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.function.Function;
 import java.util.regex.Matcher;
@@ -34,6 +35,19 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Service
 public class IOService {
+
+	/*
+	 * The titles of publications in these journals / books, are NOT normalized.
+	 * The format of the titles of these journals / books is the output of addNormalizedJournal
+	 */
+	// @formatter:off
+	static Set<String> skipNormalizationTitleFor = Set.of(
+		"Molecular Imaging and Contrast Agent Database",	// Molecular Imaging and Contrast Agent Database (MICAD)
+		"National Cancer Inst Carcinog Tech Rep Ser", 		// Natl Cancer Inst Carcinog Tech Rep Ser
+		"National Toxicol Program Tech Rep Ser",			// Natl Toxicol Program Tech Rep Ser
+		"Ont Health Technol Assess Ser"						// Ont Health Technol Assess Ser
+	);
+	// @formatter:on
 
 	/**
 	 * Pattern to identify conferences in the T3 field
@@ -219,6 +233,7 @@ public class IOService {
 						fillAllAuthors(publication);
 						addNormalizedPages(pagesInputMap, publication);
 						publications.add(publication);
+
 						titleCache = null;
 						publication = new Publication();
 						pagesInputMap.clear();
@@ -261,8 +276,10 @@ public class IOService {
 					/*
 					 * original non-English titles:
 					 * - PubMed: OP 
-					 * - Embase: continuation line of title
+					 * - Embase: continuation line of title (ST and TI)
 					 * - Scopus: ST and TT?
+					 * 
+					 * See below in continuation line of TI for PubMed chapters
 					 */
 					case "ST": // Original Title in Scopus
 						addNormalizedTitle(fieldContent, publication);
@@ -298,9 +315,8 @@ public class IOService {
 							addNormalizedTitle(fieldContent, publication);
 						}
 						break;
-					// ??? in Embase the original title is on the continuation line:
-					// "Een 45-jarige patiente met chronische koliekachtige abdominale
-					// pijn". Not found in test set!
+					// ??? in Embase the original title is on the continuation line of ST and TI:
+					// "Een 45-jarige patiente met chronische koliekachtige abdominale pijn". Not found in test set!
 					case "TI": // Title
 						addNormalizedTitle(fieldContent, publication);
 						// Don't do this in IOService::readPublications because these 2 patterns are only applied to TI
@@ -345,14 +361,37 @@ public class IOService {
 						publication.getIsbns().addAll(normalized.isbns());
 						publication.getIssns().addAll(normalized.issns());
 						break;
+					/*
+					 * The ST field with continuation line has the same content as the TI field with its continuation line.
+					 * Only the TI case is handled (makes the PubMed/Chapter handling easier)
+					 */
 					case "TI":
 						/*
-						 * EMBASE original title.
-						 * There are also cases (ASySD_SRSR_Human test file) for Book Section (TY: CHAP) where the first line contains
-						 * the book series title, and the continuation line the title of the chapter. Not sure if this ASySD_SRSR_Human
-						 * file should be used as an example?
+						 * PubMed book chapters (TY CHAP, PMID 21204472).
+						 * The series of the book is the first line of ST and TI field,
+						 * the title of the chapter is the continuation line.
+						 * 
+						 * False Positive deduplication is quite likely if some of the authors are shared):
+						 * - The book chapters have NO page number of chapter number in EndNote
+						 * - the series title is taken as one of the titles
+						 * 
+						 * Solution: if there is a continuation line of TI for a chapter (TY CHAP), 
+						 * the existing titles from ST and TI should be removed,
+						 * the continuation line of TI should be used as the only title.
+						 * 
+						 * The ST field has in these cases the same content as the TI field. 
+						 * This switch statement does not need to have a case for ST. The solution (below) would be
+						 * even be more complex if there was a case ST.
 						 */
-						addNormalizedTitle(line, publication);
+						if ("CHAP".equals(publication.getReferenceType())) {
+							publication.getTitles().clear();
+							addNormalizedTitle(line, publication);
+						} else {
+							/*
+							* EMBASE original title (at least for articles).
+							*/
+							addNormalizedTitle(line, publication);
+						}
 						break;
 					case "UR":
 						if (line.startsWith("https://clinicaltrials.gov")) {
@@ -396,7 +435,6 @@ public class IOService {
 		publication.getJournals().addAll(NormalizationService.normalizeInputJournals(fieldContent));
 	}
 
-	// See the comment at NormalizationService::normalizeInputPages for explanation of the if-else
 	public static void addNormalizedPages(Map<String, String> pagesInputMap, Publication publication) {
 		publication.setPagesInput(pagesInputMap.toString());
 		PageRecord normalizedPages = NormalizationService.normalizeInputPages(pagesInputMap, publication.getId());
@@ -406,21 +444,28 @@ public class IOService {
 	}
 
 	public static void addNormalizedTitle(String fieldContent, Publication publication) {
-		TitleRecord normalizedTitle = NormalizationService.normalizeInputTitles(fieldContent);
-		publication.getTitles().addAll(normalizedTitle.titles());
-		if (normalizedTitle.originalTitle() != null) {
-			publication.setTitle(normalizedTitle.originalTitle());
+		if (UtilitiesService.setsContainSameString(skipNormalizationTitleFor, publication.getJournals())) {
+			publication.getTitles().clear();
+			publication.getTitles().add(fieldContent);
+		} else {
+			TitleRecord normalizedTitle = NormalizationService.normalizeInputTitles(fieldContent);
+			publication.getTitles().addAll(normalizedTitle.titles());
+			if (normalizedTitle.originalTitle() != null) {
+				publication.setTitle(normalizedTitle.originalTitle());
+			}
 		}
 	}
 
 	public static void addReversedTitles(Publication publication) {
-		List<String> titles = publication.getTitles();
-		if (!titles.isEmpty()) {
-			List<String> reversed = new ArrayList<>();
-			for (String t : titles) {
-				reversed.add(new StringBuilder(t).reverse().toString());
+		if (!UtilitiesService.setsContainSameString(skipNormalizationTitleFor, publication.getJournals())) {
+			List<String> titles = publication.getTitles();
+			if (!titles.isEmpty()) {
+				List<String> reversed = new ArrayList<>();
+				for (String t : titles) {
+					reversed.add(new StringBuilder(t).reverse().toString());
+				}
+				titles.addAll(reversed);
 			}
-			titles.addAll(reversed);
 		}
 	}
 

@@ -5,7 +5,9 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
@@ -87,5 +89,14 @@ public class UtilitiesService {
 		}
 
 		return result;
+	}
+
+	static boolean setsContainSameString(Set<String> set1, Set<String> set2) {
+		if (set1.isEmpty() || set2.isEmpty()) {
+			return false;
+		}
+		Set<String> common = new HashSet<>(set1);
+		common.retainAll(set2);
+		return !common.isEmpty();
 	}
 }

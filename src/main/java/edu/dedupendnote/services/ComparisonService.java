@@ -29,7 +29,7 @@ public class ComparisonService {
 	 */
 	public static boolean compareIssns(Publication r1, Publication r2) {
 		if (!r1.getIsbns().isEmpty() && !r2.getIsbns().isEmpty()) {
-			if (setsContainSameString(r1.getIsbns(), r2.getIsbns())) {
+			if (UtilitiesService.setsContainSameString(r1.getIsbns(), r2.getIsbns())) {
 				log.trace("- 4. ISBNs are the same");
 				return true;
 			} else {
@@ -39,7 +39,7 @@ public class ComparisonService {
 				return false;
 			}
 		}
-		if (setsContainSameString(r1.getIssns(), r2.getIssns())) {
+		if (UtilitiesService.setsContainSameString(r1.getIssns(), r2.getIssns())) {
 			log.trace("- 4. ISSNs are the same");
 			return true;
 		} else {
@@ -187,14 +187,14 @@ public class ComparisonService {
 		boolean sufficientDois = !dois1.isEmpty() && !dois2.isEmpty();
 		boolean atLeastOneSeveralPages = r1.isSeveralPages() || r2.isSeveralPages();
 
-		if (sufficientDois && setsContainSameString(dois1, dois2)) {
+		if (sufficientDois && UtilitiesService.setsContainSameString(dois1, dois2)) {
 			map.put("sameDois", true);
 		}
 
 		if (bothCochrane) {
 			if (r1.getPublicationYear().equals(r2.getPublicationYear())) {
 				if (sufficientDois) {
-					if (setsContainSameString(dois1, dois2)) {
+					if (UtilitiesService.setsContainSameString(dois1, dois2)) {
 						log.trace("- 1. DOIs are the same for Cochrane");
 						return true;
 					} else {
@@ -216,7 +216,7 @@ public class ComparisonService {
 		}
 		if (atLeastOneSeveralPages) {
 			if (sufficientDois) {
-				if (setsContainSameString(dois1, dois2)) {
+				if (UtilitiesService.setsContainSameString(dois1, dois2)) {
 					log.trace("- 1. DOIs are the same for severalPages");
 					return true;
 				}
@@ -239,7 +239,7 @@ public class ComparisonService {
 			}
 		}
 
-		if (setsContainSameString(dois1, dois2)) {
+		if (UtilitiesService.setsContainSameString(dois1, dois2)) {
 			log.trace("- 1. DOIs are the same");
 			return true;
 		}
@@ -276,8 +276,8 @@ public class ComparisonService {
 			for (String title2 : titles2) {
 				int minLength = Math.min(title1.length(), title2.length()) - 1;
 				if (minLength < 1) {
-					log.error("For publ {} or {} the titles are too short: '{}' or {}", r1.getId(), r2.getId(), title1,
-							title2);
+					log.error("For publ {} or {} the titles are too short: '{}' or '{}'", r1.getId(), r2.getId(),
+							title1, title2);
 					similarity = jws.apply(title1, title2);
 				} else {
 					similarity = jws.apply(title1.substring(0, minLength), title2.substring(0, minLength));
@@ -292,7 +292,10 @@ public class ComparisonService {
 
 				if (isPhase) {
 					if (similarity > TITLE_SIMILARITY_PHASE) {
-						log.trace("- 3. Title similarity (for Phase) is above threshold");
+						if (log.isTraceEnabled()) {
+							log.trace("- 3. Title similarity (for Phase) {} is above threshold: '{}' and '{}'",
+									similarity, title1, title2);
+						}
 						return true;
 					}
 				} else {
@@ -300,8 +303,8 @@ public class ComparisonService {
 						if (similarity > TITLE_SIMILARITY_SUFFICIENT_STARTPAGES_OR_DOIS) {
 							if (log.isTraceEnabled()) {
 								log.trace(
-										"- 3. Title similarity (with pages or DOIs) is above threshold: '{}' and '{}'",
-										title1, title2);
+										"- 3. Title similarity (with pages or DOIs) {} is above threshold: '{}' and '{}'",
+										similarity, title1, title2);
 							}
 							return true;
 						}
@@ -310,8 +313,8 @@ public class ComparisonService {
 						if (similarity > TITLE_SIMILARITY_INSUFFICIENT_STARTPAGES_AND_DOIS) {
 							if (log.isTraceEnabled()) {
 								log.trace(
-										"- 3. Title similarity (without sufficient pages or DOIs) is above threshold: '{}' and '{}'",
-										title1, title2);
+										"- 3. Title similarity (without sufficient pages or DOIs) {} is above threshold: '{}' and '{}'",
+										similarity, title1, title2);
 							}
 							return true;
 						}
@@ -327,14 +330,5 @@ public class ComparisonService {
 									: "not sufficient startPages or DOIs"));
 		}
 		return false;
-	}
-
-	private static boolean setsContainSameString(Set<String> set1, Set<String> set2) {
-		if (set1.isEmpty() || set2.isEmpty()) {
-			return false;
-		}
-		Set<String> common = new HashSet<>(set1);
-		common.retainAll(set2);
-		return !common.isEmpty();
 	}
 }
