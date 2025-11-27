@@ -50,6 +50,7 @@ public class Publication {
 	 */
 	private String pagesOutput;
 	private String pageStart;
+	private String pagesInput = null;
 
 	private Integer publicationYear = 0;
 
@@ -57,6 +58,7 @@ public class Publication {
 
 	private String title; // only set for Reply-titles
 
+	// TODO: can this be a Set?
 	private List<String> titles = new ArrayList<>();
 
 	private boolean isClinicalTrialGov = false;
@@ -82,5 +84,4 @@ public class Publication {
 	 */
 	private boolean isReply = false;
 	public boolean isSeveralPages;
-	private String pagesInput = null;
 }

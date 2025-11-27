@@ -211,7 +211,6 @@ public class IOService {
 						if (publication.getId() == null) {
 							publication.setId(Integer.toString(missingId++));
 						}
-						addReversedTitles(publication);
 						if (publication.isClinicalTrialGov()) {
 							publication.getAuthors().clear();
 							String journal = publication.getJournals().stream()
@@ -232,6 +231,9 @@ public class IOService {
 						}
 						fillAllAuthors(publication);
 						addNormalizedPages(pagesInputMap, publication);
+						if (publication.isSeveralPages) {
+							addReversedTitles(publication);
+						}
 						publications.add(publication);
 
 						titleCache = null;

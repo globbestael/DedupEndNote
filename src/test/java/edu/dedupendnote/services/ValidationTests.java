@@ -116,11 +116,11 @@ class ValidationTests {
 		// previous results
 		Map<String, ValidationResult> validationResultsMap = List
 				.of(
-					new ValidationResult("AI_subset", 502, 23, 250, 0, 29_000L),	// why so slow?
-					new ValidationResult("ASySD_Cardiac_human", 6762, 7, 2179, 1, 3_700L),
+					new ValidationResult("AI_subset", 501, 12, 2570, 0, 29_000L),	// why so slow?
+					new ValidationResult("ASySD_Cardiac_human", 6761, 7, 2179, 1, 3_700L),
 					new ValidationResult("ASySD_Diabetes", 1811, 11, 21, 2, 1_000L),
 					new ValidationResult("ASySD_Neuroimaging", 2179, 14, 1242, 3, 1_350L),
-					new ValidationResult("ASySD_SRSR_Human", 27944, 48, 25000, 9, 100_000L),
+					new ValidationResult("ASySD_SRSR_Human", 27947, 48, 24994, 12, 100_000L),
 					new ValidationResult("BIG_SET", 3967, 90, 1017, 8, 66_000L),
 					new ValidationResult("Clinical_trials", 219, 0, 0, 0, 190L),
 					new ValidationResult("McKeown_2021", 2023, 34, 1073, 0, 800L),
