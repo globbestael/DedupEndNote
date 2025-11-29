@@ -301,6 +301,10 @@ public class IOService {
 					 * T3 for PsycINFO (OVID) also puts alternative journal names in this field, sometimes more than one separated with a comma:
 					 * 		T2  - Archives of Neurology
 					 * 		T3  - A.M.A. Archives of Neurology, JAMA Neurology
+					 * T3 for PubMed can have "Retraction of: ..." and "Retraction in: ...", e.g.
+					 * - Retraction of: Cancer Lett. 2022 Mar 31;529:19-36. doi: 10.1016/j.canlet.2021.12.032 PMID: 34979165 [https://pubmed.ncbi.nlm.nih.gov/34979165]
+					 * - Retraction of: J Healthc Eng. 2022 Feb 18;2022:8507773. doi: 10.1155/2022/8507773 PMID: 35222894 [https://pubmed.ncbi.nlm.nih.gov/35222894]
+					 * - Retraction in: Comput Intell Neurosci. 2024 Aug 5;2024:9896585. doi: 10.1155/2024/9896585 PMID: 39139200 [https://pubmed.ncbi.nlm.nih.gov/39139200]
 					 * 
 					 * Present solution:
 					 * - skip it if it contains a number or "Annual|Conference|Congress|Meeting|Society"
@@ -312,7 +316,8 @@ public class IOService {
 					 */
 					// @formatter:on
 					case "T3": // Book section
-						if (!CONFERENCE_PATTERN.matcher(fieldContent).matches()) {
+						if (!fieldContent.startsWith("Retract")
+								&& !CONFERENCE_PATTERN.matcher(fieldContent).matches()) {
 							addNormalizedJournal(fieldContent, publication);
 							addNormalizedTitle(fieldContent, publication);
 						}
