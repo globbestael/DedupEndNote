@@ -10,6 +10,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.SequencedSet;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.function.Function;
@@ -243,7 +244,7 @@ public class IOService {
 						publication = new Publication();
 						pagesInputMap.clear();
 						log.debug("Publication read with id {} and title: {}", publication.getId(),
-								(publication.getTitles().isEmpty() ? "(none)" : publication.getTitles().get(0)));
+								(publication.getTitles().isEmpty() ? "(none)" : publication.getTitles().getFirst()));
 						break;
 					case "ID": // EndNote Publication number
 						publication.setId(fieldContent);
@@ -483,7 +484,7 @@ public class IOService {
 
 	public static void addReversedTitles(Publication publication) {
 		if (!UtilitiesService.setsContainSameString(skipNormalizationTitleFor, publication.getJournals())) {
-			List<String> titles = publication.getTitles();
+			SequencedSet<String> titles = publication.getTitles();
 			if (!titles.isEmpty()) {
 				List<String> reversed = new ArrayList<>();
 				for (String t : titles) {

@@ -9,6 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.SequencedSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -54,7 +55,7 @@ class JaroWinklerTitleTest {
 
 		SoftAssertions softAssertions = new SoftAssertions();
 		softAssertions.assertThat(highestSimilarity)
-				.as("\nTitle1: %s\nTitle2: %s", p1.getTitles().get(0), p2.getTitles().get(0))
+				.as("\nTitle1: %s\nTitle2: %s", p1.getTitles().getFirst(), p2.getTitles().getFirst())
 				.isEqualTo(expected, within(0.01));
 		softAssertions.assertThat(highestSimilarity)
 				.as("\nTitle1: %s\nTitle2: %s\nGreaterThanOrEqualTo threshold", p1.getTitles(), p2.getTitles())
@@ -560,7 +561,7 @@ class JaroWinklerTitleTest {
 		String t1 = "Severe deficiency of the specific von Willebrand factor-cleaving protease";
 		String t2 = "ADAMTS 13 activity in a subgroup of children with atypical hemolytic uremic syndrome";
 		IOService.addNormalizedTitle(t1 + ": " + t2, publication);
-		List<String> titles = publication.getTitles();
+		SequencedSet<String> titles = publication.getTitles();
 
 		System.err.println(titles);
 		assertThat(titles).hasSize(3);

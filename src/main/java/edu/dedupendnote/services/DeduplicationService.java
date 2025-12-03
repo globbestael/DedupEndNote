@@ -337,7 +337,7 @@ l						 * 		V 		W 		X
 				Publication publicationToKeep = publicationList.remove(0);
 				log.debug("Kept: {}: {}", publicationToKeep.getId(),
 						(publicationToKeep.getTitles().isEmpty() ? "(no titles found)"
-								: publicationToKeep.getTitles().get(0)));
+								: publicationToKeep.getTitles().getFirst()));
 				// Don't set keptPublication in compareSet(): trouble when multiple duplicates and no publication year
 				publicationList.stream().forEach(r -> r.setKeptPublication(false));
 
@@ -349,7 +349,7 @@ l						 * 		V 		W 		X
 							// .filter(Publication::isReply)
 							.map(r -> {
 								log.debug("Reply {} has title: {}.", r.getId(), r.getTitle());
-								return r.getTitle() != null ? r.getTitle() : r.getTitles().get(0);
+								return r.getTitle() != null ? r.getTitle() : r.getTitles().getFirst();
 							}).max(Comparator.comparingInt(String::length)).orElse("");
 					// There are cases where not all titles are recognized as replies -> publication.title can be null
 					if (publicationToKeep.getTitle() == null
@@ -364,7 +364,7 @@ l						 * 		V 		W 		X
 					log.debug("Publication {} is a trial: ", publicationToKeep.getId());
 					String shortestTitle = publicationList.stream().map(r -> {
 						log.debug("Trial {} has title: {}.", r.getId(), r.getTitle());
-						return r.getTitle() != null ? r.getTitle() : r.getTitles().get(0);
+						return r.getTitle() != null ? r.getTitle() : r.getTitles().getFirst();
 					}).min(Comparator.comparingInt(String::length)).orElse("");
 					// There are cases where publication.title can be null (??)
 					if (publicationToKeep.getTitle() == null

@@ -2,7 +2,9 @@ package edu.dedupendnote.domain;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.SequencedSet;
 import java.util.Set;
 
 import lombok.Data;
@@ -58,8 +60,11 @@ public class Publication {
 
 	private String title; // only set for Reply-titles
 
-	// TODO: can this be a Set?
-	private List<String> titles = new ArrayList<>();
+	/*
+	 * In DeduplicationService::enrich we need the first added title (split title parts are not-first). 
+	 * Therefore a SequencedSet and a LinkedHashSet
+	 */
+	private SequencedSet<String> titles = new LinkedHashSet<>();
 
 	private boolean isClinicalTrialGov = false;
 

@@ -1,7 +1,6 @@
 package edu.dedupendnote.services;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -257,8 +256,8 @@ public class ComparisonService {
 		}
 
 		Double similarity = 0.0;
-		List<String> titles1 = r1.getTitles();
-		List<String> titles2 = r2.getTitles();
+		Set<String> titles1 = r1.getTitles();
+		Set<String> titles2 = r2.getTitles();
 		boolean sufficientStartPages = r1.getPageStart() != null && r2.getPageStart() != null;
 		boolean sufficientDois = !r1.getDois().isEmpty() && !r2.getDois().isEmpty();
 		boolean isPhase = r1.isPhase() || r2.isPhase();
