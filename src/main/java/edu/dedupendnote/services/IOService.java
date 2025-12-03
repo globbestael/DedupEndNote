@@ -164,6 +164,7 @@ public class IOService {
 		 * reading the ER field
 		 */
 		String titleCache = null;
+		String journalCache = null;
 		Publication publication = new Publication();
 
 		boolean hasBom = UtilitiesService.detectBom(inputFileName);
@@ -204,7 +205,11 @@ public class IOService {
 						pagesInputMap.put(fieldName, fieldContent);
 						break;
 					case "DO": // DOI
-						publication.getDois().addAll(NormalizationService.normalizeInputDois(fieldContent));
+						if (fieldContent.startsWith("ARTN ")) {
+							pagesInputMap.put("C7", fieldContent);
+						} else {
+							publication.getDois().addAll(NormalizationService.normalizeInputDois(fieldContent));
+						}
 						previousFieldName = fieldName;
 						break;
 					case "ER":
@@ -226,9 +231,6 @@ public class IOService {
 							}
 							publication.setTitle(titleCache);
 						}
-						if (publication.isCochrane() && publication.getPagesOutput() == null) {
-							fillCochranePages(publication);
-						}
 						fillAllAuthors(publication);
 						addNormalizedPages(pagesInputMap, publication);
 						if (publication.isSeveralPages) {
@@ -236,6 +238,7 @@ public class IOService {
 						}
 						publications.add(publication);
 
+						journalCache = null;
 						titleCache = null;
 						publication = new Publication();
 						pagesInputMap.clear();
@@ -287,6 +290,7 @@ public class IOService {
 						addNormalizedTitle(fieldContent, publication);
 						break;
 					case "T2": // Journal title / Book title
+						journalCache = fieldContent;
 						if (fieldContent.startsWith("https://clinicaltrials.gov")) {
 							publication.setClinicalTrialGov(true);
 						}
@@ -354,6 +358,12 @@ public class IOService {
 						}
 						previousFieldName = fieldName;
 						break;
+					case "VL":
+						if (fieldContent.length() > 10 && journalCache != null) {
+							addNormalizedJournal(journalCache + ". " + fieldContent, publication);
+						}
+						previousFieldName = fieldName;
+						break;
 					default:
 						previousFieldName = fieldName;
 						break;
@@ -361,7 +371,7 @@ public class IOService {
 				} else { // continuation line
 					switch (previousFieldName) {
 					case "DO":
-						publication.getDois().addAll(NormalizationService.normalizeInputDois(fieldContent));
+						publication.getDois().addAll(NormalizationService.normalizeInputDois(line));
 						break;
 					case "SN":
 						IsbnIssnRecord normalized = NormalizationService.normalizeInputIssns(line);
@@ -444,6 +454,14 @@ public class IOService {
 
 	public static void addNormalizedPages(Map<String, String> pagesInputMap, Publication publication) {
 		publication.setPagesInput(pagesInputMap.toString());
+
+		if (publication.isCochrane() && pagesInputMap.isEmpty()) {
+			String c7 = getCochranePagesFromDoi(publication);
+			if (c7 != null) {
+				pagesInputMap.put("C7", c7);
+			}
+		}
+
 		PageRecord normalizedPages = NormalizationService.normalizeInputPages(pagesInputMap, publication.getId());
 		publication.setPageStart(normalizedPages.pageStart());
 		publication.setPagesOutput(normalizedPages.pagesOutput());
@@ -901,25 +919,19 @@ public class IOService {
 	}
 
 	/**
-	 * Tries to extract pageStart and pagesOutput from the DOI of Cochrane publications if these fields couldn't be filled
-	 * from the normal fields C7, SE and SP
+	 * Tries to extract ArticleNumber (C7) from the DOI of Cochrane publication.
+	 * This function is only called if (1) isCochrane and (2) pagesInputMap is empty
 	 */
-	private void fillCochranePages(Publication publication) {
-		String pageStart = publication.getPageStart();
-		if (pageStart == null) {
-			log.debug("Reached Cochrane publication without pageStart, getting it from the DOIs: {}", publication.getAuthors());
-			for (String doi : publication.getDois()) {
-				Matcher matcher = DeduplicationService.COCHRANE_DOI_PATTERN.matcher(doi);
-				if (matcher.matches()) {
-					pageStart = matcher.group(1);
-					break;
-				}
+	private static String getCochranePagesFromDoi(Publication publication) {
+		String c7 = null;
+		log.debug("Reached Cochrane publication without pageStart, getting it from the DOIs: {}", publication.getAuthors());
+		for (String doi : publication.getDois()) {
+			Matcher matcher = DeduplicationService.COCHRANE_DOI_PATTERN.matcher(doi);
+			if (matcher.matches()) {
+				c7 = matcher.group(1);
+				break;
 			}
 		}
-		if (pageStart != null) {
-			publication.setPageStart(pageStart.replaceAll("[\\^d]+", ""));
-			publication.setPagesOutput(pageStart.toUpperCase());
-		}
+		return c7;
 	}
-
 }

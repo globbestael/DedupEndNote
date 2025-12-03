@@ -12,6 +12,27 @@
   This will cause a big change in the performance data
   Is there a corollary change for FP?
 - NormalizationService::addTitleWithNormalization why is title a list instead of a set?
+  See ASySD_SRSR_Human 26854
+  - variation in the outcome reported by studies of interventions for atypical endometrial hyperplasia a systematic review the first step in the development of crukfunded core outcome sets, 
+  - variation in the outcome reported by studies of interventions for atypical endometrial hyperplasia, 
+  - systematic review the first step in the development of crukfunded core outcome sets, 
+  - variation in the outcome reported by studies of interventions for atypical endometrial hyperplasia a systematic review the first step in the development of crukfunded core outcome sets, 
+  - variation in the outcome reported by studies of interventions for atypical endometrial hyperplasia, 
+  - systematic review the first step in the development of crukfunded core outcome sets
+- TI normalization: 
+  - TI  - \d+[.:]\d* remove first part. Or should if there is a starting number, a second title without the number be added?
+  - TI  - Reprint( of)?
+  - TI  - .+(\(Reprinted.*$)
+  - TI  - .+(\(R\))
+- T2 normalization
+  - t2  - [^(\r]+\d+$:  '(' for journals with "(Berlin 2002)". 
+    See also: 
+    - https://clinicaltrials.gov/show/NCT01326949
+    - http://www.who.int/trialsearch/Trial2.aspx?TrialID=JPRN-UMIN000015319
+    - Hepatology v70 suppl.1 2019
+    - Advances in Internal Medicine, Vol 42
+    - PROCEEDINGS OF THE ASME INTERNATIONAL MECHANICAL ENGINEERING CONGRESS AND EXPOSITION, 2013, VOL 15
+    - The number can be added from the VL field: "T2  - Schizophrenia Bulletin" and "VL  - 45 (Supplement 2)"
 
 ## Spring Boot 4.0
 - see also https://docs.openrewrite.org/recipes/java/spring/boot4

@@ -55,7 +55,7 @@ public class NormalizationService {
 	 */
 	// private static final Pattern PAGES_ADDITIONS_PATTERN = Pattern.compile("(^(UNSP|Article)\\s*|; author.+$)",
 	// Pattern.CASE_INSENSITIVE);
-	private static final Pattern PAGES_ADDITIONS_PATTERN = Pattern.compile("^(UNSP|Article)\\s*",
+	private static final Pattern PAGES_ADDITIONS_PATTERN = Pattern.compile("^(UNSP|Article|ARTN)\\s*",
 			Pattern.CASE_INSENSITIVE);
 
 	/**
@@ -284,6 +284,13 @@ public class NormalizationService {
 	public static final Pattern ANONYMOUS_OR_GROUPNAME_PATTERN = Pattern
 			.compile("\\b(anonymous|consortium|et al|grp|group|nct|study)\\b", Pattern.CASE_INSENSITIVE);
 
+	/*
+	 * Finds the longest group (i.e. the outer group) of balanced braces. Use group(0) to get this content.
+	 * https://stackoverflow.com/questions/47162098/is-it-possible-to-match-nested-brackets-with-a-regex-without-using-recursion-or/47162099#47162099
+	 */
+	private static Pattern BALANCED_BRACES_PATTERN = Pattern.compile(
+			"(?=\\()(?:(?=.*?\\((?!.*?\\1)(.*\\)(?!.*\\2).*))(?=.*?\\)(?!.*?\\2)(.*)).)+?.*?(?=\\1)[^(]*(?=\\2$)");
+
 	// FIXME: Not used any more in normalizeInputPages
 	// private static final Pattern NUMBERS_WITHIN_PATTERN = Pattern.compile(".*\\d+.*");
 
@@ -365,7 +372,7 @@ public class NormalizationService {
 			return new AuthorRecord(null, null, false);
 		}
 
-		authorInput = NormalizationService.normalizeToBasicLatin(authorInput);
+		authorInput = normalizeToBasicLatin(authorInput);
 
 		String[] parts = authorInput.split("\\s*,\\s+"); // see testfile Non_Latin_input.txt for " , "
 		if (parts.length < 2) {
@@ -550,7 +557,7 @@ public class NormalizationService {
 		}
 		// Strip last part of "Clinical neuropharmacology.12 Suppl 2 ()(pp v-xii; S1-105) 1989.Date
 		// of Publication: 1989."
-		Matcher matcher = NormalizationService.JOURNAL_EXTRA_PATTERN.matcher(journal);
+		Matcher matcher = JOURNAL_EXTRA_PATTERN.matcher(journal);
 		if (matcher.matches()) {
 			journal = matcher.group(1);
 		}
@@ -573,7 +580,7 @@ public class NormalizationService {
 		 * - ... = ...: Zhen ci yan jiu = Acupuncture research
 		 */
 		// String[] parts = journal.split("[\\[\\]=|/]");
-		String[] parts = journal.split("[\\[\\]]|([=|/] )");
+		String[] parts = journal.split("[\\[\\]]|([=|/.] )");
 		List<String> list = new ArrayList<>(Arrays.asList(parts));
 
 		/*
@@ -601,7 +608,7 @@ public class NormalizationService {
 			// if (JOURNAL_SECTION_MARKERS.matcher(journal).matches()) {
 			// additional.add(JOURNAL_SECTION_MARKERS.matcher(journal).replaceAll("Matcher"));
 			// }
-			matcher = NormalizationService.JOURNAL_SUPPLEMENT_PATTERN.matcher(journal);
+			matcher = JOURNAL_SUPPLEMENT_PATTERN.matcher(journal);
 			if (matcher.find()) {
 				log.debug("SupplementMatcher fired for: {}", journal);
 				additional.add(matcher.replaceAll(""));
@@ -623,7 +630,7 @@ public class NormalizationService {
 					List<String> words = Arrays.asList(j.toLowerCase().split(" "));
 					j = words.stream().map(StringUtils::capitalize).collect(Collectors.joining(" "));
 				}
-				String normalized = NormalizationService.normalizeJournal(j);
+				String normalized = normalizeJournal(j);
 				if (!normalized.isEmpty()) {
 					journals.add(normalized);
 				}
@@ -942,6 +949,23 @@ public class NormalizationService {
 			originalTitle = cachedTitle;
 			title = startMatcher.group(4);
 		}
+
+		if (title.startsWith("Retraction: ")) {
+			Matcher balancedBracesMatcher = BALANCED_BRACES_PATTERN.matcher(title);
+			if (balancedBracesMatcher.find()) {
+				String addition = balancedBracesMatcher.group(0);
+				title = title.substring(0, title.length() - addition.length());
+				title = title.substring("Retraction: ".length());
+			}
+		}
+
+		if (title.startsWith("Editorial: ")) {
+			title = title.substring("Editorial: ".length());
+		}
+		if (title.startsWith("Editorial on ")) {
+			title = title.substring("Editorial on ".length());
+		}
+
 		List<String> normalizedTitles = addTitleWithNormalization(title);
 
 		boolean splittable = true;
@@ -976,7 +1000,7 @@ public class NormalizationService {
 	}
 
 	private static List<String> addTitleWithNormalization(String title) {
-		String normalized = NormalizationService.normalizeTitle(title);
+		String normalized = normalizeTitle(title);
 		String[] parts = normalized.split("=");
 		List<String> list = new ArrayList<>(Arrays.asList(parts));
 		List<String> titles = new ArrayList<>();
@@ -1111,6 +1135,7 @@ public class NormalizationService {
 		r = r.strip();
 		r = MULTIPLE_WHITE_SPACE_PATTERN.matcher(r).replaceAll(" ");
 		r = STARTING_ARTICLE_PATTERN.matcher(r).replaceAll("");
+		// r = r.replaceAll(" ", "");
 		return r.strip();
 	}
 

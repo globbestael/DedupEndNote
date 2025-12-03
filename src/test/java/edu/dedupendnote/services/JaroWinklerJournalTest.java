@@ -98,6 +98,9 @@ class JaroWinklerJournalTest {
 		Publication p1 = new Publication();
 		IOService.addNormalizedJournal(input1, p1);
 
+		for (String j : p1.getJournals()) {
+			log.error("For input '{}': {}", input1, j);
+		}
 		assertThat(p1.getJournals()).containsAll(list);
 	}
 
@@ -124,20 +127,33 @@ class JaroWinklerJournalTest {
 
 	static Stream<Arguments> slashArgumentProvider() {
 		// @formatter:off
-		return Stream.of(arguments(
+		return Stream.of(
+			arguments(
 				"The Canadian Journal of Neurological Sciences / Le Journal Canadien Des Sciences Neurologiques",
-				List.of("Canadian Journal of Neurological Sciences",	"Journal Canadien Des Sciences Neurologiques")),
-				arguments(
-						"Doklady biological sciences : proceedings of the Academy of Sciences of the USSR, Biological sciences sections / translated from Russian",
-						List.of("Doklady biological sciences")),
-				arguments("Polski Przeglad Chirurgiczny/ Polish Journal of Surgery",
-						List.of("Polski Przeglad Chirurgiczny", "Polish Journal of Surgery")),
-				arguments("Hematology/Oncology Clinics of North America",
-						List.of("Hematology Oncology Clinics of North America")),
-				arguments(
-						"Zhen ci yan jiu = Acupuncture research / [Zhongguo yi xue ke xue yuan Yi xue qing bao yan jiu suo bian ji]",
-						List.of("Zhen ci yan jiu", "Acupuncture research",
-								"Zhongguo yi xue ke xue yuan Yi xue qing bao yan jiu suo bian ji"))
+				List.of(
+					"Canadian Journal of Neurological Sciences",
+					"Journal Canadien Des Sciences Neurologiques")),
+			arguments(
+					"Doklady biological sciences : proceedings of the Academy of Sciences of the USSR, Biological sciences sections / translated from Russian",
+					List.of("Doklady biological sciences")),
+			arguments("Polski Przeglad Chirurgiczny/ Polish Journal of Surgery",
+					List.of(
+						"Polski Przeglad Chirurgiczny", 
+						"Polish Journal of Surgery")),
+			arguments("Hematology/Oncology Clinics of North America",
+					List.of("Hematology Oncology Clinics of North America")),
+			arguments(
+					"Zhen ci yan jiu = Acupuncture research / [Zhongguo yi xue ke xue yuan Yi xue qing bao yan jiu suo bian ji]",
+					List.of(
+						"Zhen ci yan jiu", 
+						"Acupuncture research",
+						"Zhongguo yi xue ke xue yuan Yi xue qing bao yan jiu suo bian ji")),
+			arguments("Anatomical Record. Part A, Discoveries in Molecular, Cellular, & Evolutionary Biology",
+				List.of(
+					// "Anatomical Record Part A Discoveries in Molecular Cellular Evolutionary Biology",
+					"Anatomical Record", 
+					"Part A Discoveries in Molecular Cellular Evolutionary Biology"))
+
 		// @formatter:on
 		);
 	}
