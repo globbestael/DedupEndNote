@@ -25,8 +25,8 @@ public class ValidationResult {
 	double accuracy;
 	double f1Score;
 
-	Map<Integer, List<Publication>> fnPairs = new TreeMap<>();
-	Map<Integer, List<Publication>> fpPairs = new TreeMap<>();
+	Map<Integer, List<List<Publication>>> fnPairs = new TreeMap<>();
+	Map<Integer, List<List<Publication>>> fpPairs = new TreeMap<>();
 
 	public ValidationResult(String fileName, int tp, int fn, int tn, int fp, long durationMilliseconds) {
 		this.fileName = fileName;

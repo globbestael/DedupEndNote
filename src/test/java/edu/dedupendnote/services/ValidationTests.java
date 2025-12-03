@@ -146,10 +146,10 @@ class ValidationTests {
 		Map<String, ValidationResult> resultsMap = List
 				.of(
 					// checkResults_AI_subset(),
-					checkResults_ASySD_Cardiac_human()
+					// checkResults_ASySD_Cardiac_human(),
 					// checkResults_ASySD_Diabetes(),
 					// checkResults_ASySD_Neuroimaging(),
-					// checkResults_ASySD_SRSR_Human(),
+					checkResults_ASySD_SRSR_Human()
 					// checkResults_BIG_SET(),
 					// checkResults_Clinical_trials(),
 					// checkResults_McKeown_2021(),
@@ -314,8 +314,9 @@ class ValidationTests {
 		int tns = 0, tps = 0, fps = 0, fns = 0;
 		List<String> errors = new ArrayList<>();
 		Map<Integer, Integer> fpErrors = new HashMap<>();
-		Map<Integer, List<Publication>> fnPairs = new TreeMap<>();
-		Map<Integer, List<Publication>> fpPairs = new TreeMap<>();
+		// Because there can be more than 1 FN-pair or FP-pair with the same kept publication, a List<List> is needed
+		Map<Integer, List<List<Publication>>> fnPairs = new TreeMap<>();
+		Map<Integer, List<List<Publication>>> fpPairs = new TreeMap<>();
 		
 		for (PublicationDB t : truthRecords) {
 			PublicationDB v = validationMap.get(t.getId());
@@ -337,7 +338,14 @@ class ValidationTests {
 						pair.add(publicationMap.get(t.getId().toString()));
 						pair.add(publicationMap.get(tDedupId.toString()));
 						pair = pair.stream().sorted((p1,p2) -> Integer.valueOf(p1.getId()).compareTo(Integer.valueOf(p2.getId()))).toList();
-						fnPairs.put(Integer.valueOf(pair.get(0).getId()), new ArrayList<>(pair));
+						Integer keptId = Integer.valueOf(pair.get(0).getId());
+						if (fnPairs.containsKey(keptId)) {
+							fnPairs.get(keptId).add(new ArrayList<>(pair));
+						} else {
+							List<List<Publication>> list = new ArrayList<>();
+							list.add(new ArrayList<Publication>(pair));
+							fnPairs.put(keptId, list);
+						}
 					}
 				}
 			} else if ((trueDuplicateSets.containsKey(tDedupId) && trueDuplicateSets.get(tDedupId).contains(vDedupId)) || v.getId().equals(vDedupId)) {
@@ -354,7 +362,14 @@ class ValidationTests {
 					pair.add(publicationMap.get(v.getId().toString()));
 					pair.add(publicationMap.get(vDedupId.toString()));
 					pair = pair.stream().sorted((p1,p2) -> Integer.valueOf(p1.getId()).compareTo(Integer.valueOf(p2.getId()))).toList();
-					fpPairs.put(Integer.valueOf(pair.get(0).getId()), new ArrayList<>(pair));
+					Integer keptId = Integer.valueOf(pair.get(0).getId());
+					if (fpPairs.containsKey(keptId)) {
+						fpPairs.get(keptId).add(new ArrayList<>(pair));
+					} else {
+						List<List<Publication>> list = new ArrayList<>();
+						list.add(new ArrayList<Publication>(pair));
+						fpPairs.put(keptId, list);
+					}
 				}
 			}
 		}
@@ -406,12 +421,17 @@ class ValidationTests {
 		return validationResult;
 	}
 	
-	List<Pattern> tracePatterns = List.of(Pattern.compile("- (1|2|3|4). .+"),
+	List<Pattern> tracePatterns = List.of(Pattern.compile("- (0|1|2|3|4). .+"),
 			Pattern.compile("\\d+ - \\d+ ARE (NOT )?DUPLICATES"));
 
-	private void writeFNandFPresults(Map<Integer, List<Publication>> pairs, String outputFileName) {
+	private void writeFNandFPresults(Map<Integer, List<List<Publication>>> pairsList, String outputFileName) {
 		List<Logger> loggers = new ArrayList<>();
-		List<String> loggerNames = List.of("edu.dedupendnote.services.DeduplicationService", "edu.dedupendnote.services.ComparisonService", "edu.dedupendnote.services.DefaultAuthorsComparisonService");
+		List<String> loggerNames = List.of(
+			"edu.dedupendnote.services.DeduplicationService", 
+			"edu.dedupendnote.services.ComparisonService", 
+			"edu.dedupendnote.services.DefaultAuthorsComparisonService",
+			"edu.dedupendnote.services.ValidationTests" // add this file because of trace on publication year
+			);
 		Level oldLevel = null;
 
 		try (BufferedWriter bw = new BufferedWriter(new FileWriter(outputFileName))) {
@@ -426,25 +446,35 @@ class ValidationTests {
 			memoryAppender.setContext((LoggerContext) LoggerFactory.getILoggerFactory());
 			memoryAppender.start();
 
-			for (List<Publication> pair : pairs.values()) {
-				bw.write(pair.get(0).toString());
-				bw.write("\n");
-				if (pair.size() < 2) {
-					bw.write("Pair contains only 1 record");
-				} else {
-					bw.write(pair.get(1).toString());
+			for (List<List<Publication>> pairs : pairsList.values()) {
+				for (List<Publication> pair : pairs) {
+					bw.write(pair.get(0).toString());
+					bw.write("\n");
+					if (pair.size() < 2) {
+						bw.write("Pair contains only 1 record");
+					} else {
+						bw.write(pair.get(1).toString());
+					}
+
+					// deduplicate pair after writing because deduplication alter the pair
+					if (Math.abs(pair.get(0).getPublicationYear() - pair.get(1).getPublicationYear()) > 1) {
+						Publication p1 = pair.get(0);
+						Publication p2 = pair.get(1);
+						log.trace("\nStarting comparison {} - {}", p1.getId(), p2.getId());
+						log.trace("- 0. Publication years are too far apart: {} and {}", p1.getPublicationYear(), p2.getPublicationYear());
+						log.trace("{} - {} ARE NOT DUPLICATES", p1.getId(), p2.getId());
+					} else {
+						deduplicationService.compareSet(pair, pair.get(0).getPublicationYear(), true, "dummy");
+					}
+
+					bw.write("\nANALYSIS:\n");
+					for (String s : memoryAppender.filterByPatterns(tracePatterns, Level.TRACE)) {
+						bw.write(s + "\n");
+					}
+					bw.write("\n=======================\n");
+
+					memoryAppender.reset();
 				}
-
-				// deduplicate pair after writing because deduplication alter the pair
-				deduplicationService.compareSet(pair, pair.get(0).getPublicationYear(), true, "dummy");
-
-				bw.write("\nANALYSIS:\n");
-				for (String s : memoryAppender.filterByPatterns(tracePatterns, Level.TRACE)) {
-					bw.write(s + "\n");
-				}
-				bw.write("\n=======================\n");
-
-				memoryAppender.reset();
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
