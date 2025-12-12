@@ -50,6 +50,16 @@ public class NormalizationService {
 	private static final Pattern NON_INITIAL_SQUARE_BRACKETS_PATTERN = Pattern.compile(".\\[[^\\\\]+\\]$");
 
 	/**
+	 * Split main title and subtitle on " -" except for cases as "...virus-positive and -negative patients".
+	 * 
+	 * There are also older records where Greek letters are skipped in database. Example from Embase 2003 article: Real:
+	 * Role of κ-opioid receptor activation in pharmacological preconditioning of swine Embase: Role of -opioid receptor
+	 * activation in pharmacological preconditioning of swine
+	 */
+	private static final Pattern HYPHEN_AS_SUBTITLE_DIVIDER_PATTERN = Pattern
+			.compile("(.*(?<!( and| of| or|,|\\d)))( -)([ \\p{Alpha}]+)$");
+
+	/**
 	 * "UNSP ..." (and variants) should be cleaned from the C7 field (WoS). Import may have changed UNSP" Into "Unsp".
 	 * "author..." (reply etc): delete rest of string
 	 */
@@ -122,16 +132,22 @@ public class NormalizationService {
 
 	// FIXME: check last characters in pattern (space or punctuation?)
 	/**
-	 * Esp. Scopus uses "(Japanese)" (or "(Japanese text)") at the end of the title.
+	 * Esp. Scopus uses additions as "(Japanese)" (or "(Japanese text)") at the end of the title.
 	 *
 	 * The pattern is used on the lowercased title. The languages are not complete: based on the 200 most frequent
-	 * (sub)titles in the testfiles
+	 * (sub)titles in the testfiles.
 	 */
 	private static final Pattern LANGUAGE_PATTERN = Pattern
 			.compile("(\\(?(chinese|dutch|french|german|italian|japanese|polish|russian|spanish)( text)?\\)?)$");
 
+	/**
+	 * Punctuation characters except for closing ')' and ']' (because they may be used as part of a following Pattern)
+	 * 
+	 * See https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/regex/Pattern.html for substraction of
+	 * Unicode character classes.
+	 */
+	private static final Pattern PARTIAL_ENDING_PUNCTUATION_PATTERN = Pattern.compile("([\\p{P}&&[^)\\]]]+)$");
 	private static final Pattern TRANSLATION_PATTERN = Pattern.compile("(\\(author's transl\\))$");
-
 	/**
 	 * All characters outside the BasicLatin Unicode block (\u0000 – \u007F). After Normalization with canonical
 	 * decomposition (Normalizer.Form.NFD) all combining accents and diacritics, supplemental characters (e.g. "£") and
@@ -254,11 +270,17 @@ public class NormalizationService {
 
 	private static final List<String> NO_TITLES = List.of("not available", "[not available]", "untitled");
 
+	/**
+	 * Starting "(retracted|removed|review|withdrawn)( article)", to be removed
+	 */
 	private static final Pattern RETRACTION_START_PATTERN = Pattern
 			.compile("((retracted|removed|review|withdrawn)( article)?[.:] )(.+)", Pattern.CASE_INSENSITIVE);
+	/**
+	 * Ending "(Retracted [Aa]rticle ...", to be removed
+	 */
 	private static final Pattern RETRACTION_END_PATTERN = Pattern.compile("(.+)\\(Retracted [Aa]rticle.*\\)");
 
-	private static final Pattern TITLE_AND_SUBTITLE_PATTERN = Pattern.compile("^(.{50,}?)[:.?] (.{50,})$");
+	private static final Pattern TITLE_AND_SUBTITLE_PATTERN = Pattern.compile("^(.{20,}?)[:.?;] (.{40,})$");
 
 	/*
 	* In Java 8 replaceAll via PATTERN.matcher(s).replaceAll(replacement) is faster than
@@ -290,6 +312,22 @@ public class NormalizationService {
 	 */
 	private static Pattern BALANCED_BRACES_PATTERN = Pattern.compile(
 			"(?=\\()(?:(?=.*?\\((?!.*?\\1)(.*\\)(?!.*\\2).*))(?=.*?\\)(?!.*?\\2)(.*)).)+?.*?(?=\\1)[^(]*(?=\\2$)");
+
+	private static Pattern STARTING_NUMBERS_PATTERN = Pattern.compile("^(\\d+)(.+)$");
+
+	/**
+	 * The addition "(Reprinted ...)" in titles, to be removed
+	 */
+	private static Pattern REPRINTED_ADDITION_PATTERN = Pattern.compile("^(.+)\\(Reprinted .*$");
+	/**
+	 * The starting "Reprint( of)?:" in titles, to be removed
+	 */
+	private static Pattern REPRINTED_START_PATTERN = Pattern.compile("^Reprint( of)?:(.+)$", Pattern.CASE_INSENSITIVE);
+
+	/**
+	 * Both "(R)" and "(TM)", to be removed
+	 */
+	private static Pattern REGISTERED_TRADEMARK_PATTERN = Pattern.compile("^(.+)(\\((R|TM)\\))(.+)$");
 
 	// FIXME: Not used any more in normalizeInputPages
 	// private static final Pattern NUMBERS_WITHIN_PATTERN = Pattern.compile(".*\\d+.*");
@@ -539,7 +577,7 @@ public class NormalizationService {
 		return result;
 	}
 
-	public static Set<String> normalizeInputJournals(String journal) {
+	public static Set<String> normalizeInputJournals(String journal, String fieldName) {
 		// @formatter:off
 		/*
 		 * General:
@@ -579,10 +617,20 @@ public class NormalizationService {
 		 * - ... / ...: The Canadian Journal of Neurological Sciences / Le Journal Canadien Des Sciences Neurologiques 
 		 * - ... = ...: Zhen ci yan jiu = Acupuncture research
 		 */
-		// String[] parts = journal.split("[\\[\\]=|/]");
-		String[] parts = journal.split("[\\[\\]]|([=|/.] )");
-		List<String> list = new ArrayList<>(Arrays.asList(parts));
-
+		Set<String> journalSet = new HashSet<>();
+		String[] parts = null;
+		/*
+		 * Don't use "." as split character for J2 content because field oten has content as "Clin. Med.J. R. Coll. Phys. Lond."
+		 */
+		if ("J2".equals(fieldName)) {
+			parts = journal.split("[\\[\\]]|[=|/]");
+		} else {
+			parts = journal.split("[\\[\\]]|[=|/]|([.] )");
+		}
+		journalSet.addAll(Arrays.asList(parts));
+		if (parts.length > 1) {
+			journalSet.add(journal);
+		}
 		/*
 		 * Journals with a ":" will get 2 variants. e.g
 		 * "BJOG: An International Journal of Obstetrics and Gynaecology" or
@@ -590,11 +638,11 @@ public class NormalizationService {
 		 * - one with the colon and all following characters removed ("BJOG" and "Clinical Medicine Insights").
 		 *   The removal of these characters does not happen here, but later within normalizeJournalJava8() (journalAdditionPattern)
 		 * - one with the ":" replaced with a SPACE
-		 *   ("BJOG: An International Journal of Obstetrics and Gynaecology" and
+		 *   ("BJOG An International Journal of Obstetrics and Gynaecology" and
 		 *    "Clinical Medicine Insights Circulatory, Respiratory and Pulmonary Medicine")
 		 */
 		Set<String> additional = new HashSet<>();
-		for (String j : list) {
+		for (String j : journalSet) {
 			if (j.contains(":")) {
 				additional.add(j.replace(":", " "));
 			}
@@ -616,13 +664,13 @@ public class NormalizationService {
 		}
 
 		if (!additional.isEmpty()) {
-			list.addAll(additional);
+			journalSet.addAll(additional);
 		}
 		/*
 		 * The EXCLUDED_JOURNALS_PARTS are not a pattern. They are one of the journal(parts) and will be skipped
 		 */
 		Set<String> journals = new HashSet<>();
-		for (String j : list) {
+		for (String j : journalSet) {
 			j = j.strip();
 			// FIXME: what happens when EXCLUDED_JOURNALS_PARTS.contains(j.toLowerCase())??
 			if (!j.isEmpty() && !EXCLUDED_JOURNALS_PARTS.contains(j.toLowerCase())) {
@@ -937,6 +985,7 @@ public class NormalizationService {
 		if (NO_TITLES.contains(title.toLowerCase())) {
 			return new TitleRecord(null, new ArrayList<>());
 		}
+		title = StringEscapeUtils.unescapeHtml4(title);
 		String cachedTitle = title;
 		String originalTitle = null;
 		Matcher endMatcher = RETRACTION_END_PATTERN.matcher(title);
@@ -959,14 +1008,46 @@ public class NormalizationService {
 			}
 		}
 
+		Matcher reprintAdditionMatcher = REPRINTED_ADDITION_PATTERN.matcher(title);
+		if (reprintAdditionMatcher.matches()) {
+			title = reprintAdditionMatcher.group(1);
+		}
+
+		Matcher reprintStartMatcher = REPRINTED_START_PATTERN.matcher(title);
+		if (reprintStartMatcher.matches()) {
+			title = reprintStartMatcher.group(2);
+		}
+
+		Matcher registeredtrademarkMatcher = REGISTERED_TRADEMARK_PATTERN.matcher(title);
+		while (registeredtrademarkMatcher.find()) {
+			title = registeredtrademarkMatcher.group(1) + " " + registeredtrademarkMatcher.group(4);
+		}
+
 		if (title.startsWith("Editorial: ")) {
 			title = title.substring("Editorial: ".length());
 		}
 		if (title.startsWith("Editorial on ")) {
 			title = title.substring("Editorial on ".length());
 		}
+		// Replace "--" and " -" with the normal splitter for main title - subtitle (": ")
+		title = title.replaceAll("--", ": ");
+		Matcher hyphenAsSubtitleDividerMatchermatcher = HYPHEN_AS_SUBTITLE_DIVIDER_PATTERN.matcher(title);
+		if (hyphenAsSubtitleDividerMatchermatcher.matches()) {
+			// log.error("\n- orig: {}\n- G1: {}\n- G2: {}\n- G3: {}\n- G4: {}", title,
+			// hyphenAsSubtitleDividerMatchermatcher.group(1), hyphenAsSubtitleDividerMatchermatcher.group(2),
+			// hyphenAsSubtitleDividerMatchermatcher.group(3), hyphenAsSubtitleDividerMatchermatcher.group(4));
+			title = hyphenAsSubtitleDividerMatchermatcher.group(1) + ": "
+					+ hyphenAsSubtitleDividerMatchermatcher.group(4);
+			;
+		}
 
 		List<String> normalizedTitles = addTitleWithNormalization(title);
+
+		Matcher startingNumbMatcher = STARTING_NUMBERS_PATTERN.matcher(title);
+		if (startingNumbMatcher.matches()) {
+			title = startingNumbMatcher.group(2);
+			normalizedTitles.addAll(addTitleWithNormalization(title));
+		}
 
 		boolean splittable = true;
 		String secondPart = title;
@@ -996,6 +1077,7 @@ public class NormalizationService {
 		// addTitleWithNormalization(firstPart);
 		// // do not add the subtitle: titles.add(matcher.group(2));
 		// }
+
 		return new TitleRecord(originalTitle, normalizedTitles);
 	}
 
@@ -1086,6 +1168,7 @@ public class NormalizationService {
 
 	public static String normalizeTitle(String s) {
 		// FIXME: Why starting with parameter s and later copying s to r?
+		s = PARTIAL_ENDING_PUNCTUATION_PATTERN.matcher(s).replaceAll("");
 		s = normalizeToBasicLatin(s);
 		s = DOUBLE_QUOTES_PATTERN.matcher(s).replaceAll("");
 		/*

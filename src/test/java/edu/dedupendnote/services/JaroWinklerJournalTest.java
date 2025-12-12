@@ -66,8 +66,8 @@ class JaroWinklerJournalTest {
 		Publication p2 = new Publication();
 		log.debug("==================================================================");
 
-		IOService.addNormalizedJournal(input1, p1);
-		IOService.addNormalizedJournal(input2, p2);
+		IOService.addNormalizedJournal(input1, p1, "T2");
+		IOService.addNormalizedJournal(input2, p2, "T2");
 
 		assertThat(ComparisonService.compareJournals(p1, p2))
 				.as("Journals are NOT similar: " + p1.getJournals() + " versus " + p2.getJournals()).isTrue();
@@ -81,8 +81,8 @@ class JaroWinklerJournalTest {
 	void fullNegativeTest(String input1, String input2) {
 		Publication p1 = new Publication();
 		Publication p2 = new Publication();
-		IOService.addNormalizedJournal(input1, p1);
-		IOService.addNormalizedJournal(input2, p2);
+		IOService.addNormalizedJournal(input1, p1, "T2");
+		IOService.addNormalizedJournal(input2, p2, "T2");
 
 		// log.debug("Result: {}", ComparisonService.compareJournals(p1, p2));
 		assertThat(ComparisonService.compareJournals(p1, p2))
@@ -96,7 +96,7 @@ class JaroWinklerJournalTest {
 	@MethodSource("slashArgumentProvider")
 	void slashTest(String input1, List<String> list) {
 		Publication p1 = new Publication();
-		IOService.addNormalizedJournal(input1, p1);
+		IOService.addNormalizedJournal(input1, p1, "T2");
 
 		for (String j : p1.getJournals()) {
 			log.error("For input '{}': {}", input1, j);
@@ -107,7 +107,7 @@ class JaroWinklerJournalTest {
 	@Test
 	void journalWithSquareBracketsAtEnd() {
 		Publication p1 = new Publication();
-		IOService.addNormalizedJournal("Zhonghua wai ke za zhi [Chinese journal of surgery]", p1);
+		IOService.addNormalizedJournal("Zhonghua wai ke za zhi [Chinese journal of surgery]", p1, "T2");
 
 		assertThat(p1.getJournals()).hasSize(2);
 		assertThat(p1.getJournals()).contains("Zhonghua wai ke za zhi");
@@ -118,7 +118,7 @@ class JaroWinklerJournalTest {
 	void journalWithSquareBracketsAtStart() {
 		Publication p1 = new Publication();
 
-		IOService.addNormalizedJournal("[Rinsho ketsueki] The Japanese journal of clinical hematology", p1);
+		IOService.addNormalizedJournal("[Rinsho ketsueki] The Japanese journal of clinical hematology", p1, "T2");
 
 		assertThat(p1.getJournals()).hasSize(2);
 		assertThat(p1.getJournals()).contains("Rinsho ketsueki");
@@ -286,7 +286,9 @@ class JaroWinklerJournalTest {
 			arguments( // see issue #1
 					"ADHD-ATTENTION DEFICIT AND HYPERACTIVITY DISORDERS", "Atten Defic Hyperact Disord"),
 			arguments("European Child and Adolescent Psychiatry", "European Child & Adolescent Psychiatry"),
-			arguments("Bull Acad Natl Med", "Bulletin de l'Académie nationale de médecine")
+			arguments("Bull Acad Natl Med", "Bulletin de l'Académie nationale de médecine"),
+			arguments("Amer.J.Dig.Dis.", "American Journal of Digestive Diseases"),
+			arguments("International journal of cancer.Journal international du cancer", "International journal of cancer. Journal international du cancer")
 		// @formatter:on
 		);
 	}

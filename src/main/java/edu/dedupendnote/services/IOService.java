@@ -51,7 +51,8 @@ public class IOService {
 	// @formatter:on
 
 	/**
-	 * Pattern to identify conferences in the T3 field
+	 * Pattern to identify conferences in the T3 field. \\d{4} select a.o. "Digestive Disease Week (DDW) 2020. United
+	 * States."
 	 */
 	private static final Pattern CONFERENCE_PATTERN = Pattern
 			.compile("((^\\d)|(.*(\\d{4}|Annual|Conference|Congress|Meeting|Society|Symposium))).*");
@@ -213,6 +214,13 @@ public class IOService {
 						}
 						previousFieldName = fieldName;
 						break;
+					/*
+					 * Zotero has split the pages between SP and EP (in that order in RIS file)
+					 */
+					case "EP":
+						String sp = pagesInputMap.getOrDefault("SP", "");
+						pagesInputMap.put("SP", sp + "-" + fieldContent);
+						break;
 					case "ER":
 						if (publication.getId() == null) {
 							publication.setId(Integer.toString(missingId++));
@@ -251,13 +259,13 @@ public class IOService {
 						// log.debug("Read ID {}", fieldContent);
 						break;
 					case "J2": // Alternate journal
-						addNormalizedJournal(fieldContent, publication);
+						addNormalizedJournal(fieldContent, publication, fieldName);
 						break;
 					case "OP":
 						// in PubMed: original title, in Web of Science (at least for conference papers): conference
 						// title
 						if ("CONF".equals(publication.getReferenceType())) {
-							addNormalizedJournal(fieldContent, publication);
+							addNormalizedJournal(fieldContent, publication, fieldName);
 						} else {
 							addNormalizedTitle(fieldContent, publication);
 						}
@@ -292,10 +300,11 @@ public class IOService {
 						break;
 					case "T2": // Journal title / Book title
 						journalCache = fieldContent;
-						if (fieldContent.startsWith("https://clinicaltrials.gov")) {
+						if (fieldContent.startsWith("http") && fieldContent.contains("//clinicaltrials.gov")) {
+							fieldContent = fieldContent.replace("http:", "https:");
 							publication.setClinicalTrialGov(true);
 						}
-						addNormalizedJournal(fieldContent, publication);
+						addNormalizedJournal(fieldContent, publication, fieldName);
 						break;
 					// @formatter:off
 					/*
@@ -306,10 +315,16 @@ public class IOService {
 					 * T3 for PsycINFO (OVID) also puts alternative journal names in this field, sometimes more than one separated with a comma:
 					 * 		T2  - Archives of Neurology
 					 * 		T3  - A.M.A. Archives of Neurology, JAMA Neurology
-					 * T3 for PubMed can have "Retraction of: ..." and "Retraction in: ...", e.g.
+					 *   ???: Many cases where T3 has the predecessor(s) of the journal of the publication.
+					 *   BUT: PsycINFO (OVID) also has the original title in T2 and the journal of T3 (ovid URL has "D=psyc10":is this PsycINFO?)
+					 * T3 for PubMed can have "Retraction of: ...", "Retraction in: ...", ... e.g.
 					 * - Retraction of: Cancer Lett. 2022 Mar 31;529:19-36. doi: 10.1016/j.canlet.2021.12.032 PMID: 34979165 [https://pubmed.ncbi.nlm.nih.gov/34979165]
 					 * - Retraction of: J Healthc Eng. 2022 Feb 18;2022:8507773. doi: 10.1155/2022/8507773 PMID: 35222894 [https://pubmed.ncbi.nlm.nih.gov/35222894]
 					 * - Retraction in: Comput Intell Neurosci. 2024 Aug 5;2024:9896585. doi: 10.1155/2024/9896585 PMID: 39139200 [https://pubmed.ncbi.nlm.nih.gov/39139200]
+					 * - [Erratum appears in Curr Top Behav Neurosci. 2017 Jul 15;:; PMID: 28710675]
+					 * 
+					 * T3 for WoS can contain the series title of the book (title of the book in T2)
+					 * - Advances in Experimental Medicine and Biology [BIG_SET 40620, 40621, TY is CHAP]
 					 * 
 					 * Present solution:
 					 * - skip it if it contains a number or "Annual|Conference|Congress|Meeting|Society"
@@ -323,8 +338,32 @@ public class IOService {
 					case "T3": // Book section
 						if (!fieldContent.startsWith("Retract")
 								&& !CONFERENCE_PATTERN.matcher(fieldContent).matches()) {
-							addNormalizedJournal(fieldContent, publication);
+							addNormalizedJournal(fieldContent, publication, fieldName);
 							addNormalizedTitle(fieldContent, publication);
+
+							// This commented out code was an unsuccessful attempt to make better choices with the
+							// McKeown test file.
+							// See Github issue 53
+							//
+							// if (!publication.getIsbns().isEmpty()) {
+							// addNormalizedJournal(fieldContent, publication, fieldName);
+							// } else {
+							// /*
+							// * Compare its length with the length of the (cached)Journal (T2) and of the first title
+							// (ST).
+							// * Add it to the field with the most similar length
+							// */
+							// int jlength = Math.abs(journalCache.length() - fieldContent.length());
+							// int tlength = Math
+							// .abs(publication.getTitles().getFirst().length() - fieldContent.length());
+							// log.error("\nTI: {}\nJO: {}\nT3: {}\n\n", publication.getTitles().getFirst(),
+							// journalCache, fieldContent);
+							// if (jlength < tlength - 15) {
+							// addNormalizedJournal(fieldContent, publication, fieldName);
+							// } else {
+							// addNormalizedTitle(fieldContent, publication);
+							// }
+							// }
 						}
 						break;
 					// ??? in Embase the original title is on the continuation line of ST and TI:
@@ -353,15 +392,16 @@ public class IOService {
 						break;
 					// do not use UR to extract more DOI's: see https://github.com/globbestael/DedupEndNote/issues/14
 					case "UR":
-						if (fieldContent.startsWith("https://clinicaltrials.gov")) {
+						if (fieldContent.startsWith("http") && fieldContent.contains("//clinicaltrials.gov")) {
+							fieldContent = fieldContent.replace("http:", "https:");
 							publication.setClinicalTrialGov(true);
-							addNormalizedJournal(fieldContent, publication);
+							addNormalizedJournal(fieldContent, publication, fieldName);
 						}
 						previousFieldName = fieldName;
 						break;
 					case "VL":
 						if (fieldContent.length() > 10 && journalCache != null) {
-							addNormalizedJournal(journalCache + ". " + fieldContent, publication);
+							addNormalizedJournal(journalCache + ". " + fieldContent, publication, fieldName);
 						}
 						previousFieldName = fieldName;
 						break;
@@ -412,9 +452,10 @@ public class IOService {
 						}
 						break;
 					case "UR":
-						if (line.startsWith("https://clinicaltrials.gov")) {
+						if (line.startsWith("http") && line.contains("//clinicaltrials.gov")) {
+							line = line.replace("http:", "https:");
 							publication.setClinicalTrialGov(true);
-							addNormalizedJournal(line, publication);
+							addNormalizedJournal(line, publication, fieldName);
 						}
 						break;
 					default:
@@ -446,11 +487,11 @@ public class IOService {
 		}
 	}
 
-	public static void addNormalizedJournal(String fieldContent, Publication publication) {
+	public static void addNormalizedJournal(String fieldContent, Publication publication, String fieldName) {
 		if (fieldContent.toLowerCase().contains("cochrane")) {
 			publication.setCochrane(true);
 		}
-		publication.getJournals().addAll(NormalizationService.normalizeInputJournals(fieldContent));
+		publication.getJournals().addAll(NormalizationService.normalizeInputJournals(fieldContent, fieldName));
 	}
 
 	public static void addNormalizedPages(Map<String, String> pagesInputMap, Publication publication) {

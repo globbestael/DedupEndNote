@@ -49,6 +49,7 @@ public class DedupEndNoteController {
 	 *   Reloading the page (e.g. with the Restart button) start a new connection and subscription. A running deduplication is NOT stopped!
 	 *   FIXME: is it possible to stop these running deduplications? A server could be flooded with interrupted calls?
 	 *   See a.o. https://stackoverflow.com/questions/54946096/spring-boot-websocket-how-do-i-know-when-a-client-has-unsubscribed/54948213
+	 *   Is StructuredTaskScope (java 21) a solution?
 	 * - files are uploaded with AJAX (uploadFile)
 	 * - deduplication is started with AJAX (startOneFile|StartTwoFiles) which calls the DeduplicationService.
 	 * - the DeduplicationService uses Web Sockets to report progress to the browser.

@@ -33,8 +33,8 @@ class ComparisonServiceTest {
 	void compareJournalsTest(String journal1, String journal2, boolean expected) {
 		Publication p1 = new Publication();
 		Publication p2 = new Publication();
-		IOService.addNormalizedJournal(journal1, p1);
-		IOService.addNormalizedJournal(journal2, p2);
+		IOService.addNormalizedJournal(journal1, p1, "T2");
+		IOService.addNormalizedJournal(journal2, p2, "T2");
 
 		boolean result = ComparisonService.compareJournals(p1, p2);
 		assertThat(result).isEqualTo(expected);
@@ -65,7 +65,9 @@ class ComparisonServiceTest {
 				arguments("Different Journal", "Another Journal", false),
 				// own tests
 				arguments("Ann Intern Med", "ANNALS OF INTERNAL MEDICINE", true),
-				arguments("ARTHROSCOPY-THE JOURNAL OF ARTHROSCOPIC AND RELATED SURGERY", "Arthroscopy : the journal of arthroscopic & related surgery : official publication of the Arthroscopy Association of North America and the International Arthroscopy Association", true)
+				arguments("ARTHROSCOPY-THE JOURNAL OF ARTHROSCOPIC AND RELATED SURGERY", "Arthroscopy : the journal of arthroscopic & related surgery : official publication of the Arthroscopy Association of North America and the International Arthroscopy Association", true),
+				// abbreviations which can't be matched
+				arguments("Un med canada", "Union Med Can", false)
 			);
 			// @formatter:on
 	}

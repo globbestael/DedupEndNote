@@ -127,38 +127,38 @@ class ValidationTests {
 		// previous results
 		Map<String, ValidationResult> validationResultsMap = List
 				.of(
-					new ValidationResult("AI_subset", 501, 12, 2570, 0, 29_000L),	// why so slow?
-					new ValidationResult("ASySD_Cardiac_human", 6760, 7, 2181, 0, 3_700L),
+					new ValidationResult("AI_subset", 507, 9, 2567, 0, 29_000L),	// why so slow?
+					new ValidationResult("ASySD_Cardiac_human", 6759, 5, 2183, 1, 3_700L),
 					new ValidationResult("ASySD_Diabetes", 1811, 11, 21, 2, 1_000L),
-					new ValidationResult("ASySD_Neuroimaging", 2176, 15, 1245, 2, 1_350L),
-					new ValidationResult("ASySD_SRSR_Human", 27935, 53, 25008, 5, 100_000L),
-					new ValidationResult("BIG_SET", 3954, 97, 1023, 8, 66_000L),
+					new ValidationResult("ASySD_Neuroimaging", 2184, 10, 1242, 2, 1_350L),
+					new ValidationResult("ASySD_SRSR_Human", 27945, 36, 25015, 5, 100_000L),
+					new ValidationResult("BIG_SET", 3955, 87, 1031, 9, 66_000L),
 					new ValidationResult("Clinical_trials", 219, 0, 0, 0, 190L),
-					new ValidationResult("McKeown_2021", 2022, 35, 1073, 0, 800L),
-					new ValidationResult("SRA2_Cytology_screening", 1359, 34, 463, 0, 400L),
-					new ValidationResult("SRA2_Haematology", 220, 9, 1185, 1, 300L),
-					new ValidationResult("SRA2_Respiratory", 765, 20, 1203, 0, 800L),
+					new ValidationResult("McKeown_2021", 2023, 33, 1074, 0, 800L),
+					new ValidationResult("SRA2_Cytology_screening", 1361, 33, 462, 0, 400L),
+					new ValidationResult("SRA2_Haematology", 222, 6, 1186, 1, 300L),
+					new ValidationResult("SRA2_Respiratory", 770, 17, 1201, 0, 800L),
 					new ValidationResult("SRA2_Stroke", 497, 7, 788, 0, 320L),
 					new ValidationResult("TIL", 697, 3, 392, 0, 9_000L),
-					new ValidationResult("TIL_Zotero", 687, 11, 393, 1, 9_000L))
+					new ValidationResult("TIL_Zotero", 696, 4, 391, 1, 9_000L))
 				.stream().collect(Collectors.toMap(ValidationResult::getFileName, Function.identity(), (o1, o2) -> o1,
 						TreeMap::new));
 		Map<String, ValidationResult> resultsMap = List
 				.of(
-					// checkResults_AI_subset(),
-					// checkResults_ASySD_Cardiac_human(),
-					// checkResults_ASySD_Diabetes(),
-					// checkResults_ASySD_Neuroimaging(),
-					checkResults_ASySD_SRSR_Human()
-					// checkResults_BIG_SET(),
-					// checkResults_Clinical_trials(),
-					// checkResults_McKeown_2021(),
-					// checkResults_SRA2_Cytology_screening(),
-					// checkResults_SRA2_Haematology(),
-					// checkResults_SRA2_Respiratory(),
-					// checkResults_SRA2_Stroke(),
-					// checkResults_TIL(),
-					// checkResults_TIL_Zotero()
+					checkResults_AI_subset(),
+					checkResults_ASySD_Cardiac_human(),
+					checkResults_ASySD_Diabetes(),
+					checkResults_ASySD_Neuroimaging(),
+					checkResults_ASySD_SRSR_Human(),
+					checkResults_BIG_SET(),
+					checkResults_Clinical_trials(),
+					checkResults_McKeown_2021(),
+					checkResults_SRA2_Cytology_screening(),
+					checkResults_SRA2_Haematology(),
+					checkResults_SRA2_Respiratory(),
+					checkResults_SRA2_Stroke(),
+					checkResults_TIL(),
+					checkResults_TIL_Zotero()
 				)
 				.stream().collect(Collectors.toMap(ValidationResult::getFileName, Function.identity(), (o1, o2) -> o1,
 						TreeMap::new));
@@ -457,14 +457,14 @@ class ValidationTests {
 					}
 
 					// deduplicate pair after writing because deduplication alter the pair
-					if (Math.abs(pair.get(0).getPublicationYear() - pair.get(1).getPublicationYear()) > 1) {
-						Publication p1 = pair.get(0);
-						Publication p2 = pair.get(1);
+					Publication p1 = pair.get(0);
+					Publication p2 = pair.get(1);
+					if (p1.getPublicationYear() > 0 && p2.getPublicationYear() > 0 && Math.abs(p1.getPublicationYear() - p2.getPublicationYear()) > 1) {
 						log.trace("\nStarting comparison {} - {}", p1.getId(), p2.getId());
 						log.trace("- 0. Publication years are too far apart: {} and {}", p1.getPublicationYear(), p2.getPublicationYear());
 						log.trace("{} - {} ARE NOT DUPLICATES", p1.getId(), p2.getId());
 					} else {
-						deduplicationService.compareSet(pair, pair.get(0).getPublicationYear(), true, "dummy");
+						deduplicationService.compareSet(pair, p1.getPublicationYear(), true, "dummy");
 					}
 
 					bw.write("\nANALYSIS:\n");

@@ -110,9 +110,9 @@ WHERE t1.title2 <> t2.title2
 
 		for (Triple triple : triples) {
 			Publication p1 = new Publication();
-			IOService.addNormalizedJournal(triple.getJournal1(), p1);
+			IOService.addNormalizedJournal(triple.getJournal1(), p1, "T2");
 			Publication p2 = new Publication();
-			IOService.addNormalizedJournal(triple.getJournal2(), p2);
+			IOService.addNormalizedJournal(triple.getJournal2(), p2, "T2");
 
 			triple.setSimilar(ComparisonService.compareJournals(p1, p2));
 		}
