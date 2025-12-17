@@ -24,7 +24,7 @@ class ComparisonServiceTest {
 		p1.getIssns().addAll(NormalizationService.normalizeInputIssns(issn1).issns());
 		p2.getIssns().addAll(NormalizationService.normalizeInputIssns(issn2).issns());
 
-		boolean result = ComparisonService.compareIssns(p1, p2);
+		boolean result = ComparisonService.compareIssns(p1, p2, false);
 		assertThat(result).isEqualTo(expected);
 	}
 
@@ -36,7 +36,7 @@ class ComparisonServiceTest {
 		IOService.addNormalizedJournal(journal1, p1, "T2");
 		IOService.addNormalizedJournal(journal2, p2, "T2");
 
-		boolean result = ComparisonService.compareJournals(p1, p2);
+		boolean result = ComparisonService.compareJournals(p1, p2, false);
 		assertThat(result).isEqualTo(expected);
 	}
 

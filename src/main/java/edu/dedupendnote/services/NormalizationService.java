@@ -775,6 +775,7 @@ public class NormalizationService {
 			}
 		}
 
+		// FIXME: use Patterns
 		if (spPages != null) {
 			spPages = PAGES_ADDITIONS_PATTERN.matcher(spPages).replaceAll("").strip();
 			// replace "S6-97-s6-99" by "S697-s699"
@@ -801,11 +802,10 @@ public class NormalizationService {
 
 		if (c7Pages != null) {
 			isSeveralPages = true;
-			// FIXME: C7: 82, SP: 171-172: only 2 pages, should take C7 and isSeveralPages true?
-			// take SP only if C7 == pageStart from SP???
 			if (spPages != null
 					&& (spPages.startsWith(c7Pages) || (spPages.contains("-") && !spPages.startsWith("1-")))) {
 				pages = spPages;
+				pagesOutput = spPages;
 			} else {
 				pages = c7Pages;
 			}

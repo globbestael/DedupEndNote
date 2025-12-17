@@ -26,7 +26,11 @@ public class ComparisonService {
 	/*
 	 * Compares the ISBNs or the ISSNs of 2 publications 
 	 */
-	public static boolean compareIssns(Publication r1, Publication r2) {
+	public static boolean compareIssns(Publication r1, Publication r2, Boolean isSameDois) {
+		// if (Boolean.FALSE.equals(isSameDois)) {
+		// return false;
+		// }
+
 		if (!r1.getIsbns().isEmpty() && !r2.getIsbns().isEmpty()) {
 			if (UtilitiesService.setsContainSameString(r1.getIsbns(), r2.getIsbns())) {
 				log.trace("- 4. ISBNs are the same");
@@ -49,7 +53,10 @@ public class ComparisonService {
 		}
 	}
 
-	public static boolean compareJournals(Publication r1, Publication r2) {
+	public static boolean compareJournals(Publication r1, Publication r2, Boolean isSameDois) {
+		// if (Boolean.FALSE.equals(isSameDois)) {
+		// return false;
+		// }
 		if (!r1.getIsbns().isEmpty() && !r2.getIsbns().isEmpty()) {
 			return false;
 		}
@@ -163,10 +170,10 @@ public class ComparisonService {
 	}
 
 	/*
-	 * Does NOT compare the DOIs of 2 publications, but the field map.sameDois in the compareSet method
+	 * Does NOT compare the DOIs of 2 publications, but the field map.isSameDois in the compareSet method
 	 */
-	public static boolean compareSameDois(Publication r1, Publication r2, boolean sameDois) {
-		if (sameDois) {
+	public static boolean compareSameDois(Publication r1, Publication r2, Boolean isSameDois) {
+		if (Boolean.TRUE.equals(isSameDois)) {
 			if (log.isTraceEnabled()) {
 				log.trace("- 4. DOIs are the same (ISSNs and Journals are NOT compared)");
 			}
@@ -186,8 +193,8 @@ public class ComparisonService {
 		boolean sufficientDois = !dois1.isEmpty() && !dois2.isEmpty();
 		boolean atLeastOneSeveralPages = r1.isSeveralPages() || r2.isSeveralPages();
 
-		if (sufficientDois && UtilitiesService.setsContainSameString(dois1, dois2)) {
-			map.put("sameDois", true);
+		if (sufficientDois) { // this test to keep the initial null value when not both have DOIs
+			map.put("isSameDois", UtilitiesService.setsContainSameString(dois1, dois2));
 		}
 
 		if (bothCochrane) {

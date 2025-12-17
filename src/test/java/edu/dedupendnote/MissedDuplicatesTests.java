@@ -100,10 +100,10 @@ class MissedDuplicatesTests extends BaseTest {
 		// "'/ASySD/dedupendnote_files/missed_duplicates/SRSR_Human_missed_3.txt', 2, 2", // book chapters
 		// "'/ASySD/dedupendnote_files/missed_duplicates/SRSR_Human_missed_4.txt', 2, 2", // book chapters
 		// "'/ASySD/dedupendnote_files/missed_duplicates/Neuroimaging_missed_1.txt', 2, 2",
-		// "'/problems/Semaglutide_wrong_duplicates.txt', 4, 2",
+		"'/problems/Semaglutide_wrong_duplicates.txt', 4, 2",
 		// "'/problems/BIG_SET_missed_3.txt', 3, 2", 
 		// "'/problems/TIL_missed_duplicates_2.txt', 3, 1", // different pages, same DOI
-		"'/TIL/missed_duplicates_TIL_Zotero_1.txt', 5, 2",
+		// "'/TIL/missed_duplicates_TIL_Zotero_1.txt', 5, 2",
 	})
 	// @formatter:on
 	void deduplicateMissedDuplicates(String fileName, int total, int totalWritten) {

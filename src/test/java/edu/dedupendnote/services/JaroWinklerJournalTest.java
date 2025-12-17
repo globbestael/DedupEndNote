@@ -69,7 +69,7 @@ class JaroWinklerJournalTest {
 		IOService.addNormalizedJournal(input1, p1, "T2");
 		IOService.addNormalizedJournal(input2, p2, "T2");
 
-		assertThat(ComparisonService.compareJournals(p1, p2))
+		assertThat(ComparisonService.compareJournals(p1, p2, false))
 				.as("Journals are NOT similar: " + p1.getJournals() + " versus " + p2.getJournals()).isTrue();
 	}
 
@@ -85,7 +85,7 @@ class JaroWinklerJournalTest {
 		IOService.addNormalizedJournal(input2, p2, "T2");
 
 		// log.debug("Result: {}", ComparisonService.compareJournals(p1, p2));
-		assertThat(ComparisonService.compareJournals(p1, p2))
+		assertThat(ComparisonService.compareJournals(p1, p2, false))
 				.as("Journals are similar: %s versus %s", p1.getJournals(), p2.getJournals()).isFalse();
 	}
 

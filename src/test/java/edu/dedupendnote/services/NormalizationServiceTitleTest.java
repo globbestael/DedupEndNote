@@ -82,34 +82,29 @@ class NormalizationServiceTitleTest {
 					"comparing a vs b is a very long title that is definitely more than fifty characters long and this is a very long subtitle that is also more than fifty characters long",
 					"comparing a vs b is a very long title that is definitely more than fifty characters long",
 					"and this is a very long subtitle that is also more than fifty characters long")),
-			arguments( // first part is only 27 characters
-			// FIXME: Should first part be allowed to be smaller?
+			arguments( 
 				"Restructuring consciousness: The psychedelic state in light of integrated information theory",
 				List.of(
-					"restructuring consciousness the psychedelic state in light of integrated information theory"/*,
+					"restructuring consciousness the psychedelic state in light of integrated information theory",
 					"restructuring consciousness", 
-					"psychedelic state in light of integrated information theory"*/)),
-			arguments( // first part is only 27 characters
-			// FIXME: Should first part be allowed to be smaller?
-			// FIXME: a title with hyphens be added a second time with hyphens replaced with ": ", probably not in all cases "5-HT-agonist"?
+					"psychedelic state in light of integrated information theory")),
+			arguments( // hyphen between letters dioes NOT split the title
 				"Restructuring consciousness-The psychedelic state in light of integrated information theory",
 				List.of(
-					"restructuring consciousnessthe psychedelic state in light of integrated information theory"/*,
-					"restructuring consciousness", 
-					"psychedelic state in light of integrated information theory"*/)),
-			arguments(
+					"restructuring consciousnessthe psychedelic state in light of integrated information theory")),
+			arguments( // double hyphen splits
 				"Portal vein obstruction--epidemiology, pathogenesis, natural history, prognosis and treatment",
 				List.of(
 					"portal vein obstruction epidemiology pathogenesis natural history prognosis and treatment",
 					"portal vein obstruction",
 					"epidemiology pathogenesis natural history prognosis and treatment"
 				)),
-			arguments(
+			arguments( // " -" does NOT split with preceding "of|...". Original title had a Greek kappa
 				"Role of -opioid receptor activation in pharmacological preconditioning of swine",
 				List.of(
 					"role of opioid receptor activation in pharmacological preconditioning of swine"
 				)),
-			arguments(
+			arguments( // " -" does split in normal cases
 				"Restructuring consciousness -The psychedelic state in light of integrated information theory",
 				List.of(
 					"restructuring consciousness the psychedelic state in light of integrated information theory",

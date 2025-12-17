@@ -114,7 +114,7 @@ WHERE t1.title2 <> t2.title2
 			Publication p2 = new Publication();
 			IOService.addNormalizedJournal(triple.getJournal2(), p2, "T2");
 
-			triple.setSimilar(ComparisonService.compareJournals(p1, p2));
+			triple.setSimilar(ComparisonService.compareJournals(p1, p2, false));
 		}
 
 		// triples.stream().filter(t -> t.isSimilar() == false).forEach(System.err::println);

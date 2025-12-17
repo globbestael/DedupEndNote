@@ -96,7 +96,19 @@ public class DeduplicationService {
 	public void compareSet(List<Publication> publications, Integer year, boolean descending, String wssessionId) {
 		int noOfPublications = publications.size();
 		int noOfDuplicates = 0;
-		Map<String, Boolean> map = new HashMap<>(Map.of("sameDois", false));
+		/*
+		 * This Map holds temporary results of the comparison between 2 publications.
+		 * At present there is only 1 key (isSameDois). If we need more keys, a POJO would be better?
+		 * 
+		 * isSameDois is three-valued: null (i.e uninitialized), false, true
+		 * Don't initialize here as "new HashMap<>(Map.of("isSameDois", null))" because null values are not allowed.
+		 * 
+		 * This three-valuedness was an attempt to lower the False Positives. ComparisonService.compareIssns and compareJournals
+		 * would short circuit when isSameDois == false (both publications have DOIs but they are different).
+		 * FPs didn't go down, however there were more FNs (especially with errors in DOIs)
+		 */
+		Map<String, Boolean> map = new HashMap<>();
+		// Map<String, Boolean> map = new HashMap<>(Map.of("isSameDois", null));
 
 		while (publications.size() > 1) {
 			// In log messages this publication is called the pivot
@@ -112,7 +124,7 @@ public class DeduplicationService {
 			}
 
 			for (Publication r : publications) {
-				map.put("sameDois", false);
+				map.put("isSameDois", null);
 				// log.atDebug().setMessage("Clear results previous comparison {}")
 				// .addArgument(() -> publication.getLogLines().removeAll(publication.getLogLines())).log();
 				if (log.isTraceEnabled()) {
@@ -121,9 +133,9 @@ public class DeduplicationService {
 				if (ComparisonService.compareStartPagesOrDois(r, publication, map)
 						&& authorsComparisonService.compare(r, publication)
 						&& ComparisonService.compareTitles(r, publication)
-						&& (ComparisonService.compareSameDois(r, publication, map.get("sameDois"))
-								|| ComparisonService.compareIssns(r, publication)
-								|| ComparisonService.compareJournals(r, publication))) {
+						&& (ComparisonService.compareSameDois(r, publication, map.get("isSameDois"))
+								|| ComparisonService.compareIssns(r, publication, map.get("isSameDois"))
+								|| ComparisonService.compareJournals(r, publication, map.get("isSameDois")))) {
 
 					noOfDuplicates++;
 					// set the label

@@ -147,11 +147,12 @@ class NormalizationServiceTest {
 			// ----------------------------
 			// detailed SP
 			// ----------------------------
-			arguments("87", null, "171-172", "87", true),
-			arguments("87", null, "171-182", "87", true),
+			arguments("87", null, "171-172", "171", true),
+			arguments("87", null, "171-182", "171", true),
+			// 2 SP based on versioned DOIs can lead to the same expectedPageStart / Integer used for comparison
+			arguments(null, null, "BSR20211218", "20211218", false),
+			arguments(null, null, "BSR20211218C", "20211218", false),
 			arguments(null, "", null, null, false),
-			arguments(null, "", null, null, false),
-			
 
 			arguments(null, null, null, null, false) // last as dummy
 		);
