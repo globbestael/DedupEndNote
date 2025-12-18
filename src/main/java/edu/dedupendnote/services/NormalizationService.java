@@ -74,9 +74,6 @@ public class NormalizationService {
 	private static final Pattern PAGES_MONTH_PATTERN = Pattern
 			.compile("\\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\\b");
 
-	// FIXME: Not used any more in normalizeInputPages
-	// private static final Pattern FIRST_PAGES_GROUP = Pattern.compile("^([^-,;]+)([,;])(.*)$");
-
 	/**
 	 * All characters between "<" and ">", including the pointy brackets
 	 *
@@ -130,7 +127,6 @@ public class NormalizationService {
 	 */
 	private static final Pattern STARTING_ARTICLE_PATTERN = Pattern.compile("^(the|a|an) ");
 
-	// FIXME: check last characters in pattern (space or punctuation?)
 	/**
 	 * Esp. Scopus uses additions as "(Japanese)" (or "(Japanese text)") at the end of the title.
 	 *
@@ -310,9 +306,12 @@ public class NormalizationService {
 	static final List<String> EXCLUDED_JOURNALS_PARTS = Arrays.asList("electronic resource", "et al.",
 			"technical report");
 
-	// FIXME: add "No authorship, indicated"?
-	public static final Pattern ANONYMOUS_OR_GROUPNAME_PATTERN = Pattern
-			.compile("\\b(anonymous|consortium|et al|grp|group|nct|study)\\b", Pattern.CASE_INSENSITIVE);
+	/**
+	 * Several forms of "author" values which are removed for comparisons (anonymous, et al, group names, ...)
+	 */
+	public static final Pattern ANONYMOUS_OR_GROUPNAME_PATTERN = Pattern.compile(
+			"\\b(anonymous|No authorship, indicated|consortium|et al|grp|group|nct|study)\\b",
+			Pattern.CASE_INSENSITIVE);
 
 	/*
 	 * Finds the longest group (i.e. the outer group) of balanced braces. Use group(0) to get this content.
@@ -336,9 +335,6 @@ public class NormalizationService {
 	 * Both "(R)" and "(TM)", to be removed
 	 */
 	private static Pattern REGISTERED_TRADEMARK_PATTERN = Pattern.compile("^(.+)(\\((R|TM)\\))(.+)$");
-
-	// FIXME: Not used any more in normalizeInputPages
-	// private static final Pattern NUMBERS_WITHIN_PATTERN = Pattern.compile(".*\\d+.*");
 
 	// @formatter:off
 	/*
@@ -701,11 +697,12 @@ public class NormalizationService {
 	 * pageStart, pageEnd and pagesOutput.
 	 * 
 	 * Originally IOService::readPublications called this function for the fields C7, SE and SP (sometimes skipped depending on
-	 * the fields set in a previous all). This has been changed to:
+	 * the fields set in a previous all). 
+	 * This has been changed to:
 	 * - IOService::readPublications gathers the fieldContent for these fields in a map
 	 * - IOService::readPublications calls this parsing function when the last field (ER) is encountered
 	 *
-	 * The following information should be adjusted:
+	 * FIXME: The following information is old, and should be changed:
 	 * C7 (Article Number) should sometimes overrule / overwrite SP (starting and ending page) because when C7 is
 	 * present, SP often contains the number of pages, and in a few cases relative pages (1-10 for a 10 pages article).
 	 * 

@@ -219,8 +219,8 @@ class ValidationTests {
 	}
 
 	/*
-	 * TODO: extend the function with real checkResults as in checkAllTruthFiles()? TODO:
-	 * extract validationResultsMap to avoid duplication.
+	 * TODO: extend the function with real checkResults as in checkAllTruthFiles()? 
+	 * TODO: extract validationResultsMap to avoid duplication.
 	 */
 	@Test
 	void printValidationResultsASySD() {

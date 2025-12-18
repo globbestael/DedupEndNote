@@ -107,8 +107,7 @@ class AuthorsComparisonThresholdTest extends AuthorsBaseTest {
 		filledTriples.sort(Comparator.comparing(Triple::getJws).reversed());
 
 		/*
-		 * FIXME: Deze aantallen kloppen niet in de zin dat alleen de verschillende auteursstring gebruikt worden en ze ontdubbeld worden.
-		 * De percentielen horen over het totaal berkend te worden???
+		 * These percentiles are for the DIFFERENT author strings (SQL used DISTINCT)
 		 */
 		for (int i = 100; i > 90; i--) {
 			System.err.println("At " + i + ": " + percentile(filledTriples, i));

@@ -112,8 +112,8 @@ class JaroWinklerTitleTest {
 	}
 
 	/*
-	 * FIXME: Should ther be 2 similarity scores, one for the first title (jwPositiveTest) and one for all titles (jwFullPositiveTest).
-	 * FIXME: tests for Phase titles compare to nrmal threshold
+	 * FIXME: Should there be 2 similarity scores, one for the first title (jwPositiveTest) and one for all titles (jwFullPositiveTest).
+	 * FIXME: tests for Phase titles and a dedicated argumentProvided becausae these titles are now compared to the normal threshold
 	 */
 	// @formatter:off
 	static Stream<Arguments> positiveArgumentProvider() {

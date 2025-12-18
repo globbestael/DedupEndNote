@@ -102,9 +102,11 @@ class JaroWinklerAuthorsTest extends AuthorsBaseTest {
 	}
 
 	/*
-	 * Compares only the first authorlists FIXME: this test and jwFullNegativeTest have
-	 * same results, i.e. jwFullNegativeTest has no cases where the non-first authorlists
+	 * Compares only the first authorlists 
+	 * 
+	 * FIXME: this test and jwFullNegativeTest have same results, i.e. jwFullNegativeTest has no cases where the non-first authorlists
 	 * have higher similarity than the first authorlists
+	 * negativeAuthorsProvider has NOT for all arguments 2 expected similarity results
 	 */
 	@ParameterizedTest(name = "{index}: jaroWinkler({0}, {1})={2}")
 	@MethodSource("negativeAuthorsProvider")
@@ -118,8 +120,7 @@ class JaroWinklerAuthorsTest extends AuthorsBaseTest {
 				.isLessThan(DefaultAuthorsComparisonService.AUTHOR_SIMILARITY_NO_REPLY);
 	}
 
-	// The 3rd argument is JWS score without transposed authors, the 4th argument with
-	// transposed authors
+	// The 3rd argument is JWS score without transposed authors, the 4th argument with transposed authors
 	static Stream<Arguments> positiveAuthorsProvider() {
 		// @formatter:off
 		return Stream.of(

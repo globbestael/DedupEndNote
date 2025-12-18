@@ -23,14 +23,16 @@ class JaroWinklerJournalTest {
 	JaroWinklerSimilarity jws = new JaroWinklerSimilarity();
 
 	/*
-	 * TODO: Test for splitting journals: e.g "European Surgery - Acta Chirurgica Austriaca".
-	 * This would call NormalizationService.normalizeInputJournal
+	 * FIXME: Refactor
+	 * - Most tests should be moved to a NormalizationServiceTest
+	 * - and call NormalizationService.normalizeInputJournals
+	 * - the argumentProvider should provide the set of normalized journals (this has already partly been done for slashTest())
 	 * 
-	 * TODO: Why is ComparisonService.JOURNAL_SIMILARITY_REPLY used as treshold instead of JOURNAL_SIMILARITY_NO_REPLY?
+	 * See https://github.com/globbestael/DedupEndNote/issues/50
 	 */
 
 	/*
-	 * Jarowinkler similarity > 0.9 for normalized journals
+	 * Jarowinkler similarity > ComparisonService.JOURNAL_SIMILARITY_NO_REPLY for normalized journals
 	 */
 	@ParameterizedTest(name = "{index}: jaroWinkler({0}, {1})")
 	@MethodSource("positiveArgumentProvider")
@@ -40,11 +42,12 @@ class JaroWinklerJournalTest {
 		// System.err.println(String.format("- 1: %s\n- 2: %s\n- 3: %s\n- 4: %s\n",
 		// input1, Publication.normalizeJava8(input1), input2,
 		// Publication.normalizeJava8(input2)));
-		assertThat(similarity).isGreaterThan(ComparisonService.JOURNAL_SIMILARITY_REPLY);
+		assertThat(similarity).isGreaterThan(ComparisonService.JOURNAL_SIMILARITY_NO_REPLY);
 	}
 
 	/*
-	 * Jarowinkler similarity <= 0.9 for normalized journals
+	 * Is the Jarowinkler similarity <= ComparisonService.JOURNAL_SIMILARITY_NO_REPLY for normalized journals.
+	 * Does NOT compare by initials, ...
 	 */
 	@ParameterizedTest(name = "{index}: jaroWinkler({0}, {1})")
 	@MethodSource("negativeArgumentProvider")
@@ -53,7 +56,7 @@ class JaroWinklerJournalTest {
 				NormalizationService.normalizeJournal(input2));
 		System.err.println("- 1: %s\n- 2: %s\n- 3: %s\n- 4: %s\n".formatted(input1,
 				NormalizationService.normalizeTitle(input1), input2, NormalizationService.normalizeTitle(input2)));
-		assertThat(similarity).isLessThanOrEqualTo(ComparisonService.JOURNAL_SIMILARITY_REPLY);
+		assertThat(similarity).isLessThanOrEqualTo(ComparisonService.JOURNAL_SIMILARITY_NO_REPLY);
 	}
 
 	/*
@@ -380,14 +383,12 @@ class JaroWinklerJournalTest {
 			arguments(
 					"Prilozi (Makedonska akademija na naukite i umetnostite. Oddelenie za medicinski nauki). 36 (3) (pp 35-41), 2015. Date of Publication: 2015.",
 					"Prilozi (Makedonska akademija na naukite i umetnostite"),
-			// TODO: This would work if journals are also split on " - ", possibly as
-			// an extra journal variant
+			// TODO: This would work if journals are also split on " - ", possibly as an extra journal variant
+			// see https://github.com/globbestael/DedupEndNote/issues/50
 			arguments("European Surgery - Acta Chirurgica Austriaca", "European Surgery"),
-			// TODO: This would work if journals are also split on " - ", possibly as
-			// an extra journal variant
+			// TODO: This would work if journals are also split on " - ", possibly as an extra journal variant
 			arguments("European Surgery - Acta Chirurgica Austriaca", "Acta Chirurgica Austriaca"),
-			// TODO: This would work if journals are also split on "/", possibly as an
-			// extra journal variant
+			// TODO: This would work if journals are also split on "/", possibly as an extra journal variant
 			arguments(
 					"Chung-Kuo Hsiu Fu Chung Chien Wai Ko Tsa Chih/Chinese Journal of Reparative & Reconstructive Surgery",
 					"Zhongguo xiu fu chong jian wai ke za zhi = Zhongguo xiufu chongjian waike zazhi = Chinese journal of reparative and reconstructive surgery"),
