@@ -143,8 +143,8 @@ class JaroWinklerTitleTest {
 						1.0), // "<...>" replaced by nought: "y" vs "y 90"
 				arguments(
 						"Letter: portal vein obstruction--which subset of patients could benefit the most? Authors' reply",
-						"Letter: Portal vein obstruction - Which subset of patients could benefit the most?", 0.91), // bibliographic
-																														// addition
+						"Letter: Portal vein obstruction - Which subset of patients could benefit the most?", 
+						0.96), // bibliographic addition
 				arguments(
 						"90Y radioembolization using resin microspheres in patients with hepatocellular carcinoma and portal vein thrombosis",
 						"90Y RADIOEMBOLIZATION USING RESIN MICROSPHERES IN PATIENTS WITH HEPATOCELLULAR CARCINOMA AND PORTAL VEIN THROMBOSIS",
@@ -220,6 +220,10 @@ class JaroWinklerTitleTest {
 				arguments(
 					"Case records of the Massachusetts General Hospital. Case 35-2007. A 30-year-old man with inflammatory bowel disease and recent onset of fever and bloody diarrhea",
 					"Case 35-2007: A 30-year-old man with inflammatory bowel disease and recent onset of fever and bloody diarrhea",
+					1.0),
+				arguments( // "Case 35-2007: " should be removed as ne of the titles?
+					"Case records of the Massachusetts General Hospital. Case 35-2007. A 30-year-old man with inflammatory bowel disease and recent onset of fever and bloody diarrhea",
+					"A 30-year-old man with inflammatory bowel disease and recent onset of fever and bloody diarrhea",
 					1.0),
 				arguments(revertString(
 						"Case records of the Massachusetts General Hospital. Case 35-2007. A 30-year-old man with inflammatory bowel disease and recent onset of fever and bloody diarrhea"),
@@ -314,6 +318,22 @@ class JaroWinklerTitleTest {
 				// 0.9684), // example of False Positive, with "I" and "II" translated and
 				// quadrupled as 1 word
 				arguments(
+					"Case report. Duplication of the portal vein: a rare congenital anomaly",
+					"Duplication of the portal vein - A rare congenital anomaly", 
+					1.0),
+				arguments( // matches on subtitle
+					"90 Y radioembolization for locally advanced hepatocellular carcinoma with portal vein thrombosis: Long-term outcomes in a 185-patient cohort",
+					"Y-90 Radioembolization for Locally Advanced Hepatocellular Carcinoma with Portal Vein Thrombosis: Long-Term Outcomes in a 185-Patient Cohort",
+					1.0),
+				arguments(
+					"<<Except for the war's laws>>. Psychic trauma in soldiers murderers. French",
+					"Except for the war's laws. Psychic trauma in soldiers murderers. French", 
+					1.0),
+				arguments(
+					"La sémantique de l'image radiologique. Intérêt du procédé de soustraction électronique en couleurs d'Oosterkamp en angiographie abdominale",
+					"INTERET DU PROCEDE DE SOUSTRACTION ELECTRONIQUE EN COULEURS D'OOSTERKAMP EN ANGIOGRAPHIE ABDOMINALE",
+					1.0),
+				arguments(
 						revertString("Six-year (yr) follow-up of patients (pts) with imatinib-resistant or -intolerant chronic-phase chronic myeloid leukemia (CML-CP) receiving dasatinib"),
 						revertString("Five-year follow-up of patients with imatinib-resistant or -intolerant chronic-phase chronic myeloid leukemia (CML-CP) receiving dasatinib"),
 						0.9656), // example of False Positive: difference at the start
@@ -388,14 +408,6 @@ class JaroWinklerTitleTest {
 						"NF kappa B inhibition decreases hepatocyte proliferation but does not alter apoptosis in obstructive jaundice",
 						0.88),
 				arguments(
-					"Case report. Duplication of the portal vein: a rare congenital anomaly",
-					"Duplication of the portal vein - A rare congenital anomaly", 
-					0.79),
-				arguments(
-					"La sémantique de l'image radiologique. Intérêt du procédé de soustraction électronique en couleurs d'Oosterkamp en angiographie abdominale",
-					"INTERET DU PROCEDE DE SOUSTRACTION ELECTRONIQUE EN COULEURS D'OOSTERKAMP EN ANGIOGRAPHIE ABDOMINALE",
-					0.75),
-				arguments(
 					"The JAK2 46/1 haplotype in Budd-Chiari syndrome and portal vein thrombosis",
 					"JAK2 Germline Genetic Variation In Budd-Chiari Syndrome and Portal Vein Thrombosis", 
 					0.85),
@@ -403,10 +415,6 @@ class JaroWinklerTitleTest {
 					"Retraction notice to \"Evaluation of the treatment strategies on patient-derived xenograft mice of human breast tumor\" [Eur. J. Pharmacol. 889 (2020) 173605]",
 					"Evaluation of the treatment strategies on patient-derived xenograft mice of human breast tumor",
 					0.78),
-				arguments( // just because of the space
-					"90 Y radioembolization for locally advanced hepatocellular carcinoma with portal vein thrombosis: Long-term outcomes in a 185-patient cohort",
-					"Y-90 Radioembolization for Locally Advanced Hepatocellular Carcinoma with Portal Vein Thrombosis: Long-Term Outcomes in a 185-Patient Cohort",
-					0.84),
 				/*
 				 * Examples of False Positives
 				 */
@@ -425,11 +433,7 @@ class JaroWinklerTitleTest {
 				arguments(// False Positive: Difference at the end
 					revertString("A phase 3 study of durvalumab with or without bevacizumab as adjuvant therapy in patients with hepatocellular carcinoma at high risk of recurrence after curative hepatic resection or ablation: EMERALD-2"),
 						revertString("A phase 3 study of durvalumab with or without bevacizumab as adjuvant therapy in patients with hepatocellular carcinoma (HCC) who are at high risk of recurrence after curative hepatic resection"),
-						0.81), // example of False Positive
-				arguments(
-					"<<Except for the war's laws>>. Psychic trauma in soldiers murderers. French",
-					"Except for the war's laws. Psychic trauma in soldiers murderers. French", 
-					0.71)
+						0.81) // example of False Positive
 		);
 	}
 	// @formatter:on

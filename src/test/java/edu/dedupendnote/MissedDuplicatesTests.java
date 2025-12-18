@@ -78,7 +78,6 @@ class MissedDuplicatesTests extends BaseTest {
 		//  "'/own/missed_duplicates/Rofo.txt', 3, 1",
 		// Solved: authors in ALL are treated better
 		// "'/ASySD/dedupendnote_files/missed_duplicates/SRSR_Human_52927.txt', 2, 1",
-		// "'/ASySD/dedupendnote_files/missed_duplicates/SRSR_Human_missed_2.txt', 4, 1", // Cochrane, solved
 		// "'/problems/AI_Query_2022_missed_duplicates_1.txt', 2, 1",
 		// "'/problems/AI_Query_2022_missed_duplicates_2.txt', 4, 1",
 		// "'/problems/AI_Query_2022_missed_duplicates_3.txt', 2, 1",
@@ -97,10 +96,30 @@ class MissedDuplicatesTests extends BaseTest {
 		// "'/problems/AI_Query_2022_missed_duplicates_5.txt', 2, 2", // ISSN same, ISBN different
 		// "'/ASySD/dedupendnote_files/missed_duplicates/Cardiac_Human_missed_duplicates_1.txt', 2, 2",
 		// "'/ASySD/dedupendnote_files/missed_duplicates/SRSR_Human_missed_1.txt', 6, 2", // Cochrane
+		/*
+		 * Originally
+		 * False positives or negatives for these 2 versions of Cochrane review CD006069
+		 * 20282, 20456, 36223, 36439, 51545, 51546
+		 * The first 4 (in SRSR_Human_missed_2_4.txt) merges 20456 to 20282 
+		 * All 6 (in SRSR_Human_missed_2_4.txt) merges 20456 to 20282, and keeps 51546 as a second set with 1 publication
+		 * 
+		 * The false merge of 20456 with 20282 is triggered by the comparison of 20456 with 36459
+		 * - 1. with doi / without doi
+		 * - 1. same SP
+		 * - 2. same AU
+		 * - 3. same TI
+		 * - 4. different ISSN
+		 * - 4. same journal
+		 * And then the label of THE COMPARED JOURNAL (36459, label 20282) is copied to THE PIVOT (20456)"
+		 * 
+		 * On 2025-12-18 copying the label from the publication to the pivot has been disabled
+		 */
+		"'/ASySD/dedupendnote_files/missed_duplicates/SRSR_Human_missed_2_4.txt', 4, 2", // Cochrane
+		"'/ASySD/dedupendnote_files/missed_duplicates/SRSR_Human_missed_2_6.txt', 6, 3", // Cochrane
 		// "'/ASySD/dedupendnote_files/missed_duplicates/SRSR_Human_missed_3.txt', 2, 2", // book chapters
 		// "'/ASySD/dedupendnote_files/missed_duplicates/SRSR_Human_missed_4.txt', 2, 2", // book chapters
 		// "'/ASySD/dedupendnote_files/missed_duplicates/Neuroimaging_missed_1.txt', 2, 2",
-		"'/problems/Semaglutide_wrong_duplicates.txt', 4, 2",
+		// "'/problems/Semaglutide_wrong_duplicates.txt', 4, 2",
 		// "'/problems/BIG_SET_missed_3.txt', 3, 2", 
 		// "'/problems/TIL_missed_duplicates_2.txt', 3, 1", // different pages, same DOI
 		// "'/TIL/missed_duplicates_TIL_Zotero_1.txt', 5, 2",
