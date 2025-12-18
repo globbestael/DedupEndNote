@@ -77,7 +77,9 @@ class NormalizationServiceTest {
 
 	static Stream<Arguments> pagesArgumentProvider() {
 		// @formatter:off
+		// String c7Input, String seInput, String spInput, String expectedPageStart, boolean expectedIsSeveralPages
 		return Stream.of(
+			arguments(null, null, "A relational approach to rehabilitation: Thinking about relationships after brain injury. xvi, 376", null, false),
 			arguments(null, null, null, null, false),
 			arguments(null, null, "22", "22", false),
 			arguments(null, null, "22-25", "22", true),
@@ -152,6 +154,9 @@ class NormalizationServiceTest {
 			// 2 SP based on versioned DOIs can lead to the same expectedPageStart / Integer used for comparison
 			arguments(null, null, "BSR20211218", "20211218", false),
 			arguments(null, null, "BSR20211218C", "20211218", false),
+			// only the first of the pageranges is used, not the second ("376")
+			arguments(null, null, "A relational approach to rehabilitation. xvi, 376", null, false),
+			
 			arguments(null, "", null, null, false),
 
 			arguments(null, null, null, null, false) // last as dummy

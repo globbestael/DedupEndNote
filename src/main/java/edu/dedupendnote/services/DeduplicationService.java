@@ -176,11 +176,21 @@ l						 * 		V 		W 		X
 						 * - X.SP = V.SP 		-> X.label = V 
 						 * Loop N + 1 (W) 
 						 * - W.SP = X.SP 		-> W.label = X (=V)
+						 * 
+						 * See MissedDuplicatesTest: comment with test file
+						 * /ASySD/dedupendnote_files/missed_duplicates/SRSR_Human_missed_2_4.txt
+						 * 
+						 * BIG_SET id set 10428, 10915, 22038, 38961 has some small changes in the order of the authors (last 3 with a
+						 * large number of group authors).
+						 * Without copy of label TO the pivot 10915 is NOT seen as a duplicate of 10428
+						 * 
+						 * THIS COPYING OF THE LABEL FROM THE PUBLICATION TO THE PIVOT HAS BEEN DISABLED 
+						 * because it reduces the FPs at a smell cost of more FNs
 						 */
 						// @formatter:on
-						// log.debug("=== pub {} SETs label {} in pivot {}", r.getId(), r.getLabel(),
+						// log.error("=== pub {} SETs label {} in pivot {}", r.getId(), r.getLabel(),
 						// publication.getId());
-						publication.setLabel(r.getLabel());
+						// publication.setLabel(r.getLabel());
 					} else {
 						// log.debug("=== Both pivot {} and pub {} get label {} from the publicationId of the pivot {}",
 						// publication.getId(), r.getId(), publication.getId(), publication.getId());

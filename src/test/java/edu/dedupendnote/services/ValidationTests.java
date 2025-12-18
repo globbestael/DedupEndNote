@@ -130,17 +130,17 @@ class ValidationTests {
 					new ValidationResult("AI_subset", 507, 9, 2567, 0, 29_000L),	// why so slow?
 					new ValidationResult("ASySD_Cardiac_human", 6759, 5, 2183, 1, 3_700L),
 					new ValidationResult("ASySD_Diabetes", 1811, 11, 21, 2, 1_000L),
-					new ValidationResult("ASySD_Neuroimaging", 2184, 10, 1242, 2, 1_350L),
-					new ValidationResult("ASySD_SRSR_Human", 27945, 36, 25015, 5, 100_000L),
-					new ValidationResult("BIG_SET", 3955, 87, 1031, 9, 66_000L),
+					new ValidationResult("ASySD_Neuroimaging", 2181, 11, 1244, 2, 1_350L),
+					new ValidationResult("ASySD_SRSR_Human", 27945, 36, 25016, 4, 100_000L),
+					new ValidationResult("BIG_SET", 3952, 92, 1030, 8, 66_000L),
 					new ValidationResult("Clinical_trials", 219, 0, 0, 0, 190L),
 					new ValidationResult("McKeown_2021", 2023, 33, 1074, 0, 800L),
 					new ValidationResult("SRA2_Cytology_screening", 1361, 33, 462, 0, 400L),
 					new ValidationResult("SRA2_Haematology", 222, 6, 1186, 1, 300L),
-					new ValidationResult("SRA2_Respiratory", 770, 17, 1201, 0, 800L),
-					new ValidationResult("SRA2_Stroke", 497, 7, 788, 0, 320L),
-					new ValidationResult("TIL", 697, 3, 392, 0, 9_000L),
-					new ValidationResult("TIL_Zotero", 696, 4, 391, 1, 9_000L))
+					new ValidationResult("SRA2_Respiratory", 768, 18, 1202, 0, 800L),
+					new ValidationResult("SRA2_Stroke", 497, 8, 787, 0, 320L),
+					new ValidationResult("TIL", 696, 4, 392, 0, 9_000L),
+					new ValidationResult("TIL_Zotero", 695, 5, 392, 0, 9_000L))
 				.stream().collect(Collectors.toMap(ValidationResult::getFileName, Function.identity(), (o1, o2) -> o1,
 						TreeMap::new));
 		Map<String, ValidationResult> resultsMap = List

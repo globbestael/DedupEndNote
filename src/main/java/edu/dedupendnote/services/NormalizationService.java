@@ -148,6 +148,14 @@ public class NormalizationService {
 	 */
 	private static final Pattern PARTIAL_ENDING_PUNCTUATION_PATTERN = Pattern.compile("([\\p{P}&&[^)\\]]]+)$");
 	private static final Pattern TRANSLATION_PATTERN = Pattern.compile("(\\(author's transl\\))$");
+
+	/**
+	 * String starts with "Case report(s): ", "Case series: " or "Case [number]: " (titles). Will be removed
+	 * 
+	 * These substrings are too short for the TITLE_AND_SUBTITLE_PATTERN to be split as a (sub)title.
+	 */
+	private static final Pattern CASE_REPORT_PATTERN = Pattern.compile("^case (reports?|series|[-\\d]+)[.:] ",
+			Pattern.CASE_INSENSITIVE);
 	/**
 	 * All characters outside the BasicLatin Unicode block (\u0000 – \u007F). After Normalization with canonical
 	 * decomposition (Normalizer.Form.NFD) all combining accents and diacritics, supplemental characters (e.g. "£") and
@@ -819,11 +827,15 @@ public class NormalizationService {
 
 		List<String> pagesParts = Arrays.asList(pages.split("[+,;]\\s*"));
 		// Split into (1) group with only Roman numbers, and (2) others (could be Arabic numbers, combined Roman+Arabic
-		// ("ii208-212"),
-		// combined Arabic+text ("S12-23", "CD123456". "67A-69A", text, ...)
+		// ("ii208-212"), combined Arabic+text ("S12-23", "CD123456". "67A-69A", text, ...)
 		Map<Boolean, List<String>> resultMap = pagesParts.stream()
 				.collect(Collectors.partitioningBy(p -> p.matches("[ivxlcmIVXLCM\\-]+")));
 
+		/*
+		 * Only the first of the pagesParts in the resultMap values will be used!
+		 * In "A relational approach to rehabilitation: Thinking about relationships after brain injury. xvi, 376"
+		 * the second part ("376") will be disregarded. 
+		 */
 		if (resultMap.get(false).isEmpty()) { // there are no Arabic numbers, possibly Roman numbers
 			if (!resultMap.get(true).isEmpty()) {
 				String[] parts = resultMap.get(true).removeFirst().split("-");
@@ -934,6 +946,11 @@ public class NormalizationService {
 		}
 		if (pagesOutput == null) {
 			pagesOutput = originalPages;
+		}
+		// A last check
+		if (isSeveralPages && (pageStart == null || pageStart.isEmpty())) {
+			// log.error("isSeveralPages is set but pageStart is null or empty for publicationId {}", publicationId);
+			isSeveralPages = false;
 		}
 		return new PageRecord(originalPages, pageStart, pagesOutput, isSeveralPages);
 	}
@@ -1190,6 +1207,7 @@ public class NormalizationService {
 		String r = s.toLowerCase();
 		r = LANGUAGE_PATTERN.matcher(r).replaceAll("");
 		r = TRANSLATION_PATTERN.matcher(r).replaceAll("");
+		r = CASE_REPORT_PATTERN.matcher(r).replaceAll("");
 		r = NON_INITIAL_SQUARE_BRACKETS_PATTERN.matcher(r).replaceAll("");
 		r = POINTY_BRACKETS_PATTERN.matcher(r).replaceAll("");
 		// Checks for the pointyBracketsPattern (the path not chosen)
