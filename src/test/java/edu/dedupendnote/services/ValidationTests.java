@@ -41,7 +41,6 @@ import ch.qos.logback.classic.LoggerContext;
 import edu.dedupendnote.domain.Publication;
 import edu.dedupendnote.domain.PublicationDB;
 import edu.dedupendnote.domain.ValidationResult;
-import edu.dedupendnote.domain.ValidationResultASySD;
 import edu.dedupendnote.utils.MemoryAppender;
 import lombok.extern.slf4j.Slf4j;
 
@@ -80,10 +79,10 @@ class ValidationTests {
 	private boolean withTracing = false;
 	private boolean withTitleSplitterOutput = false;
 
-	static final String TABLE_HEADER = "| %7s | %12s | %7s | %7s | %12s | %7s | %7s | %12s | %12s | %12s | %12s | %11s |"
+	static final String TABLE_HEADER = "| %7s | %12s | %7s | %7s | %12s | %7s | %7s | %12s | %12s | %12s | %12s | %11s | %9s |"
 			.formatted("TOTAL", "% duplicates", "TP", "FN", "Sensitivity", "TN", "FP", "Specificity", "Precision",
-					"Accuracy", "F1-score", "Duration");
-	static final String TABLE_DIVIDER = "|---------|--------------|---------|---------|--------------|---------|---------|--------------|--------------|--------------|--------------|-------------|";
+					"Accuracy", "F1-score", "Duration", "Uniq dupl");
+	static final String TABLE_DIVIDER = "|---------|--------------|---------|---------|--------------|---------|---------|--------------|--------------|--------------|--------------|-------------|-----------|";
 	static final String EXPLANATION = """
 			FP can be found with regex: \\ttrue\\tfalse\\tfalse\\ttrue\\tfalse\\t
 			FN can be found with regex: \\d\\ttrue\\tfalse\\tfalse\\tfalse\\ttrue\\t
@@ -102,6 +101,29 @@ class ValidationTests {
 		rootLogger = loggerContext.getLogger("edu.dedupendnote.services.DeduplicationService");
 		rootLogger.setLevel(Level.INFO);
 	}
+
+	/*
+	 * FIXME: the number of unique duplicates has to be from the ..._to_validate.txt files.
+	 */
+	// @formatter:off
+	Map<String, ValidationResult> validationResultsMap = List
+		.of(
+			new ValidationResult("AI_subset", 507, 9, 2567, 0, 29_000L, 218),	// why so slow?
+			new ValidationResult("ASySD_Cardiac_human", 6759, 5, 2183, 1, 3_700L, 3238),
+			new ValidationResult("ASySD_Diabetes", 1811, 11, 21, 2, 1_000L, 563),
+			new ValidationResult("ASySD_Neuroimaging", 2181, 11, 1244, 2, 1_350L, 896),
+			new ValidationResult("ASySD_SRSR_Human", 27945, 36, 25016, 4, 100_000L,11130),
+			new ValidationResult("BIG_SET", 3952, 92, 1030, 8, 66_000L,1444),
+			new ValidationResult("Clinical_trials", 219, 0, 0, 0, 190L, 87),
+			new ValidationResult("McKeown_2021", 2023, 33, 1074, 0, 800L, 820),
+			new ValidationResult("SRA2_Cytology_screening", 1361, 33, 462, 0, 400L, 623),
+			new ValidationResult("SRA2_Haematology", 222, 6, 1186, 1, 300L, 106),
+			new ValidationResult("SRA2_Respiratory", 768, 18, 1202, 0, 800L, 356),
+			new ValidationResult("SRA2_Stroke", 497, 8, 787, 0, 320L, 190),
+			new ValidationResult("TIL", 696, 4, 392, 0, 9_000L, 262),
+			new ValidationResult("TIL_Zotero", 695, 5, 392, 0, 9_000L, 262))
+		.stream().collect(Collectors.toMap(ValidationResult::getFileName, Function.identity(), (o1, o2) -> o1, TreeMap::new));
+	// @formatter:on
 
 	// @formatter:off
 	/*
@@ -124,25 +146,6 @@ class ValidationTests {
 		withTitleSplitterOutput = false;
 
 		// @formatter:off
-		// previous results
-		Map<String, ValidationResult> validationResultsMap = List
-				.of(
-					new ValidationResult("AI_subset", 507, 9, 2567, 0, 29_000L),	// why so slow?
-					new ValidationResult("ASySD_Cardiac_human", 6759, 5, 2183, 1, 3_700L),
-					new ValidationResult("ASySD_Diabetes", 1811, 11, 21, 2, 1_000L),
-					new ValidationResult("ASySD_Neuroimaging", 2181, 11, 1244, 2, 1_350L),
-					new ValidationResult("ASySD_SRSR_Human", 27945, 36, 25016, 4, 100_000L),
-					new ValidationResult("BIG_SET", 3952, 92, 1030, 8, 66_000L),
-					new ValidationResult("Clinical_trials", 219, 0, 0, 0, 190L),
-					new ValidationResult("McKeown_2021", 2023, 33, 1074, 0, 800L),
-					new ValidationResult("SRA2_Cytology_screening", 1361, 33, 462, 0, 400L),
-					new ValidationResult("SRA2_Haematology", 222, 6, 1186, 1, 300L),
-					new ValidationResult("SRA2_Respiratory", 768, 18, 1202, 0, 800L),
-					new ValidationResult("SRA2_Stroke", 497, 8, 787, 0, 320L),
-					new ValidationResult("TIL", 696, 4, 392, 0, 9_000L),
-					new ValidationResult("TIL_Zotero", 695, 5, 392, 0, 9_000L))
-				.stream().collect(Collectors.toMap(ValidationResult::getFileName, Function.identity(), (o1, o2) -> o1,
-						TreeMap::new));
 		Map<String, ValidationResult> resultsMap = List
 				.of(
 					checkResults_AI_subset(),
@@ -173,8 +176,9 @@ class ValidationTests {
 				continue; // easy when some checkResults_...() are commented out
 			}
 			if (v.getFn() == c.getFn() && v.getFp() == c.getFp() && v.getTn() == c.getTn() && v.getTp() == c.getTp()
-					&& (c.getDurationMilliseconds() >= (long) (v.getDurationMilliseconds() * 0.9))
-					&& c.getDurationMilliseconds() <= (long) (v.getDurationMilliseconds() * 1.1)) {
+					&& (c.getDuration() >= (long) (v.getDuration() * 0.9))
+					&& c.getDuration() <= (long) (v.getDuration() * 1.1)
+					&& c.getUniqueDuplicates() == v.getUniqueDuplicates()) {
 				printValidationResult(setName, c, null);
 			} else {
 				changed = true;
@@ -212,67 +216,40 @@ class ValidationTests {
 
 	private void printIndividualValidationResult(ValidationResult v) {
 		System.out.println(
-				"| %7d | %11.2f%% | %7d | %7d | %11.2f%% | %7d | %7d | %11.3f%% | %11.3f%% | %11.3f%% | %11.3f%% | %11.2f |"
+				"| %7d | %11.2f%% | %7d | %7d | %11.2f%% | %7d | %7d | %11.3f%% | %11.3f%% | %11.3f%% | %11.3f%% | %11.2f | %9d |"
 						.formatted(v.getTotal(), v.getPercDuplicates(), v.getTp(), v.getFn(), v.getSensitivity(),
 								v.getTn(), v.getFp(), v.getSpecificity(), v.getPrecision(), v.getAccuracy(),
-								v.getF1Score(), (double) (v.getDurationMilliseconds() / 1000.0)));
+								v.getF1Score(), (double) (v.getDuration() / 1000.0), v.getUniqueDuplicates()));
 	}
 
-	/*
-	 * TODO: extend the function with real checkResults as in checkAllTruthFiles()? 
-	 * TODO: extract validationResultsMap to avoid duplication.
-	 */
 	@Test
 	void printValidationResultsASySD() {
-
-		/*
-		 * FIXME: the number of unique duplicates has to be from the ..._to_validate.txt
-		 * files.
-		 */
-
-		// @formatter:off
-		Map<String, ValidationResultASySD> validationResultsMap = List
-				.of(
-					new ValidationResultASySD("AI_subset", 491, 0, 2590, 2, 210),	// why so slow?
-					new ValidationResultASySD("Cytology_screening", 1361, 59, 436, 0, 623),
-					new ValidationResultASySD("Cytology_screening", 1359, 61, 436, 0, 623),
-					new ValidationResultASySD("Haematology", 225, 11, 1177, 2, 107),
-					new ValidationResultASySD("Respiratory", 766, 34, 1184, 4, 354),
-					new ValidationResultASySD("Stroke", 497, 13, 782, 0, 190),
-					new ValidationResultASySD("BIG_SET", 3937, 176, 959, 10, 1433),
-					new ValidationResultASySD("Clinical_trials", 219, 0, 0, 0, 87),
-					new ValidationResultASySD("McKeown_2021", 2018, 56, 1056, 0, 817),
-					new ValidationResultASySD("ASySD_Cardiac_human", 6753, 20, 2175, 0, 3235),
-					// new ValidationResultASySD("ASySD_Depression", 17389, 576, 61894, 21, 7705),
-					new ValidationResultASySD("ASySD_Diabetes", 1816, 18, 11, 0, 566),
-					new ValidationResultASySD("ASySD_Neuroimaging", 2172, 29, 1235, 2, 891),
-					new ValidationResultASySD("ASySD_SRSR_Human", 27897, 120, 24975, 9, 11111),
-					new ValidationResultASySD("TIL", 687, 15, 390, 0, 258),
-					new ValidationResultASySD("TIL_Zotero", 687, 15, 390, 0, 258)
-				)
-				.stream().collect(Collectors.toMap(ValidationResultASySD::getFileName, Function.identity(),
-						(o1, o2) -> o1, TreeMap::new));
-		// @formatter:on
-
 		for (String setName : validationResultsMap.keySet()) {
-			ValidationResultASySD v = validationResultsMap.get(setName);
-			int tp = v.getTp() - v.getUniqueDuplicates(), fn = v.getFn(), tn = v.getTn() + v.getUniqueDuplicates(),
-					fp = v.getFp();
+			ValidationResult v = validationResultsMap.get(setName);
+			int tp = v.getTp() - v.getUniqueDuplicates();
+			int fn = v.getFn();
+			int tn = v.getTn() + v.getUniqueDuplicates();
+			int fp = v.getFp();
+			int total = tp + fn + tn + fp;
+
 			double precision = tp * 100.0 / (tp + fp);
 			double sensitivity = tp * 100.0 / (tp + fn);
+			double specificity = tn * 100.0 / (tn + fp);
+			double accuracy = (tp + tn) * 100.0 / total;
+			double f1Score = 2 * precision * sensitivity / (precision + sensitivity);
+
 			System.out.println("\nResults: " + setName);
 			System.out.println(
-					"---------------------------------------------------------------------------------------------------------------------------------------------");
-			System.out.println("| %7s | %12s | %7s | %7s | %12s | %7s | %7s | %12s | %12s | %12s | %12s |".formatted(
-					"TOTAL", "% duplicates", "TP", "FN", "Sensitivity", "TN", "FP", "Specificity", "Precision",
-					"Accuracy", "F1"));
+					"--------------------------------------------------------------------------------------------------------------------------------------------------------");
+			System.out.println("| %7s | %12s | %7s | %7s | %12s | %7s | %7s | %12s | %12s | %12s | %12s | %9s |"
+					.formatted("TOTAL", "% duplicates", "TP", "FN", "Sensitivity", "TN", "FP", "Specificity",
+							"Precision", "Accuracy", "F1", "Uniq dupl"));
 			System.out.println(
-					"| %7d | %11.2f%% | %7d | %7d | %11.2f%% | %7d | %7d | %11.3f%% | %11.3f%% | %11.3f%% | %11.3f%% |"
-							.formatted(tp + tn + fp + fn, (tp + fn) * 100.0 / (tp + tn + fp + fn), tp, fn, sensitivity,
-									tn, fp, tn * 100.0 / (tn + fp), precision, (tp + tn) * 100.0 / (tp + fn + tn + fp),
-									2 * precision * sensitivity / (precision + sensitivity)));
+					"| %7d | %11.2f%% | %7d | %7d | %11.2f%% | %7d | %7d | %11.3f%% | %11.3f%% | %11.3f%% | %11.3f%% | %9d |"
+							.formatted(total, (tp + fn) * 100.0 / total, tp, fn, sensitivity, tn, fp, specificity,
+									precision, accuracy, f1Score, v.getUniqueDuplicates()));
 			System.out.println(
-					"---------------------------------------------------------------------------------------------------------------------------------------------");
+					"--------------------------------------------------------------------------------------------------------------------------------------------------------");
 			System.out.flush();
 			assertThat(1 * 1).isEqualTo(1);
 		}
@@ -374,7 +351,13 @@ class ValidationTests {
 			}
 		}
 		recordDBService.saveRecordDBs(publicationDBs, outputFileName);
-		ValidationResult validationResult = new ValidationResult(setName, tps, fns, tns, fps, endTime - startTime);
+		long uniqueDuplicates = publicationDBs.stream()
+				.filter(r -> r.isTruePositive() == true && r.getDedupid().equals(r.getId()))
+				.count();
+
+		System.err.println("File " + setName +  " has unique duplicates: " + uniqueDuplicates);
+		ValidationResult validationResult = new ValidationResult(setName, tps, fns, tns, fps, endTime - startTime, (int) uniqueDuplicates);
+
 		if (withTracing) {
 				/*
 				 * There may be records in the output file with "... - ... ARE DUPLICATES" but with publication years
@@ -401,11 +384,11 @@ class ValidationTests {
 			System.err.println("These are the FP recordIDs for " + setName);
 			fpErrors.entrySet().forEach(System.err::println);
 		}
-		long uniqueDuplicates = publicationDBs.stream()
-				.filter(r -> r.isTruePositive() == true && r.getDedupid().equals(r.getId()))
-				.count();
+		// long uniqueDuplicates = publicationDBs.stream()
+		// 		.filter(r -> r.isTruePositive() == true && r.getDedupid().equals(r.getId()))
+		// 		.count();
 
-		System.err.println("File " + setName +  " has unique duplicates: " + uniqueDuplicates);
+		// System.err.println("File " + setName +  " has unique duplicates: " + uniqueDuplicates);
 
 		if (withTitleSplitterOutput) {
 			for (Publication p : publications) {
