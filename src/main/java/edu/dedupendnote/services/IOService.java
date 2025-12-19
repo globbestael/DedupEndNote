@@ -192,8 +192,6 @@ public class IOService {
 					previousFieldName = "XYZ";
 					switch (fieldName) {
 					case "AU": // Authors
-						// XML files can put all authors on 1 line separated by "; "
-						// TODO: Does this occur in RIS files too?
 						if (fieldContent.contains("; ")) {
 							List<String> authors = Arrays.asList(fieldContent.split("; "));
 							for (String author : authors) {

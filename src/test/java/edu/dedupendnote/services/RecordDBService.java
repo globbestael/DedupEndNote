@@ -24,14 +24,14 @@ import lombok.extern.slf4j.Slf4j;
 public class RecordDBService {
 
 	/*
-	 * FIXME: These are the same fieldnames as the @JSonPropertyOrder({...}) of
-	 * PublicationDB. Can a Spring property be used in both cases? See:
-	 * https://stackoverflow.com/questions/35089257/conditional-jsonproperty-using-jackson
-	 * -with-spring-boot There is a findSerializationPropertyOrder(...) method in
+	 * FIXME: These are the same fieldnames as the @JSonPropertyOrder({...}) of PublicationDB. 
+	 * Can a Spring property be used in both cases? 
+	 * See:
+	 * https://stackoverflow.com/questions/35089257/conditional-jsonproperty-using-jackson-with-spring-boot 
+	 * There is a findSerializationPropertyOrder(...) method in
 	 * com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector
 	 *
-	 * Alternative: can the value be set in @JSonPropertyOrder({...}), read from
-	 * this @JSonPropertyOrder({...}) and be used here?
+	 * Alternative: can the value be set in @JSonPropertyOrder({...}), read from this @JSonPropertyOrder({...}) and be used here?
 	 */
 	private static List<String> dbFields = Arrays.asList("id", "dedupid", "correction", "validated", "true_pos",
 			"true_neg", "false_pos", "false_neg", "unsolvable", "authors_truncated", "authors", "publ_year",

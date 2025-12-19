@@ -26,11 +26,6 @@ class NormalizationServiceTest {
 		assertThat(result).isEqualTo(expected);
 	}
 
-	/*
-	 * This test calls IOService::addNormalizedPages because the logic there is quite intricate
-	 * 
-	 * TODO: is this test still relevant?
-	 */
 	@ParameterizedTest(name = "{index}: normalizeJournal({0})={1}")
 	@MethodSource("journalArgumentProvider")
 	void normalizeJournalTest(String input, String expected) {

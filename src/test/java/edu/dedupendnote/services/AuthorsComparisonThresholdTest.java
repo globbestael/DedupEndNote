@@ -25,25 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 @TestConfiguration
 class AuthorsComparisonThresholdTest extends AuthorsBaseTest {
 
-	// private final DeduplicationService deduplicationService;
-	// private final DedupEndNoteController dedupEndNoteController;
-	// private final DedupEndNoteApplication dedupEndNoteApplication;
-	// private final ComparisonService comparisonService;
-	// private final ComparisonService comparisonService;
 	List<Triple> triples = new ArrayList<>();
-
-	// AuthorComparisonThresholdTest(ComparisonService comparisonService, DedupEndNoteApplication
-	// dedupEndNoteApplication,
-	// DedupEndNoteController dedupEndNoteController, DeduplicationService deduplicationService) {
-	// this.comparisonService = comparisonService;
-	// this.dedupEndNoteApplication = dedupEndNoteApplication;
-	// this.dedupEndNoteController = dedupEndNoteController;
-	// this.deduplicationService = deduplicationService;
-	// }
-
-	// AuthorComparisonThresholdTest(ComparisonService comparisonService) {
-	// this.comparisonService = comparisonService;
-	// }
 
 	@BeforeAll
 	static void beforeAll() {
@@ -63,12 +45,13 @@ class AuthorsComparisonThresholdTest extends AuthorsBaseTest {
 		// triples.stream().limit(5).forEach(System.err::println);
 		List<Triple> filledTriples = new ArrayList<>();
 
-		/*
-		 * The cases where one of both allAuthors is empty should be skipped
-		 */
 		for (Triple triple : triples) {
 			Publication r1 = fillPublication(triple.getAuthors1());
 			Publication r2 = fillPublication(triple.getAuthors2());
+			/*
+			 * Can't use DefaultAuthorsComparisonService::compare because it returns in the loop as soon as a JWS is above a threshold.
+			 * This JWS is the minimally accepted similarity, not the highest similarity of all authors pairs.
+			 */
 			triple.setJws(getHighestSimilarityForAuthors(r1.getAllAuthors(), r2.getAllAuthors()));
 			if (!r1.getAllAuthors().isEmpty() && !r2.getAllAuthors().isEmpty()) {
 				filledTriples.add(triple);

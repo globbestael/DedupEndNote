@@ -60,12 +60,13 @@ class AuthorExperimentsTests {
 			boolean sufficientDois = (!r1.getDois().isEmpty() && !r2.getDois().isEmpty());
 
 			if (r1.getAllAuthors().isEmpty() || r2.getAllAuthors().isEmpty()) {
-				// Because Anonymous AND Reply would only compare on journals (and maybe
-				// SP/DOIs) (see "MedGenMed Medscape General Medicine" articles in
-				// Cannabis test set)
-				// Because Anonymous AND no SP or DOI would only compare on title and
-				// journals (see "Abstracts of 16th National Congress of SIGENP" articles
-				// in Joost problem set)
+				/*
+				 * Because:
+				 * - Anonymous AND Reply would only compare on journals (and maybe SP/DOIs) 
+				 *  (see "MedGenMed Medscape General Medicine" articles in Cannabis test set)
+				 * - Anonymous AND no SP or DOI would only compare on title and journals 
+				 *   (see "Abstracts of 16th National Congress of SIGENP" articles in Joost problem set)
+				 */
 				if (isReply || (!sufficientStartPages && !sufficientDois)) {
 					return false;
 				}

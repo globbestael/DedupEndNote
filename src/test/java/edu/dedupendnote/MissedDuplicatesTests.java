@@ -135,15 +135,6 @@ class MissedDuplicatesTests extends BaseTest {
 		String resultString = deduplicationService.deduplicateOneFile(inputFileName, outputFileName, markMode,
 				wssessionId);
 
-		// System.err.println("Number of events " + memoryAppender.getSize());
-		// log.error("Number of events {}", memoryAppender.getSize());
-		// assertThat(memoryAppender.contains("1. Starting pages are the same", Level.DEBUG)).isTrue();
-		// Pattern pattern = Pattern.compile("- (1|2|3|4). .+");
-		// System.err.println("Messages: " + memoryAppender.filterByPattern(pattern, Level.DEBUG));
-		// assertThat(memoryAppender.filterByPattern(Pattern.compile(".+ (1|2|3|4). .+"), Level.DEBUG).size())
-		// .isGreaterThan(0);
-		// assertThat(memoryAppender.containsPattern(Pattern.compile(".+ (1|2|3|4). .+"), Level.DEBUG)).isTrue();
-
 		System.err.println("Messages: " + memoryAppender.filterByPatterns(tracePatterns, Level.TRACE));
 		assertThat(memoryAppender.filterByPatterns(tracePatterns, Level.TRACE).size()).isGreaterThan(0);
 		assertThat(resultString).isEqualTo(deduplicationService.formatResultString(total, totalWritten));

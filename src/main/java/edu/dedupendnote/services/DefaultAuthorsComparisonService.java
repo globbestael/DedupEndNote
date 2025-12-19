@@ -48,13 +48,11 @@ public class DefaultAuthorsComparisonService implements AuthorsComparisonService
 			log.trace("- 2. One or both authors are empty");
 			return true;
 		}
-		// FIXME: the lowest similarity is often used. Does this make the results of AuthorComparisonThresholdTest
-		// invalid?
+
 		for (String authors1 : r1.getAllAuthors()) {
 			for (String authors2 : r2.getAllAuthors()) {
 				similarity = jws.apply(authors1, authors2);
 				if (isReply) {
-					// TODO: do we have examples of this case?
 					if (!(sufficientStartPages || sufficientDois)
 							&& similarity > AUTHOR_SIMILARITY_REPLY_INSUFFICIENT_STARTPAGES_AND_DOIS) {
 						return true;

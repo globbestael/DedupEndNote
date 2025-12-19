@@ -69,10 +69,12 @@ public class NormalizationService {
 			Pattern.CASE_INSENSITIVE);
 
 	/**
-	 * Month names as part of pages field
+	 * English month names.
+	 * 
+	 * If Pages contains a month name string (e.g. "01 June"), omit the whole pages
 	 */
 	private static final Pattern PAGES_MONTH_PATTERN = Pattern
-			.compile("\\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\\b");
+			.compile("\\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)");
 
 	/**
 	 * All characters between "<" and ">", including the pointy brackets
@@ -504,13 +506,12 @@ public class NormalizationService {
 		if (doi.length() > 200) {
 			return dois;
 		}
-		// TODO: should illegal strings (java.lang.IllegalArgumentException) be treated differently?
 		try {
 			doi = URLDecoder.decode(doi, "UTF8");
 			doi = StringEscapeUtils.unescapeHtml4(doi);
 		} catch (UnsupportedEncodingException e) {
-			log.info(e.getMessage());
-			e.printStackTrace();
+			log.error("DOI {} threw an UnsupportedEncodingException", doi);
+			// e.printStackTrace();
 		}
 		Matcher matcher = DOI_PATTERN.matcher(doi.toLowerCase());
 		while (matcher.find()) {
@@ -676,7 +677,6 @@ public class NormalizationService {
 		Set<String> journals = new HashSet<>();
 		for (String j : journalSet) {
 			j = j.strip();
-			// FIXME: what happens when EXCLUDED_JOURNALS_PARTS.contains(j.toLowerCase())??
 			if (!j.isEmpty() && !EXCLUDED_JOURNALS_PARTS.contains(j.toLowerCase())) {
 				if (j.equals(j.toUpperCase()) && (j.contains(" ") || j.length() > 6)) {
 					List<String> words = Arrays.asList(j.toLowerCase().split(" "));
@@ -700,26 +700,12 @@ public class NormalizationService {
 	 * the fields set in a previous all). 
 	 * This has been changed to:
 	 * - IOService::readPublications gathers the fieldContent for these fields in a map
-	 * - IOService::readPublications calls this parsing function when the last field (ER) is encountered
+	 * - IOService::readPublications calls this parsing function when the last field (ER) of a publication is encountered
 	 *
-	 * FIXME: The following information is old, and should be changed:
-	 * C7 (Article Number) should sometimes overrule / overwrite SP (starting and ending page) because when C7 is
-	 * present, SP often contains the number of pages, and in a few cases relative pages (1-10 for a 10 pages article).
-	 * 
-	 * SE (Starting Ending Page) should sometimes overrule / overwrite SP (SE: 1746-1746, SP: 19)
-	 *
-	 * C7 and SE occur before the SP field in an EndNote RIS file.
-	 *
-	 * Solution: 
-	 * - treat C7 as pages 
-	 * - if C7 has already been called AND SE is a range of pages (except "1-..."), then SE can overwrite the C7 data. 
-	 * - if C7 or SE has already been called AND SP is a range of pages (except "1-...") (e.g. C7: Pmid 29451177, and SP: 3-4) 
-	 *   then SP can overwrite the C7 data. 
-	 * 
-	 * The test if fieldName ... has already been called / pagesOutput is not null, is NOT part of this method, but is handled in
-	 * IOService::readPublications (and addNormalizedPages).
-	 *
-	 * See also issues https://github.com/globbestael/DedupEndnote/issues/2 and https://github.com/globbestael/DedupEndnote/issues/3
+	 * 3 steps:
+	 * - normalize the content of the 3 fields
+	 * - choose which of these 3 field values will be used
+	 * - handle the chosen field value to get pageStart, pagesOutput and isSevtalPages
 	 */
 	public static PageRecord normalizeInputPages(Map<String, String> pagesInputMap, String publicationId) {
 		String c7Pages = pagesInputMap.get("C7");
@@ -732,21 +718,22 @@ public class NormalizationService {
 		String pageStart = null;
 		String pageEnd = null;
 
+		/*
+		 * Step 1: normalize the 3 possible inputs (pagesInputMap)
+		 * 
+		 * There is already a return in the c7pages branch!
+		 */
+
 		if (c7Pages != null) {
-			c7Pages = PAGES_ADDITIONS_PATTERN.matcher(c7Pages).replaceAll("").strip();
-			// replace "ii-218-ii-228" by "ii218-ii228", and "S-12" by "S12"
-			c7Pages = c7Pages.replaceAll("(?<!\\d+)([a-zA-Z]+)-(\\d+)", "$1$2");
+			c7Pages = initialPagesCleanup(c7Pages, publicationId);
 			originalPages = c7Pages;
-			// if Pages contains a month name string (e.g. "01 June"), omit the whole pages
-			Matcher matcher = PAGES_MONTH_PATTERN.matcher(c7Pages);
-			while (matcher.find()) {
-				c7Pages = null;
-			}
+			c7Pages = clearPagesIfMonth(c7Pages);
+			// Cases like "Pii s1386-6346(02)00029-3"
 			if (c7Pages.contains(" ")) {
 				c7Pages = null;
 			} else {
-				// a value like "10007431(2019)02-0126-07" (part of DOI) is changed to a number, which sets
-				// isSeveralPages to true.
+				// a value like "10007431(2019)02-0126-07" (part of DOI) is changed to a number, which later sets
+				// isSeveralPages to true (which is most cases is true?).
 				c7Pages = c7Pages.replaceAll("\\D", "");
 			}
 			if (c7Pages != null && c7Pages.isBlank()) {
@@ -770,41 +757,30 @@ public class NormalizationService {
 			if (sePages.length() > 30) {
 				sePages = null;
 			} else {
-				// replace "ii-218-ii-228" by "ii218-ii228", and "S-12" by "S12"
-				sePages = sePages.replaceAll("(?<!\\d+)([a-zA-Z]+)-(\\d+)", "$1$2");
+				sePages = initialPagesCleanup(sePages, publicationId);
 				originalPages = sePages;
-				Matcher matcher = PAGES_MONTH_PATTERN.matcher(sePages);
-				while (matcher.find()) {
-					sePages = null;
-				}
+				sePages = clearPagesIfMonth(sePages);
 			}
 		}
 
-		// FIXME: use Patterns
 		if (spPages != null) {
-			spPages = PAGES_ADDITIONS_PATTERN.matcher(spPages).replaceAll("").strip();
-			// replace "S6-97-s6-99" by "S697-s699"
-			spPages = spPages.replaceAll("(?<!\\d+)([a-zA-Z0-9]+)-(\\d+)-([a-zA-Z0-9]+)-(\\d+)", "$1$2-$3$4");
-			// replace "ii-218-ii-228" by "ii218-ii228", and "S-12" by "S12"
-			spPages = spPages.replaceAll("(?<!\\d+)([a-zA-Z]+)-(\\d+)", "$1$2");
+			spPages = initialPagesCleanup(spPages, publicationId);
 			originalPages = spPages;
-			Matcher matcher = PAGES_MONTH_PATTERN.matcher(spPages);
-			while (matcher.find()) {
-				spPages = null;
-			}
+			spPages = clearPagesIfMonth(spPages);
 			if (spPages != null) {
-				// Cochrane uses hyphen characters instead of minus
-				spPages = spPages.replaceAll("[\\u2010\\u00ad]", "-");
 				if ((spPages.startsWith("e") || spPages.startsWith("E")) && !spPages.contains("-")) {
 					isSeveralPages = true;
 					pagesOutput = originalPages;
 				}
-				if (spPages.endsWith("+")) {
+				if (spPages.endsWith("+") || spPages.endsWith("-")) {
 					spPages = spPages.substring(0, spPages.length() - 1);
 				}
 			}
 		}
 
+		/*
+		 * Step 2: choose the pages and pagesOutput which will be used later for the comparison
+		 */
 		if (c7Pages != null) {
 			isSeveralPages = true;
 			if (spPages != null
@@ -814,7 +790,7 @@ public class NormalizationService {
 			} else {
 				pages = c7Pages;
 			}
-		} else if (spPages != null) {
+		} else if (spPages != null && !spPages.isBlank()) {
 			pages = spPages;
 		} else if (sePages != null) {
 			pages = sePages;
@@ -822,6 +798,9 @@ public class NormalizationService {
 			return new PageRecord(originalPages, null, null, false);
 		}
 
+		/*
+		 * Step 3
+		 */
 		List<String> pagesParts = Arrays.asList(pages.split("[+,;]\\s*"));
 		// Split into (1) group with only Roman numbers, and (2) others (could be Arabic numbers, combined Roman+Arabic
 		// ("ii208-212"), combined Arabic+text ("S12-23", "CD123456". "67A-69A", text, ...)
@@ -848,15 +827,16 @@ public class NormalizationService {
 				}
 			}
 		} else if (!resultMap.get(false).isEmpty()) { // there are Arabic numbers
-			// Clean "1165A" to "1165", and "ii108" to "108"
-			// String first = resultMap.get(false).getFirst().replaceAll("[^\\d\\-]", "");
-			String first = resultMap.get(false).removeFirst().replaceAll("(?<!\\d+)([a-zA-Z]+)-(\\d+)", "$1$2");
+			String first = resultMap.get(false).removeFirst();
 			String[] parts = first.split("-");
 			pageStart = parts[0];
 			if (parts.length > 1) {
 				pageEnd = parts[1];
 				pageStart = pageStart.replaceAll("^(0+|N\\.PAG)", "");
 				pageEnd = pageEnd.replaceAll("^(0+|N\\.PAG)", "");
+				if (pageEnd.isBlank()) {
+					pageEnd = null;
+				}
 			}
 			if ("".equals(pageStart)) {
 				pageStart = pageEnd;
@@ -872,15 +852,14 @@ public class NormalizationService {
 				pagesOutput = originalPages;
 			} else if ((pageEnd != null && pageStart.length() >= pageEnd.length())
 					|| (resultMap.get(false).size() + resultMap.get(true).size() > 0)) {
+				// The second OR above = there were other pageRanges than the current one
 				/*
 				 * The test on pagesOutput == null because for C7 field pagesOutput has already been set.
 				 */
+				pageEnd = getLongPageEnd(pageStart, pageEnd);
 				if (pagesOutput == null) {
 					// if the whole pages string is the same pageStart - pageEnd, record the long form
 					pagesOutput = composePagesOutput(pageStart, pageEnd, resultMap);
-				}
-				if (pageEnd != null && pageStart.length() >= pageEnd.length()) {
-					pageEnd = pageStart.substring(0, pageStart.length() - pageEnd.length()) + pageEnd;
 				}
 			}
 		} else {
@@ -952,21 +931,68 @@ public class NormalizationService {
 		return new PageRecord(originalPages, pageStart, pagesOutput, isSeveralPages);
 	}
 
+	private static String getLongPageEnd(String pageStart, String pageEnd) {
+		if (pageEnd != null && pageStart.length() >= pageEnd.length()) {
+			pageEnd = pageStart.substring(0, pageStart.length() - pageEnd.length()) + pageEnd;
+		}
+		return pageEnd;
+	}
+
+	private static String clearPagesIfMonth(String pages) {
+		Matcher matcher = PAGES_MONTH_PATTERN.matcher(pages);
+		while (matcher.find()) {
+			pages = null;
+		}
+		return pages;
+	}
+
+	/**
+	 * Pattern to replace pages "S6-97-s6-99" by "S697-s699"
+	 */
+	private static final Pattern PAGES_HYPHEN_MERGE_1_PATTERN = Pattern
+			.compile("(?<!\\d+)([a-zA-Z0-9]+)-(\\d+)-([a-zA-Z0-9]+)-(\\d+)");
+	/**
+	 * Pattern to replace pages "ii-218-ii-228" by "ii218-ii228", and "S-12" by "S12"
+	 */
+	private static final Pattern PAGES_HYPHEN_MERGE_2_PATTERN = Pattern.compile("(?<!\\d+)([a-zA-Z]+)-(\\d+)");
+
+	private static String initialPagesCleanup(String pages, String publicationId) {
+		// Cochrane uses hyphen characters instead of minus
+		pages = pages.replaceAll("[\\u2010\\u00ad]", "-");
+
+		pages = PAGES_ADDITIONS_PATTERN.matcher(pages).replaceAll("").strip();
+
+		// replace "S6-97-s6-99" by "S697-s699"
+		pages = PAGES_HYPHEN_MERGE_1_PATTERN.matcher(pages).replaceAll("$1$2-$3$4");
+		// pages = pages.replaceAll("(?<!\\d+)([a-zA-Z0-9]+)-(\\d+)-([a-zA-Z0-9]+)-(\\d+)", "$1$2-$3$4");
+
+		// replace "ii-218-ii-228" by "ii218-ii228", and "S-12" by "S12"
+		pages = PAGES_HYPHEN_MERGE_2_PATTERN.matcher(pages).replaceAll("$1$2");
+		// pages = pages.replaceAll("(?<!\\d+)([a-zA-Z]+)-(\\d+)", "$1$2");
+
+		if (pages != null && pages.isBlank()) {
+			pages = null;
+		}
+		return pages;
+	}
+
 	private static String composePagesOutput(String pageStart, String pageEnd, Map<Boolean, List<String>> resultMap) {
 		List<String> pageRanges = new ArrayList<>();
+		// 1. add the Roman ranges first
 		pageRanges.addAll(resultMap.get(true));
+		// 2. add the first arabic pageStart (and pageEnd)
 		if (pageEnd == null) {
 			if (pageStart == null) {
 				pageRanges.add("");
 			} else {
 				pageRanges.add(pageStart);
 			}
-		} else if (pageStart.length() >= pageEnd.length()) {
-			pageRanges.add(pageStart + "-" + pageStart.substring(0, pageStart.length() - pageEnd.length()) + pageEnd);
 		} else {
 			pageRanges.add(pageStart + "-" + pageEnd);
 		}
+		// 3. add the other Arabic pages
 		pageRanges.addAll(resultMap.get(false));
+
 		return pageRanges.stream().collect(Collectors.joining("; "));
 	}
 
