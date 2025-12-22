@@ -125,25 +125,31 @@ public class IOService {
 			"(e)?Comment(|s|ary)\\b.*|.+[cC]omment(|s|ary)( from| on| to)?:? [A-Z'\"].+|.+[Cc]omment(|s|ary)|.+COMMENT");
 
 	/*
-	 * If field content starts with a comma (",") EndNote exports "[Fieldname]  -,",
-	 * NOT "[Fieldname]  - ," (EndNote X9.3.3) This pattern skips that initial
-	 * comma, not the space which may come after that comma!
+	 * If field content starts with a comma (",") EndNote exports "[Fieldname]  -,", NOT "[Fieldname]  - ," (EndNote X9.3.3).
+	 * This pattern skips that initial comma, not the space which may come after that comma!
+	 * 
+	 * Whitespaces has already been normalized (input may have had '\u00A0' after '-').
 	 */
 	public static final Pattern RIS_LINE_PATTERN = Pattern.compile("(^[A-Z][A-Z0-9])( {2}-[ ,\\u00A0])(.*)$");
 
 	/**
-	 * All white space characters within input fields will replaced with a normal SPACE. LINE SEPARATOR and NO-BREAK
-	 * SPACE have been observed in the test files. The pattern uses a maximum view: - all white space / "Separator,
-	 * space" characters (class Zs): https://www.fileformat.info/info/unicode/category/Zs/list.htm - all "Separator,
-	 * Line" (Zl) and "Separator, Paragraph" (Zp) characters - some "Control, other" characters (class Cc), but not all:
-	 * https://www.fileformat.info/info/unicode/category/Cc/list.htm
+	 * All whitespace characters within input fields. Will be replaced with a normal SPACE.
 	 * 
-	 * Pattern excludes SPACE from class Zs for performance reason by making an intersection (&&) with the negation ([^
-	 * ]).
+	 * The pattern uses a maximum view:
+	 *  - all "Separator, space" characters (class Zs) except for SPACE: https://www.fileformat.info/info/unicode/category/Zs/list.htm
+	 *  - all "Separator, Line" (Zl) characters: https://www.fileformat.info/info/unicode/category/Zl/list.htm
+	 *  - all "Separator, paragraph" (Zp) characters: https://www.fileformat.info/info/unicode/category/Zp/list.htm
+	 *  - some "Other, Control" characters (class Cc), but not all: https://www.fileformat.info/info/unicode/category/Cc/list.htm
+	 * 
+	 * SPACE is excluded from class Zs for performance reason by making an intersection (&&) with the negation ([^ ]).
+	 * See https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/regex/Pattern.html for substraction of
+	 * Unicode character classes.
+	 * 
+	 * LINE SEPARATOR and NO-BREAK SPACE have been observed in the test files.
 	 * 
 	 * Tested in TextNormalizerTest
 	 */
-	public static final Pattern unusualWhiteSpacePattern = Pattern
+	public static final Pattern UNUSUAL_WHITESPACE_PATTERN = Pattern
 			.compile("[\\p{Zs}\\p{Zl}\\p{Zp}\\u0009\\u000A\\u000B\\u000C\\u000D&&[^ ]]");
 
 	/*
@@ -180,7 +186,7 @@ public class IOService {
 			}
 			String line;
 			while ((line = br.readLine()) != null) {
-				line = unusualWhiteSpacePattern.matcher(line).replaceAll(" ");
+				line = NormalizationService.normalizeHyphensAndWhitespace(line);
 				Matcher matcher = RIS_LINE_PATTERN.matcher(line);
 				if (matcher.matches()) {
 					fieldName = matcher.group(1);
@@ -594,7 +600,7 @@ public class IOService {
 
 			while ((line = br.readLine()) != null) {
 				lineNumber++;
-				line = unusualWhiteSpacePattern.matcher(line).replaceAll(" ");
+				line = NormalizationService.normalizeHyphensAndWhitespace(line);
 				Matcher matcher = RIS_LINE_PATTERN.matcher(line);
 				if (matcher.matches()) {
 					fieldName = matcher.group(1);
@@ -678,7 +684,7 @@ public class IOService {
 			String realId = null;
 
 			while ((line = br.readLine()) != null) {
-				line = unusualWhiteSpacePattern.matcher(line).replaceAll(" ");
+				line = NormalizationService.normalizeHyphensAndWhitespace(line);
 				Matcher matcher = RIS_LINE_PATTERN.matcher(line);
 				if (matcher.matches()) {
 					fieldName = matcher.group(1);
@@ -839,7 +845,7 @@ public class IOService {
 			String line;
 			Integer id = null;
 			while ((line = br.readLine()) != null) {
-				line = unusualWhiteSpacePattern.matcher(line).replaceAll(" ");
+				line = NormalizationService.normalizeHyphensAndWhitespace(line);
 				Matcher matcher = RIS_LINE_PATTERN.matcher(line);
 				if (matcher.matches()) {
 					fieldName = matcher.group(1);
@@ -909,7 +915,7 @@ public class IOService {
 			String line;
 			Integer id = null;
 			while ((line = br.readLine()) != null) {
-				line = unusualWhiteSpacePattern.matcher(line).replaceAll(" ");
+				line = NormalizationService.normalizeHyphensAndWhitespace(line);
 				Matcher matcher = RIS_LINE_PATTERN.matcher(line);
 				if (matcher.matches()) {
 					fieldName = matcher.group(1);

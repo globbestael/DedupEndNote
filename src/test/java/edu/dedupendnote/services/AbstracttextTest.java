@@ -222,10 +222,11 @@ class AbstracttextTest {
 		text = text.replaceAll(
 				"^(aim(s?)|background(s?)|context|importance|introduction|objective(s?)|purpose|question|study objective|synopsis|(\\w+(\\s\\w+)?:\\s?))",
 				"");
-		// FIXME: replace with pattern
-		text = text.replaceAll("\u2010", "\u002D"); // replace HYPHEN with HYPHEN-MINUS
-		text = text.replaceAll("\u2009", ""); // remove THIN SPACE. Some databases use THIN SPACE within "30 mg", others
-												// use no character
+		// FIXME: replace with NormalizationService::normalizrHyhensAndWhitespace?
+		// replace HYPHEN with HYPHEN-MINUS
+		text = text.replaceAll("\u2010", "\u002D");
+		// remove THIN SPACE. Some databases use THIN SPACE within "30 mg", others use no character
+		text = text.replaceAll("\u2009", "");
 		text = text.replaceAll("\\p{Zs}+", " "); // normalize white space
 		// remove all characters which are not letters or numbers or spaces
 		text = text.replaceAll("[^\\p{L}\\p{N} ]+", ""); // use "\\p{Nd}" if you want "¼" treated as a number

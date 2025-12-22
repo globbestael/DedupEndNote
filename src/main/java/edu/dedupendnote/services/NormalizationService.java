@@ -1207,15 +1207,14 @@ public class NormalizationService {
 	// }
 
 	public static String normalizeTitle(String s) {
-		// FIXME: Why starting with parameter s and later copying s to r?
-		s = PARTIAL_ENDING_PUNCTUATION_PATTERN.matcher(s).replaceAll("");
-		s = normalizeToBasicLatin(s);
-		s = DOUBLE_QUOTES_PATTERN.matcher(s).replaceAll("");
+		String r = PARTIAL_ENDING_PUNCTUATION_PATTERN.matcher(s).replaceAll("");
+		r = normalizeToBasicLatin(r);
+		r = DOUBLE_QUOTES_PATTERN.matcher(r).replaceAll("");
 		/*
 		 * Assume "<<...>>" is not an addition, but a variant of double quotes. This replacement before the pointyBracketsPattern replacement.
 		 * Skipped because later nonAsciiLowercasePattern will replace the pointy brackets with a space.
 		 */
-		// s = s.replaceAll("(<<|>>)", "");
+		// r = r.replaceAll("(<<|>>)", "");
 		/**
 		 * FIXME: Do a thorough check of retractions (including "WITHDRAWN: ..." Cochrane reviews). Cochrane: PubMed,
 		 * Medline and EMBASE use format "WITHDRAWN: ...", Web of Science the format "... (Withdrawn Paper, 2011, Art.
@@ -1227,7 +1226,7 @@ public class NormalizationService {
 		 * {@link edu.dedupendnote.JaroWinklerTitleTest} (and an incomplete method
 		 * {@link edu.dedupendnote.JaroWinklerTitleTest#testErrata()})
 		 */
-		String r = s.toLowerCase();
+		r = r.toLowerCase();
 		r = LANGUAGE_PATTERN.matcher(r).replaceAll("");
 		r = TRANSLATION_PATTERN.matcher(r).replaceAll("");
 		r = CASE_REPORT_PATTERN.matcher(r).replaceAll("");
@@ -1289,12 +1288,21 @@ public class NormalizationService {
 	 * normalizeToBasicLatin: removes accents and diacritics when the base character belongs to the BasicLatin Unicode
 	 * block (U+0000–U+007F) and removes all other characters.
 	 */
-	public static String normalizeToBasicLatin(String r) {
-		if (NON_BASIC_LATIN_PATTERN.matcher(r).find()) {
-			r = Normalizer.normalize(r, Normalizer.Form.NFD);
+	public static String normalizeToBasicLatin(String s) {
+		if (NON_BASIC_LATIN_PATTERN.matcher(s).find()) {
+			s = Normalizer.normalize(s, Normalizer.Form.NFD);
 			// you can't reuse the existing matcher because r might be changed
-			r = NON_BASIC_LATIN_PATTERN.matcher(r).replaceAll("");
+			s = NON_BASIC_LATIN_PATTERN.matcher(s).replaceAll("");
 		}
-		return r;
+		return s;
+	}
+
+	public static String normalizeHyphensAndWhitespace(String s) {
+		// replace HYPHEN with HYPHEN-MINUS
+		s = s.replaceAll("\u2010", "\u002D");
+		// remove THIN SPACE. Some databases use THIN SPACE within "30 mg", others use no character
+		s = s.replaceAll("\u2009", "");
+		s = IOService.UNUSUAL_WHITESPACE_PATTERN.matcher(s).replaceAll(" ");
+		return s;
 	}
 }

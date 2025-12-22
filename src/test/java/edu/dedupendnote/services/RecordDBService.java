@@ -80,7 +80,7 @@ public class RecordDBService {
 			String line;
 			Publication publication = null;
 			while ((line = br.readLine()) != null) {
-				line = IOService.unusualWhiteSpacePattern.matcher(line).replaceAll(" ");
+				line = NormalizationService.normalizeHyphensAndWhitespace(line);
 				Matcher matcher = IOService.RIS_LINE_PATTERN.matcher(line);
 				if (matcher.matches()) {
 					fieldName = matcher.group(1);

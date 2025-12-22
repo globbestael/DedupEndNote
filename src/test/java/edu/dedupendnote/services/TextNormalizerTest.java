@@ -114,7 +114,7 @@ class TextNormalizerTest {
 	@Test
 	void whiteSpaceReplacement() {
 		String input = " a\u000Ca\u00A0a\u2000a";
-		String output = IOService.unusualWhiteSpacePattern.matcher(input).replaceAll("A");
+		String output = IOService.UNUSUAL_WHITESPACE_PATTERN.matcher(input).replaceAll("A");
 
 		assertThat(output).isEqualTo(" aAaAaAa");
 	}
