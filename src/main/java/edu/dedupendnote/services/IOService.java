@@ -20,12 +20,12 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
+import edu.dedupendnote.domain.AuthorRecord;
+import edu.dedupendnote.domain.IsbnIssnRecord;
+import edu.dedupendnote.domain.PageRecord;
 import edu.dedupendnote.domain.Publication;
 import edu.dedupendnote.domain.PublicationDB;
-import edu.dedupendnote.services.NormalizationService.AuthorRecord;
-import edu.dedupendnote.services.NormalizationService.IsbnIssnRecord;
-import edu.dedupendnote.services.NormalizationService.PageRecord;
-import edu.dedupendnote.services.NormalizationService.TitleRecord;
+import edu.dedupendnote.domain.TitleRecord;
 import lombok.extern.slf4j.Slf4j;
 
 /*
@@ -131,26 +131,6 @@ public class IOService {
 	 * Whitespaces has already been normalized (input may have had '\u00A0' after '-').
 	 */
 	public static final Pattern RIS_LINE_PATTERN = Pattern.compile("(^[A-Z][A-Z0-9])( {2}-[ ,\\u00A0])(.*)$");
-
-	/**
-	 * All whitespace characters within input fields. Will be replaced with a normal SPACE.
-	 * 
-	 * The pattern uses a maximum view:
-	 *  - all "Separator, space" characters (class Zs) except for SPACE: https://www.fileformat.info/info/unicode/category/Zs/list.htm
-	 *  - all "Separator, Line" (Zl) characters: https://www.fileformat.info/info/unicode/category/Zl/list.htm
-	 *  - all "Separator, paragraph" (Zp) characters: https://www.fileformat.info/info/unicode/category/Zp/list.htm
-	 *  - some "Other, Control" characters (class Cc), but not all: https://www.fileformat.info/info/unicode/category/Cc/list.htm
-	 * 
-	 * SPACE is excluded from class Zs for performance reason by making an intersection (&&) with the negation ([^ ]).
-	 * See https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/regex/Pattern.html for substraction of
-	 * Unicode character classes.
-	 * 
-	 * LINE SEPARATOR and NO-BREAK SPACE have been observed in the test files.
-	 * 
-	 * Tested in TextNormalizerTest
-	 */
-	public static final Pattern UNUSUAL_WHITESPACE_PATTERN = Pattern
-			.compile("[\\p{Zs}\\p{Zl}\\p{Zp}\\u0009\\u000A\\u000B\\u000C\\u000D&&[^ ]]");
 
 	/*
 	 * readPublications: called in the first phase (before the comparison of publications), includes normalization of data.

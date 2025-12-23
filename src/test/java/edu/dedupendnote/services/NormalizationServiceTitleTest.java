@@ -12,7 +12,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
-import edu.dedupendnote.services.NormalizationService.TitleRecord;
+import edu.dedupendnote.domain.TitleRecord;
 
 class NormalizationServiceTitleTest {
 

@@ -11,7 +11,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.boot.test.context.TestConfiguration;
 
-import edu.dedupendnote.services.NormalizationService.PageRecord;
+import edu.dedupendnote.domain.PageRecord;
 import lombok.extern.slf4j.Slf4j;
 
 @TestConfiguration

@@ -7,7 +7,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import edu.dedupendnote.services.NormalizationService;
-import edu.dedupendnote.services.NormalizationService.AuthorRecord;
 
 /*
  * Used in tests for evaluating alternatives.
