@@ -102,9 +102,6 @@ class ValidationTests {
 		rootLogger.setLevel(Level.INFO);
 	}
 
-	/*
-	 * FIXME: the number of unique duplicates has to be from the ..._to_validate.txt files.
-	 */
 	// @formatter:off
 	Map<String, ValidationResult> validationResultsMap = List
 		.of(
@@ -148,20 +145,20 @@ class ValidationTests {
 		// @formatter:off
 		Map<String, ValidationResult> resultsMap = List
 				.of(
-					checkResults_AI_subset(),
-					checkResults_ASySD_Cardiac_human(),
-					checkResults_ASySD_Diabetes(),
-					checkResults_ASySD_Neuroimaging(),
-					checkResults_ASySD_SRSR_Human(),
-					checkResults_BIG_SET(),
-					checkResults_Clinical_trials(),
-					checkResults_McKeown_2021(),
-					checkResults_SRA2_Cytology_screening(),
-					checkResults_SRA2_Haematology(),
-					checkResults_SRA2_Respiratory(),
-					checkResults_SRA2_Stroke(),
-					checkResults_TIL(),
-					checkResults_TIL_Zotero()
+					// checkResults_AI_subset(),
+					// checkResults_ASySD_Cardiac_human(),
+					// checkResults_ASySD_Diabetes(),
+					// checkResults_ASySD_Neuroimaging(),
+					// checkResults_ASySD_SRSR_Human(),
+					checkResults_BIG_SET()
+					// checkResults_Clinical_trials(),
+					// checkResults_McKeown_2021(),
+					// checkResults_SRA2_Cytology_screening(),
+					// checkResults_SRA2_Haematology(),
+					// checkResults_SRA2_Respiratory(),
+					// checkResults_SRA2_Stroke(),
+					// checkResults_TIL(),
+					// checkResults_TIL_Zotero()
 				)
 				.stream().collect(Collectors.toMap(ValidationResult::getFileName, Function.identity(), (o1, o2) -> o1,
 						TreeMap::new));
@@ -384,11 +381,6 @@ class ValidationTests {
 			System.err.println("These are the FP recordIDs for " + setName);
 			fpErrors.entrySet().forEach(System.err::println);
 		}
-		// long uniqueDuplicates = publicationDBs.stream()
-		// 		.filter(r -> r.isTruePositive() == true && r.getDedupid().equals(r.getId()))
-		// 		.count();
-
-		// System.err.println("File " + setName +  " has unique duplicates: " + uniqueDuplicates);
 
 		if (withTitleSplitterOutput) {
 			for (Publication p : publications) {

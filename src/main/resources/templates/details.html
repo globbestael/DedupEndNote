@@ -146,11 +146,11 @@
                                 th:text="${T(edu.dedupendnote.services.ComparisonService).TITLE_SIMILARITY_SUFFICIENT_STARTPAGES_OR_DOIS}">-0.90</span>?
                         </h3>
                         <p>The fields Original publication (OP), Short Title (ST), Title (TI) and sometimes Book section
-                            (T3,
-                            see below) are treated as titles.<br />
+                            (T3, see below) are treated as titles.<br />
                             Because the Jaro-Winkler similarity algorithm puts a heavy penalty on differences at the
-                            beginning
-                            of a string, the normalized titles are also reversed.</p>
+                            beginning of a string, the normalized titles are also reversed if the publication is longer
+                            than 1 page
+                            (i.e. except for meeting abtracts, replies, retraction notices, ...).</p>
                         <ul>
                             <li>Preprocessing:
                                 <ul>
@@ -825,7 +825,7 @@
                                             <td>PY</td>
                                             <td>Publication year</td>
                                             <td>Year</td>
-                                            <td>1</td>
+                                            <td style="border-left: 2px dotted black;">1</td>
                                         </tr>
                                         <tr>
                                             <td>SP</td>
@@ -847,7 +847,7 @@
                                             <td>AU</td>
                                             <td>Authors</td>
                                             <td>Authors</td>
-                                            <td>3</td>
+                                            <td style="border-left: 2px dotted black;">3</td>
                                         </tr>
                                         <tr>
                                             <td>TI</td>
@@ -872,13 +872,14 @@
                                             <td>SN</td>
                                             <td>ISSN or ISBN</td>
                                             <td>ISBN<br />ISSN</td>
-                                            <td rowspan="5" class="align-middle" style="border-left: 2px solid black;">5
+                                            <td rowspan="6" class="align-middle" style="border-left: 2px dotted black;">
+                                                5
                                             </td>
                                         </tr>
                                         <tr>
                                             <td>T2</td>
                                             <td>Journal title<br />Book title</td>
-                                            <td rowspan="4" class="align-middle">Journal</td>
+                                            <td rowspan="5" class="align-middle">Journal</td>
                                         </tr>
                                         <tr>
                                             <td>J2</td>
@@ -892,10 +893,17 @@
                                             <td>T3 **</td>
                                             <td>Conference title<br />Alternate journal title<br />Original title</td>
                                         </tr>
+                                        <tr>
+                                            <td>VL ***</td>
+                                            <td>Can be last part of journal title (T2)</td>
+                                        </tr>
                                     </tbody>
                                 </table>
                                 <p><i>*: the field OP can be a title variant or a journal variant.</i></p>
                                 <p><i>**: Conference titles in T3 are omitted.</i></p>
+                                <p><i>***: VL can be the last part of the T2 field
+                                        ("T2 - American journal of physiology" and "VL - Regulatory, integrative and
+                                        comparative physiology. 303").</i></p>
 
                                 <p><u><strong>Justification:</strong></u></p>
                                 <ul>
@@ -1458,13 +1466,13 @@
                                 </tr>
                                 <tr>
                                     <td>DedupEndNote</td>
-                                    <td align="right">225</td>
-                                    <td align="right">11</td>
-                                    <td align="right"><strong>95.3%</strong></td>
-                                    <td align="right">1177</td>
-                                    <td align="right">2</td>
-                                    <td align="right">99.8%</td>
-                                    <td align="right"><strong>99.1%</strong></td>
+                                    <td align="right">222</td>
+                                    <td align="right">6</td>
+                                    <td align="right"><strong>97.3%</strong></td>
+                                    <td align="right">1186</td>
+                                    <td align="right">1</td>
+                                    <td align="right">99.9%</td>
+                                    <td align="right"><strong>99.5%</strong></td>
                                 </tr>
                                 <tr>
                                     <td cellspan="9" style="height: 15px;"></td>
@@ -1492,13 +1500,13 @@
                                 </tr>
                                 <tr>
                                     <td>DedupEndNote</td>
-                                    <td align="right">763</td>
-                                    <td align="right">37</td>
-                                    <td align="right"><strong>95.4%</strong></td>
-                                    <td align="right">1184</td>
-                                    <td align="right">4</td>
-                                    <td align="right">99.7%</td>
-                                    <td align="right"><strong>97.9%</strong></td>
+                                    <td align="right">768</td>
+                                    <td align="right">18</td>
+                                    <td align="right"><strong>97.7%</strong></td>
+                                    <td align="right">1202</td>
+                                    <td align="right">0</td>
+                                    <td align="right"><strong>100.0%</strong></td>
+                                    <td align="right"><strong>99.0%</strong></td>
                                 </tr>
                                 <tr>
                                     <td cellspan="9" style="height: 15px;"></td>
@@ -1527,12 +1535,12 @@
                                 <tr>
                                     <td>DedupEndNote</td>
                                     <td align="right">497</td>
-                                    <td align="right">13</td>
-                                    <td align="right"><strong>97.4%</strong></td>
-                                    <td align="right">782</td>
+                                    <td align="right">8</td>
+                                    <td align="right"><strong>98.4%</strong></td>
+                                    <td align="right">787</td>
                                     <td align="right">0</td>
                                     <td align="right"><strong>100.0%</strong></td>
-                                    <td align="right"><strong>99.0%</strong></td>
+                                    <td align="right"><strong>99.4%</strong></td>
                                 </tr>
                                 <tr>
                                     <td cellspan="9" style="height: 15px;"></td>
@@ -1592,7 +1600,7 @@
                                     <td>Rayyan</td>
                                     <td align="right">2023</td>
                                     <td align="right">49</td>
-                                    <td align="right"><strong>97.6%</strong></td>
+                                    <td align="right">97.6%</td>
                                     <td align="right">1006</td>
                                     <td align="right">52</td>
                                     <td align="right">95.1%</td>
@@ -1600,27 +1608,27 @@
                                 </tr>
                                 <tr>
                                     <td>DedupEndNote</td>
-                                    <td align="right">2018</td>
-                                    <td align="right">56</td>
-                                    <td align="right">97.3%</td>
-                                    <td align="right">1056</td>
+                                    <td align="right">2023</td>
+                                    <td align="right">33</td>
+                                    <td align="right"><strong>98.4%</strong></td>
+                                    <td align="right">1074</td>
                                     <td align="right">0</td>
                                     <td align="right"><strong>100.0%</strong></td>
-                                    <td align="right"><strong>98.2%</strong></td>
+                                    <td align="right"><strong>98.9%</strong></td>
                                 </tr>
                                 <tr>
                                     <td cellspan="9" style="height: 15px;"></td>
                                 </tr>
                                 <tr>
-                                    <td>BIG_SET<br>(5078 rec)</td>
+                                    <td>BIG_SET<br>(5082 rec)</td>
                                     <td>DedupEndNote</td>
-                                    <td align="right">3937</td>
-                                    <td align="right">176</td>
-                                    <td align="right">95.7%</td>
-                                    <td align="right">959</td>
-                                    <td align="right">10</td>
-                                    <td align="right">99.0%</td>
-                                    <td align="right">96.3%</td>
+                                    <td align="right">3952</td>
+                                    <td align="right">92</td>
+                                    <td align="right">97.7%</td>
+                                    <td align="right">1030</td>
+                                    <td align="right">8</td>
+                                    <td align="right">99.2%</td>
+                                    <td align="right">98.0%</td>
                                 </tr>
                             </tbody>
                         </table>

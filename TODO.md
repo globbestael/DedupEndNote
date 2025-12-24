@@ -2,41 +2,58 @@
 
 ## Performance
 - if both are isSeveralPages = false, then use a higher threshold for authors and/or title?
-- if both are isSeveralPages = false, then do not use the reversed title?
-- if no pages, then do not use the reversed title?
-- FP because label is copied from the publication that is ***not*** the pivot: see comments in DeduplicationService::compareSet
-  e.g. BIG_SET 23819 - 13006, 24143 - 13006, ASySD_SRSR_Human 20282 - 36439
-+ Should "^review( article)?:" be removed from the title? 180 cases in All.txt
 - FP in BIG_SET for 8111 - 36423: 1. SP same, 2 Same because one AU is empty, NO 3 (TI comparison) because reply, 4 same Journal. One of PY = 0
-+ FN where id = dedupId must be changed from FN=true to FN=false (and TP=true) (and correction should be moved to dedup_id?)
-  This will cause a big change in the performance data
-  Is there a corollary change for FP?
-- NormalizationService::addTitleWithNormalization why is title a list instead of a set?
-  See ASySD_SRSR_Human 26854
-  - variation in the outcome reported by studies of interventions for atypical endometrial hyperplasia a systematic review the first step in the development of crukfunded core outcome sets, 
-  - variation in the outcome reported by studies of interventions for atypical endometrial hyperplasia, 
-  - systematic review the first step in the development of crukfunded core outcome sets, 
-  - variation in the outcome reported by studies of interventions for atypical endometrial hyperplasia a systematic review the first step in the development of crukfunded core outcome sets, 
-  - variation in the outcome reported by studies of interventions for atypical endometrial hyperplasia, 
-  - systematic review the first step in the development of crukfunded core outcome sets
-- TI normalization: 
-  - TI  - \d+[.:]\d* remove first part. Or should if there is a starting number, a second title without the number be added?
-  - TI  - Reprint( of)?
-  - TI  - .+(\(Reprinted.*$)
-  - TI  - .+(\(R\))
++ TI normalization: 
+  + TI  - \d+[.:]\d* remove first part. Or should if there is a starting number, a second title without the number be added?
+  + TI  - Reprint( of)?
+  + TI  - .+(\(Reprinted.*$)
+  + TI  - .+(\(R\))
+  - TI  - .+ et al: Does it make sense to split the title into 3 parts, and to remove the second part
+    - part 1
+    - part 2: " et al" with all text to the previous divider (start|.|:|...) an to the next divider (end||,|...)
+    - part 3 
+    Or maybe split all titles with " et al" by dividers, remove the parts with " et al", and join the rest with ": "
+  - TI  - Images in ...\. (hepatology|clinical medicine|...)| Image of interest|Image of the month
+  - TI from Psychological Abstracts / PsyCNFO(?) uses "-" for compounds AND between main title and subtitle (several examples in McKeown test file)
+    Psilocybin-assisted psychotherapy for dying cancer patients-Aiding the final trip
 - T2 normalization
   - t2  - [^(\r]+\d+$:  '(' for journals with "(Berlin 2002)". 
     See also: 
     - https://clinicaltrials.gov/show/NCT01326949
     - http://www.who.int/trialsearch/Trial2.aspx?TrialID=JPRN-UMIN000015319
     - Hepatology v70 suppl.1 2019
+      Should end be [\d ]+
     - Advances in Internal Medicine, Vol 42
     - PROCEEDINGS OF THE ASME INTERNATIONAL MECHANICAL ENGINEERING CONGRESS AND EXPOSITION, 2013, VOL 15
+      Should it be a while loop
+    - Non-Viral Vectors for Gene Therapy, Second Edition: Part 2
+    - NTP Research Report on Systematic Literature Review on the Effects of Fluoride on Learning and Memory in Animal Studies: Research Report 1
     - The number can be added from the VL field: "T2  - Schizophrenia Bulletin" and "VL  - 45 (Supplement 2)"
+  - Health Technology Assessment (Pubmed; "Health Technol Assess"[Journal]) don't accept 1 or Roman numeral as starting page
+ - T3: 
+   - how many cases are there with Alternative journal name as content? There are examples in BIG_SET for PsycINFO_OVID records
+     For WoS and PsycINFO chapters in a book within a series, the book title is T2, the book series is T3. Other databases often have only the
+     book series as "journal" (T2)
+     What is performance if this option is left out?
+     Can the presence/absence of an ISSN be used to distinguish original title from journal name? Probably not
+     Can the presence/absence of an ISBN be used to distinguish original title from journal name? Probably.
+     There is an attempt in IOService::readPublications for the T3 field to solve this, but this doesn't work very well for the McKeown test file.
+     However, that McKeown test file has problems (because the original RIS files weren't imported correctly?) See Github issue 53
 
+     The other test files(e.g. BIG_TEST) also have cases with T3. The sheer number of cases with Proceedings titles in T3, makes it difficult
+     to see the other cases:
+      - It looks as if T3 for original title was an old Medline rule (before the OT field???). Should that have any influence on the choices for 
+      DedupEndNote?
+      - The series title for book chapters is necessary? Especially for Scopus records?
+      - PsycINFO with name of journal predecessors complicates it
+- FP: in TIL_Zotero there is a case where both publications have a different DOI and in step 4b the ISSNs are compared, resulting in a FP.
+  - strangely enough 1-2 N, 1-3 Y, 1-4 Y, 1-5 Y, then 2-3 N, 2-4 N, both because 1. DOIs and starting pages are NOT the same,
+    then 2-5 YES with 1. Starting pages are the same, but for 2 "BSR20211218" and for 5 "BSR20211218C"
+  
 ## Spring Boot 4.0
 - see also https://docs.openrewrite.org/recipes/java/spring/boot4
 - OpenTelemetry: https://spring.io/blog/2025/11/18/opentelemetry-with-spring-boot
+- https://www.youtube.com/watch?v=ENpq2J5yQ8Y
 
 
 ## More and more recent test files?
@@ -44,10 +61,20 @@
 - Emma Wilson SynGAP: https://github.com/emma-wilson/syngap-sr/tree/main
 - bib-dedup: data files: https://github.com/CoLRev-Environment/bib-dedupe/tree/main/data These are files which are also used in our ValidationTest (ASYSD_*, SRA2_*)
 - dedupe-sweep: data files: https://github.com/IEBH/dedupe-sweep/tree/master/test
+- problems/Conference_papers_skateboarding_20251207.txt: Conference papers from Scopus on skateboarding. 325 records, 2233 duplicates removed/
+  How accurate is this given (1) this publication type and (2) most records are from the same database (that many duplicates? that many FP???)
+- McKeown_2021: how good is tghe quality of data
+  - what is the origin of the bibliographic errors: the bibliographic database, EndNote import filter used, ...
+- SRA2_Cytology_screening: most of the FNs are caused by bibliographic errors in the pages field. 
+  - what is the origin of the bibliographic errors: the bibliographic database, EndNote import filter used, ...
+    Can this be tested for the OVID Medline cases?
+    File / publications are quite old (2000-2012).
+
+
 
 ## Performance data
 - some (a lot?) of the false positives are also bibliographic errors / are caused by bibliographic errors 
-  (e.g. the DOIs are correct by the journal and pages are errors: you can also say that the data of a individual record are in conflict).
+  (e.g. the DOIs are correct but the journal and pages are errors: you can also say that the data of an individual record are in conflict).
   Should all the cases count as FP's / should there be subtypes: FP - real vs FP conflict?
 
   In the MS Access database it could be useful to have one or more fields for this information (bibliographic_error BOOLEAN, extra_information).

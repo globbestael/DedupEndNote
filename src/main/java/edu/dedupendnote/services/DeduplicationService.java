@@ -26,6 +26,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class DeduplicationService {
 
+	private final ComparisonService comparisonService;
+
 	private AuthorsComparisonService authorsComparisonService;
 	private final IOService ioService;
 	private final SimpMessagingTemplate simpMessagingTemplate;
@@ -87,10 +89,11 @@ public class DeduplicationService {
 	 */
 	// @formatter:on
 
-	public DeduplicationService(SimpMessagingTemplate simpMessagingTemplate) {
+	public DeduplicationService(SimpMessagingTemplate simpMessagingTemplate, ComparisonService comparisonService) {
 		this.simpMessagingTemplate = simpMessagingTemplate;
 		this.authorsComparisonService = new DefaultAuthorsComparisonService();
 		this.ioService = new IOService();
+		this.comparisonService = comparisonService;
 	}
 
 	public void compareSet(List<Publication> publications, Integer year, boolean descending, String wssessionId) {
@@ -111,41 +114,42 @@ public class DeduplicationService {
 		// Map<String, Boolean> map = new HashMap<>(Map.of("isSameDois", null));
 
 		while (publications.size() > 1) {
-			// In log messages this publication is called the pivot
-			Publication publication = publications.remove(0);
+			Publication pivot = publications.remove(0);
 			/*
 			 * If descending / OneFile mode: only publications of year1 should be compared to publications of year1 and year2.
 			 * The publications of year2 will be compared in the next pair of years.
 			 * If ascending / TwoFile mode: publicationYear 0 publications are at the head of the publicationList!
 			 */
-			if ((descending && publication.getPublicationYear() < year) || (!descending
-					&& publication.getPublicationYear() != 0 && publication.getPublicationYear() > year)) {
+			if ((descending && pivot.getPublicationYear() < year)
+					|| (!descending && pivot.getPublicationYear() != 0 && pivot.getPublicationYear() > year)) {
 				break;
 			}
 
-			for (Publication r : publications) {
+			for (Publication p : publications) {
 				map.put("isSameDois", null);
 				// log.atDebug().setMessage("Clear results previous comparison {}")
-				// .addArgument(() -> publication.getLogLines().removeAll(publication.getLogLines())).log();
+				// .addArgument(() -> pivot.getLogLines().removeAll(publication.getLogLines())).log();
 				if (log.isTraceEnabled()) {
-					log.trace("\nStarting comparison {} - {}", publication.getId(), r.getId());
+					log.trace("\nStarting comparison {} - {}", pivot.getId(), p.getId());
 				}
-				if (ComparisonService.compareStartPagesOrDois(r, publication, map)
-						&& authorsComparisonService.compare(r, publication)
-						&& ComparisonService.compareTitles(r, publication)
-						&& (ComparisonService.compareSameDois(r, publication, map.get("isSameDois"))
-								|| ComparisonService.compareIssns(r, publication, map.get("isSameDois"))
-								|| ComparisonService.compareJournals(r, publication, map.get("isSameDois")))) {
+				if (ComparisonService.compareStartPagesOrDois(p, pivot, map)
+						&& authorsComparisonService.compare(p, pivot) && ComparisonService.compareTitles(p, pivot)
+						&& (ComparisonService.compareSameDois(p, pivot, map.get("isSameDois"))
+								|| ComparisonService.compareIssns(p, pivot, map.get("isSameDois"))
+								|| ComparisonService.compareJournals(p, pivot, map.get("isSameDois")))) {
 
 					noOfDuplicates++;
 					// set the label
-					if (publication.getLabel() != null) {
-						// log.debug("=== pub {} gets label {} from pivot {}", r.getId(), publication.getLabel(),
-						// publication.getId());
-						r.setLabel(publication.getLabel());
-					} else if (r.getLabel() != null) {
+					if (pivot.getLabel() != null) {
+						// log.debug("=== pub {} gets label {} from pivot {}", r.getId(), pivot.getLabel(),
+						// pivot.getId());
+						p.setLabel(pivot.getLabel());
+					} else if (p.getLabel() != null) {
 						// @formatter:off
 						/**
+						 * THIS COPYING OF THE LABEL FROM THE PUBLICATION p TO THE PIVOT HAS BEEN DISABLED 
+						 * because it reduces the FPs at a smell cost of more FNs.
+						 * 
 						 * Labels can be promoted from a publication to the pivot without a label:
 						 * - in loop N with pivot V 
 						 *   - publication W is NOT seen as similar and gets no label
@@ -183,36 +187,33 @@ l						 * 		V 		W 		X
 						 * BIG_SET id set 10428, 10915, 22038, 38961 has some small changes in the order of the authors (last 3 with a
 						 * large number of group authors).
 						 * Without copy of label TO the pivot 10915 is NOT seen as a duplicate of 10428
-						 * 
-						 * THIS COPYING OF THE LABEL FROM THE PUBLICATION TO THE PIVOT HAS BEEN DISABLED 
-						 * because it reduces the FPs at a smell cost of more FNs
 						 */
 						// @formatter:on
-						// log.error("=== pub {} SETs label {} in pivot {}", r.getId(), r.getLabel(),
-						// publication.getId());
-						// publication.setLabel(r.getLabel());
+						// log.error("=== pub {} SETs label {} in pivot {}", p.getId(), p.getLabel(),
+						// pivot.getId());
+						// pivot.setLabel(p.getLabel());
 					} else {
 						// log.debug("=== Both pivot {} and pub {} get label {} from the publicationId of the pivot {}",
-						// publication.getId(), r.getId(), publication.getId(), publication.getId());
-						publication.setLabel(publication.getId());
-						r.setLabel(publication.getId());
+						// pivot.getId(), p.getId(), pivot.getId(), pivot.getId());
+						pivot.setLabel(pivot.getId());
+						p.setLabel(pivot.getId());
 					}
 
-					if (r.isReply()) {
-						publication.setReply(true);
+					if (p.isReply()) {
+						pivot.setReply(true);
 					} else {
-						if (r.getTitle() != null && publication.getTitle() == null) {
-							publication.setTitle(r.getTitle());
+						if (p.getTitle() != null && pivot.getTitle() == null) {
+							pivot.setTitle(p.getTitle());
 						}
 					}
 					if (log.isTraceEnabled()) {
-						log.trace("{} - {} ARE DUPLICATES", publication.getId(), r.getId());
+						log.trace("{} - {} ARE DUPLICATES", pivot.getId(), p.getId());
 					}
 				} else {
 					if (log.isTraceEnabled()) {
-						log.trace("{} - {} ARE NOT DUPLICATES", publication.getId(), r.getId());
+						log.trace("{} - {} ARE NOT DUPLICATES", pivot.getId(), p.getId());
 						// log.trace("Comparisons:\n"
-						// + publication.getLogLines().stream().collect(Collectors.joining("\n- ")));
+						// + pivot.getLogLines().stream().collect(Collectors.joining("\n- ")));
 					}
 				}
 			}

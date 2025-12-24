@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-DedupEndNoteApplication<DedupEndNote>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "edu.dedupendnote.DedupEndNoteApplication",
+            "projectName": "DedupEndNote",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}
