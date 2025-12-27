@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import org.apache.commons.text.similarity.JaroWinklerSimilarity;
@@ -112,9 +113,9 @@ class JaroWinklerJournalTest {
 		Publication p1 = new Publication();
 		IOService.addNormalizedJournal("Zhonghua wai ke za zhi [Chinese journal of surgery]", p1, "T2");
 
-		assertThat(p1.getJournals()).hasSize(2);
-		assertThat(p1.getJournals()).contains("Zhonghua wai ke za zhi");
-		assertThat(p1.getJournals()).contains("Chinese journal of surgery");
+		assertThat(p1.getJournals()).hasSize(3);
+		assertThat(p1.getJournals()).containsAll(Set.of("Zhonghua wai ke za zhi", "Chinese journal of surgery",
+				"Zhonghua wai ke za zhi Chinese journal of surgery"));
 	}
 
 	@Test
@@ -123,9 +124,10 @@ class JaroWinklerJournalTest {
 
 		IOService.addNormalizedJournal("[Rinsho ketsueki] The Japanese journal of clinical hematology", p1, "T2");
 
-		assertThat(p1.getJournals()).hasSize(2);
-		assertThat(p1.getJournals()).contains("Rinsho ketsueki");
-		assertThat(p1.getJournals()).contains("Japanese journal of clinical hematology");
+		assertThat(p1.getJournals()).hasSize(3);
+		// The variant with both parts has NOT removed the leading article of secons part
+		assertThat(p1.getJournals()).containsAll(Set.of("Rinsho ketsueki", "Japanese journal of clinical hematology",
+				"Rinsho ketsueki The Japanese journal of clinical hematology"));
 	}
 
 	static Stream<Arguments> slashArgumentProvider() {

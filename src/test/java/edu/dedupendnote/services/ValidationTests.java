@@ -145,20 +145,20 @@ class ValidationTests {
 		// @formatter:off
 		Map<String, ValidationResult> resultsMap = List
 				.of(
-					// checkResults_AI_subset(),
-					// checkResults_ASySD_Cardiac_human(),
-					// checkResults_ASySD_Diabetes(),
-					// checkResults_ASySD_Neuroimaging(),
-					// checkResults_ASySD_SRSR_Human(),
-					checkResults_BIG_SET()
-					// checkResults_Clinical_trials(),
-					// checkResults_McKeown_2021(),
-					// checkResults_SRA2_Cytology_screening(),
-					// checkResults_SRA2_Haematology(),
-					// checkResults_SRA2_Respiratory(),
-					// checkResults_SRA2_Stroke(),
-					// checkResults_TIL(),
-					// checkResults_TIL_Zotero()
+					checkResults_AI_subset(),
+					checkResults_ASySD_Cardiac_human(),
+					checkResults_ASySD_Diabetes(),
+					checkResults_ASySD_Neuroimaging(),
+					checkResults_ASySD_SRSR_Human(),
+					checkResults_BIG_SET(),
+					checkResults_Clinical_trials(),
+					checkResults_McKeown_2021(),
+					checkResults_SRA2_Cytology_screening(),
+					checkResults_SRA2_Haematology(),
+					checkResults_SRA2_Respiratory(),
+					checkResults_SRA2_Stroke(),
+					checkResults_TIL(),
+					checkResults_TIL_Zotero()
 				)
 				.stream().collect(Collectors.toMap(ValidationResult::getFileName, Function.identity(), (o1, o2) -> o1,
 						TreeMap::new));

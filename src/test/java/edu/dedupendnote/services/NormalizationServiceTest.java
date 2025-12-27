@@ -190,7 +190,7 @@ class NormalizationServiceTest {
 				arguments("Jbr-btr", "JBR BTR"),
 				arguments("Rofo", "Rofo"),
 				arguments("Gastro-Enterology", "Gastroenterology"),
-				arguments("Anatomical Record. Part A, Discoveries in Molecular, Cellular, & Evolutionary Biology", "aa"),
+				arguments("Anatomical Record. Part A, Discoveries in Molecular, Cellular, & Evolutionary Biology", "Anatomical Record Part A Discoveries in Molecular Cellular Evolutionary Biology"),
 				//	for these journals the titles are NOT normalized (IOService.skipNormalizationTitleFor)
 				arguments("Molecular Imaging and Contrast Agent Database (MICAD)", "Molecular Imaging and Contrast Agent Database"),
 				arguments("Natl Cancer Inst Carcinog Tech Rep Ser", "National Cancer Inst Carcinog Tech Rep Ser"),

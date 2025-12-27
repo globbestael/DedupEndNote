@@ -617,9 +617,11 @@ public class NormalizationService {
 	}
 
 	private static String clearPagesIfMonth(String pages) {
-		Matcher matcher = NormPatterns.PAGES_MONTH_PATTERN.matcher(pages);
-		while (matcher.find()) {
-			pages = null;
+		if (pages != null) {
+			Matcher matcher = NormPatterns.PAGES_MONTH_PATTERN.matcher(pages);
+			while (matcher.find()) {
+				pages = null;
+			}
 		}
 		return pages;
 	}

@@ -55,8 +55,7 @@ class JaroWinklerAuthorsTest extends AuthorsBaseTest {
 		Double similarity = authorsComparisonService.getSimilarity();
 
 		assertThat(similarity).as("\nAuthors1: %s\nAuthors2: %s", r1.getAllAuthors().get(0), r2.getAllAuthors().get(0))
-				// .isEqualTo(lowestAcceptedSimilarity, within(0.01))
-				.isEqualTo(highestSimilarity, within(0.01))
+				.isEqualTo(lowestAcceptedSimilarity, within(0.01))
 				.isGreaterThan(DefaultAuthorsComparisonService.AUTHOR_SIMILARITY_NO_REPLY);
 	}
 

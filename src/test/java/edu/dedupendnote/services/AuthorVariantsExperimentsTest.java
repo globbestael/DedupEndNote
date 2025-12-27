@@ -157,16 +157,12 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 	@Test
 	void compareSameNumberOfAuthorsTest() throws IOException {
 		List<Triple> triples = getValidatedAuthorsPairs();
+		triples.removeIf(t -> t.getAuthors1().isEmpty() || t.getAuthors2().isEmpty());
 		// triples.stream().limit(5).forEach(System.err::println);
 
 		for (Triple triple : triples) {
 			Publication r1 = fillPublication(triple.getAuthors1());
 			Publication r2 = fillPublication(triple.getAuthors2());
-
-			if (r1.getAllAuthors().isEmpty() || r2.getAllAuthors().isEmpty()) {
-				triples.remove(triple);
-				continue;
-			}
 
 			triple.setJws(getHighestSimilarityForAuthors(r1.getAllAuthors(), r2.getAllAuthors()));
 

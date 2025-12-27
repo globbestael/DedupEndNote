@@ -32,7 +32,7 @@ class AuthorExperimentsTests {
 	AuthorsComparisonService authorsComparisonService = new ExperimentalAuthorsComparator();
 
 	// @Autowired
-	private DeduplicationService expService = new DeduplicationService(simpMessagingTemplate);
+	private DeduplicationService expService = new DeduplicationService(simpMessagingTemplate, new ComparisonService());
 
 	String homeDir = System.getProperty("user.home");
 	String testdir = homeDir + "/dedupendnote_files";
