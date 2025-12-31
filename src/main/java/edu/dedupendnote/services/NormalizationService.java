@@ -516,9 +516,9 @@ public class NormalizationService {
 					pageEnd = null;
 				}
 			}
-			if ("".equals(pageStart)) {
+			if (pageStart.isBlank()) {
 				pageStart = pageEnd;
-				if ("".equals(pageStart)) {
+				if (pageStart != null && pageStart.isBlank()) {
 					pageStart = null;
 				}
 				pageEnd = null;
@@ -526,7 +526,9 @@ public class NormalizationService {
 				// pagesOutput = "";
 			} else if (pageStart.matches("[Vv]\\d+:\\d+")) {
 				pageStart = pageStart.replaceAll("[Vv]\\d+:(\\d)", "$1");
-				pageEnd = pageEnd.replaceAll("[Vv]\\d+:(\\d)", "$1");
+				if (pageEnd != null) {
+					pageEnd = pageEnd.replaceAll("[Vv]\\d+:(\\d)", "$1");
+				}
 				pagesOutput = originalPages;
 			} else if ((pageEnd != null && pageStart.length() >= pageEnd.length())
 					|| (resultMap.get(false).size() + resultMap.get(true).size() > 0)) {
@@ -670,9 +672,9 @@ public class NormalizationService {
 		if (page != null) {
 			page = page.replaceAll("[^\\d]", "");
 			page = page.replaceAll("^(0+)", "");
-		}
-		if ("".equals(page)) {
-			page = null;
+			if ("".equals(page)) {
+				page = null;
+			}
 		}
 		return page;
 	}

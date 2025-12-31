@@ -628,7 +628,7 @@ public class IOService {
 				}
 			}
 		} catch (IOException e) {
-            String message = String.format("IOException while writing deduplicated records to %s at line %d: %s", outputFileName, lineNumber, e.getMessage());
+            String message = "IOException while writing deduplicated records to %s at line %d: %s".formatted(outputFileName, lineNumber, e.getMessage());
             log.error(message, e);
             // Consider re-throwing the exception or handling it in another appropriate way
             throw new RuntimeException(message, e);

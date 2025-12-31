@@ -13,7 +13,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.5.9</version>
+		<version>4.0.1</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 
@@ -35,7 +35,7 @@
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-web</artifactId>
+			<artifactId>spring-boot-starter-webmvc</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -84,7 +84,7 @@
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
-			<groupId>com.fasterxml.jackson.dataformat</groupId>
+			<groupId>tools.jackson.dataformat</groupId>
 			<artifactId>jackson-dataformat-csv</artifactId>
 			<scope>test</scope>
 		</dependency>
@@ -147,13 +147,11 @@
 			<plugin>
 		        <groupId>org.openrewrite.maven</groupId>
 		        <artifactId>rewrite-maven-plugin</artifactId>
-		        <version>6.11.0</version>
+		        <version>6.26.0</version>
 				<configuration>
 					<exportDatatables>true</exportDatatables>
 					<activeRecipes>
-<!--						<recipe>org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_4</recipe>-->
-						<!-- recipe for spring boot 3.5 errors out (because it is the first recipe from io.moderne? -->
-						 <recipe>org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_5</recipe>
+						 <recipe>org.openrewrite.java.spring.boot4.UpgradeSpringBoot_4_0</recipe>
 					</activeRecipes>
 					<exclusions>
 						<exclusion>${project.basedir}/upload-dir/**</exclusion>
@@ -163,12 +161,7 @@
 		          <dependency>
 		            <groupId>org.openrewrite.recipe</groupId>
 		            <artifactId>rewrite-spring</artifactId>
-		            <version>6.8.2</version>
-		          </dependency>
-		          <dependency>
-		            <groupId>io.moderne.recipe</groupId>
-		            <artifactId>rewrite-spring</artifactId>
-		            <version>0.7.2</version>
+		            <version>6.21.0</version>
 		          </dependency>
 		        </dependencies>
 		      </plugin>
