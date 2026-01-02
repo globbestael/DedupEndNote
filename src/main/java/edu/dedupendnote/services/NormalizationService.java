@@ -13,6 +13,7 @@ import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 
 import org.apache.commons.text.StringEscapeUtils;
+import org.jspecify.annotations.Nullable;
 import org.springframework.util.StringUtils;
 
 import edu.dedupendnote.domain.AuthorRecord;
@@ -407,12 +408,14 @@ public class NormalizationService {
 			originalPages = c7Pages;
 			c7Pages = clearPagesIfMonth(c7Pages);
 			// Cases like "Pii s1386-6346(02)00029-3"
-			if (c7Pages.contains(" ")) {
-				c7Pages = null;
-			} else {
-				// a value like "10007431(2019)02-0126-07" (part of DOI) is changed to a number, which later sets
-				// isSeveralPages to true (which is most cases is true?).
-				c7Pages = c7Pages.replaceAll("\\D", "");
+			if (c7Pages != null) {
+				if (c7Pages.contains(" ")) {
+					c7Pages = null;
+				} else {
+					// a value like "10007431(2019)02-0126-07" (part of DOI) is changed to a number, which later sets
+					// isSeveralPages to true (which is most cases is true?).
+					c7Pages = c7Pages.replaceAll("\\D", "");
+				}
 			}
 			if (c7Pages != null && c7Pages.isBlank()) {
 				c7Pages = null;
@@ -484,15 +487,24 @@ public class NormalizationService {
 		// ("ii208-212"), combined Arabic+text ("S12-23", "CD123456". "67A-69A", text, ...)
 		Map<Boolean, List<String>> resultMap = pagesParts.stream()
 				.collect(Collectors.partitioningBy(p -> p.matches("[ivxlcmIVXLCM\\-]+")));
-
 		/*
+		 * Working with "resultMap.get(false).[function]()" and NullAway caused a lot of "derefenced expression ...is @Nullable" errors.
+		 * Splitting resultMap in 2 seperate Lists solved these errors.
+		 * Is this the problem mentioned in the NullAway wiki at https://github.com/uber/NullAway/wiki/Maps?
+		 * 
+		 * BTW: using these List romanPages and arabicPages makes the code a lot cleaner.
+		 */
+		List<String> romanPages = (List<String>) resultMap.getOrDefault(Boolean.TRUE, List.of());
+		List<String> arabicPages = (List<String>) resultMap.getOrDefault(Boolean.FALSE, List.of());
+		/*
+		 * FIXME: The following example is a bad example: replace!
 		 * Only the first of the pagesParts in the resultMap values will be used!
 		 * In "A relational approach to rehabilitation: Thinking about relationships after brain injury. xvi, 376"
 		 * the second part ("376") will be disregarded. 
 		 */
-		if (resultMap.get(false).isEmpty()) { // there are no Arabic numbers, possibly Roman numbers
-			if (!resultMap.get(true).isEmpty()) {
-				String[] parts = resultMap.get(true).removeFirst().split("-");
+		if (arabicPages.isEmpty()) { // there are no Arabic numbers, possibly Roman numbers
+			if (!romanPages.isEmpty()) {
+				String[] parts = romanPages.removeFirst().split("-");
 				try {
 					pageStart = String.valueOf(UtilitiesService.romanToArabic(parts[0]));
 					if (parts.length > 1) {
@@ -504,8 +516,8 @@ public class NormalizationService {
 					pagesOutput = originalPages;
 				}
 			}
-		} else if (!resultMap.get(false).isEmpty()) { // there are Arabic numbers
-			String first = resultMap.get(false).removeFirst();
+		} else if (!arabicPages.isEmpty()) { // there are Arabic numbers
+			String first = arabicPages.removeFirst();
 			String[] parts = first.split("-");
 			pageStart = parts[0];
 			if (parts.length > 1) {
@@ -531,7 +543,7 @@ public class NormalizationService {
 				}
 				pagesOutput = originalPages;
 			} else if ((pageEnd != null && pageStart.length() >= pageEnd.length())
-					|| (resultMap.get(false).size() + resultMap.get(true).size() > 0)) {
+					|| (!arabicPages.isEmpty() && !romanPages.isEmpty())) {
 				// The second OR above = there were other pageRanges than the current one
 				/*
 				 * The test on pagesOutput == null because for C7 field pagesOutput has already been set.
@@ -596,7 +608,7 @@ public class NormalizationService {
 		}
 
 		if (isSeveralPages == false) {
-			if (resultMap.get(true).size() + resultMap.get(false).size() > 0) {
+			if (!arabicPages.isEmpty() && !romanPages.isEmpty()) {
 				isSeveralPages = true;
 			}
 		}
@@ -611,14 +623,14 @@ public class NormalizationService {
 		return new PageRecord(originalPages, pageStart, pagesOutput, isSeveralPages);
 	}
 
-	private static String getLongPageEnd(String pageStart, String pageEnd) {
+	private static @Nullable String getLongPageEnd(String pageStart, @Nullable String pageEnd) {
 		if (pageEnd != null && pageStart.length() >= pageEnd.length()) {
 			pageEnd = pageStart.substring(0, pageStart.length() - pageEnd.length()) + pageEnd;
 		}
 		return pageEnd;
 	}
 
-	private static String clearPagesIfMonth(String pages) {
+	private static @Nullable String clearPagesIfMonth(@Nullable String pages) {
 		if (pages != null) {
 			Matcher matcher = NormPatterns.PAGES_MONTH_PATTERN.matcher(pages);
 			while (matcher.find()) {
@@ -628,7 +640,7 @@ public class NormalizationService {
 		return pages;
 	}
 
-	private static String initialPagesCleanup(String pages, String publicationId) {
+	private static @Nullable String initialPagesCleanup(String pages, String publicationId) {
 		// Cochrane uses hyphen characters instead of minus
 		pages = pages.replaceAll("[\\u2010\\u00ad]", "-");
 
@@ -648,7 +660,8 @@ public class NormalizationService {
 		return pages;
 	}
 
-	private static String composePagesOutput(String pageStart, String pageEnd, Map<Boolean, List<String>> resultMap) {
+	private static String composePagesOutput(@Nullable String pageStart, @Nullable String pageEnd,
+			Map<Boolean, List<String>> resultMap) {
 		List<String> pageRanges = new ArrayList<>();
 		// 1. add the Roman ranges first
 		pageRanges.addAll(resultMap.get(true));
@@ -668,7 +681,7 @@ public class NormalizationService {
 		return pageRanges.stream().collect(Collectors.joining("; "));
 	}
 
-	private static String cleanUpPage(String page) {
+	private static @Nullable String cleanUpPage(@Nullable String page) {
 		if (page != null) {
 			page = page.replaceAll("[^\\d]", "");
 			page = page.replaceAll("^(0+)", "");

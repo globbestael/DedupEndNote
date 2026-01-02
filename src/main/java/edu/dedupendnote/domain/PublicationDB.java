@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import org.jspecify.annotations.Nullable;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -21,10 +23,13 @@ import lombok.Data;
 		"issue", "pages", "article_number", "dois", "publ_type", "database", "number_authors" })
 public class PublicationDB {
 
+	@Nullable
 	Integer id;
 
+	@Nullable
 	Integer dedupid;
 
+	@Nullable
 	Integer correction;
 
 	boolean validated = false;
@@ -44,37 +49,51 @@ public class PublicationDB {
 	boolean unsolvable = false;
 
 	@JsonProperty("authors_truncated")
+	@Nullable
 	String authorsTruncated;
 
+	@Nullable
 	String authors;
 
 	@JsonProperty("publ_year")
+	@Nullable
 	Integer publYear;
 
 	@JsonProperty("title_truncated")
+	@Nullable
 	String titleTruncated;
 
+	@Nullable
 	String title;
 
+	@Nullable
 	String title2;
 
+	@Nullable
 	String volume;
 
+	@Nullable
 	String issue;
 
+	@Nullable
 	String pages;
 
 	@JsonProperty("article_number")
+	@Nullable
 	String articleNumber;
 
+	@Nullable
 	String dois;
 
 	@JsonProperty("publ_type")
+	@Nullable
 	String publType;
 
+	@Nullable
 	String database;
 
 	@JsonProperty("number_authors")
+	@Nullable
 	Integer numberAuthors;
 
 	@JsonIgnore
@@ -89,52 +108,18 @@ public class PublicationDB {
 
 	public String toDBLine() {
 		StringBuilder sb = new StringBuilder();
-		sb.append(id)
-			.append(TAB)
-			.append(dedupid != null ? dedupid : "")
-			.append(TAB)
-			.append(correction != null ? correction : "")
-			.append(TAB)
-			.append(validated)
-			.append(TAB)
-			.append(truePositive)
-			.append(TAB)
-			.append(trueNegative)
-			.append(TAB)
-			.append(falsePositive)
-			.append(TAB)
-			.append(falseNegative)
-			.append(TAB)
-			.append(unsolvable)
-			.append(TAB)
-			.append(Objects.toString(authorsTruncated, ""))
-			.append(TAB)
-			.append(Objects.toString(authors, ""))
-			.append(TAB)
-			.append(publYear != null && publYear > 0 ? publYear : "")
-			.append(TAB)
-			.append(Objects.toString(titleTruncated, ""))
-			.append(TAB)
-			.append(Objects.toString(title, ""))
-			.append(TAB)
-			.append(Objects.toString(title2, ""))
-			.append(TAB)
-			.append(Objects.toString(volume, ""))
-			.append(TAB)
-			.append(Objects.toString(issue, ""))
-			.append(TAB)
-			.append(Objects.toString(pages, ""))
-			.append(TAB)
-			.append(Objects.toString(articleNumber, ""))
-			.append(TAB)
-			.append(Objects.toString(dois, ""))
-			.append(TAB)
-			.append(Objects.toString(publType, ""))
-			.append(TAB)
-			.append(Objects.toString(database, ""))
-			.append(TAB)
-			.append(authorsList.size())
-			.append(NEWLINE);
+		sb.append(id).append(TAB).append(dedupid != null ? dedupid : "").append(TAB)
+				.append(correction != null ? correction : "").append(TAB).append(validated).append(TAB)
+				.append(truePositive).append(TAB).append(trueNegative).append(TAB).append(falsePositive).append(TAB)
+				.append(falseNegative).append(TAB).append(unsolvable).append(TAB)
+				.append(Objects.toString(authorsTruncated, "")).append(TAB).append(Objects.toString(authors, ""))
+				.append(TAB).append(publYear != null && publYear > 0 ? publYear : "").append(TAB)
+				.append(Objects.toString(titleTruncated, "")).append(TAB).append(Objects.toString(title, ""))
+				.append(TAB).append(Objects.toString(title2, "")).append(TAB).append(Objects.toString(volume, ""))
+				.append(TAB).append(Objects.toString(issue, "")).append(TAB).append(Objects.toString(pages, ""))
+				.append(TAB).append(Objects.toString(articleNumber, "")).append(TAB).append(Objects.toString(dois, ""))
+				.append(TAB).append(Objects.toString(publType, "")).append(TAB).append(Objects.toString(database, ""))
+				.append(TAB).append(authorsList.size()).append(NEWLINE);
 		return sb.toString();
 	}
 

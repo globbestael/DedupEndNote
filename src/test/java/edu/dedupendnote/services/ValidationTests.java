@@ -21,6 +21,8 @@ import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.fail;
+
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -169,7 +171,7 @@ class ValidationTests {
 		for (String setName : resultsMap.keySet()) {
 			ValidationResult v = validationResultsMap.get(setName);
 			ValidationResult c = resultsMap.get(setName);
-			if (c == null) {
+			if (v == null || c == null) {
 				continue; // easy when some checkResults_...() are commented out
 			}
 			if (v.getFn() == c.getFn() && v.getFp() == c.getFp() && v.getTn() == c.getTn() && v.getTp() == c.getTp()
@@ -199,7 +201,7 @@ class ValidationTests {
 		// assertThat(changed).isFalse();
 	}
 
-	private void printValidationResult(String setName, ValidationResult newV, ValidationResult oldV) {
+	private void printValidationResult(String setName, ValidationResult newV, @Nullable ValidationResult oldV) {
 		System.err.println(
 				"\nResults: " + setName + (oldV == null ? "" : ": HAS DIFFERENT RESULTS (first new, second old)"));
 		System.out.println(TABLE_HEADER);
@@ -294,20 +296,23 @@ class ValidationTests {
 		
 		for (PublicationDB t : truthRecords) {
 			PublicationDB v = validationMap.get(t.getId());
+			if (v == null) {
+				continue;
+			}
 			v.setValidated(t.isValidated());
 			v.setUnsolvable(t.isUnsolvable());
 			Integer tDedupId = t.getDedupid();
 			Integer vDedupId = v.getDedupid();
 			log.debug("Comparing {} with truth {} and validation {}", t.getId(), t.getDedupid(), v.getDedupid());
 			if (vDedupId == null) {
-				if (tDedupId == null || t.getId().equals(tDedupId)) {
+				if (tDedupId == null || (t.getId() != null && t.getId().equals(tDedupId))) {
 					v.setTrueNegative(true);
 					tns++;
 				} else {
 					v.setFalseNegative(true);
 					fns++;
 					v.setCorrection(tDedupId);
-					if (! t.getId().equals(tDedupId)) {
+					if (t.getId() != null && ! t.getId().equals(tDedupId)) {
 						List<Publication> pair = new ArrayList<>();
 						pair.add(publicationMap.get(t.getId().toString()));
 						pair.add(publicationMap.get(tDedupId.toString()));
@@ -322,7 +327,8 @@ class ValidationTests {
 						}
 					}
 				}
-			} else if ((trueDuplicateSets.containsKey(tDedupId) && trueDuplicateSets.get(tDedupId).contains(vDedupId)) || v.getId().equals(vDedupId)) {
+			} else if ((trueDuplicateSets.containsKey(tDedupId) && trueDuplicateSets.get(tDedupId).contains(vDedupId)) 
+						|| (v.getId() != null && v.getId().equals(vDedupId))) {
 				v.setTruePositive(true);
 				tps++;
 			} else {
@@ -331,7 +337,7 @@ class ValidationTests {
 				v.setCorrection(tDedupId);
 				errors.add("FALSE POSITIVES: \n- TRUTH " + t + "\n- CURRENT " + v + "\n");
 				fpErrors.put(v.getId(), vDedupId);
-				if (! v.getId().equals(vDedupId)) {
+				if (v.getId() != null &&  ! v.getId().equals(vDedupId)) {
 					List<Publication> pair = new ArrayList<>();
 					pair.add(publicationMap.get(v.getId().toString()));
 					pair.add(publicationMap.get(vDedupId.toString()));
@@ -349,7 +355,7 @@ class ValidationTests {
 		}
 		recordDBService.saveRecordDBs(publicationDBs, outputFileName);
 		long uniqueDuplicates = publicationDBs.stream()
-				.filter(r -> r.isTruePositive() == true && r.getDedupid().equals(r.getId()))
+				.filter(r -> r.isTruePositive() == true && r.getDedupid() != null && r.getDedupid().equals(r.getId()))
 				.count();
 
 		System.err.println("File " + setName +  " has unique duplicates: " + uniqueDuplicates);
@@ -807,7 +813,7 @@ class ValidationTests {
 		
 		publicationDBs.forEach(r -> {
 			Integer id = r.getId();
-			if (goldMap.get(id).size() == 1) {
+			if (goldMap.get(id) != null && goldMap.get(id).size() == 1) {
 				if (r.getDedupid() == null) {
 					r.setTrueNegative(true);
 				} else {
@@ -817,7 +823,7 @@ class ValidationTests {
 				if (r.getDedupid() == null) {
 					r.setFalseNegative(true);
 				} else {
-					if (goldMap.get(id).contains(id)) {
+					if (goldMap.get(id) != null && goldMap.get(id).contains(id)) {
 						r.setTruePositive(true);
 					}
 				}

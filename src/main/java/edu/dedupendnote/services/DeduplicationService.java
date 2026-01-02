@@ -13,6 +13,7 @@ import java.util.TreeMap;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.annotation.RequestScope;
@@ -110,7 +111,7 @@ public class DeduplicationService {
 		 * would short circuit when isSameDois == false (both publications have DOIs but they are different).
 		 * FPs didn't go down, however there were more FNs (especially with errors in DOIs)
 		 */
-		Map<String, Boolean> map = new HashMap<>();
+		Map<String, @Nullable Boolean> map = new HashMap<>();
 		// Map<String, Boolean> map = new HashMap<>(Map.of("isSameDois", null));
 
 		while (publications.size() > 1) {
@@ -329,7 +330,7 @@ l						 * 		V 		W 		X
 		return s;
 	}
 
-	public String doSanityChecks(List<Publication> publications, String fileName) {
+	public @Nullable String doSanityChecks(List<Publication> publications, String fileName) {
 		if (containsPublicationsWithoutId(publications)) {
 			return "ERROR: The input file " + fileName
 					+ " contains publications without IDs. The input file is not an Export as RIS-file from an EndNote library!";
@@ -479,13 +480,15 @@ l						 * 		V 		W 		X
 		// log.debug("YearSets: {}", yearSets.keySet().stream().sorted().toList());
 		yearSets.keySet().stream().forEach(year -> {
 			List<Publication> yearSet = yearSets.get(year);
-			if (emptyYearlist != null) {
-				yearSet.addAll(emptyYearlist.stream().filter(r -> r.getLabel() == null).toList());
+			if (yearSet != null) {
+				if (emptyYearlist != null) {
+					yearSet.addAll(emptyYearlist.stream().filter(r -> r.getLabel() == null).toList());
+				}
+				yearSet.addAll(yearSets.getOrDefault(year - 1, Collections.emptyList()));
+				wsMessage(wssessionId, "Working on " + year + " for " + yearSet.size() + " publications");
+				compareSet(yearSet, year, true, wssessionId);
+				wsMessage(wssessionId, "PROGRESS: " + cumulativePercentages.get(year));
 			}
-			yearSet.addAll(yearSets.getOrDefault(year - 1, Collections.emptyList()));
-			wsMessage(wssessionId, "Working on " + year + " for " + yearSet.size() + " publications");
-			compareSet(yearSet, year, true, wssessionId);
-			wsMessage(wssessionId, "PROGRESS: " + cumulativePercentages.get(year));
 		});
 	}
 

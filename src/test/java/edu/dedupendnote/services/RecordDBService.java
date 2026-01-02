@@ -33,7 +33,7 @@ public class RecordDBService {
 	 *
 	 * Alternative: can the value be set in @JSonPropertyOrder({...}), read from this @JSonPropertyOrder({...}) and be used here?
 	 */
-	private static List<String> dbFields = Arrays.asList("id", "dedupid", "correction", "validated", "true_pos",
+	private static List<String> DB_FIELDS = Arrays.asList("id", "dedupid", "correction", "validated", "true_pos",
 			"true_neg", "false_pos", "false_neg", "unsolvable", "authors_truncated", "authors", "publ_year",
 			"title_truncated", "title", "title2", "volume", "issue", "pages", "article_number", "dois", "publ_type",
 			"database", "number_authors");
@@ -49,7 +49,7 @@ public class RecordDBService {
 		outputFileName = outputFileName.replace("mark.", "markDB.");
 		log.debug("Start writing {} records to file {}", publicationDBs.size(), outputFileName);
 		try (BufferedWriter bw = new BufferedWriter(new FileWriter(outputFileName))) {
-			bw.write(dbFields.stream().collect(Collectors.joining("\t")) + "\n");
+			bw.write(DB_FIELDS.stream().collect(Collectors.joining("\t")) + "\n");
 			for (PublicationDB r : publicationDBs) {
 				writeRecordForDB(r, bw);
 			}
@@ -63,7 +63,8 @@ public class RecordDBService {
 	public List<PublicationDB> convertToRecordDB(List<Publication> publications, String inputFileName) {
 		boolean hasBom = UtilitiesService.detectBom(inputFileName);
 
-		Map<String, Publication> recordIdMap = publications.stream().filter(r -> !r.getId().startsWith("-"))
+		Map<String, Publication> recordIdMap = publications.stream()
+				.filter(r -> r.getId() != null && !r.getId().startsWith("-"))
 				.collect(Collectors.toMap(Publication::getId, Function.identity()));
 
 		List<PublicationDB> publicationDBs = new ArrayList<>();

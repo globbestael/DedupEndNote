@@ -8,6 +8,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.apache.commons.text.similarity.JaroWinklerSimilarity;
+import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Service;
 
 import edu.dedupendnote.domain.Publication;
@@ -26,11 +27,7 @@ public class ComparisonService {
 	/*
 	 * Compares the ISBNs or the ISSNs of 2 publications 
 	 */
-	public static boolean compareIssns(Publication r1, Publication r2, Boolean isSameDois) {
-		// if (Boolean.FALSE.equals(isSameDois)) {
-		// return false;
-		// }
-
+	public static boolean compareIssns(Publication r1, Publication r2, @Nullable Boolean isSameDois) {
 		if (!r1.getIsbns().isEmpty() && !r2.getIsbns().isEmpty()) {
 			if (UtilitiesService.setsContainSameString(r1.getIsbns(), r2.getIsbns())) {
 				log.trace("- 4. ISBNs are the same");
@@ -53,10 +50,7 @@ public class ComparisonService {
 		}
 	}
 
-	public static boolean compareJournals(Publication r1, Publication r2, Boolean isSameDois) {
-		// if (Boolean.FALSE.equals(isSameDois)) {
-		// return false;
-		// }
+	public static boolean compareJournals(Publication r1, Publication r2, @Nullable Boolean isSameDois) {
 		if (!r1.getIsbns().isEmpty() && !r2.getIsbns().isEmpty()) {
 			return false;
 		}
@@ -172,7 +166,7 @@ public class ComparisonService {
 	/*
 	 * Does NOT compare the DOIs of 2 publications, but the field map.isSameDois in the compareSet method
 	 */
-	public static boolean compareSameDois(Publication r1, Publication r2, Boolean isSameDois) {
+	public static boolean compareSameDois(Publication r1, Publication r2, @Nullable Boolean isSameDois) {
 		if (Boolean.TRUE.equals(isSameDois)) {
 			if (log.isTraceEnabled()) {
 				log.trace("- 4. DOIs are the same (ISSNs and Journals are NOT compared)");
@@ -185,7 +179,7 @@ public class ComparisonService {
 		return false;
 	}
 
-	public static boolean compareStartPagesOrDois(Publication r1, Publication r2, Map<String, Boolean> map) {
+	public static boolean compareStartPagesOrDois(Publication r1, Publication r2, Map<String, @Nullable Boolean> map) {
 		Set<String> dois1 = r1.getDois();
 		Set<String> dois2 = r2.getDois();
 		boolean bothCochrane = r1.isCochrane() && r2.isCochrane();
@@ -207,7 +201,8 @@ public class ComparisonService {
 						log.trace("- 1. DOIs are NOT the same for Cochrane");
 						return false;
 					}
-				} else if (sufficientStartPages && r1.getPageStart().equals(r2.getPageStart())) {
+				} else if (sufficientStartPages && r1.getPageStart() != null
+						&& r1.getPageStart().equals(r2.getPageStart())) {
 					log.trace("- 1. Starting pages are the same for Cochrane");
 					return true;
 				}
@@ -227,7 +222,7 @@ public class ComparisonService {
 					return true;
 				}
 			}
-			if (sufficientStartPages && r1.getPageStart().equals(r2.getPageStart())) {
+			if (sufficientStartPages && r1.getPageStart() != null && r1.getPageStart().equals(r2.getPageStart())) {
 				log.trace("- 1. Starting pages are the same for severalPages");
 				return true;
 			}
@@ -236,7 +231,7 @@ public class ComparisonService {
 		}
 
 		if (sufficientStartPages) {
-			if (r1.getPageStart().equals(r2.getPageStart())) {
+			if (r1.getPageStart() != null && r1.getPageStart().equals(r2.getPageStart())) {
 				log.trace("- 1. Starting pages are the same");
 				return true;
 			} else {

@@ -45,10 +45,14 @@ class AuthorsBaseTest extends BaseTest {
 		double jws = 0.0;
 		double expJws = 0.0;
 
+		Triple(String authors1, String authors2) {
+			this.authors1 = authors1;
+			this.authors2 = authors2;
+		}
+
 		public String toString() {
 			return "- " + authors1 + "\n- " + authors2 + "\n- " + jws + "\n";
 		}
-
 	}
 
 	// @formatter:off
@@ -105,10 +109,11 @@ class AuthorsBaseTest extends BaseTest {
 		Stream<String> lines = Files.lines(path);
 		lines.forEach(l -> {
 			String[] parts = l.split("\t");
-			Triple triple = new Triple();
+			if (parts.length != 2 || parts[0].isEmpty() || parts[1].isEmpty()) {
+				return;
+			}
+			Triple triple = new Triple(parts[0], parts[1]);
 			localTriples.add(triple);
-			triple.setAuthors1(parts[0]);
-			triple.setAuthors2(parts[1]);
 		});
 		lines.close();
 		log.error("There were {} triples", localTriples.size());

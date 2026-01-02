@@ -19,8 +19,15 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class DedupEndNoteApplication {
 
+	/*
+	 * The initialization of this variable via the @Value annototion by Spring is LATER than the statis NullAway check.
+	 * Must be solved by the @SuppresWarnings annotation?
+	 * 
+	 * We could hardcode the vallue from applications.properties here, but this value is also initialized in DedupEndNoteController.
+	 */
+	@SuppressWarnings("NullAway.Init") // necessary because of lazy / late initialization?
 	@Value("${upload-dir}")
-	private String uploadDir;
+	private String uploadDir; // = "upload-dir";
 
 	public static void main(String[] args) {
 		SpringApplication.run(DedupEndNoteApplication.class, args);

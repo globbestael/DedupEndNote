@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.SequencedSet;
 import java.util.Set;
 
+import org.jspecify.annotations.Nullable;
+
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
@@ -29,6 +31,7 @@ public class Publication {
 
 	private Set<String> dois = new HashSet<>();
 
+	@Nullable
 	private String id;
 
 	private Set<String> isbns = new HashSet<>();
@@ -42,6 +45,7 @@ public class Publication {
 	 * It is NOT the content of the Label (EndNote field LB) of the EndNote input file. 
 	 * If markMode is set, this field is exported. The original content of the Label field in the EndNote export file is overwritten in this case!
 	 */
+	@Nullable
 	private String label;
 
 	/*
@@ -50,14 +54,19 @@ public class Publication {
 	 * - if empty string: do not output any pages field
 	 * - else: use this field instead (typically the long form "102-118" instead of "102-18")
 	 */
+	@Nullable
 	private String pagesOutput;
+	@Nullable
 	private String pageStart;
+	@Nullable
 	private String pagesInput = null;
 
 	private Integer publicationYear = 0;
 
+	@Nullable
 	private String referenceType;
 
+	@Nullable
 	private String title; // only set for Reply-titles
 
 	/*

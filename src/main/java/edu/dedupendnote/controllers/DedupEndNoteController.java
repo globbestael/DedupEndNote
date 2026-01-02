@@ -32,6 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class DedupEndNoteController {
 
+	@SuppressWarnings("NullAway.Init") // necessary because of lazy / late initialization?
 	@Value("${upload-dir}")
 	private String uploadDir;
 

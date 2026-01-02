@@ -2,5 +2,7 @@ package edu.dedupendnote.domain;
 
 import java.util.List;
 
-public record TitleRecord(String originalTitle, List<String> titles) {
+import org.jspecify.annotations.Nullable;
+
+public record TitleRecord(@Nullable String originalTitle, List<String> titles) {
 }

@@ -1,4 +1,6 @@
 package edu.dedupendnote.domain;
 
-public record AuthorRecord(String author, String authorTransposed, boolean isAuthorTransposed) {
+import org.jspecify.annotations.Nullable;
+
+public record AuthorRecord(@Nullable String author, @Nullable String authorTransposed, boolean isAuthorTransposed) {
 }

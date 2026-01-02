@@ -74,6 +74,7 @@ class NormalizationServiceTest {
 		// @formatter:off
 		// String c7Input, String seInput, String spInput, String expectedPageStart, boolean expectedIsSeveralPages
 		return Stream.of(
+			// FIXME: Is this the result wanted? Why are both XVI and 376 not accepted?
 			arguments(null, null, "A relational approach to rehabilitation: Thinking about relationships after brain injury. xvi, 376", null, false),
 			arguments(null, null, null, null, false),
 			arguments(null, null, "22", "22", false),

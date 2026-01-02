@@ -40,7 +40,10 @@ public class TimingExtension
 	@Override
 	public void afterTestExecution(ExtensionContext context) throws Exception {
 		Method testMethod = context.getRequiredTestMethod();
-		long startTime = getStore(context).remove(START_TIME, long.class);
+		Long startTime = getStore(context).remove(START_TIME, long.class);
+		if (startTime == null) {
+			startTime = 0L;
+		}
 		long duration = System.currentTimeMillis() - startTime;
 
 		logger.info(() -> "Method [%s] took %s ms.".formatted(testMethod.getName(), duration));

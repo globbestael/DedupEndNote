@@ -36,6 +36,11 @@ class JournalsBaseTest extends BaseTest {
 		String journal2;
 		boolean similar = false;
 
+		Triple(String journal1, String journal2) {
+			this.journal1 = journal1;
+			this.journal2 = journal2;
+		}
+
 		public String toString() {
 			return "- " + journal1 + "\n- " + journal2 + "\n";
 		}
@@ -79,10 +84,11 @@ WHERE t1.title2 <> t2.title2
 		Stream<String> lines = Files.lines(path);
 		lines.forEach(l -> {
 			String[] parts = l.split("\t");
-			Triple triple = new Triple();
+			if (parts.length != 2 || parts[0].isEmpty() || parts[1].isEmpty()) {
+				return;
+			}
+			Triple triple = new Triple(parts[0], parts[1]);
 			localTriples.add(triple);
-			triple.setJournal1(parts[0]);
-			triple.setJournal2(parts[1]);
 		});
 		lines.close();
 		log.error("There were {} triples", localTriples.size());

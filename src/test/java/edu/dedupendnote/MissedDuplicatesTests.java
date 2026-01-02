@@ -39,7 +39,7 @@ class MissedDuplicatesTests extends BaseTest {
 	String testdir = homeDir + "/dedupendnote_files/";
 	String wssessionId = "";
 
-	static Logger logger = null;
+	//	static Logger logger = null;
 
 	List<Pattern> tracePatterns = List.of(Pattern.compile("- (1|2|3|4). .+"),
 			Pattern.compile("\\d+ - \\d+ ARE (NOT )?DUPLICATES"));

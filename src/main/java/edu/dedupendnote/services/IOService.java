@@ -18,6 +18,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Service;
 
 import edu.dedupendnote.domain.AuthorRecord;
@@ -439,7 +440,7 @@ public class IOService {
 						if (line.startsWith("http") && line.contains("//clinicaltrials.gov")) {
 							line = line.replace("http:", "https:");
 							publication.setClinicalTrialGov(true);
-							addNormalizedJournal(line, publication, fieldName);
+							addNormalizedJournal(line, publication, "UR");
 						}
 						break;
 					default:
@@ -488,7 +489,9 @@ public class IOService {
 			}
 		}
 
-		PageRecord normalizedPages = NormalizationService.normalizeInputPages(pagesInputMap, publication.getId());
+		String publicationId = (publication.getId() == null ? "0" : publication.getId());
+
+		PageRecord normalizedPages = NormalizationService.normalizeInputPages(pagesInputMap, publicationId);
 		publication.setPageStart(normalizedPages.pageStart());
 		publication.setPagesOutput(normalizedPages.pagesOutput());
 		publication.setSeveralPages(normalizedPages.isSeveralPages());
@@ -556,8 +559,9 @@ public class IOService {
 		List<Publication> recordsToKeep = publications.stream().filter(Publication::isKeptPublication).toList();
 		log.debug("Publications to be kept: {}", recordsToKeep.size());
 
-		Map<String, Publication> recordIdMap = publications.stream().filter(r -> !r.getId().startsWith("-"))
-				.collect(Collectors.toMap(Publication::getId, Function.identity()));
+		Map<String, Publication> recordIdMap = publications.stream()
+			.filter(p -> p.getId() != null && p.getId().startsWith("-"))
+			.collect(Collectors.toMap(Publication::getId, Function.identity()));
 
 		int numberWritten = 0;
 		int lineNumber = 0;
@@ -642,8 +646,9 @@ public class IOService {
 		List<Publication> recordsToKeep = publications.stream().filter(Publication::isKeptPublication).toList();
 		log.debug("Publications to be kept: {}", recordsToKeep.size());
 
-		Map<String, Publication> recordIdMap = publications.stream().filter(r -> !r.getId().startsWith("-"))
-				.collect(Collectors.toMap(Publication::getId, Function.identity()));
+		Map<String, Publication> recordIdMap = publications.stream()
+			.filter(p -> p.getId() != null && !p.getId().startsWith("-"))
+			.collect(Collectors.toMap(Publication::getId, Function.identity()));
 
 		int numberWritten = 0;
 		String fieldContent = null;
@@ -675,7 +680,9 @@ public class IOService {
 						phantomId++;
 						if (realId == null) {
 							publication = recordIdMap.get(phantomId.toString());
-							publication.setId(phantomId.toString());
+							if (publication != null) {
+								publication.setId(phantomId.toString());
+							}
 							map.put("ID", phantomId.toString());
 						}
 						if (publication != null && publication.isKeptPublication()) {
@@ -720,9 +727,9 @@ public class IOService {
 	 * Ordering of an EndNote export RIS file: the fields are ordered
 	 * alphabetically, except for TY (first), and ID and ER (last fields)
 	 */
-	private void writePublication(Map<String, String> map, Publication publication, BufferedWriter bw, boolean enhance)
+	private void writePublication(Map<String, String> map, @Nullable Publication publication, BufferedWriter bw, boolean enhance)
 			throws IOException {
-		if (enhance) {
+		if (enhance && publication != null) {
 			if (!publication.getDois().isEmpty()) {
 				map.put("DO", "https://doi.org/"
 						+ publication.getDois().stream().collect(Collectors.joining("\nhttps://doi.org/")));
@@ -838,8 +845,13 @@ public class IOService {
 							map.put(fieldName, fieldContent);
 							if (truthMap.containsKey(id)) {
 								if (truthMap.get(id).isTruePositive()) {
+									PublicationDB publicationDB = truthMap.get(id);
+									if (publicationDB.getDedupid() != null) {
+										map.put("LB", publicationDB.getDedupid().toString());
+									} else {
+										map.put("LB", "");
+									}
 									map.put("CA", "Duplicate");
-									map.put("LB", truthMap.get(id).getDedupid().toString());
 								} else {
 									map.remove("CA");
 									map.remove("LB");
@@ -907,14 +919,19 @@ public class IOService {
 							log.error("Writing {}", id);
 							map.put(fieldName, fieldContent);
 							if (truthMap.containsKey(id)) {
-								map.put("CA", map.get("CA").toUpperCase());
+								map.put("CA", map.getOrDefault("CA", "").toUpperCase());
 								if (truthMap.get(id).isTruePositive()) {
-									map.put("LB", truthMap.get(id).getDedupid().toString());
+									PublicationDB publicationDB = truthMap.get(id);
+									if (publicationDB.getDedupid() != null) {
+										map.put("LB", publicationDB.getDedupid().toString());
+									} else {
+										map.put("LB", "");
+									}
 								} else {
 									map.remove("LB");
 								}
 							} else {
-								map.put("CA", map.get("CA").toLowerCase());
+								map.put("CA", map.getOrDefault("CA", "").toLowerCase());
 							}
 							writePublication(map, null, bw, false);
 							numberWritten++;
@@ -948,7 +965,7 @@ public class IOService {
 	 * Tries to extract ArticleNumber (C7) from the DOI of Cochrane publication.
 	 * This function is only called if (1) isCochrane and (2) pagesInputMap is empty
 	 */
-	private static String getCochranePagesFromDoi(Publication publication) {
+	private static @Nullable String getCochranePagesFromDoi(Publication publication) {
 		String c7 = null;
 		log.debug("Reached Cochrane publication without pageStart, getting it from the DOIs: {}", publication.getAuthors());
 		for (String doi : publication.getDois()) {

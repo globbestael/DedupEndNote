@@ -1,4 +1,7 @@
 package edu.dedupendnote.domain;
 
-public record PageRecord(String originalPages, String pageStart, String pagesOutput, boolean isSeveralPages) {
+import org.jspecify.annotations.Nullable;
+
+public record PageRecord(@Nullable String originalPages, @Nullable String pageStart, @Nullable String pagesOutput,
+		boolean isSeveralPages) {
 }
