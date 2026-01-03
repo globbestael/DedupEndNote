@@ -534,7 +534,7 @@ public class NormalizationService {
 					pageStart = null;
 				}
 				pageEnd = null;
-				pagesOutput = composePagesOutput(pageStart, pageEnd, resultMap);
+				pagesOutput = composePagesOutput(pageStart, pageEnd, romanPages, arabicPages);
 				// pagesOutput = "";
 			} else if (pageStart.matches("[Vv]\\d+:\\d+")) {
 				pageStart = pageStart.replaceAll("[Vv]\\d+:(\\d)", "$1");
@@ -543,7 +543,7 @@ public class NormalizationService {
 				}
 				pagesOutput = originalPages;
 			} else if ((pageEnd != null && pageStart.length() >= pageEnd.length())
-					|| (!arabicPages.isEmpty() && !romanPages.isEmpty())) {
+					|| (!arabicPages.isEmpty() || !romanPages.isEmpty())) {
 				// The second OR above = there were other pageRanges than the current one
 				/*
 				 * The test on pagesOutput == null because for C7 field pagesOutput has already been set.
@@ -551,7 +551,7 @@ public class NormalizationService {
 				pageEnd = getLongPageEnd(pageStart, pageEnd);
 				if (pagesOutput == null) {
 					// if the whole pages string is the same pageStart - pageEnd, record the long form
-					pagesOutput = composePagesOutput(pageStart, pageEnd, resultMap);
+					pagesOutput = composePagesOutput(pageStart, pageEnd, romanPages, arabicPages);
 				}
 			}
 		} else {
@@ -608,7 +608,8 @@ public class NormalizationService {
 		}
 
 		if (isSeveralPages == false) {
-			if (!arabicPages.isEmpty() && !romanPages.isEmpty()) {
+			// The first part of one of them was removed. If there were more pages of the same kind or at least one of the other kind
+			if (!arabicPages.isEmpty() || !romanPages.isEmpty()) {
 				isSeveralPages = true;
 			}
 		}
@@ -661,10 +662,10 @@ public class NormalizationService {
 	}
 
 	private static String composePagesOutput(@Nullable String pageStart, @Nullable String pageEnd,
-			Map<Boolean, List<String>> resultMap) {
+			List<String> romanPages, List<String> arabicPages) {
 		List<String> pageRanges = new ArrayList<>();
 		// 1. add the Roman ranges first
-		pageRanges.addAll(resultMap.get(true));
+		pageRanges.addAll(romanPages);
 		// 2. add the first arabic pageStart (and pageEnd)
 		if (pageEnd == null) {
 			if (pageStart == null) {
@@ -676,7 +677,7 @@ public class NormalizationService {
 			pageRanges.add(pageStart + "-" + pageEnd);
 		}
 		// 3. add the other Arabic pages
-		pageRanges.addAll(resultMap.get(false));
+		pageRanges.addAll(arabicPages);
 
 		return pageRanges.stream().collect(Collectors.joining("; "));
 	}

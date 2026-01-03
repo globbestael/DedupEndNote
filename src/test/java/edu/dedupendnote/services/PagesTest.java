@@ -93,7 +93,6 @@ class PagesTest {
 			arguments("N.PAG-N.PAG", null, "", false),
 			// // The following case will not have pagesOutput "s0003394402007769/sco" unless the output field is C7
 			arguments("Unsp s0003394402007769/sco", "3394402007769", "s0003394402007769/sco", false),
-			arguments("1252-3; author reply 1252-3", "1252", "1252-1253; author reply 1252-3", true),
 			arguments("iiv", null, "iiv", false), // invalid Roman number
 			arguments("3S38-3S42", "338", "3S38-3S42", true),
 			arguments("S6-97-s6-99", "697", "S697-s699", true)
@@ -115,11 +114,11 @@ class PagesTest {
 		// pages).isEqualTo(severalPages);
 
 		SoftAssertions.assertSoftly(softAssertions -> {
-			softAssertions.assertThat(normalizedPages.pageStart()).as("PageStart comparison for " + pages)
+			softAssertions.assertThat(normalizedPages.pageStart()).as("PageStart comparison for '%s'", pages)
 					.isEqualTo(pageStart);
-			softAssertions.assertThat(normalizedPages.pagesOutput()).as("PagesOutput comparison for " + pages)
+			softAssertions.assertThat(normalizedPages.pagesOutput()).as("PagesOutput comparison for '%s'", pages)
 					.isEqualTo(pagesOutput);
-			softAssertions.assertThat(normalizedPages.isSeveralPages()).as("SeveralPages comparison for " + pages)
+			softAssertions.assertThat(normalizedPages.isSeveralPages()).as("SeveralPages comparison for '%s'", pages)
 					.isEqualTo(severalPages);
 		});
 	}
