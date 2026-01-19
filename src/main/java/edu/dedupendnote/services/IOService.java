@@ -560,7 +560,7 @@ public class IOService {
 		log.debug("Publications to be kept: {}", recordsToKeep.size());
 
 		Map<String, Publication> recordIdMap = publications.stream()
-			.filter(p -> p.getId() != null && p.getId().startsWith("-"))
+			.filter(p -> p.getId() != null && !p.getId().startsWith("-"))
 			.collect(Collectors.toMap(Publication::getId, Function.identity()));
 
 		int numberWritten = 0;
