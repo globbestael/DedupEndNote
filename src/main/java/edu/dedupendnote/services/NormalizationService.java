@@ -505,53 +505,57 @@ public class NormalizationService {
 		if (arabicPages.isEmpty()) { // there are no Arabic numbers, possibly Roman numbers
 			if (!romanPages.isEmpty()) {
 				String[] parts = romanPages.removeFirst().split("-");
-				try {
-					pageStart = String.valueOf(UtilitiesService.romanToArabic(parts[0]));
-					if (parts.length > 1) {
-						pageEnd = String.valueOf(UtilitiesService.romanToArabic(parts[1]));
+				if (parts.length > 0) {
+					try {
+						pageStart = String.valueOf(UtilitiesService.romanToArabic(parts[0]));
+						if (parts.length > 1) {
+							pageEnd = String.valueOf(UtilitiesService.romanToArabic(parts[1]));
+						}
+					} catch (java.lang.IllegalArgumentException e) {
+						pageStart = null;
+						pageEnd = null;
+						pagesOutput = originalPages;
 					}
-				} catch (java.lang.IllegalArgumentException e) {
-					pageStart = null;
-					pageEnd = null;
-					pagesOutput = originalPages;
 				}
 			}
 		} else if (!arabicPages.isEmpty()) { // there are Arabic numbers
 			String first = arabicPages.removeFirst();
 			String[] parts = first.split("-");
-			pageStart = parts[0];
-			if (parts.length > 1) {
-				pageEnd = parts[1];
-				pageStart = pageStart.replaceAll("^(0+|N\\.PAG)", "");
-				pageEnd = pageEnd.replaceAll("^(0+|N\\.PAG)", "");
-				if (pageEnd.isBlank()) {
+			if (parts.length > 0) {
+				pageStart = parts[0];
+				if (parts.length > 1) {
+					pageEnd = parts[1];
+					pageStart = pageStart.replaceAll("^(0+|N\\.PAG)", "");
+					pageEnd = pageEnd.replaceAll("^(0+|N\\.PAG)", "");
+					if (pageEnd.isBlank()) {
+						pageEnd = null;
+					}
+				}
+				if (pageStart.isBlank()) {
+					pageStart = pageEnd;
+					if (pageStart != null && pageStart.isBlank()) {
+						pageStart = null;
+					}
 					pageEnd = null;
-				}
-			}
-			if (pageStart.isBlank()) {
-				pageStart = pageEnd;
-				if (pageStart != null && pageStart.isBlank()) {
-					pageStart = null;
-				}
-				pageEnd = null;
-				pagesOutput = composePagesOutput(pageStart, pageEnd, romanPages, arabicPages);
-				// pagesOutput = "";
-			} else if (pageStart.matches("[Vv]\\d+:\\d+")) {
-				pageStart = pageStart.replaceAll("[Vv]\\d+:(\\d)", "$1");
-				if (pageEnd != null) {
-					pageEnd = pageEnd.replaceAll("[Vv]\\d+:(\\d)", "$1");
-				}
-				pagesOutput = originalPages;
-			} else if ((pageEnd != null && pageStart.length() >= pageEnd.length())
-					|| (!arabicPages.isEmpty() || !romanPages.isEmpty())) {
-				// The second OR above = there were other pageRanges than the current one
-				/*
-				 * The test on pagesOutput == null because for C7 field pagesOutput has already been set.
-				 */
-				pageEnd = getLongPageEnd(pageStart, pageEnd);
-				if (pagesOutput == null) {
-					// if the whole pages string is the same pageStart - pageEnd, record the long form
 					pagesOutput = composePagesOutput(pageStart, pageEnd, romanPages, arabicPages);
+					// pagesOutput = "";
+				} else if (pageStart.matches("[Vv]\\d+:\\d+")) {
+					pageStart = pageStart.replaceAll("[Vv]\\d+:(\\d)", "$1");
+					if (pageEnd != null) {
+						pageEnd = pageEnd.replaceAll("[Vv]\\d+:(\\d)", "$1");
+					}
+					pagesOutput = originalPages;
+				} else if ((pageEnd != null && pageStart.length() >= pageEnd.length())
+						|| (!arabicPages.isEmpty() || !romanPages.isEmpty())) {
+					// The second OR above = there were other pageRanges than the current one
+					/*
+					* The test on pagesOutput == null because for C7 field pagesOutput has already been set.
+					*/
+					pageEnd = getLongPageEnd(pageStart, pageEnd);
+					if (pagesOutput == null) {
+						// if the whole pages string is the same pageStart - pageEnd, record the long form
+						pagesOutput = composePagesOutput(pageStart, pageEnd, romanPages, arabicPages);
+					}
 				}
 			}
 		} else {
