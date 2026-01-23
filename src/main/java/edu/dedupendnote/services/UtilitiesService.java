@@ -31,7 +31,7 @@ public class UtilitiesService {
 		boolean hasBom = false;
 		try (BufferedReader br = new BufferedReader(new FileReader(inputFileName))) {
 			String line = br.readLine();
-			hasBom = line.startsWith("\uFEFF");
+			hasBom = line != null && line.startsWith("\uFEFF");
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

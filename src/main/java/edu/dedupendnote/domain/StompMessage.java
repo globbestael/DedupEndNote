@@ -1,5 +1,7 @@
 package edu.dedupendnote.domain;
 
+import org.jspecify.annotations.Nullable;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -7,6 +9,6 @@ import lombok.Data;
 @AllArgsConstructor
 public class StompMessage {
 
-	String name;
+	@Nullable String name;
 
 }
