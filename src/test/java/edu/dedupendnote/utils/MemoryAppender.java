@@ -27,12 +27,12 @@ public class MemoryAppender extends ListAppender<ILoggingEvent> {
 	}
 
 	public List<ILoggingEvent> search(String string) {
-		return this.list.stream().filter(event -> event.toString().contains(string)).collect(Collectors.toList());
+		return this.list.stream().filter(event -> event.toString().contains(string)).toList();
 	}
 
 	public List<ILoggingEvent> search(String string, Level level) {
 		return this.list.stream().filter(event -> event.toString().contains(string) && event.getLevel().equals(level))
-				.collect(Collectors.toList());
+				.toList();
 	}
 
 	public int getSize() {

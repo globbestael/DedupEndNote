@@ -1,7 +1,6 @@
 package edu.dedupendnote.services;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -484,7 +483,7 @@ l						 * 		V 		W 		X
 				if (emptyYearlist != null) {
 					yearSet.addAll(emptyYearlist.stream().filter(r -> r.getLabel() == null).toList());
 				}
-				yearSet.addAll(yearSets.getOrDefault(year - 1, Collections.emptyList()));
+				yearSet.addAll(yearSets.getOrDefault(year - 1, List.of()));
 				wsMessage(wssessionId, "Working on " + year + " for " + yearSet.size() + " publications");
 				compareSet(yearSet, year, true, wssessionId);
 				wsMessage(wssessionId, "PROGRESS: " + cumulativePercentages.get(year));
@@ -515,7 +514,7 @@ l						 * 		V 		W 		X
 				yearSet.addAll(emptyYearlist.stream().filter(r -> r.getLabel() == null).toList());
 			}
 			yearSet.addAll(yearSets.get(year));
-			yearSet.addAll(yearSets.getOrDefault(year + 1, Collections.emptyList()));
+			yearSet.addAll(yearSets.getOrDefault(year + 1, List.of()));
 			wsMessage(wssessionId, "Working on " + year + " for " + yearSet.size() + " publications");
 			compareSet(yearSet, year, false, wssessionId);
 			wsMessage(wssessionId, "PROGRESS: " + cumulativePercentages.get(year));

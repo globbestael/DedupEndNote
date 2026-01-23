@@ -3,6 +3,7 @@ package edu.dedupendnote.services;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
@@ -338,16 +339,16 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 		// double threshold = 0.85;
 		double threshold = DefaultAuthorsComparisonService.AUTHOR_SIMILARITY_NO_REPLY;
 
-		List<Triple> better = triples.stream().filter(t -> t.getJws() > threshold && t.getExpJws() <= threshold)
-				.collect(Collectors.toList());
+		List<Triple> better = new ArrayList<>(
+				triples.stream().filter(t -> t.getJws() > threshold && t.getExpJws() <= threshold).toList());
 		better.sort(new TripleComparatorDefault());
 
-		List<Triple> worse = triples.stream().filter(t -> t.getJws() <= threshold && t.getExpJws() > threshold)
-				.collect(Collectors.toList());
+		List<Triple> worse = new ArrayList<>(
+				triples.stream().filter(t -> t.getJws() <= threshold && t.getExpJws() > threshold).toList());
 		worse.sort(new TripleComparatorExperiment());
 
-		List<Triple> bothBelow = triples.stream().filter(t -> t.getJws() <= threshold && t.getExpJws() <= threshold)
-				.collect(Collectors.toList());
+		List<Triple> bothBelow = new ArrayList<>(
+				triples.stream().filter(t -> t.getJws() <= threshold && t.getExpJws() <= threshold).toList());
 		bothBelow.sort(new TripleComparatorDefault());
 
 		if (!onlySummary) {

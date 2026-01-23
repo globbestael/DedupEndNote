@@ -242,17 +242,10 @@ public class NormalizationService {
 			String isbnToAdd = null;
 			String issnToAdd = null;
 			switch (group.length()) {
-			case 8: // real ISSN
-				issnToAdd = group;
-				break;
-			case 10: // ISBN-10
-				isbnToAdd = group.substring(0, 9);
-				break;
-			case 13: // ISBN-13
-				isbnToAdd = group.substring(3, 12);
-				break;
-			default:
-				break;
+				case 8 -> issnToAdd = group;  // real ISSN
+				case 10 -> isbnToAdd = group.substring(0, 9);  // ISBN-10
+				case 13 -> isbnToAdd = group.substring(3, 12);  // ISBN-13
+				default -> { }
 			}
 			if (issnToAdd != null && !normalizedIssns.contains(issnToAdd)) {
 				normalizedIssns.add(issnToAdd);

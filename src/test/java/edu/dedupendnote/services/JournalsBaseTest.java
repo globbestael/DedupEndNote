@@ -8,7 +8,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import static java.util.function.Predicate.not;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeAll;
@@ -93,7 +92,7 @@ WHERE t1.title2 <> t2.title2
 		lines.close();
 		log.error("There were {} triples", localTriples.size());
 		// deduplicate
-		localTriples = localTriples.stream().distinct().collect(Collectors.toList());
+		localTriples = new ArrayList<>(localTriples.stream().distinct().toList());
 		log.error("There are {} triples", localTriples.size());
 
 		assertThat(localTriples).as("There are more than 100 journal pairs").hasSizeGreaterThan(100);
