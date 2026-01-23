@@ -19,7 +19,6 @@ import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 import edu.dedupendnote.BaseTest;
 import edu.dedupendnote.domain.Publication;
-import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -28,22 +27,20 @@ class JournalsBaseTest extends BaseTest {
 	String testdir = homeDir + "/dedupendnote_files";
 	List<Triple> localTriples = new ArrayList<>();
 
-	@Data
-	public class Triple {
+	public record Triple(String journal1, String journal2, boolean similar) {
 
-		String journal1;
-		String journal2;
-		boolean similar = false;
-
-		Triple(String journal1, String journal2) {
-			this.journal1 = journal1;
-			this.journal2 = journal2;
+		public Triple(String journal1, String journal2) {
+			this(journal1, journal2, false);
 		}
 
+		public Triple withSimilar(boolean similar) {
+			return new Triple(journal1, journal2, similar);
+		}
+
+		@Override
 		public String toString() {
 			return "- " + journal1 + "\n- " + journal2 + "\n";
 		}
-
 	}
 
 	// @formatter:off
@@ -113,19 +110,20 @@ WHERE t1.title2 <> t2.title2
 		List<Triple> triples = getValidatedJournalPairs();
 		// triples.stream().limit(5).forEach(System.err::println);
 
-		for (Triple triple : triples) {
+		for (int i = 0; i < triples.size(); i++) {
+			Triple triple = triples.get(i);
 			Publication p1 = new Publication();
-			IOService.addNormalizedJournal(triple.getJournal1(), p1, "T2");
+			IOService.addNormalizedJournal(triple.journal1(), p1, "T2");
 			Publication p2 = new Publication();
-			IOService.addNormalizedJournal(triple.getJournal2(), p2, "T2");
+			IOService.addNormalizedJournal(triple.journal2(), p2, "T2");
 
-			triple.setSimilar(ComparisonService.compareJournals(p1, p2, false));
+			triples.set(i, triple.withSimilar(ComparisonService.compareJournals(p1, p2, false)));
 		}
 
-		// triples.stream().filter(t -> t.isSimilar() == false).forEach(System.err::println);
-		// long numberMissed = triples.stream().filter(t -> t.isSimilar() == false).count();
-		triples.stream().filter(not(Triple::isSimilar)).forEach(System.err::println);
-		long numberMissed = triples.stream().filter(not(Triple::isSimilar)).count();
+		// triples.stream().filter(t -> t.similar() == false).forEach(System.err::println);
+		// long numberMissed = triples.stream().filter(t -> t.similar() == false).count();
+		triples.stream().filter(not(Triple::similar)).forEach(System.err::println);
+		long numberMissed = triples.stream().filter(not(Triple::similar)).count();
 
 		/*
 		 	20220528: started with 125 missed

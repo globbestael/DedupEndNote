@@ -46,19 +46,19 @@ class AuthorsComparisonThresholdTest extends AuthorsBaseTest {
 		List<Triple> filledTriples = new ArrayList<>();
 
 		for (Triple triple : triples) {
-			Publication r1 = fillPublication(triple.getAuthors1());
-			Publication r2 = fillPublication(triple.getAuthors2());
+			Publication r1 = fillPublication(triple.authors1());
+			Publication r2 = fillPublication(triple.authors2());
 			/*
 			 * Can't use DefaultAuthorsComparisonService::compare because it returns in the loop as soon as a JWS is above a threshold.
 			 * This JWS is the minimally accepted similarity, not the highest similarity of all authors pairs.
 			 */
-			triple.setJws(getHighestSimilarityForAuthors(r1.getAllAuthors(), r2.getAllAuthors()));
+			Triple updated = triple.withJws(getHighestSimilarityForAuthors(r1.getAllAuthors(), r2.getAllAuthors()));
 			if (!r1.getAllAuthors().isEmpty() && !r2.getAllAuthors().isEmpty()) {
-				filledTriples.add(triple);
+				filledTriples.add(updated);
 			}
 		}
 		// Show the 10 lowest JWS values
-		filledTriples.sort(Comparator.comparing(Triple::getJws));
+		filledTriples.sort(Comparator.comparing(Triple::jws));
 
 		// The VS Code debug console does not show UTF-8 characters correctly with System.err::println
 		// triples.stream().limit(10).forEach(System.err::println);
@@ -67,8 +67,8 @@ class AuthorsComparisonThresholdTest extends AuthorsBaseTest {
 		// Print the triples which are below the AUTHOR_SIMILARITY_NO_REPLY
 		log.error("Current threshold does not accept following pairs: ");
 		for (Triple triple : filledTriples) {
-			if (triple.jws < DefaultAuthorsComparisonService.AUTHOR_SIMILARITY_NO_REPLY) {
-				log.error("\n- {}\n- {}\n", triple.authors1, triple.authors2);
+			if (triple.jws() < DefaultAuthorsComparisonService.AUTHOR_SIMILARITY_NO_REPLY) {
+				log.error("\n- {}\n- {}\n", triple.authors1(), triple.authors2());
 			}
 		}
 
@@ -87,7 +87,7 @@ class AuthorsComparisonThresholdTest extends AuthorsBaseTest {
 		 * We know the current threshold is very forgiving, maybe too forgiving.
 		 * Does the authorComparison have any influence on the results?
 		 */
-		filledTriples.sort(Comparator.comparing(Triple::getJws).reversed());
+		filledTriples.sort(Comparator.comparing(Triple::jws).reversed());
 
 		/*
 		 * These percentiles are for the DIFFERENT author strings (SQL used DISTINCT)

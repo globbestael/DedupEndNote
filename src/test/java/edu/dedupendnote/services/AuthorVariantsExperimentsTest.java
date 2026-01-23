@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
 
@@ -27,6 +28,8 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
+	List<Triple> triples;
+	List<Triple> filledTriples = new ArrayList<>();
 
 	@BeforeAll
 	static void beforeAll() {
@@ -36,20 +39,25 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 		log.debug("Logging level set to INFO");
 	}
 
+	@BeforeEach
+	void before() throws IOException {
+		triples = getValidatedAuthorsPairs();
+		filledTriples.clear();
+	}
+
 	@Test
 	void compareAuthorsWithoutPreprocessingTest() throws IOException {
-		List<Triple> triples = getValidatedAuthorsPairs();
-		// triples.stream().limit(5).forEach(System.err::println);
 
 		for (Triple triple : triples) {
-			Publication r1 = fillPublication(triple.getAuthors1());
-			Publication r2 = fillPublication(triple.getAuthors2());
+			Publication r1 = fillPublication(triple.authors1());
+			Publication r2 = fillPublication(triple.authors2());
 
-			triple.setJws(getHighestSimilarityForAuthors(r1.getAllAuthors(), r2.getAllAuthors()));
+			triple = triple.withJws(getHighestSimilarityForAuthors(r1.getAllAuthors(), r2.getAllAuthors()));
 
-			r1 = fillPublicationAddAuthorsWithoutPreprocessing(triple.getAuthors1());
-			r2 = fillPublicationAddAuthorsWithoutPreprocessing(triple.getAuthors2());
-			triple.setExpJws(getHighestSimilarityForAuthors(r1.getAllAuthors(), r2.getAllAuthors()));
+			r1 = fillPublicationAddAuthorsWithoutPreprocessing(triple.authors1());
+			r2 = fillPublicationAddAuthorsWithoutPreprocessing(triple.authors2());
+			filledTriples
+					.add(triple.withExpJws(getHighestSimilarityForAuthors(r1.getAllAuthors(), r2.getAllAuthors())));
 		}
 		// @formatter:off
 		/*
@@ -61,7 +69,7 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 		 */
 		// @formatter:on
 
-		showTripleComparisonDetails("AuthorsWithoutPreprocessing", triples, true);
+		showTripleComparisonDetails("AuthorsWithoutPreprocessing", filledTriples, true);
 
 		assertThat(1).isEqualTo(1);
 	}
@@ -77,21 +85,20 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 	// @formatter:on
 	@Test
 	void compareAuthorsLimitedToFirstLettersTest() throws IOException {
-		List<Triple> triples = getValidatedAuthorsPairs();
-		// triples.stream().limit(5).forEach(System.err::println);
 
 		for (Triple triple : triples) {
-			Publication r1 = fillPublication(triple.getAuthors1());
-			Publication r2 = fillPublication(triple.getAuthors2());
+			Publication r1 = fillPublication(triple.authors1());
+			Publication r2 = fillPublication(triple.authors2());
 
-			triple.setJws(getHighestSimilarityForAuthors(r1.getAllAuthors(), r2.getAllAuthors()));
+			triple = triple.withJws(getHighestSimilarityForAuthors(r1.getAllAuthors(), r2.getAllAuthors()));
 
-			r1 = fillPublicationAddAuthorsLimitedToFirstLetters(triple.getAuthors1());
-			r2 = fillPublicationAddAuthorsLimitedToFirstLetters(triple.getAuthors2());
-			triple.setExpJws(getHighestSimilarityForAuthors(r1.getAllAuthors(), r2.getAllAuthors()));
+			r1 = fillPublicationAddAuthorsLimitedToFirstLetters(triple.authors1());
+			r2 = fillPublicationAddAuthorsLimitedToFirstLetters(triple.authors2());
+			filledTriples
+					.add(triple.withExpJws(getHighestSimilarityForAuthors(r1.getAllAuthors(), r2.getAllAuthors())));
 		}
 
-		showTripleComparisonDetails("AuthorsLimitedToFirstLetters", triples, false);
+		showTripleComparisonDetails("AuthorsLimitedToFirstLetters", filledTriples, false);
 
 		assertThat(1).isEqualTo(1);
 	}
@@ -102,21 +109,20 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 	 */
 	@Test
 	void compareAuthorsLimitedToFirstLetters_2_Test() throws IOException {
-		List<Triple> triples = getValidatedAuthorsPairs();
-		// triples.stream().limit(5).forEach(System.err::println);
 
 		for (Triple triple : triples) {
-			Publication r1 = fillPublication(triple.getAuthors1());
-			Publication r2 = fillPublication(triple.getAuthors2());
+			Publication r1 = fillPublication(triple.authors1());
+			Publication r2 = fillPublication(triple.authors2());
 
-			triple.setJws(getHighestSimilarityForAuthors(r1.getAllAuthors(), r2.getAllAuthors()));
+			triple = triple.withJws(getHighestSimilarityForAuthors(r1.getAllAuthors(), r2.getAllAuthors()));
 
-			r1 = fillPublicationAddAuthorsLimitedToFirstLetters_2(triple.getAuthors1());
-			r2 = fillPublicationAddAuthorsLimitedToFirstLetters_2(triple.getAuthors2());
-			triple.setExpJws(getHighestSimilarityForAuthors(r1.getAllAuthors(), r2.getAllAuthors()));
+			r1 = fillPublicationAddAuthorsLimitedToFirstLetters_2(triple.authors1());
+			r2 = fillPublicationAddAuthorsLimitedToFirstLetters_2(triple.authors2());
+			filledTriples
+					.add(triple.withExpJws(getHighestSimilarityForAuthors(r1.getAllAuthors(), r2.getAllAuthors())));
 		}
 
-		showTripleComparisonDetails("AuthorsLimitedToFirstLetters_2", triples, false);
+		showTripleComparisonDetails("AuthorsLimitedToFirstLetters_2", filledTriples, false);
 
 		assertThat(1).isEqualTo(1);
 	}
@@ -157,28 +163,27 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 	// @formatter:on
 	@Test
 	void compareSameNumberOfAuthorsTest() throws IOException {
-		List<Triple> triples = getValidatedAuthorsPairs();
-		triples.removeIf(t -> t.getAuthors1().isEmpty() || t.getAuthors2().isEmpty());
-		// triples.stream().limit(5).forEach(System.err::println);
+		triples.removeIf(t -> t.authors1().isEmpty() || t.authors2().isEmpty());
 
 		for (Triple triple : triples) {
-			Publication r1 = fillPublication(triple.getAuthors1());
-			Publication r2 = fillPublication(triple.getAuthors2());
+			Publication r1 = fillPublication(triple.authors1());
+			Publication r2 = fillPublication(triple.authors2());
 
-			triple.setJws(getHighestSimilarityForAuthors(r1.getAllAuthors(), r2.getAllAuthors()));
+			triple = triple.withJws(getHighestSimilarityForAuthors(r1.getAllAuthors(), r2.getAllAuthors()));
 
-			List<String> authorList1 = Arrays.asList(triple.getAuthors1().split("; "));
-			List<String> authorList2 = Arrays.asList(triple.getAuthors2().split("; "));
+			List<String> authorList1 = Arrays.asList(triple.authors1().split("; "));
+			List<String> authorList2 = Arrays.asList(triple.authors2().split("; "));
 			int min = Math.min(authorList1.size(), authorList2.size());
 
 			// r1 = fillPublication(authorList1.subList(0, min).stream().collect(Collectors.joining("; ")));
 			// r2 = fillPublication(authorList2.subList(0, min).stream().collect(Collectors.joining("; ")));
 			r1 = fillPublication(authorList1.stream().limit(min).collect(Collectors.joining("; ")));
 			r2 = fillPublication(authorList2.stream().limit(min).collect(Collectors.joining("; ")));
-			triple.setExpJws(getHighestSimilarityForAuthors(r1.getAllAuthors(), r2.getAllAuthors()));
+			filledTriples
+					.add(triple.withExpJws(getHighestSimilarityForAuthors(r1.getAllAuthors(), r2.getAllAuthors())));
 		}
 
-		showTripleComparisonDetails("compareSameNumberOfAuthors", triples, false);
+		showTripleComparisonDetails("compareSameNumberOfAuthors", filledTriples, false);
 
 		assertThat(1).isEqualTo(1);
 	}
@@ -198,31 +203,30 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 	// @formatter:on
 	@Test
 	void compareOnlyFirst10AuthorsTest() throws IOException {
-		List<Triple> triples = getValidatedAuthorsPairs();
 		int limit = 10;
-		// triples.stream().limit(5).forEach(System.err::println);
 
 		for (Triple triple : triples) {
-			Publication r1 = fillPublication(triple.getAuthors1());
-			Publication r2 = fillPublication(triple.getAuthors2());
+			Publication r1 = fillPublication(triple.authors1());
+			Publication r2 = fillPublication(triple.authors2());
 
-			triple.setJws(getHighestSimilarityForAuthors(r1.getAllAuthors(), r2.getAllAuthors()));
+			triple = triple.withJws(getHighestSimilarityForAuthors(r1.getAllAuthors(), r2.getAllAuthors()));
 
-			List<String> authorList1 = Arrays.asList(triple.getAuthors1().split("; "));
+			List<String> authorList1 = Arrays.asList(triple.authors1().split("; "));
 			if (authorList1.size() > limit) {
 				authorList1 = authorList1.subList(0, limit);
 			}
-			List<String> authorList2 = Arrays.asList(triple.getAuthors2().split("; "));
+			List<String> authorList2 = Arrays.asList(triple.authors2().split("; "));
 			if (authorList2.size() > limit) {
 				authorList2 = authorList2.subList(0, limit);
 			}
 
 			r1 = fillPublication(authorList1.stream().collect(Collectors.joining("; ")));
 			r2 = fillPublication(authorList2.stream().collect(Collectors.joining("; ")));
-			triple.setExpJws(getHighestSimilarityForAuthors(r1.getAllAuthors(), r2.getAllAuthors()));
+			filledTriples
+					.add(triple.withExpJws(getHighestSimilarityForAuthors(r1.getAllAuthors(), r2.getAllAuthors())));
 		}
 
-		showTripleComparisonDetails("compareOnlyFirst10Authors", triples, true);
+		showTripleComparisonDetails("compareOnlyFirst10Authors", filledTriples, true);
 
 		assertThat(1).isEqualTo(1);
 	}
@@ -242,31 +246,30 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 	// @formatter:on
 	@Test
 	void compareOnlyFirst5AuthorsTest() throws IOException {
-		List<Triple> triples = getValidatedAuthorsPairs();
 		int limit = 5;
-		// triples.stream().limit(5).forEach(System.err::println);
 
 		for (Triple triple : triples) {
-			Publication r1 = fillPublication(triple.getAuthors1());
-			Publication r2 = fillPublication(triple.getAuthors2());
+			Publication r1 = fillPublication(triple.authors1());
+			Publication r2 = fillPublication(triple.authors2());
 
-			triple.setJws(getHighestSimilarityForAuthors(r1.getAllAuthors(), r2.getAllAuthors()));
+			triple = triple.withJws(getHighestSimilarityForAuthors(r1.getAllAuthors(), r2.getAllAuthors()));
 
-			List<String> authorList1 = Arrays.asList(triple.getAuthors1().split("; "));
+			List<String> authorList1 = Arrays.asList(triple.authors1().split("; "));
 			if (authorList1.size() > limit) {
 				authorList1 = authorList1.subList(0, limit);
 			}
-			List<String> authorList2 = Arrays.asList(triple.getAuthors2().split("; "));
+			List<String> authorList2 = Arrays.asList(triple.authors2().split("; "));
 			if (authorList2.size() > limit) {
 				authorList2 = authorList2.subList(0, limit);
 			}
 
 			r1 = fillPublication(authorList1.stream().collect(Collectors.joining("; ")));
 			r2 = fillPublication(authorList2.stream().collect(Collectors.joining("; ")));
-			triple.setExpJws(getHighestSimilarityForAuthors(r1.getAllAuthors(), r2.getAllAuthors()));
+			filledTriples
+					.add(triple.withExpJws(getHighestSimilarityForAuthors(r1.getAllAuthors(), r2.getAllAuthors())));
 		}
 
-		showTripleComparisonDetails("compareOnlyFirst5Authors", triples, false);
+		showTripleComparisonDetails("compareOnlyFirst5Authors", filledTriples, false);
 
 		assertThat(1).isEqualTo(1);
 	}
@@ -313,26 +316,24 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 	class TripleComparatorDefault implements Comparator<Triple> {
 
 		public int compare(Triple a, Triple b) {
-			Double diff1 = a.getJws() - a.getExpJws();
-			Double diff2 = b.getJws() - b.getExpJws();
+			Double diff1 = a.jws() - a.expJws();
+			Double diff2 = b.jws() - b.expJws();
 			return diff2.compareTo(diff1);
 		}
-
 	}
 
 	class TripleComparatorExperiment implements Comparator<Triple> {
 
 		public int compare(Triple a, Triple b) {
-			Double diff1 = a.getJws() - a.getExpJws();
-			Double diff2 = b.getJws() - b.getExpJws();
+			Double diff1 = a.jws() - a.expJws();
+			Double diff2 = b.jws() - b.expJws();
 			return diff1.compareTo(diff2);
 		}
-
 	}
 
 	private String showTripleComparison(Triple t) {
-		return "JWS %.2f vs %.2f (%.2f):\n- %s\n- %s".formatted(t.getJws(), t.getExpJws(), t.getJws() - t.getExpJws(),
-				t.getAuthors1(), t.getAuthors2());
+		return "JWS %.2f vs %.2f (%.2f):\n- %s\n- %s".formatted(t.jws(), t.expJws(), t.jws() - t.expJws(), t.authors1(),
+				t.authors2());
 	}
 
 	private void showTripleComparisonDetails(String nameExperiment, List<Triple> triples, boolean onlySummary) {
@@ -340,15 +341,15 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 		double threshold = DefaultAuthorsComparisonService.AUTHOR_SIMILARITY_NO_REPLY;
 
 		List<Triple> better = new ArrayList<>(
-				triples.stream().filter(t -> t.getJws() > threshold && t.getExpJws() <= threshold).toList());
+				triples.stream().filter(t -> t.jws() > threshold && t.expJws() <= threshold).toList());
 		better.sort(new TripleComparatorDefault());
 
 		List<Triple> worse = new ArrayList<>(
-				triples.stream().filter(t -> t.getJws() <= threshold && t.getExpJws() > threshold).toList());
+				triples.stream().filter(t -> t.jws() <= threshold && t.expJws() > threshold).toList());
 		worse.sort(new TripleComparatorExperiment());
 
 		List<Triple> bothBelow = new ArrayList<>(
-				triples.stream().filter(t -> t.getJws() <= threshold && t.getExpJws() <= threshold).toList());
+				triples.stream().filter(t -> t.jws() <= threshold && t.expJws() <= threshold).toList());
 		bothBelow.sort(new TripleComparatorDefault());
 
 		if (!onlySummary) {
@@ -379,10 +380,10 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 				better.size(), better.size() * 100.0 / triples.size(), worse.size(),
 				worse.size() * 100.0 / triples.size(), bothBelow.size(), bothBelow.size() * 100.0 / triples.size()));
 		System.err.println("--------------------------------------------------------------------");
-		triples.sort(Comparator.comparing(Triple::getJws).reversed());
+		triples.sort(Comparator.comparing(Triple::jws).reversed());
 		double default98 = percentile(triples, 98);
 		double default99 = percentile(triples, 99);
-		triples.sort(Comparator.comparing(Triple::getExpJws).reversed());
+		triples.sort(Comparator.comparing(Triple::expJws).reversed());
 		double exp98 = expPercentile(triples, 98);
 		double exp99 = expPercentile(triples, 99);
 		System.err.println("98th percentile for default at %2.2f, for experiment at %2.2f: experiment wins? %b"

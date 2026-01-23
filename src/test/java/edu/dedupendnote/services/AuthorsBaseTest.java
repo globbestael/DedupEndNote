@@ -13,7 +13,6 @@ import org.junit.jupiter.api.Test;
 
 import edu.dedupendnote.BaseTest;
 import edu.dedupendnote.domain.Publication;
-import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -36,19 +35,21 @@ class AuthorsBaseTest extends BaseTest {
 		return publication;
 	}
 
-	@Data
-	public class Triple {
+	public record Triple(String authors1, String authors2, double jws, double expJws) {
 
-		String authors1;
-		String authors2;
-		double jws = 0.0;
-		double expJws = 0.0;
-
-		Triple(String authors1, String authors2) {
-			this.authors1 = authors1;
-			this.authors2 = authors2;
+		public Triple(String authors1, String authors2) {
+			this(authors1, authors2, 0.0, 0.0);
 		}
 
+		public Triple withJws(double jws) {
+			return new Triple(authors1, authors2, jws, expJws);
+		}
+
+		public Triple withExpJws(double expJws) {
+			return new Triple(authors1, authors2, jws, expJws);
+		}
+
+		@Override
 		public String toString() {
 			return "- " + authors1 + "\n- " + authors2 + "\n- " + jws + "\n";
 		}
@@ -125,20 +126,20 @@ class AuthorsBaseTest extends BaseTest {
 		return localTriples;
 	}
 
-	// Assumes that triples are sorted on getJws() descending
+	// Assumes that triples are sorted on jws() descending
 	protected static double percentile(List<Triple> triples, double percentile) {
-		assertThat(triples.get(0).getJws()).as("The triples are sorted on getJws() descending")
-				.isGreaterThan(triples.get(triples.size() - 1).getJws());
+		assertThat(triples.get(0).jws()).as("The triples are sorted on jws() descending")
+				.isGreaterThan(triples.get(triples.size() - 1).jws());
 		int index = (int) Math.ceil(percentile / 100.0 * triples.size());
-		return triples.get(index - 1).getJws();
+		return triples.get(index - 1).jws();
 	}
 
-	// Assumes that triples are sorted on getExpJws() descending
+	// Assumes that triples are sorted on expJws() descending
 	protected static double expPercentile(List<Triple> triples, double percentile) {
-		assertThat(triples.get(0).getExpJws()).as("The triples are sorted on getExpJws() descending")
-				.isGreaterThan(triples.get(triples.size() - 1).getExpJws());
+		assertThat(triples.get(0).expJws()).as("The triples are sorted on expJws() descending")
+				.isGreaterThan(triples.get(triples.size() - 1).expJws());
 		int index = (int) Math.ceil(percentile / 100.0 * triples.size());
-		return triples.get(index - 1).getExpJws();
+		return triples.get(index - 1).expJws();
 	}
 
 }
