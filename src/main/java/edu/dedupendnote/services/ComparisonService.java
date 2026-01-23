@@ -85,7 +85,10 @@ public class ComparisonService {
 					log.trace("- 4. Journal similarity ({}) above treshold (not reply)", similarity);
 					return true;
 				}
-
+				/*
+					Claude analysis of Jspecify and NullAway has a minor issue with these charAt() calls. However the Sert<String> journals
+					cannot contain null Strings.
+				 */
 				if (s1.toLowerCase().charAt(0) != s2.toLowerCase().charAt(0)) {
 					continue;
 				}
