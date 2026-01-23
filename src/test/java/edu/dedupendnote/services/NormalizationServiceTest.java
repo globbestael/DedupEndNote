@@ -152,6 +152,8 @@ class NormalizationServiceTest {
 			arguments(null, null, "BSR20211218C", "20211218", false),
 			// only the first of the pageranges is used, not the second ("376")
 			arguments(null, null, "A relational approach to rehabilitation. xvi, 376", null, false),
+			arguments(null, "-",null, null, false),
+			arguments(null, "-;",null, null, false),
 			
 			arguments(null, "", null, null, false),
 
