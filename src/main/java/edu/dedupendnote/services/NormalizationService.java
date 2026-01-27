@@ -242,10 +242,11 @@ public class NormalizationService {
 			String isbnToAdd = null;
 			String issnToAdd = null;
 			switch (group.length()) {
-				case 8 -> issnToAdd = group;  // real ISSN
-				case 10 -> isbnToAdd = group.substring(0, 9);  // ISBN-10
-				case 13 -> isbnToAdd = group.substring(3, 12);  // ISBN-13
-				default -> { }
+			case 8 -> issnToAdd = group; // real ISSN
+			case 10 -> isbnToAdd = group.substring(0, 9); // ISBN-10
+			case 13 -> isbnToAdd = group.substring(3, 12); // ISBN-13
+			default -> {
+			}
 			}
 			if (issnToAdd != null && !normalizedIssns.contains(issnToAdd)) {
 				normalizedIssns.add(issnToAdd);
@@ -978,8 +979,10 @@ public class NormalizationService {
 	}
 
 	public static String normalizeHyphensAndWhitespace(String s) {
-		// replace HYPHEN with HYPHEN-MINUS
-		s = s.replaceAll("\u2010", "\u002D");
+		// standardize / replace HYPHENs (Unicode Dash Punctuation, not Hyphen!) to HYPHEN-MINUS
+		// https://www.unicode.org/reports/tr44/#Dash
+		// https://www.compart.com/en/unicode/category/Pd
+		s = s.replaceAll("\\p{Pd}", "\u002D");
 		// remove THIN SPACE. Some databases use THIN SPACE within "30 mg", others use no character
 		s = s.replaceAll("\u2009", "");
 		s = NormPatterns.UNUSUAL_WHITESPACE_PATTERN.matcher(s).replaceAll(" ");
