@@ -706,7 +706,8 @@ public class NormalizationService {
 	}
 
 	public static TitleRecord normalizeInputTitles(String title) {
-		if (NormPatterns.NO_TITLES.contains(title.toLowerCase())) {
+		if (NormPatterns.NO_TITLES.contains(title.toLowerCase())
+				|| NormPatterns.ONLY_NUMBERS_AND_HYPHENS_PATTERN.matcher(title).matches()) {
 			return new TitleRecord(null, new ArrayList<>());
 		}
 		title = StringEscapeUtils.unescapeHtml4(title);

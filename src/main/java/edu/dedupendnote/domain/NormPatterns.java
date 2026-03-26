@@ -237,6 +237,12 @@ public class NormPatterns {
 	public static final Pattern NON_INITIAL_SQUARE_BRACKETS_PATTERN = Pattern.compile(".\\[[^\\\\]+\\]$");
 
 	/**
+	 * Only numbers and hyphens, probably an ID.
+	 * Occurs in CINAHL in the ST field. To be skipped as title variant
+	 */
+	public static final Pattern ONLY_NUMBERS_AND_HYPHENS_PATTERN = Pattern.compile("^[-\\d]+$");
+
+	/**
 	 * - "UNSP ..." (and variants) should be cleaned from the C7 field (WoS). Import may have changed UNSP" Into "Unsp". 
 	 *   This replacement is now applied to ALL pages fields
 	 * 
