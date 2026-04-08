@@ -24,12 +24,14 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 
 import edu.dedupendnote.domain.Publication;
 
 //@Slf4j
 //@ExtendWith(TimingExtension.class)
 @SpringBootTest
+@ActiveProfiles("test")
 class JaroWinklerTitleTest {
 
 	@Value("${baseDir}")

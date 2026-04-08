@@ -14,6 +14,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import edu.dedupendnote.domain.Publication;
@@ -22,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 //@ExtendWith(TimingExtension.class)
 @Slf4j
 @SpringBootTest
+@ActiveProfiles("test")
 class JaroWinklerAuthorsTest extends AuthorsBaseTest {
 	JaroWinklerSimilarity jws = new JaroWinklerSimilarity();
 

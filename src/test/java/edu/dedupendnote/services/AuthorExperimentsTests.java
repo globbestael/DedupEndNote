@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
@@ -21,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
  * and compares deduplication results with the production version.
  */
 @SpringBootTest
+@ActiveProfiles("test")
 @Slf4j
 class AuthorExperimentsTests {
 
@@ -32,7 +34,7 @@ class AuthorExperimentsTests {
 
 	AuthorsComparisonService authorsComparisonService = new ExperimentalAuthorsComparator();
 
-	private DeduplicationService expService = new DeduplicationService(simpMessagingTemplate, new ComparisonService());
+	private DeduplicationService expService;
 
 	@Value("${baseDir}")
 	String baseDir = "";
@@ -42,12 +44,9 @@ class AuthorExperimentsTests {
 	String wssessionId = "";
 
 	@BeforeEach
-	void initTestDir() {
-		testDir = baseDir;
-	}
-
-	@BeforeEach
 	void beforeEach() {
+		testDir = baseDir;
+		expService = new DeduplicationService(simpMessagingTemplate, new ComparisonService());
 		expService.setAuthorsComparisonService(authorsComparisonService);
 	}
 
