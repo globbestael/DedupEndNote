@@ -12,6 +12,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -35,8 +36,11 @@ class MissedDuplicatesTests extends BaseTest {
 
 	private final MemoryAppender memoryAppender = new MemoryAppender();
 
-	String homeDir = System.getProperty("user.home");
-	String testdir = homeDir + "/dedupendnote_files/";
+	@Value("${baseDir}")
+	String baseDir = "";
+
+	String testDir = "";
+
 	String wssessionId = "";
 
 	//	static Logger logger = null;
@@ -51,6 +55,11 @@ class MissedDuplicatesTests extends BaseTest {
 	 * 
 	 * FIXME: There is a big overlap with ValidationTests::writeFNandFPresults in initialization of the memoryAppender
 	 */
+	@BeforeEach
+	void initTestDir() {
+		testDir = baseDir;
+	}
+
 	@BeforeEach
 	void addMemoryAppender() {
 		List<Logger> loggers = new ArrayList<>();
@@ -129,7 +138,7 @@ class MissedDuplicatesTests extends BaseTest {
 	// @formatter:on
 	void deduplicateMissedDuplicates(String fileName, int total, int totalWritten) {
 		log.debug("Log level should be debug");
-		String inputFileName = testdir + fileName;
+		String inputFileName = testDir + fileName;
 		boolean markMode = false;
 		String outputFileName = UtilitiesService.createOutputFileName(inputFileName, markMode);
 		assertThat(new File(inputFileName)).exists();

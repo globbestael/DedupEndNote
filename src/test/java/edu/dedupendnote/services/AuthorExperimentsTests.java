@@ -6,6 +6,7 @@ import org.apache.commons.text.similarity.JaroWinklerSimilarity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -31,12 +32,19 @@ class AuthorExperimentsTests {
 
 	AuthorsComparisonService authorsComparisonService = new ExperimentalAuthorsComparator();
 
-	// @Autowired
 	private DeduplicationService expService = new DeduplicationService(simpMessagingTemplate, new ComparisonService());
 
-	String homeDir = System.getProperty("user.home");
-	String testdir = homeDir + "/dedupendnote_files";
+	@Value("${baseDir}")
+	String baseDir = "";
+
+	String testDir = "";
+
 	String wssessionId = "";
+
+	@BeforeEach
+	void initTestDir() {
+		testDir = baseDir;
+	}
 
 	@BeforeEach
 	void beforeEach() {
@@ -101,7 +109,7 @@ class AuthorExperimentsTests {
 
 	@Test
 	void higherAuthorSimilarityFindsLessDuplicates() {
-		String subdir = testdir + "/experiments/";
+		String subdir = testDir + "/experiments/";
 		String inputFileName = subdir + "t1.txt";
 		boolean markMode = false;
 		String outputFileName = subdir + "t1_mark.txt";

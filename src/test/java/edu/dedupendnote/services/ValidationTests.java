@@ -24,10 +24,12 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -72,8 +74,11 @@ class ValidationTests {
 	@Autowired
 	RecordDBService recordDBService;
 
-	String homeDir = System.getProperty("user.home");
-	String testdir = homeDir + "/dedupendnote_files";
+	@Value("${baseDir}")
+	String baseDir = "";
+
+	String testDir = "";
+
 	Map<String, Integer> titleCounter = new HashMap<>();
 	String wssessionId = "";
 
@@ -91,6 +96,11 @@ class ValidationTests {
 			FN solvable can be found with regex: ^\\d+\\t\\t\\d+\\ttrue\\tfalse\\tfalse\\tfalse\\ttrue\\tfalse
 			TP which will be kept can be found with regex: ^(\\d+)\\t\\1\\t\\ttrue\\ttrue\\t
 			""";
+
+	@BeforeEach
+	void initTestDir() {
+		testDir = baseDir;
+	}
 
 	@BeforeAll
 	static void beforeAll() {
@@ -256,7 +266,7 @@ class ValidationTests {
 
 	@Test
 	void readTruthFileTest() throws IOException {
-		String fileName = testdir + "/SRA2/Cytology_screening_TRUTH.txt";
+		String fileName = testDir + "/SRA2/Cytology_screening_TRUTH.txt";
 		List<PublicationDB> truthRecords = readTruthFile(fileName);
 
 		assertThat(truthRecords).hasSizeGreaterThan(10);
@@ -467,49 +477,49 @@ class ValidationTests {
 	}
 
 	ValidationResult checkResults_AI_subset() throws IOException {
-		String truthFileName = testdir + "/AI_subset/AI_subset_TRUTH.txt";
-		String inputFileName = testdir + "/AI_subset/AI_subset.txt";
-		String outputFileName = testdir + "/AI_subset/AI_subset_to_validate.txt";
+		String truthFileName = testDir + "/AI_subset/AI_subset_TRUTH.txt";
+		String inputFileName = testDir + "/AI_subset/AI_subset.txt";
+		String outputFileName = testDir + "/AI_subset/AI_subset_to_validate.txt";
 
 		return checkResults("AI_subset", inputFileName, outputFileName, truthFileName);
 	}
 
 	ValidationResult checkResults_ASySD_Cardiac_human() throws IOException {
-		String truthFileName = testdir + "/ASySD/dedupendnote_files/Cardiac_human_TRUTH.txt";
-		String inputFileName = testdir + "/ASySD/dedupendnote_files/Cardiac_human.txt";
-		String outputFileName = testdir + "/ASySD/dedupendnote_files/Cardiac_human_to_validate.txt";
+		String truthFileName = testDir + "/ASySD/dedupendnote_files/Cardiac_human_TRUTH.txt";
+		String inputFileName = testDir + "/ASySD/dedupendnote_files/Cardiac_human.txt";
+		String outputFileName = testDir + "/ASySD/dedupendnote_files/Cardiac_human_to_validate.txt";
 
 		return checkResults("ASySD_Cardiac_human", inputFileName, outputFileName, truthFileName);
 	}
 
 	// ValidationResult checkResults_ASySD_Depression() throws IOException {
-	// 	String truthFileName = testdir + "/ASySD/dedupendnote_files/Depression_TRUTH.txt";
-	// 	String inputFileName = testdir + "/ASySD/dedupendnote_files/Depression.txt";
-	// 	String outputFileName = testdir + "/ASySD/dedupendnote_files/Depression_to_validate.txt";
+	// 	String truthFileName = testDir + "/ASySD/dedupendnote_files/Depression_TRUTH.txt";
+	// 	String inputFileName = testDir + "/ASySD/dedupendnote_files/Depression.txt";
+	// 	String outputFileName = testDir + "/ASySD/dedupendnote_files/Depression_to_validate.txt";
 
 	// 	return checkResults("ASySD_Depression", inputFileName, outputFileName, truthFileName);
 	// }
 	
 	ValidationResult checkResults_ASySD_Diabetes() throws IOException {
-		String truthFileName = testdir + "/ASySD/dedupendnote_files/Diabetes_TRUTH.txt";
-		String inputFileName = testdir + "/ASySD/dedupendnote_files/Diabetes.txt";
-		String outputFileName = testdir + "/ASySD/dedupendnote_files/Diabetes_to_validate.txt";
+		String truthFileName = testDir + "/ASySD/dedupendnote_files/Diabetes_TRUTH.txt";
+		String inputFileName = testDir + "/ASySD/dedupendnote_files/Diabetes.txt";
+		String outputFileName = testDir + "/ASySD/dedupendnote_files/Diabetes_to_validate.txt";
 
 		return checkResults("ASySD_Diabetes", inputFileName, outputFileName, truthFileName);
 	}
 	
 	ValidationResult checkResults_ASySD_Neuroimaging() throws IOException {
-		String truthFileName = testdir + "/ASySD/dedupendnote_files/Neuroimaging_sorted_TRUTH.txt";
-		String inputFileName = testdir + "/ASySD/dedupendnote_files/Neuroimaging_sorted.txt";
-		String outputFileName = testdir + "/ASySD/dedupendnote_files/Neuroimaging_sorted_to_validate.txt";
+		String truthFileName = testDir + "/ASySD/dedupendnote_files/Neuroimaging_sorted_TRUTH.txt";
+		String inputFileName = testDir + "/ASySD/dedupendnote_files/Neuroimaging_sorted.txt";
+		String outputFileName = testDir + "/ASySD/dedupendnote_files/Neuroimaging_sorted_to_validate.txt";
 
 		return checkResults("ASySD_Neuroimaging", inputFileName, outputFileName, truthFileName);
 	}
 	
 	ValidationResult checkResults_ASySD_SRSR_Human() throws IOException {
-		String truthFileName = testdir + "/ASySD/dedupendnote_files/SRSR_Human_TRUTH.txt";
-		String inputFileName = testdir + "/ASySD/dedupendnote_files/SRSR_Human.txt";
-		String outputFileName = testdir + "/ASySD/dedupendnote_files/SRSR_Human_to_validate.txt";
+		String truthFileName = testDir + "/ASySD/dedupendnote_files/SRSR_Human_TRUTH.txt";
+		String inputFileName = testDir + "/ASySD/dedupendnote_files/SRSR_Human.txt";
+		String outputFileName = testDir + "/ASySD/dedupendnote_files/SRSR_Human_to_validate.txt";
 
 		return checkResults("ASySD_SRSR_Human", inputFileName, outputFileName, truthFileName);
 	}
@@ -518,73 +528,73 @@ class ValidationTests {
 	 * Deduplicates the whole file, but checks only the results of the validated subset
 	 */
 	ValidationResult checkResults_BIG_SET() throws IOException {
-		String truthFileName = testdir + "/own/BIG_SET_TRUTH.txt";
-		String inputFileName = testdir + "/own/BIG_SET.txt";
-		String outputFileName = testdir + "/own/BIG_SET_to_validate.txt";
+		String truthFileName = testDir + "/own/BIG_SET_TRUTH.txt";
+		String inputFileName = testDir + "/own/BIG_SET.txt";
+		String outputFileName = testDir + "/own/BIG_SET_to_validate.txt";
 
 		return checkResults("BIG_SET", inputFileName, outputFileName, truthFileName);
 	}
 
 	ValidationResult checkResults_Clinical_trials() throws IOException {
-		String truthFileName = testdir + "/Clinical_trials/clinicaltrialsdotgov_TRUTH.txt";
-		String inputFileName = testdir + "/Clinical_trials/clinicaltrialsdotgov.txt";
-		String outputFileName = testdir + "/Clinical_trials/clinicaltrialsdotgov_to_validate.txt";
+		String truthFileName = testDir + "/Clinical_trials/clinicaltrialsdotgov_TRUTH.txt";
+		String inputFileName = testDir + "/Clinical_trials/clinicaltrialsdotgov.txt";
+		String outputFileName = testDir + "/Clinical_trials/clinicaltrialsdotgov_to_validate.txt";
 
 		return checkResults("Clinical_trials", inputFileName, outputFileName, truthFileName);
 	}
 
 	ValidationResult checkResults_McKeown_2021() throws IOException {
-		String truthFileName = testdir + "/McKeown_S_2021/dedupendnote_files/McKeown_2021_TRUTH.txt";
-		String inputFileName = testdir + "/McKeown_S_2021/dedupendnote_files/McKeown_2021.txt";
-		String outputFileName = testdir + "/McKeown_S_2021/dedupendnote_files/McKeown_2021_to_validate.txt";
+		String truthFileName = testDir + "/McKeown_S_2021/dedupendnote_files/McKeown_2021_TRUTH.txt";
+		String inputFileName = testDir + "/McKeown_S_2021/dedupendnote_files/McKeown_2021.txt";
+		String outputFileName = testDir + "/McKeown_S_2021/dedupendnote_files/McKeown_2021_to_validate.txt";
 
 		return checkResults("McKeown_2021", inputFileName, outputFileName, truthFileName);
 	}
 	
 	ValidationResult checkResults_SRA2_Cytology_screening() throws IOException {
-		String truthFileName = testdir + "/SRA2/Cytology_screening_TRUTH.txt";
-		String inputFileName = testdir + "/SRA2/Cytology_screening.txt";
-		String outputFileName = testdir + "/SRA2/Cytology_screening_to_validate.txt";
+		String truthFileName = testDir + "/SRA2/Cytology_screening_TRUTH.txt";
+		String inputFileName = testDir + "/SRA2/Cytology_screening.txt";
+		String outputFileName = testDir + "/SRA2/Cytology_screening_to_validate.txt";
 
 		return checkResults("SRA2_Cytology_screening", inputFileName, outputFileName, truthFileName);
 	}
 
 	ValidationResult checkResults_SRA2_Haematology() throws IOException {
-		String truthFileName = testdir + "/SRA2/Haematology_TRUTH.txt";
-		String inputFileName = testdir + "/SRA2/Haematology.txt";
-		String outputFileName = testdir + "/SRA2/Haematology_to_validate.txt";
+		String truthFileName = testDir + "/SRA2/Haematology_TRUTH.txt";
+		String inputFileName = testDir + "/SRA2/Haematology.txt";
+		String outputFileName = testDir + "/SRA2/Haematology_to_validate.txt";
 
 		return checkResults("SRA2_Haematology", inputFileName, outputFileName, truthFileName);
 	}
 
 	ValidationResult checkResults_SRA2_Respiratory() throws IOException {
-		String truthFileName = testdir + "/SRA2/Respiratory_TRUTH.txt";
-		String inputFileName = testdir + "/SRA2/Respiratory.txt";
-		String outputFileName = testdir + "/SRA2/Respiratory_to_validate.txt";
+		String truthFileName = testDir + "/SRA2/Respiratory_TRUTH.txt";
+		String inputFileName = testDir + "/SRA2/Respiratory.txt";
+		String outputFileName = testDir + "/SRA2/Respiratory_to_validate.txt";
 
 		return checkResults("SRA2_Respiratory", inputFileName, outputFileName, truthFileName);
 	}
 	
 	ValidationResult checkResults_SRA2_Stroke() throws IOException {
-		String truthFileName = testdir + "/SRA2/Stroke_TRUTH.txt";
-		String inputFileName = testdir + "/SRA2/Stroke.txt";
-		String outputFileName = testdir + "/SRA2/Stroke_to_validate.txt";
+		String truthFileName = testDir + "/SRA2/Stroke_TRUTH.txt";
+		String inputFileName = testDir + "/SRA2/Stroke.txt";
+		String outputFileName = testDir + "/SRA2/Stroke_to_validate.txt";
 
 		return checkResults("SRA2_Stroke", inputFileName, outputFileName, truthFileName);
 	}
 	
 	ValidationResult checkResults_TIL() throws IOException {
-		String truthFileName = testdir + "/TIL/TIL_TRUTH.txt";
-		String inputFileName = testdir + "/TIL/TIL.txt";
-		String outputFileName = testdir + "/TIL/TIL_to_validate.txt";
+		String truthFileName = testDir + "/TIL/TIL_TRUTH.txt";
+		String inputFileName = testDir + "/TIL/TIL.txt";
+		String outputFileName = testDir + "/TIL/TIL_to_validate.txt";
 
 		return checkResults("TIL", inputFileName, outputFileName, truthFileName);
 	}
 	
 	ValidationResult checkResults_TIL_Zotero() throws IOException {
-		String truthFileName = testdir + "/TIL/TIL_TRUTH.txt";
-		String inputFileName = testdir + "/TIL/TIL_Zotero.ris";
-		String outputFileName = testdir + "/TIL/TIL_Zotero_to_validate.txt";
+		String truthFileName = testDir + "/TIL/TIL_TRUTH.txt";
+		String inputFileName = testDir + "/TIL/TIL_Zotero.ris";
+		String outputFileName = testDir + "/TIL/TIL_Zotero_to_validate.txt";
 
 		return checkResults("TIL_Zotero", inputFileName, outputFileName, truthFileName);
 	}
@@ -597,15 +607,15 @@ class ValidationTests {
 	@Disabled("Only needed for initialisation of TRUTH file")
 	@Test
 	void createInitialTruthFile_AI_subset() {
-		String inputFileName = testdir + "/AI_subset/AI_subset.txt";
-		String outputFileName = testdir + "/AI_subset/AI_subset_for_truth.txt";
+		String inputFileName = testDir + "/AI_subset/AI_subset.txt";
+		String outputFileName = testDir + "/AI_subset/AI_subset_for_truth.txt";
 		createInitialTruthFile(inputFileName, outputFileName);
 	}
 
 	@Disabled("Only needed for initialisation of TRUTH file")
 	@Test
 	void createInitialTruthFile_ASySD_Cardiac_human() {
-		String dir = testdir + "/ASySD/dedupendnote_files";
+		String dir = testDir + "/ASySD/dedupendnote_files";
 		String inputFileName = dir + "/Cardiac_human.txt";
 		String asysdInputfileName = dir + "/Cardiac_human_asysd_gold.txt";
 		String outputFileName = dir + "/Cardiac_human_for_truth.txt";
@@ -615,7 +625,7 @@ class ValidationTests {
 	// @Disabled("Only needed for initialisation of TRUTH file")
 	// @Test
 	// void createInitialTruthFile_ASySD_Depression() {
-	// 	String dir = testdir + "/ASySD/dedupendnote_files";
+	// 	String dir = testDir + "/ASySD/dedupendnote_files";
 	// 	String inputFileName = dir + "/Depression.txt";
 	// 	String asysdInputfileName = dir + "/Depression_asysd_gold.txt";
 	// 	String outputFileName = dir + "/Depression_for_truth.txt";
@@ -625,7 +635,7 @@ class ValidationTests {
 	@Disabled("Only needed for initialisation of TRUTH file")
 	@Test
 	void createInitialTruthFile_ASySD_Diabetes() {
-		String dir = testdir + "/ASySD/dedupendnote_files";
+		String dir = testDir + "/ASySD/dedupendnote_files";
 		String inputFileName = dir + "/Diabetes.txt";
 		String asysdInputfileName = dir + "/Diabetes_asysd_gold.txt";
 		String outputFileName = dir + "/Diabetes_for_truth.txt";
@@ -636,7 +646,7 @@ class ValidationTests {
 	@Test
 	void createInitialTruthFile_ASySD_Neuroimaging() {
 		// Endnote DB is Neuroimaging_sorted
-		String dir = testdir + "/ASySD/dedupendnote_files";
+		String dir = testDir + "/ASySD/dedupendnote_files";
 		String inputFileName = dir + "/Neuroimaging_sorted.txt";
 		String asysdInputfileName = dir + "/Neuroimaging_sorted_asysd_gold.txt";
 		String outputFileName = dir + "/Neuroimaging_for_truth.txt";
@@ -649,7 +659,7 @@ class ValidationTests {
 	@Disabled("Only needed for initialisation of TRUTH file")
 	@Test
 	void createInitialTruthFile_ASySD_SRSR_Human() {
-		String dir = testdir + "/ASySD/dedupendnote_files";
+		String dir = testDir + "/ASySD/dedupendnote_files";
 		String inputFileName = dir + "/SRSR_Human.txt";
 		String asysdInputfileName = dir + "/SRSR_Human_asysd_gold.txt"; // Columns L and U because of renumbering
 		String outputFileName = dir + "/SRSR_Human_for_truth.txt";
@@ -659,7 +669,7 @@ class ValidationTests {
 	@Disabled("Only needed for initialisation of TRUTH file")
 	@Test
 	void createInitialTruthFile_CTG() {
-		String dir = testdir + "/clinical_trials";
+		String dir = testDir + "/clinical_trials";
 		String inputFileName = dir + "/clinicaltrialsdotgov.txt";
 		String outputFileName = dir + "/clinicaltrialsdotgov_for_truth.txt";
 		createInitialTruthFile(inputFileName, outputFileName);
@@ -668,7 +678,7 @@ class ValidationTests {
 	@Disabled("Only needed for initialisation of TRUTH file")
 	@Test
 	void createInitialTruthFile_McKeown_2021() {
-		String dir = testdir + "/McKeown_S_2021/dedupendnote_files";
+		String dir = testDir + "/McKeown_S_2021/dedupendnote_files";
 		String inputFileName = dir + "/McKeown_2021.txt";
 		String outputFileName = dir + "/McKeown_2021_for_truth.txt";
 		createInitialTruthFile(inputFileName, outputFileName);
@@ -677,41 +687,41 @@ class ValidationTests {
 	@Disabled("Only needed for initialisation of TRUTH file")
 	@Test
 	void createInitialTruthFile_SRA2_Haematology() {
-		String inputFileName = testdir + "/SRA2/Haematology.txt";
-		String outputFileName = testdir + "/SRA2/Haematology_for_truth.txt";
+		String inputFileName = testDir + "/SRA2/Haematology.txt";
+		String outputFileName = testDir + "/SRA2/Haematology_for_truth.txt";
 		createInitialTruthFile(inputFileName, outputFileName);
 	}
 	
 	@Disabled("Only needed for initialisation of TRUTH file")
 	@Test
 	void createInitialTruthFile_SRA2_Respiratory() {
-		String inputFileName = testdir + "/SRA2/Respiratory.txt";
-		String outputFileName = testdir + "/SRA2/Respiratory_for_truth.txt";
+		String inputFileName = testDir + "/SRA2/Respiratory.txt";
+		String outputFileName = testDir + "/SRA2/Respiratory_for_truth.txt";
 		createInitialTruthFile(inputFileName, outputFileName);
 	}
 	
 	@Disabled("Only needed for initialisation of TRUTH file")
 	@Test
 	void createInitialTruthFile_SRA2_Stroke() {
-		String inputFileName = testdir + "/SRA2/Stroke.txt";
-		String outputFileName = testdir + "/SRA2/Stroke_for_truth.txt";
+		String inputFileName = testDir + "/SRA2/Stroke.txt";
+		String outputFileName = testDir + "/SRA2/Stroke_for_truth.txt";
 		createInitialTruthFile(inputFileName, outputFileName);
 	}
 
 	@Disabled("Only needed for initialisation of TRUTH file")
 	@Test
 	void createInitialTruthFile_TIL() {
-		String inputFileName = testdir + "/TIL/TIL.txt";
-		String outputFileName = testdir + "/TIL/TIL_for_truth.txt";
+		String inputFileName = testDir + "/TIL/TIL.txt";
+		String outputFileName = testDir + "/TIL/TIL_for_truth.txt";
 		createInitialTruthFile(inputFileName, outputFileName);
 	}
 
 	@Disabled("Only needed for initialisation of TRUTH file")
 	@Test
 	void createInitialTruthFile_TIL_Zotero() {
-		String inputFileName = testdir + "/TIL/TIL_Zotero.ris";
+		String inputFileName = testDir + "/TIL/TIL_Zotero.ris";
 		// uses the same TRUTH file as createInitialTruthFile_TIL
-		String outputFileName = testdir + "/TIL/TIL_Zotero_for_truth.txt";
+		String outputFileName = testDir + "/TIL/TIL_Zotero_for_truth.txt";
 		createInitialTruthFile(inputFileName, outputFileName);
 	}
 
@@ -730,9 +740,9 @@ class ValidationTests {
 	@Disabled("Only needed for initialisation of TRUTH file")
 	@Test
 	void createRisWithTRUTH_BIG_SET_DS() throws IOException {
-		String truthFileName = testdir + "/own/BIG_SET_TRUTH.txt";
-		String inputFileName = testdir + "/Dedupe-sweep/dedupendnote_files/BIG_SET_mark_DS.txt";
-		String outputFileName = testdir + "/Dedupe-sweep/dedupendnote_files/BIG_SET_mark_DS_with_TRUTH.txt";
+		String truthFileName = testDir + "/own/BIG_SET_TRUTH.txt";
+		String inputFileName = testDir + "/Dedupe-sweep/dedupendnote_files/BIG_SET_mark_DS.txt";
+		String outputFileName = testDir + "/Dedupe-sweep/dedupendnote_files/BIG_SET_mark_DS_with_TRUTH.txt";
 
 		List<PublicationDB> truthRecords = readTruthFile(truthFileName);
 		ioService.writeRisWithTRUTH_forDS(truthRecords, inputFileName, outputFileName);
@@ -752,9 +762,9 @@ class ValidationTests {
 	@Disabled("Only needed for initialisation of TRUTH file")
 	@Test
 	void createRisWithTRUTH_BIG_SET() throws IOException {
-		String truthFileName = testdir + "/own/BIG_SET_TRUTH.txt";
-		String inputFileName = testdir + "/own/BIG_SET.txt";
-		String outputFileName = testdir + "/own/BIG_SET_with_TRUTH.txt";
+		String truthFileName = testDir + "/own/BIG_SET_TRUTH.txt";
+		String inputFileName = testDir + "/own/BIG_SET.txt";
+		String outputFileName = testDir + "/own/BIG_SET_with_TRUTH.txt";
 
 		createRisWithTRUTH(inputFileName, truthFileName, outputFileName);
 
@@ -764,9 +774,9 @@ class ValidationTests {
 	@Disabled("Only needed for initialisation of TRUTH file")
 	@Test
 	void createRisWithTRUTH_SRA2_Cytology_screening() throws IOException {
-		String truthFileName = testdir + "/SRA2/Cytology_screening_TRUTH.txt";
-		String inputFileName = testdir + "/SRA2/Cytology_screening.txt";
-		String outputFileName = testdir + "/SRA2/Cytology_screening_with_TRUTH.txt";
+		String truthFileName = testDir + "/SRA2/Cytology_screening_TRUTH.txt";
+		String inputFileName = testDir + "/SRA2/Cytology_screening.txt";
+		String outputFileName = testDir + "/SRA2/Cytology_screening_with_TRUTH.txt";
 
 		createRisWithTRUTH(inputFileName, truthFileName, outputFileName);
 	}

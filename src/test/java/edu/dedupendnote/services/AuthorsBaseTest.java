@@ -9,18 +9,30 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.test.context.SpringBootTest;
 
 import edu.dedupendnote.BaseTest;
 import edu.dedupendnote.domain.Publication;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@SpringBootTest
 class AuthorsBaseTest extends BaseTest {
 
-	String homeDir = System.getProperty("user.home");
-	String testdir = homeDir + "/dedupendnote_files";
+	@Value("${baseDir}")
+	String baseDir = "";
+
+	String testDir = "";
+
 	List<Triple> localTriples = new ArrayList<>();
+
+	@BeforeEach
+	void initTestDir() {
+		testDir = baseDir;
+	}
 
 	@Test
 	void fillerTest() {
@@ -103,7 +115,7 @@ class AuthorsBaseTest extends BaseTest {
 	 */
 	// @formatter:on
 	protected List<Triple> getValidatedAuthorsPairs() throws IOException {
-		String fileName = testdir + "/experiments/validated_authors_pairs.txt";
+		String fileName = testDir + "/experiments/validated_authors_pairs.txt";
 		localTriples.clear();
 		Path path = Path.of(fileName);
 		Stream<String> lines = Files.lines(path);

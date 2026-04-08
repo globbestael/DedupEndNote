@@ -12,11 +12,13 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -39,9 +41,17 @@ class DedupEndNoteApplicationTests {
 	@MockitoBean
 	SimpMessagingTemplate simpMessagingTemplate;
 
-	String homeDir = System.getProperty("user.home");
-	String testdir = homeDir + "/dedupendnote_files/experiments/";
+	@Value("${baseDir}")
+	String baseDir = "";
+
+	String testDir = "";
+
 	String wssessionId = "";
+
+	@BeforeEach
+	void initTestDir() {
+		testDir = baseDir + "/experiments/";
+	}
 
 	@BeforeAll
 	static void beforeAll() {
@@ -85,7 +95,7 @@ class DedupEndNoteApplicationTests {
 
 	@Test
 	void deduplicate_OK() {
-		String inputFileName = testdir + "t1.txt";
+		String inputFileName = testDir + "t1.txt";
 		boolean markMode = false;
 		String outputFileName = UtilitiesService.createOutputFileName(inputFileName, markMode);
 
@@ -102,7 +112,7 @@ class DedupEndNoteApplicationTests {
 			// "'DedupEndNote_portal_vein_thrombosis_37741.txt', 37741, 24382", // Very slow test
 			"'Non_Latin_input.txt', 2, 2", "'Dedup_PATIJ2_Possibly_missed.txt', 18, 12" })
 	void deduplicateSmallFiles(String fileName, int total, int totalWritten) {
-		String inputFileName = testdir + fileName;
+		String inputFileName = testDir + fileName;
 		boolean markMode = false;
 		String outputFileName = UtilitiesService.createOutputFileName(inputFileName, markMode);
 		assertThat(new File(inputFileName)).exists();
@@ -115,7 +125,7 @@ class DedupEndNoteApplicationTests {
 
 	@Test
 	void deduplicate_withDuplicateIDs() {
-		String inputFileName = testdir + "Bestand_met_duplicate_IDs.txt";
+		String inputFileName = testDir + "Bestand_met_duplicate_IDs.txt";
 		boolean markMode = false;
 		String outputFileName = UtilitiesService.createOutputFileName(inputFileName, markMode);
 

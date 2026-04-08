@@ -11,8 +11,11 @@ import static java.util.function.Predicate.not;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.test.context.SpringBootTest;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
@@ -22,10 +25,20 @@ import edu.dedupendnote.domain.Publication;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@SpringBootTest
 class JournalsBaseTest extends BaseTest {
-	String homeDir = System.getProperty("user.home");
-	String testdir = homeDir + "/dedupendnote_files";
+
+	@Value("${baseDir}")
+	String baseDir = "";
+
+	String testDir = "";
+
 	List<Triple> localTriples = new ArrayList<>();
+
+	@BeforeEach
+	void initTestDir() {
+		testDir = baseDir;
+	}
 
 	public record Triple(String journal1, String journal2, boolean similar) {
 
@@ -74,7 +87,7 @@ WHERE t1.title2 <> t2.title2
 	 */
 	// @formatter:on
 	protected List<Triple> getValidatedJournalPairs() throws IOException {
-		String fileName = testdir + "/experiments/validated_journal_pairs.txt";
+		String fileName = testDir + "/experiments/validated_journal_pairs.txt";
 		localTriples.clear();
 		Path path = Path.of(fileName);
 		Stream<String> lines = Files.lines(path);
