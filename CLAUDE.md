@@ -68,7 +68,11 @@ Two compile-time plugins are active — violations are **build errors**:
 
 ## Testing
 
-Tests live in `src/test/java/edu/dedupendnote/services/`. Many tests validate against real-world datasets (SRA, McKeown, BIG_SET) and measure sensitivity/specificity. The test Spring profile reads from `application-test.properties` which sets a separate `testdir` for RIS files.
+Tests live in `src/test/java/edu/dedupendnote/services/`. Many tests validate against real-world datasets (SRA, McKeown, BIG_SET) and measure sensitivity/specificity. The test Spring profile is activated via `src/test/resources/application.properties` (`spring.profiles.active=test`), which loads `application-test.properties`. That file defines `baseDir = ${user.home}/dedupendnote_files`. Test classes inject it with `@Value("${baseDir}") String baseDir = ""` and derive a `testDir` field in `@BeforeEach`.
+
+## Plans
+
+Executed implementation plans are saved in `.plans/` at the repo root. Each file is a Markdown document describing context, changes made, files modified, and how to verify.
 
 ## Configuration
 
