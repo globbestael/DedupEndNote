@@ -74,17 +74,19 @@ Tests live in `src/test/java/edu/dedupendnote/` and its `services/` subpackage. 
 
 ### Test class hierarchy
 
-- **`BaseTest`** — utility methods (`jws`, `getHighestSimilarityForAuthors`, `setLoggerToDebug`)
-- **`AbstractIntegrationTest extends BaseTest`** — base for all `@SpringBootTest` tests; provides `@ActiveProfiles("test")`, `@MockitoBean SimpMessagingTemplate`, `@Value("${baseDir}") protected String baseDir`, `protected String testDir`, `protected String wssessionId`, `@BeforeAll` (log level → INFO), and `@BeforeEach initTestDir()` (sets `testDir = baseDir`). Subclasses override `initTestDir()` when they need a subdirectory (e.g. `testDir = baseDir + "/experiments/"`).
-- **`AuthorsBaseTest extends AbstractIntegrationTest`** — shared logic for author-comparison tests
-- **`JournalsBaseTest extends AbstractIntegrationTest`** — shared logic for journal-comparison tests
-- Standalone unit test classes (no Spring context, no `@Tag`): `ComparisonServiceTest`, `DoiTest`, `PagesTest`, `NormalizationServiceTest`, etc.
+- **`BaseTest`** — provides `baseDir` (from `System.getProperty("user.home") + "/dedupendnote_files"`), `testDir`, `@BeforeEach initTestDir()`, plus utilities (`jws`, `getHighestSimilarityForAuthors`, `setLoggerToDebug`)
+- **`AbstractIntegrationTest`** — standalone (does not extend `BaseTest`); base for all `@SpringBootTest` tests; provides `@ActiveProfiles("test")`, `@Tag("integration")`, `@MockitoBean SimpMessagingTemplate`, `baseDir`, `testDir`, `wssessionId`, `@BeforeAll` (log level → INFO), `@BeforeEach initTestDir()`. Subclasses override `initTestDir()` when they need a subdirectory (e.g. `testDir = baseDir + "/experiments/"`).
+- **`AuthorsBaseTest extends BaseTest`** — shared logic for author-comparison tests (unit tests)
+- **`JournalsBaseTest extends BaseTest`** — shared logic for journal-comparison tests (unit tests)
+- **`JaroWinklerTitleTest extends BaseTest`** — title comparison tests (unit tests)
+- **`JaroWinklerAuthorsTest extends AuthorsBaseTest`** — has `@SpringBootTest` + `@Tag("integration")` directly; needs `@Autowired DeduplicationService`
+- Standalone unit test classes (no Spring context): `ComparisonServiceTest`, `DoiTest`, `PagesTest`, `NormalizationServiceTest`, etc.
 
-The split is enforced via `@Tag("integration")` on `AbstractIntegrationTest` and two Maven profiles in `pom.xml`: `unit-tests` (excludes the tag) and `integration-tests` (includes only the tag).
+The split is enforced via `@Tag("integration")` on `AbstractIntegrationTest` (and `JaroWinklerAuthorsTest`) and two Maven profiles in `pom.xml`: `unit-tests` (excludes the tag) and `integration-tests` (includes only the tag).
 
 ### Test profile
 
-`@ActiveProfiles("test")` on `AbstractIntegrationTest` activates the `test` profile for all integration tests, loading `src/main/resources/application-test.properties`. That file defines `baseDir = ${user.home}/dedupendnote_files`.
+`@ActiveProfiles("test")` on `AbstractIntegrationTest` activates the `test` profile for all integration tests, loading `src/main/resources/application-test.properties`. Unit tests don't start Spring and get `baseDir` directly from `BaseTest` via `System.getProperty("user.home")`.
 
 ## Plans
 

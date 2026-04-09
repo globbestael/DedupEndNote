@@ -4,7 +4,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.test.context.ActiveProfiles;
@@ -19,13 +18,12 @@ import lombok.extern.slf4j.Slf4j;
 @SpringBootTest
 @ActiveProfiles("test")
 @Tag("integration")
-public abstract class AbstractIntegrationTest extends BaseTest {
+public abstract class AbstractIntegrationTest {
 
 	@MockitoBean
 	protected SimpMessagingTemplate simpMessagingTemplate;
 
-	@Value("${baseDir}")
-	protected String baseDir = "";
+	protected String baseDir = System.getProperty("user.home", "") + "/dedupendnote_files";
 
 	protected String testDir = "";
 

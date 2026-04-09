@@ -11,12 +11,12 @@ import java.util.stream.Stream;
 import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.Test;
 
-import edu.dedupendnote.AbstractIntegrationTest;
+import edu.dedupendnote.BaseTest;
 import edu.dedupendnote.domain.Publication;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-class AuthorsBaseTest extends AbstractIntegrationTest {
+class AuthorsBaseTest extends BaseTest {
 
 	List<Triple> localTriples = new ArrayList<>();
 

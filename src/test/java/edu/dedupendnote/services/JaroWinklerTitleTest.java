@@ -21,7 +21,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import edu.dedupendnote.AbstractIntegrationTest;
+import edu.dedupendnote.BaseTest;
 import edu.dedupendnote.domain.Publication;
 
 /*
@@ -33,7 +33,7 @@ import edu.dedupendnote.domain.Publication;
 		- @SpringBootTest
 		- @ActiveProfiles("test")
 */
-class JaroWinklerTitleTest extends AbstractIntegrationTest {
+class JaroWinklerTitleTest extends BaseTest {
 
 	@ParameterizedTest(name = "{index}: jaroWinkler({0}, {1})={2}")
 	@MethodSource("positiveArgumentProvider")

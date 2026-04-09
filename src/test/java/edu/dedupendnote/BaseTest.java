@@ -3,6 +3,7 @@ package edu.dedupendnote;
 import java.util.List;
 
 import org.apache.commons.text.similarity.JaroWinklerSimilarity;
+import org.junit.jupiter.api.BeforeEach;
 import org.slf4j.LoggerFactory;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
@@ -11,6 +12,14 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class BaseTest {
+
+	protected String baseDir = System.getProperty("user.home", "") + "/dedupendnote_files";
+	protected String testDir = "";
+
+	@BeforeEach
+	void initTestDir() {
+		testDir = baseDir;
+	}
 
 	protected JaroWinklerSimilarity jws = new JaroWinklerSimilarity();
 

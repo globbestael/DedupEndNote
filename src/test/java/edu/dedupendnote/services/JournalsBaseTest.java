@@ -12,12 +12,12 @@ import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
 
-import edu.dedupendnote.AbstractIntegrationTest;
+import edu.dedupendnote.BaseTest;
 import edu.dedupendnote.domain.Publication;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-class JournalsBaseTest extends AbstractIntegrationTest {
+class JournalsBaseTest extends BaseTest {
 
 	List<Triple> localTriples = new ArrayList<>();
 
