@@ -24,8 +24,15 @@ import org.junit.jupiter.params.provider.MethodSource;
 import edu.dedupendnote.AbstractIntegrationTest;
 import edu.dedupendnote.domain.Publication;
 
-//@Slf4j
-//@ExtendWith(TimingExtension.class)
+/*
+	FIXME: This test file probably should be split into 2 files:
+	- most tests are unit tests
+	- there are a small number of tests which read external data. Because thiese methods use the baseDir / testDir variable,
+	  the whole test class is treated as integrationTest 
+	  	- extends AbstractIntegrationTest
+		- @SpringBootTest
+		- @ActiveProfiles("test")
+*/
 class JaroWinklerTitleTest extends AbstractIntegrationTest {
 
 	@ParameterizedTest(name = "{index}: jaroWinkler({0}, {1})={2}")

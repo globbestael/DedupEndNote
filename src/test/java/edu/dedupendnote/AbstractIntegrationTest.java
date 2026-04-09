@@ -2,6 +2,7 @@ package edu.dedupendnote;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -17,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @SpringBootTest
 @ActiveProfiles("test")
+@Tag("integration")
 public abstract class AbstractIntegrationTest extends BaseTest {
 
 	@MockitoBean

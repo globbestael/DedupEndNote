@@ -11,6 +11,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 # Test
 ./mvnw test                                    # Run all tests
+./mvnw test -Punit-tests                       # Run only unit tests (no Spring context, fast)
+./mvnw test -Pintegration-tests               # Run only integration tests (@SpringBootTest)
 ./mvnw -Dtest=ClassNameTest test              # Run a single test class
 ./mvnw -Dtest=ClassNameTest#methodName test   # Run a single test method
 ```
@@ -76,7 +78,9 @@ Tests live in `src/test/java/edu/dedupendnote/` and its `services/` subpackage. 
 - **`AbstractIntegrationTest extends BaseTest`** — base for all `@SpringBootTest` tests; provides `@ActiveProfiles("test")`, `@MockitoBean SimpMessagingTemplate`, `@Value("${baseDir}") protected String baseDir`, `protected String testDir`, `protected String wssessionId`, `@BeforeAll` (log level → INFO), and `@BeforeEach initTestDir()` (sets `testDir = baseDir`). Subclasses override `initTestDir()` when they need a subdirectory (e.g. `testDir = baseDir + "/experiments/"`).
 - **`AuthorsBaseTest extends AbstractIntegrationTest`** — shared logic for author-comparison tests
 - **`JournalsBaseTest extends AbstractIntegrationTest`** — shared logic for journal-comparison tests
-- Standalone unit test classes (no Spring context): `ComparisonServiceTest`, `DoiTest`, `PagesTest`, `NormalizationServiceTest`, etc.
+- Standalone unit test classes (no Spring context, no `@Tag`): `ComparisonServiceTest`, `DoiTest`, `PagesTest`, `NormalizationServiceTest`, etc.
+
+The split is enforced via `@Tag("integration")` on `AbstractIntegrationTest` and two Maven profiles in `pom.xml`: `unit-tests` (excludes the tag) and `integration-tests` (includes only the tag).
 
 ### Test profile
 
