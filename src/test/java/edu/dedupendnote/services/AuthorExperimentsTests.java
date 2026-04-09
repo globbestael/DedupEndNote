@@ -6,42 +6,26 @@ import org.apache.commons.text.similarity.JaroWinklerSimilarity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
+import edu.dedupendnote.AbstractIntegrationTest;
 import edu.dedupendnote.domain.Publication;
 import lombok.extern.slf4j.Slf4j;
 
 /*
  * Test for comparing different implementations of author comparisons; VERY INCOMPLETE
  *
- * The current ExperimentalAuthorsComparator just uses higher values for AUTHOR_SIMILARITY_... 
+ * The current ExperimentalAuthorsComparator just uses higher values for AUTHOR_SIMILARITY_...
  * and compares deduplication results with the production version.
  */
-@SpringBootTest
-@ActiveProfiles("test")
 @Slf4j
-class AuthorExperimentsTests {
+class AuthorExperimentsTests extends AbstractIntegrationTest {
 
 	@Autowired
 	DeduplicationService service;
 
-	@MockitoBean
-	SimpMessagingTemplate simpMessagingTemplate;
-
 	AuthorsComparisonService authorsComparisonService = new ExperimentalAuthorsComparator();
 
 	private DeduplicationService expService;
-
-	@Value("${baseDir}")
-	String baseDir = "";
-
-	String testDir = "";
-
-	String wssessionId = "";
 
 	@BeforeEach
 	void beforeEach() {

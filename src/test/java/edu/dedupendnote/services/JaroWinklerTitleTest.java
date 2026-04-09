@@ -14,37 +14,19 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
-import org.apache.commons.text.similarity.JaroWinklerSimilarity;
 import org.assertj.core.api.SoftAssertions;
 // import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
 
+import edu.dedupendnote.AbstractIntegrationTest;
 import edu.dedupendnote.domain.Publication;
 
 //@Slf4j
 //@ExtendWith(TimingExtension.class)
-@SpringBootTest
-@ActiveProfiles("test")
-class JaroWinklerTitleTest {
-
-	@Value("${baseDir}")
-	String baseDir = "";
-
-	String testDir = "";
-
-	JaroWinklerSimilarity jws = new JaroWinklerSimilarity();
-
-	@BeforeEach
-	void initTestDir() {
-		testDir = baseDir;
-	}
+class JaroWinklerTitleTest extends AbstractIntegrationTest {
 
 	@ParameterizedTest(name = "{index}: jaroWinkler({0}, {1})={2}")
 	@MethodSource("positiveArgumentProvider")

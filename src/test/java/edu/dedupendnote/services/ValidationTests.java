@@ -29,11 +29,6 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import tools.jackson.databind.DeserializationFeature;
 import tools.jackson.databind.MappingIterator;
@@ -43,6 +38,7 @@ import tools.jackson.dataformat.csv.CsvSchema;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
+import edu.dedupendnote.AbstractIntegrationTest;
 import edu.dedupendnote.domain.Publication;
 import edu.dedupendnote.domain.PublicationDB;
 import edu.dedupendnote.domain.ValidationResult;
@@ -61,14 +57,9 @@ import lombok.extern.slf4j.Slf4j;
  * See http://localhost:9777/developers for a description of the database.
  */
 @Slf4j
-@SpringBootTest
-@ActiveProfiles("test")
-class ValidationTests {
+class ValidationTests extends AbstractIntegrationTest {
 	@Autowired
 	DeduplicationService deduplicationService;
-
-	@MockitoBean
-	SimpMessagingTemplate simpMessagingTemplate;
 
 	@Autowired
 	IOService ioService;
@@ -76,13 +67,7 @@ class ValidationTests {
 	@Autowired
 	RecordDBService recordDBService;
 
-	@Value("${baseDir}")
-	String baseDir = "";
-
-	String testDir = "";
-
 	Map<String, Integer> titleCounter = new HashMap<>();
-	String wssessionId = "";
 
 	private static Logger rootLogger;
 	private boolean withTracing = false;
@@ -98,11 +83,6 @@ class ValidationTests {
 			FN solvable can be found with regex: ^\\d+\\t\\t\\d+\\ttrue\\tfalse\\tfalse\\tfalse\\ttrue\\tfalse
 			TP which will be kept can be found with regex: ^(\\d+)\\t\\1\\t\\ttrue\\ttrue\\t
 			""";
-
-	@BeforeEach
-	void initTestDir() {
-		testDir = baseDir;
-	}
 
 	@BeforeAll
 	static void beforeAll() {

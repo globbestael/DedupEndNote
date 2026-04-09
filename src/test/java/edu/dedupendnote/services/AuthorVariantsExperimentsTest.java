@@ -9,16 +9,11 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.slf4j.LoggerFactory;
 
 import edu.dedupendnote.domain.Publication;
 import edu.dedupendnote.domain.PublicationExperiment;
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.Logger;
-import ch.qos.logback.classic.LoggerContext;
 import lombok.extern.slf4j.Slf4j;
 
 /*
@@ -30,14 +25,6 @@ import lombok.extern.slf4j.Slf4j;
 class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 	List<Triple> triples;
 	List<Triple> filledTriples = new ArrayList<>();
-
-	@BeforeAll
-	static void beforeAll() {
-		LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
-		Logger rootLogger = loggerContext.getLogger("edu.dedupendnote");
-		rootLogger.setLevel(Level.INFO);
-		log.debug("Logging level set to INFO");
-	}
 
 	@BeforeEach
 	void before() throws IOException {

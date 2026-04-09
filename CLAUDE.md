@@ -68,7 +68,19 @@ Two compile-time plugins are active — violations are **build errors**:
 
 ## Testing
 
-Tests live in `src/test/java/edu/dedupendnote/services/`. Many tests validate against real-world datasets (SRA, McKeown, BIG_SET) and measure sensitivity/specificity. The test Spring profile is activated via `src/test/resources/application.properties` (`spring.profiles.active=test`), which loads `application-test.properties`. That file defines `baseDir = ${user.home}/dedupendnote_files`. Test classes inject it with `@Value("${baseDir}") String baseDir = ""` and derive a `testDir` field in `@BeforeEach`.
+Tests live in `src/test/java/edu/dedupendnote/` and its `services/` subpackage. Many tests validate against real-world datasets (SRA, McKeown, BIG_SET) and measure sensitivity/specificity.
+
+### Test class hierarchy
+
+- **`BaseTest`** — utility methods (`jws`, `getHighestSimilarityForAuthors`, `setLoggerToDebug`)
+- **`AbstractIntegrationTest extends BaseTest`** — base for all `@SpringBootTest` tests; provides `@ActiveProfiles("test")`, `@MockitoBean SimpMessagingTemplate`, `@Value("${baseDir}") protected String baseDir`, `protected String testDir`, `protected String wssessionId`, `@BeforeAll` (log level → INFO), and `@BeforeEach initTestDir()` (sets `testDir = baseDir`). Subclasses override `initTestDir()` when they need a subdirectory (e.g. `testDir = baseDir + "/experiments/"`).
+- **`AuthorsBaseTest extends AbstractIntegrationTest`** — shared logic for author-comparison tests
+- **`JournalsBaseTest extends AbstractIntegrationTest`** — shared logic for journal-comparison tests
+- Standalone unit test classes (no Spring context): `ComparisonServiceTest`, `DoiTest`, `PagesTest`, `NormalizationServiceTest`, etc.
+
+### Test profile
+
+`@ActiveProfiles("test")` on `AbstractIntegrationTest` activates the `test` profile for all integration tests, loading `src/main/resources/application-test.properties`. That file defines `baseDir = ${user.home}/dedupendnote_files`.
 
 ## Plans
 

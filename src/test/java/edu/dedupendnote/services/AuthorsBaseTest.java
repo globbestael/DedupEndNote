@@ -9,32 +9,16 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
 
-import edu.dedupendnote.BaseTest;
+import edu.dedupendnote.AbstractIntegrationTest;
 import edu.dedupendnote.domain.Publication;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@SpringBootTest
-@ActiveProfiles("test")
-class AuthorsBaseTest extends BaseTest {
-
-	@Value("${baseDir}")
-	String baseDir = "";
-
-	String testDir = "";
+class AuthorsBaseTest extends AbstractIntegrationTest {
 
 	List<Triple> localTriples = new ArrayList<>();
-
-	@BeforeEach
-	void initTestDir() {
-		testDir = baseDir;
-	}
 
 	@Test
 	void fillerTest() {

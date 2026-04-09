@@ -6,32 +6,21 @@ import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 import java.util.stream.Stream;
 
-import org.apache.commons.text.similarity.JaroWinklerSimilarity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import edu.dedupendnote.domain.Publication;
 import lombok.extern.slf4j.Slf4j;
 
 //@ExtendWith(TimingExtension.class)
 @Slf4j
-@SpringBootTest
-@ActiveProfiles("test")
 class JaroWinklerAuthorsTest extends AuthorsBaseTest {
-	JaroWinklerSimilarity jws = new JaroWinklerSimilarity();
 
 	@Autowired
 	DeduplicationService deduplicationService;
-
-	@MockitoBean
-	SimpMessagingTemplate simpMessagingTemplate;
 
 	AuthorsComparisonService authorsComparisonService; // = deduplicationService.getAuthorsComparisonService();
 

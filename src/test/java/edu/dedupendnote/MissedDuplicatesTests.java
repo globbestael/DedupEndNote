@@ -12,11 +12,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
@@ -27,23 +22,11 @@ import edu.dedupendnote.utils.MemoryAppender;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@SpringBootTest
-@ActiveProfiles("test")
-class MissedDuplicatesTests extends BaseTest {
+class MissedDuplicatesTests extends AbstractIntegrationTest {
 	@Autowired
 	DeduplicationService deduplicationService;
 
-	@MockitoBean
-	SimpMessagingTemplate simpMessagingTemplate;
-
 	private final MemoryAppender memoryAppender = new MemoryAppender();
-
-	@Value("${baseDir}")
-	String baseDir = "";
-
-	String testDir = "";
-
-	String wssessionId = "";
 
 	//	static Logger logger = null;
 
@@ -52,16 +35,11 @@ class MissedDuplicatesTests extends BaseTest {
 
 	/*
 	 * For each source in the @ParameterizedTest a new memoryAppender is added.
-	 * 
+	 *
 	 * Trying to reuse the memoryAppender (even by giving it a name) doesn't work.
-	 * 
+	 *
 	 * FIXME: There is a big overlap with ValidationTests::writeFNandFPresults in initialization of the memoryAppender
 	 */
-	@BeforeEach
-	void initTestDir() {
-		testDir = baseDir;
-	}
-
 	@BeforeEach
 	void addMemoryAppender() {
 		List<Logger> loggers = new ArrayList<>();

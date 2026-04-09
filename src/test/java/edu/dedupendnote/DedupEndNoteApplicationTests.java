@@ -11,22 +11,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.Logger;
-import ch.qos.logback.classic.LoggerContext;
 import edu.dedupendnote.services.DeduplicationService;
 import edu.dedupendnote.services.IOService;
 import edu.dedupendnote.services.NormalizationService;
@@ -34,33 +24,14 @@ import edu.dedupendnote.services.UtilitiesService;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@SpringBootTest
-@ActiveProfiles("test")
-class DedupEndNoteApplicationTests {
+class DedupEndNoteApplicationTests extends AbstractIntegrationTest {
 	@Autowired
 	DeduplicationService deduplicationService;
 
-	@MockitoBean
-	SimpMessagingTemplate simpMessagingTemplate;
-
-	@Value("${baseDir}")
-	String baseDir = "";
-
-	String testDir = "";
-
-	String wssessionId = "";
-
+	@Override
 	@BeforeEach
 	void initTestDir() {
 		testDir = baseDir + "/experiments/";
-	}
-
-	@BeforeAll
-	static void beforeAll() {
-		LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
-		Logger rootLogger = loggerContext.getLogger("edu.dedupendnote");
-		rootLogger.setLevel(Level.INFO);
-		log.debug("Logging level set to INFO");
 	}
 
 	@Test
