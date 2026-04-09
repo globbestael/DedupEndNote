@@ -28,7 +28,7 @@ class TwoFilesTest extends AbstractIntegrationTest {
 		String outputFileName = UtilitiesService.createOutputFileName(newFileName, markMode);
 
 		String resultString = deduplicationService.deduplicateTwoFiles(newFileName, oldFileName, outputFileName,
-				markMode, wssessionId);
+				markMode, message -> {});
 		System.err.println(resultString);
 		assertThat(resultString).startsWith(
 				"DONE: DedupEndNote removed 551 publications from the new set, and has written 114 publications.");
@@ -43,7 +43,7 @@ class TwoFilesTest extends AbstractIntegrationTest {
 		String outputFileName = UtilitiesService.createOutputFileName(newFileName, markMode);
 
 		String resultString = deduplicationService.deduplicateTwoFiles(newFileName, oldFileName, outputFileName,
-				markMode, wssessionId);
+				markMode, message -> {});
 		System.err.println(resultString);
 		assertThat(resultString).startsWith("ERROR: The second input file contains records without IDs");
 	}

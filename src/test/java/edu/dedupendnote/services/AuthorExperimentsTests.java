@@ -30,7 +30,7 @@ class AuthorExperimentsTests extends AbstractIntegrationTest {
 	@BeforeEach
 	void beforeEach() {
 		testDir = baseDir;
-		expService = new DeduplicationService(simpMessagingTemplate, new ComparisonService());
+		expService = new DeduplicationService(new ComparisonService());
 		expService.setAuthorsComparisonService(authorsComparisonService);
 	}
 
@@ -97,11 +97,11 @@ class AuthorExperimentsTests extends AbstractIntegrationTest {
 		boolean markMode = false;
 		String outputFileName = subdir + "t1_mark.txt";
 
-		String resultString = service.deduplicateOneFile(inputFileName, outputFileName, markMode, wssessionId);
+		String resultString = service.deduplicateOneFile(inputFileName, outputFileName, markMode, message -> {});
 
 		assertThat(service.formatResultString(4, 1)).isEqualTo(resultString);
 
-		String expResultString = expService.deduplicateOneFile(inputFileName, outputFileName, markMode, wssessionId);
+		String expResultString = expService.deduplicateOneFile(inputFileName, outputFileName, markMode, message -> {});
 
 		assertThat(resultString).isNotEqualTo(expResultString);
 		assertThat(service.formatResultString(4, 4)).isEqualTo(expResultString);

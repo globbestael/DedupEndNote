@@ -124,7 +124,7 @@ class MissedDuplicatesTests extends AbstractIntegrationTest {
 		assertThat(new File(inputFileName)).exists();
 
 		String resultString = deduplicationService.deduplicateOneFile(inputFileName, outputFileName, markMode,
-				wssessionId);
+				message -> {});
 
 		System.err.println("Messages: " + memoryAppender.filterByPatterns(tracePatterns, Level.TRACE));
 		assertThat(memoryAppender.filterByPatterns(tracePatterns, Level.TRACE).size()).isGreaterThan(0);

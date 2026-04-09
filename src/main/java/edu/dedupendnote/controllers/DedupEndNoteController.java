@@ -9,11 +9,13 @@ import java.nio.file.Path;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.function.Consumer;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -22,6 +24,7 @@ import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.multipart.MultipartFile;
 
+import edu.dedupendnote.domain.StompMessage;
 import edu.dedupendnote.services.DeduplicationService;
 import edu.dedupendnote.services.UtilitiesService;
 import jakarta.servlet.http.HttpServletResponse;
@@ -37,9 +40,12 @@ public class DedupEndNoteController {
 	private String uploadDir;
 
 	private final DeduplicationService deduplicationService;
+	private final SimpMessagingTemplate simpMessagingTemplate;
 
-	public DedupEndNoteController(DeduplicationService deduplicationService) {
+	public DedupEndNoteController(DeduplicationService deduplicationService,
+			SimpMessagingTemplate simpMessagingTemplate) {
 		this.deduplicationService = deduplicationService;
+		this.simpMessagingTemplate = simpMessagingTemplate;
 	}
 
 	// @formatter:off
@@ -56,18 +62,11 @@ public class DedupEndNoteController {
 	 * - the DeduplicationService uses Web Sockets to report progress to the browser.
 	 *
 	 * Web Socket: Messages should be sent to the individual user.
-	 * Normally a user would send a message to the server. The @MessageMapping function could retrieve the Web Socket SessionId with a @HeaderId argument of the function.
-	 * The called function could use @SendToUser, and the client could subscribe to "/user/...".
-	 * Spring would translate a URL as "/user/target/messages" for user "john" to "/target/messsages-john"
-	 * But:
-	 * - there is only server --> client communication (no @MessageMapping functions)
-	 * - messages are sent from within the service.
-	 * Therefore:
-	 * - the client extracts the Web Socket SessionId (wssessionId) and subscribes to "/target/messages-[wssessionId]"
-	 * - the wssessionId is passed as an argument for startOneFile / startTwoFiles
-	 * - startDeduplication passes the wssessionId along to the DeduplicationService
-	 * - the DeduplicationService sends the messages to "/target/messages-[wssessionId]"
-	 * See https://www.generacodice.com/en/articolo/2284280/spring-websockets-sendtouser-without-login
+	 * There is only server --> client communication (no @MessageMapping functions).
+	 * - the client generates a UUID (wssessionId) via crypto.randomUUID() and subscribes to "/topic/messages-[wssessionId]"
+	 * - the wssessionId is passed as a request parameter for startOneFile / startTwoFiles
+	 * - the controller creates a Consumer<String> that routes messages to "/topic/messages-[wssessionId]" via SimpMessagingTemplate
+	 * - the Consumer is passed to DeduplicationService, which calls it for each progress update
 	 */
 	// @formatter:on
 
@@ -116,12 +115,14 @@ public class DedupEndNoteController {
 		String outputFileName = UtilitiesService.createOutputFileName(inputFileName, markMode);
 		String logPrefix = "1F" + (Boolean.TRUE.equals(markMode) ? "M" : "D");
 
+		Consumer<String> progressReporter = message ->
+				simpMessagingTemplate.convertAndSend("/topic/messages-" + wssessionId, new StompMessage(message));
 		try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
 			RequestAttributes requestAttributes = RequestContextHolder.currentRequestAttributes();
 			Future<String> future = executor.submit(() -> {
 				RequestContextHolder.setRequestAttributes(requestAttributes);
 				return deduplicationService.deduplicateOneFile(uploadDir + File.separator + inputFileName,
-						uploadDir + File.separator + outputFileName, markMode, wssessionId);
+						uploadDir + File.separator + outputFileName, markMode, progressReporter);
 			});
 			log.info("Writing to result: {}: {}", logPrefix, future.get());
 			return ResponseEntity.ok("{ \"result\": " + future.get());
@@ -135,6 +136,8 @@ public class DedupEndNoteController {
 
 		String logPrefix = "2F" + (Boolean.TRUE.equals(markMode) ? "M" : "D");
 
+		Consumer<String> progressReporter = message ->
+				simpMessagingTemplate.convertAndSend("/topic/messages-" + wssessionId, new StompMessage(message));
 		try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
 			RequestAttributes requestAttributes = RequestContextHolder.currentRequestAttributes();
 			Future<String> future = executor.submit(() -> {
@@ -142,7 +145,7 @@ public class DedupEndNoteController {
 				return deduplicationService.deduplicateTwoFiles(uploadDir + File.separator + newFile,
 						uploadDir + File.separator + oldFile,
 						uploadDir + File.separator + UtilitiesService.createOutputFileName(newFile, markMode), markMode,
-						wssessionId);
+						progressReporter);
 			});
 			log.info("Writing to result: {}: {}", logPrefix, future.get());
 			return ResponseEntity.ok("{ \"result\": " + future.get());

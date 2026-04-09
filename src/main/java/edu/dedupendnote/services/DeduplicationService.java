@@ -12,13 +12,13 @@ import java.util.TreeMap;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import java.util.function.Consumer;
+
 import org.jspecify.annotations.Nullable;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.annotation.RequestScope;
 
 import edu.dedupendnote.domain.Publication;
-import edu.dedupendnote.domain.StompMessage;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
@@ -30,7 +30,6 @@ public class DeduplicationService {
 
 	private AuthorsComparisonService authorsComparisonService;
 	private final IOService ioService;
-	private final SimpMessagingTemplate simpMessagingTemplate;
 
 	// the DOIs have been lowercased
 	public static Pattern COCHRANE_DOI_PATTERN = Pattern.compile("^.*10.1002/14651858.([a-z][a-z]\\d+).*",
@@ -89,14 +88,13 @@ public class DeduplicationService {
 	 */
 	// @formatter:on
 
-	public DeduplicationService(SimpMessagingTemplate simpMessagingTemplate, ComparisonService comparisonService) {
-		this.simpMessagingTemplate = simpMessagingTemplate;
+	public DeduplicationService(ComparisonService comparisonService) {
 		this.authorsComparisonService = new DefaultAuthorsComparisonService();
 		this.ioService = new IOService();
 		this.comparisonService = comparisonService;
 	}
 
-	public void compareSet(List<Publication> publications, Integer year, boolean descending, String wssessionId) {
+	public void compareSet(List<Publication> publications, Integer year, boolean descending, Consumer<String> progressReporter) {
 		int noOfPublications = publications.size();
 		int noOfDuplicates = 0;
 		/*
@@ -217,7 +215,7 @@ l						 * 		V 		W 		X
 					}
 				}
 			}
-			wsMessage(wssessionId, "Working on %d for %d publications (marked %d duplicates)".formatted(year,
+			progressReporter.accept("Working on %d for %d publications (marked %d duplicates)".formatted(year,
 					noOfPublications, noOfDuplicates));
 		}
 	}
@@ -235,39 +233,39 @@ l						 * 		V 		W 		X
 	}
 
 	public String deduplicateOneFile(String inputFileName, String outputFileName, boolean markMode,
-			String wssessionId) {
-		wsMessage(wssessionId, "Reading file " + inputFileName);
+			Consumer<String> progressReporter) {
+		progressReporter.accept("Reading file " + inputFileName);
 		List<Publication> publications = ioService.readPublications(inputFileName);
 
 		String s = doSanityChecks(publications, inputFileName);
 		if (s != null) {
-			wsMessage(wssessionId, s);
+			progressReporter.accept(s);
 			return s;
 		}
 
-		searchYearOneFile(publications, wssessionId);
+		searchYearOneFile(publications, progressReporter);
 
 		if (markMode) { // no enrich(), and add / overwrite LB (label) field
 			int numberWritten = ioService.writeMarkedPublications(publications, inputFileName, outputFileName);
 			long labeledPublications = publications.stream().filter(r -> r.getLabel() != null).count();
 			s = "DONE: DedupEndNote has written " + numberWritten + " publications with " + labeledPublications
 					+ " duplicates marked in the Label field.";
-			wsMessage(wssessionId, s);
+			progressReporter.accept(s);
 			return s;
 		}
 
-		wsMessage(wssessionId, "Enriching the " + publications.size() + " deduplicated results");
+		progressReporter.accept("Enriching the " + publications.size() + " deduplicated results");
 		enrich(publications);
-		wsMessage(wssessionId, "Saving the " + publications.size() + " deduplicated results");
+		progressReporter.accept("Saving the " + publications.size() + " deduplicated results");
 		int numberWritten = ioService.writeDeduplicatedPublications(publications, inputFileName, outputFileName);
 		s = formatResultString(publications.size(), numberWritten);
-		wsMessage(wssessionId, s);
+		progressReporter.accept(s);
 
 		return s;
 	}
 
 	public String deduplicateTwoFiles(String newInputFileName, String oldInputFileName, String outputFileName,
-			boolean markMode, String wssessionId) {
+			boolean markMode, Consumer<String> progressReporter) {
 		// read the old publications and mark them as present, then add the new publications
 		log.info("oldInputFileName: {}", oldInputFileName);
 		log.info("newInputFileName: {}", newInputFileName);
@@ -275,7 +273,7 @@ l						 * 		V 		W 		X
 
 		String s = doSanityChecks(publications, oldInputFileName);
 		if (s != null) {
-			wsMessage(wssessionId, s);
+			progressReporter.accept(s);
 			return s;
 		}
 
@@ -296,13 +294,13 @@ l						 * 		V 		W 		X
 		List<Publication> newPublications = ioService.readPublications(newInputFileName);
 		s = doSanityChecks(newPublications, newInputFileName);
 		if (s != null) {
-			wsMessage(wssessionId, s);
+			progressReporter.accept(s);
 			return s;
 		}
 		publications.addAll(newPublications);
 		log.info("Publications read from 2 files: {}", publications.size());
 
-		searchYearTwoFiles(publications, wssessionId);
+		searchYearTwoFiles(publications, progressReporter);
 
 		if (markMode) { // no enrich(), and add / overwrite LB (label) field
 			int numberWritten = ioService.writeMarkedPublications(publications, newInputFileName, outputFileName);
@@ -310,7 +308,7 @@ l						 * 		V 		W 		X
 					.filter(r -> r.getLabel() != null && !r.isPresentInOldFile()).count();
 			s = "DONE: DedupEndNote has written %s publications with %d duplicates marked in the Label field."
 					.formatted(numberWritten, numberLabeledPublications);
-			wsMessage(wssessionId, s);
+			progressReporter.accept(s);
 			return s;
 		}
 
@@ -325,7 +323,7 @@ l						 * 		V 		W 		X
 				outputFileName);
 		s = "DONE: DedupEndNote removed %d publications from the new set, and has written %d publications."
 				.formatted((newPublications.size() - numberWritten), numberWritten);
-		wsMessage(wssessionId, s);
+		progressReporter.accept(s);
 		return s;
 	}
 
@@ -468,7 +466,7 @@ l						 * 		V 		W 		X
 	 * Reason: we prefer the data (duplicate kept) which is most recent (e.g. complete publication BEFORE ahead
 	 * of print which is possibly from earlier year or without a year).
 	 */
-	public void searchYearOneFile(List<Publication> publications, String wssessionId) {
+	public void searchYearOneFile(List<Publication> publications, Consumer<String> progressReporter) {
 		Map<Integer, List<Publication>> yearSets = publications.stream()
 				.collect(Collectors.groupingBy(Publication::getPublicationYear, TreeMap::new, Collectors.toList()))
 				.descendingMap();
@@ -484,9 +482,9 @@ l						 * 		V 		W 		X
 					yearSet.addAll(emptyYearlist.stream().filter(r -> r.getLabel() == null).toList());
 				}
 				yearSet.addAll(yearSets.getOrDefault(year - 1, List.of()));
-				wsMessage(wssessionId, "Working on " + year + " for " + yearSet.size() + " publications");
-				compareSet(yearSet, year, true, wssessionId);
-				wsMessage(wssessionId, "PROGRESS: " + cumulativePercentages.get(year));
+				progressReporter.accept("Working on " + year + " for " + yearSet.size() + " publications");
+				compareSet(yearSet, year, true, progressReporter);
+				progressReporter.accept("PROGRESS: " + cumulativePercentages.get(year));
 			}
 		});
 	}
@@ -501,7 +499,7 @@ l						 * 		V 		W 		X
 	 * from earlier year or without a year and more probably in the old file than in the new file) BEFORE the complete data
 	 */
 	// @formatter:on
-	public void searchYearTwoFiles(List<Publication> publications, String wssessionId) {
+	public void searchYearTwoFiles(List<Publication> publications, Consumer<String> progressReporter) {
 		Map<Integer, List<Publication>> yearSets = publications.stream()
 				.collect(Collectors.groupingBy(Publication::getPublicationYear, TreeMap::new, Collectors.toList()));
 		Map<Integer, Integer> cumulativePercentages = getCumulativePercentages(publications, yearSets);
@@ -515,9 +513,9 @@ l						 * 		V 		W 		X
 			}
 			yearSet.addAll(yearSets.get(year));
 			yearSet.addAll(yearSets.getOrDefault(year + 1, List.of()));
-			wsMessage(wssessionId, "Working on " + year + " for " + yearSet.size() + " publications");
-			compareSet(yearSet, year, false, wssessionId);
-			wsMessage(wssessionId, "PROGRESS: " + cumulativePercentages.get(year));
+			progressReporter.accept("Working on " + year + " for " + yearSet.size() + " publications");
+			compareSet(yearSet, year, false, progressReporter);
+			progressReporter.accept("PROGRESS: " + cumulativePercentages.get(year));
 		});
 	}
 
@@ -533,12 +531,6 @@ l						 * 		V 		W 		X
 		}
 		// log.debug("cumulativePercentages: " + cumulativePercentages);
 		return cumulativePercentages;
-	}
-
-	private void wsMessage(String wssessionId, String message) {
-		if (simpMessagingTemplate != null) {
-			simpMessagingTemplate.convertAndSend("/topic/messages-" + wssessionId, new StompMessage(message));
-		}
 	}
 
 	public void setAuthorsComparisonService(AuthorsComparisonService authorsComparisonService) {

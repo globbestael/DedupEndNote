@@ -73,7 +73,7 @@ class DedupEndNoteApplicationTests extends AbstractIntegrationTest {
 		String outputFileName = UtilitiesService.createOutputFileName(inputFileName, markMode);
 
 		String resultString = deduplicationService.deduplicateOneFile(inputFileName, outputFileName, markMode,
-				wssessionId);
+				message -> {});
 
 		assertThat(resultString).isEqualTo(deduplicationService.formatResultString(4, 1));
 		// assertThat(resultString).startsWith("DONE: DedupEndNote removed 3 records, and
@@ -91,7 +91,7 @@ class DedupEndNoteApplicationTests extends AbstractIntegrationTest {
 		assertThat(new File(inputFileName)).exists();
 
 		String resultString = deduplicationService.deduplicateOneFile(inputFileName, outputFileName, markMode,
-				wssessionId);
+				message -> {});
 
 		assertThat(resultString).isEqualTo(deduplicationService.formatResultString(total, totalWritten));
 	}
@@ -103,7 +103,7 @@ class DedupEndNoteApplicationTests extends AbstractIntegrationTest {
 		String outputFileName = UtilitiesService.createOutputFileName(inputFileName, markMode);
 
 		String resultString = deduplicationService.deduplicateOneFile(inputFileName, outputFileName, markMode,
-				wssessionId);
+				message -> {});
 
 		assertThat(resultString)
 				.startsWith("ERROR: The IDs of the publications of input file " + inputFileName + " are not unique");

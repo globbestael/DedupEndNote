@@ -65,13 +65,12 @@
 			connect();
 
 			function connect() {
+				var wssessionId = crypto.randomUUID();
+				$("#wssessionId").val(wssessionId);
 				var socket = new SockJS('/gs-guide-websocket');
 				stompClient = Stomp.over(socket);
-				//stompClient.debug = null;	// disable debug, shorthand for: "stompClient.debug = function(str) {};" see https://stomp-js.github.io/stomp-websocket/codo/class/Client.html 
+				//stompClient.debug = null;	// disable debug, shorthand for: "stompClient.debug = function(str) {};" see https://stomp-js.github.io/stomp-websocket/codo/class/Client.html
 				stompClient.connect({}, function (frame) {
-					wssessionId = /\/([^\/]+)\/websocket/.exec(socket._transport.url)[1];
-					// console.log("connected, session id: " + wssessionId);
-					$("#wssessionId").val(wssessionId);
 					// subscribe to a user specific URL (see the controller for more info)
 					stompClient.subscribe('/topic/messages-' + wssessionId, function (stompMessage) {
 						message = JSON.parse(stompMessage.body).name

@@ -27,8 +27,6 @@ public abstract class AbstractIntegrationTest {
 
 	protected String testDir = "";
 
-	protected String wssessionId = "";
-
 	@BeforeAll
 	static void setLogLevelToInfo() {
 		LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();

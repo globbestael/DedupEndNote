@@ -27,14 +27,14 @@ DedupEndNote is a Spring Boot 4.0 / Java 21 web app that deduplicates bibliograp
 - **Mark mode**: keeps all records but labels duplicates with the ID of the kept record
 
 ### Key packages
-- `controllers/` — HTTP endpoints; file upload and dedup triggers; uses virtual threads (Java 21) for concurrent dedup runs
+- `controllers/` — HTTP endpoints; file upload and dedup triggers; uses virtual threads (Java 21) for concurrent dedup runs; creates the `Consumer<String>` that routes progress messages to WebSocket
 - `domain/` — `Publication` (core model), `PublicationDB` (in-memory store), `NormPatterns` (50+ compiled regex patterns)
 - `services/` — business logic (see below)
 
 ### Services and their responsibilities
 | Service | Lines | Responsibility |
 |---|---|---|
-| `DeduplicationService` | ~547 | Orchestrates the full pipeline; sends WebSocket (STOMP) progress messages |
+| `DeduplicationService` | ~547 | Orchestrates the full pipeline; accepts a `Consumer<String> progressReporter` for progress reporting |
 | `ComparisonService` | ~337 | 5-step duplicate detection algorithm |
 | `IOService` | ~980 | Parses and writes RIS files; normalizes fields during read |
 | `NormalizationService` | ~991 | Normalizes authors, titles, DOIs, pages, journals |
@@ -75,7 +75,7 @@ Tests live in `src/test/java/edu/dedupendnote/` and its `services/` subpackage. 
 ### Test class hierarchy
 
 - **`BaseTest`** — provides `baseDir` (from `System.getProperty("user.home") + "/dedupendnote_files"`), `testDir`, `@BeforeEach initTestDir()`, plus utilities (`jws`, `getHighestSimilarityForAuthors`, `setLoggerToDebug`)
-- **`AbstractIntegrationTest`** — standalone (does not extend `BaseTest`); base for all `@SpringBootTest` tests; provides `@ActiveProfiles("test")`, `@Tag("integration")`, `@MockitoBean SimpMessagingTemplate`, `baseDir`, `testDir`, `wssessionId`, `@BeforeAll` (log level → INFO), `@BeforeEach initTestDir()`. Subclasses override `initTestDir()` when they need a subdirectory (e.g. `testDir = baseDir + "/experiments/"`).
+- **`AbstractIntegrationTest`** — standalone (does not extend `BaseTest`); base for all `@SpringBootTest` tests; provides `@ActiveProfiles("test")`, `@Tag("integration")`, `@MockitoBean SimpMessagingTemplate`, `baseDir`, `testDir`, `@BeforeAll` (log level → INFO), `@BeforeEach initTestDir()`. Subclasses override `initTestDir()` when they need a subdirectory (e.g. `testDir = baseDir + "/experiments/"`).
 - **`AuthorsBaseTest extends BaseTest`** — shared logic for author-comparison tests (unit tests)
 - **`JournalsBaseTest extends BaseTest`** — shared logic for journal-comparison tests (unit tests)
 - **`JaroWinklerTitleTest extends BaseTest`** — title comparison tests (unit tests)

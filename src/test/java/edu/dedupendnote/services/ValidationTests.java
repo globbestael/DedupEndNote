@@ -436,7 +436,7 @@ class ValidationTests extends AbstractIntegrationTest {
 						log.trace("- 0. Publication years are too far apart: {} and {}", p1.getPublicationYear(), p2.getPublicationYear());
 						log.trace("{} - {} ARE NOT DUPLICATES", p1.getId(), p2.getId());
 					} else {
-						deduplicationService.compareSet(pair, p1.getPublicationYear(), true, "dummy");
+						deduplicationService.compareSet(pair, p1.getPublicationYear(), true, message -> {});
 					}
 
 					bw.write("\nANALYSIS:\n");
@@ -860,7 +860,7 @@ class ValidationTests extends AbstractIntegrationTest {
 			fail(s);
 		}
 
-		deduplicationService.searchYearOneFile(publications, wssessionId);
+		deduplicationService.searchYearOneFile(publications, message -> {});
 		return publications;
 	}
 
