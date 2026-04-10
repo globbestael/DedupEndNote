@@ -3,6 +3,7 @@ package edu.dedupendnote.services;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -17,6 +18,11 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Service
 public class ComparisonService {
+
+	private static final JaroWinklerSimilarity JWS = new JaroWinklerSimilarity();
+	private static final Map<String, Pattern> ABBREVIATION_CACHE = new ConcurrentHashMap<>();
+	private static final Map<String, Pattern> INITIALISM_CACHE = new ConcurrentHashMap<>();
+	private static final Map<String, Pattern> STARTING_INITIALISM_CACHE = new ConcurrentHashMap<>();
 
 	public static final Double JOURNAL_SIMILARITY_NO_REPLY = 0.90;
 	public static final Double JOURNAL_SIMILARITY_REPLY = 0.93;
@@ -70,13 +76,12 @@ public class ComparisonService {
 			return true;
 		}
 
-		JaroWinklerSimilarity jws = new JaroWinklerSimilarity();
 		for (String s1 : set1) {
 			for (String s2 : set2) {
 				if (s1.startsWith("http") && s2.startsWith("http") && !s1.equals(s2)) {
 					continue;
 				}
-				Double similarity = jws.apply(s1.toLowerCase(), s2.toLowerCase());
+				Double similarity = JWS.apply(s1.toLowerCase(), s2.toLowerCase());
 				if (isReply && similarity > JOURNAL_SIMILARITY_REPLY) {
 					log.trace("- 4. Journal similarity above treshold (reply)");
 					return true;
@@ -126,7 +131,8 @@ public class ComparisonService {
 	}
 
 	private static boolean compareJournals_FirstAsAbbreviation(String j1, String j2) {
-		Pattern pattern = Pattern.compile("\\b" + j1.replaceAll("\\s", ".*\\\\b") + ".*", Pattern.CASE_INSENSITIVE);
+		Pattern pattern = ABBREVIATION_CACHE.computeIfAbsent(j1,
+				k -> Pattern.compile("\\b" + k.replaceAll("\\s", ".*\\\\b") + ".*", Pattern.CASE_INSENSITIVE));
 		Matcher matcher = pattern.matcher(j2);
 		if (matcher.find()) {
 			return true;
@@ -135,9 +141,11 @@ public class ComparisonService {
 	}
 
 	private static boolean compareJournals_FirstAsInitialism(String s1, String s2) {
-		String patternString = s1.chars().mapToObj(c -> String.valueOf((char) c))
-				.collect(Collectors.joining(".*\\b", "\\b", ".*"));
-		Pattern patternShort2 = Pattern.compile(patternString, Pattern.CASE_INSENSITIVE);
+		Pattern patternShort2 = INITIALISM_CACHE.computeIfAbsent(s1, k -> {
+			String patternString = k.chars().mapToObj(c -> String.valueOf((char) c))
+					.collect(Collectors.joining(".*\\b", "\\b", ".*"));
+			return Pattern.compile(patternString, Pattern.CASE_INSENSITIVE);
+		});
 		Matcher matcher = patternShort2.matcher(s2);
 		if (matcher.find()) {
 			return true;
@@ -155,9 +163,11 @@ public class ComparisonService {
 			if ("AJNR".equals(words[0])) {
 				words[0] = "AJN";
 			}
-			String patternString = words[0].chars().mapToObj(c -> String.valueOf((char) c))
-					.collect(Collectors.joining(".*\\b", "\\b", ".*"));
-			Pattern patternShort3 = Pattern.compile(patternString, Pattern.CASE_INSENSITIVE);
+			Pattern patternShort3 = STARTING_INITIALISM_CACHE.computeIfAbsent(words[0], k -> {
+				String patternString = k.chars().mapToObj(c -> String.valueOf((char) c))
+						.collect(Collectors.joining(".*\\b", "\\b", ".*"));
+				return Pattern.compile(patternString, Pattern.CASE_INSENSITIVE);
+			});
 			Matcher matcher = patternShort3.matcher(s2);
 			if (matcher.find()) {
 				return true;
@@ -274,17 +284,15 @@ public class ComparisonService {
 		Double highestSimilarity = 0.0;
 		String highestTitle1 = "";
 		String highestTitle2 = "";
-		JaroWinklerSimilarity jws = new JaroWinklerSimilarity();
-
 		for (String title1 : titles1) {
 			for (String title2 : titles2) {
 				int minLength = Math.min(title1.length(), title2.length()) - 1;
 				if (minLength < 1) {
 					log.error("For publ {} or {} the titles are too short: '{}' or '{}'", r1.getId(), r2.getId(),
 							title1, title2);
-					similarity = jws.apply(title1, title2);
+					similarity = JWS.apply(title1, title2);
 				} else {
-					similarity = jws.apply(title1.substring(0, minLength), title2.substring(0, minLength));
+					similarity = JWS.apply(title1.substring(0, minLength), title2.substring(0, minLength));
 				}
 
 				// similarity = jws.apply(title1, title2);
