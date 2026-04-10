@@ -1,12 +1,5 @@
 # TODO
 
-## Split tests in unit and integration tests
-With Claude plan reduce-test-duplication-abstract-integration-test.md a split was made between tests whch can be run with @TestConfiguration and tests which need a Spring Context (@SpringBootTest).
-However, both Claude and me didn't pay attention to the fact that some test files use test data from files which are identified by a variable in a properties file (the variable baseDir is annotated with `@Value("${baseDir}")`): this is a heavy penalty for these tests. If the variable baseDir was initialized in another way, the files would be treated as unit tests.
-
-Should that variable be initialized once in BaseTest by hardcoding it there (possibly as System.getProperty("home.dir") + "/dedupendnote_files")?
-
-
 ## Performance
 - if both are isSeveralPages = false, then use a higher threshold for authors and/or title?
 - FP in BIG_SET for 8111 - 36423: 1. SP same, 2 Same because one AU is empty, NO 3 (TI comparison) because reply, 4 same Journal. One of PY = 0

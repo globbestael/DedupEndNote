@@ -63,8 +63,10 @@ class MissedDuplicatesTests extends AbstractIntegrationTest {
 
 	/*
 	 * Solved cases
-	 * 		//  "'/own/missed_duplicates/9165.txt', 2, 1", // solved
+	 *
+	 	//  "'/own/missed_duplicates/9165.txt', 2, 1", // solved
 		//  "'/own/missed_duplicates/Rofo.txt', 3, 1",
+		// "'/own/missed_duplicates/chinese_and_english_title.txt', 2, 1", // 1 ST in Chinese, 1 ST and 2 TI in English, 1 T3 = '-1'
 		// Solved: authors in ALL are treated better
 		// "'/ASySD/dedupendnote_files/missed_duplicates/SRSR_Human_52927.txt', 2, 1",
 		// "'/problems/AI_Query_2022_missed_duplicates_1.txt', 2, 1",
@@ -124,7 +126,8 @@ class MissedDuplicatesTests extends AbstractIntegrationTest {
 		assertThat(new File(inputFileName)).exists();
 
 		String resultString = deduplicationService.deduplicateOneFile(inputFileName, outputFileName, markMode,
-				message -> {});
+				message -> {
+				});
 
 		System.err.println("Messages: " + memoryAppender.filterByPatterns(tracePatterns, Level.TRACE));
 		assertThat(memoryAppender.filterByPatterns(tracePatterns, Level.TRACE).size()).isGreaterThan(0);
