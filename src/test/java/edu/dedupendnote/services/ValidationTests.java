@@ -853,7 +853,7 @@ class ValidationTests extends AbstractIntegrationTest {
 	}
 
 	private List<Publication> deduplicate(String inputFileName) {
-		List<Publication> publications = ioService.readPublications(inputFileName);
+		List<Publication> publications = ioService.readPublications(inputFileName, message -> {});
 
 		String s = deduplicationService.doSanityChecks(publications, inputFileName);
 		if (s != null) {

@@ -235,7 +235,7 @@ l						 * 		V 		W 		X
 	public String deduplicateOneFile(String inputFileName, String outputFileName, boolean markMode,
 			Consumer<String> progressReporter) {
 		progressReporter.accept("Reading file " + inputFileName);
-		List<Publication> publications = ioService.readPublications(inputFileName);
+		List<Publication> publications = ioService.readPublications(inputFileName, progressReporter);
 
 		String s = doSanityChecks(publications, inputFileName);
 		if (s != null) {
@@ -269,7 +269,7 @@ l						 * 		V 		W 		X
 		// read the old publications and mark them as present, then add the new publications
 		log.info("oldInputFileName: {}", oldInputFileName);
 		log.info("newInputFileName: {}", newInputFileName);
-		List<Publication> publications = ioService.readPublications(oldInputFileName);
+		List<Publication> publications = ioService.readPublications(oldInputFileName, progressReporter);
 
 		String s = doSanityChecks(publications, oldInputFileName);
 		if (s != null) {
@@ -291,7 +291,7 @@ l						 * 		V 		W 		X
 			r.setPresentInOldFile(true);
 		});
 
-		List<Publication> newPublications = ioService.readPublications(newInputFileName);
+		List<Publication> newPublications = ioService.readPublications(newInputFileName, progressReporter);
 		s = doSanityChecks(newPublications, newInputFileName);
 		if (s != null) {
 			progressReporter.accept(s);
