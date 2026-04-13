@@ -52,6 +52,21 @@
 		function markAsActive(id) {
 			$(id).removeClass('step-waiting step-done').addClass('step-active');
 		}
+		/*
+		 * crypto.randomUUID() is only available in secure contexts (HTTPS or localhost).
+		 * On plain HTTP it is undefined, so we fall back to a Math.random()-based UUID v4.
+		 * The UUID only needs to be unique per page load (used as a WebSocket session key),
+		 * so a non-cryptographic fallback is sufficient.
+		 */
+		function generateUUID() {
+			if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+				return crypto.randomUUID();
+			}
+			return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+				var r = Math.random() * 16 | 0;
+				return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+			});
+		}
 		function disconnect() {
 			if (stompClient !== null) {
 				stompClient.disconnect();
@@ -64,7 +79,7 @@
 			connect();
 
 			function connect() {
-				var wssessionId = crypto.randomUUID();
+				var wssessionId = generateUUID();
 				$("#wssessionId").val(wssessionId);
 				var socket = new SockJS('/gs-guide-websocket');
 				stompClient = Stomp.over(socket);
