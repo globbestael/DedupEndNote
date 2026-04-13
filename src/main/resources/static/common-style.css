@@ -21,3 +21,65 @@ h3 {
     content: url("/resources/box-arrow-up-right.svg");
     margin-left: 6px;
 }
+
+/* === Stepper === */
+.step-card {
+    border-left: 4px solid #dee2e6;
+    border-radius: 0.375rem;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1rem;
+    background: #f8f9fa;
+    opacity: 0.65;
+    transition: border-color 0.25s, background 0.25s, opacity 0.25s;
+}
+.step-card.step-active {
+    border-left-color: #0d6efd;
+    background: #fff;
+    opacity: 1;
+    box-shadow: 0 2px 8px rgba(13, 110, 253, 0.1);
+}
+.step-card.step-done {
+    border-left-color: #198754;
+    background: #f0faf4;
+    opacity: 1;
+}
+.step-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-right: 0.6rem;
+    flex-shrink: 0;
+}
+.step-waiting .step-number { background: #dee2e6; color: #6c757d; }
+.step-active  .step-number { background: #0d6efd; color: #fff; }
+.step-done    .step-number { background: #198754; color: #fff; }
+.step-header {
+    margin-bottom: 0.75rem;
+}
+.step-header h4, .step-header h3 { margin: 0; font-size: 1.1rem; font-weight: 600; display: flex; align-items: center; }
+.step-subtitle { font-size: 0.875rem; color: #6c757d; margin-bottom: 0.75rem; }
+
+/* Sub-cards for twofiles step 1a/1b */
+.step-subcard {
+    border-left: 3px solid #dee2e6;
+    border-radius: 0.25rem;
+    padding: 0.75rem 1rem;
+    background: #f8f9fa;
+    opacity: 0.65;
+    transition: border-color 0.25s, background 0.25s, opacity 0.25s;
+}
+.step-subcard.step-active {
+    border-left-color: #0d6efd;
+    background: #fff;
+    opacity: 1;
+}
+.step-subcard.step-done {
+    border-left-color: #198754;
+    background: #f0faf4;
+    opacity: 1;
+}
