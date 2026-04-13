@@ -25,10 +25,15 @@
             <div class="col-8" data-bs-spy="scroll" data-bs-target="#navmenu">
                 <h1>DedupEndNote: Changelog</h1>
 
-                <h2 class="bg-success-subtle">1.1.5 (2026-03-27)</h2>
+                <h2 class="bg-success-subtle">1.1.5 (2026-04-13)</h2>
                 <ul>
                     <li>CINAHL can have an ID (numbers, numbers and hyphens) in ST field</li>
-                    <li>Upgrade to Spring Boot 4.0.4</li>
+                    <li>Redesigned web interface: visual step-by-step workflow with active/done/waiting indicators,
+                        fixed navigation bar, and progress bar shown inline during both file parsing and deduplication
+                    </li>
+                    <li>Performance: compiled journal-matching patterns and similarity objects are now cached,
+                        reducing repeated work during large deduplication runs</li>
+                    <li>Upgrade to Spring Boot 4.0.5</li>
                 </ul>
 
                 <h2 class="bg-success-subtle">1.1.4 (2026-01-27)</h2>
