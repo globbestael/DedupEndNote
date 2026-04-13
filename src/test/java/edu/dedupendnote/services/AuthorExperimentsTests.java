@@ -6,40 +6,31 @@ import org.apache.commons.text.similarity.JaroWinklerSimilarity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
+import edu.dedupendnote.AbstractIntegrationTest;
 import edu.dedupendnote.domain.Publication;
 import lombok.extern.slf4j.Slf4j;
 
 /*
  * Test for comparing different implementations of author comparisons; VERY INCOMPLETE
  *
- * The current ExperimentalAuthorsComparator just uses higher values for AUTHOR_SIMILARITY_... 
+ * The current ExperimentalAuthorsComparator just uses higher values for AUTHOR_SIMILARITY_...
  * and compares deduplication results with the production version.
  */
-@SpringBootTest
 @Slf4j
-class AuthorExperimentsTests {
+class AuthorExperimentsTests extends AbstractIntegrationTest {
 
 	@Autowired
 	DeduplicationService service;
 
-	@MockitoBean
-	SimpMessagingTemplate simpMessagingTemplate;
-
 	AuthorsComparisonService authorsComparisonService = new ExperimentalAuthorsComparator();
 
-	// @Autowired
-	private DeduplicationService expService = new DeduplicationService(simpMessagingTemplate, new ComparisonService());
-
-	String homeDir = System.getProperty("user.home");
-	String testdir = homeDir + "/dedupendnote_files";
-	String wssessionId = "";
+	private DeduplicationService expService;
 
 	@BeforeEach
 	void beforeEach() {
+		testDir = baseDir;
+		expService = new DeduplicationService(new ComparisonService());
 		expService.setAuthorsComparisonService(authorsComparisonService);
 	}
 
@@ -101,16 +92,16 @@ class AuthorExperimentsTests {
 
 	@Test
 	void higherAuthorSimilarityFindsLessDuplicates() {
-		String subdir = testdir + "/experiments/";
+		String subdir = testDir + "/experiments/";
 		String inputFileName = subdir + "t1.txt";
 		boolean markMode = false;
 		String outputFileName = subdir + "t1_mark.txt";
 
-		String resultString = service.deduplicateOneFile(inputFileName, outputFileName, markMode, wssessionId);
+		String resultString = service.deduplicateOneFile(inputFileName, outputFileName, markMode, message -> {});
 
 		assertThat(service.formatResultString(4, 1)).isEqualTo(resultString);
 
-		String expResultString = expService.deduplicateOneFile(inputFileName, outputFileName, markMode, wssessionId);
+		String expResultString = expService.deduplicateOneFile(inputFileName, outputFileName, markMode, message -> {});
 
 		assertThat(resultString).isNotEqualTo(expResultString);
 		assertThat(service.formatResultString(4, 4)).isEqualTo(expResultString);

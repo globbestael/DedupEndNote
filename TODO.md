@@ -42,8 +42,7 @@
 
      The other test files(e.g. BIG_TEST) also have cases with T3. The sheer number of cases with Proceedings titles in T3, makes it difficult
      to see the other cases:
-      - It looks as if T3 for original title was an old Medline rule (before the OT field???). Should that have any influence on the choices for 
-      DedupEndNote?
+      - It looks as if T3 for original title was an old Medline rule (before the OT field???). Should that have any influence on the choices for DedupEndNote?
       - The series title for book chapters is necessary? Especially for Scopus records?
       - PsycINFO with name of journal predecessors complicates it
 - FP: in TIL_Zotero there is a case where both publications have a different DOI and in step 4b the ISSNs are compared, resulting in a FP.

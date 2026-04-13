@@ -16,15 +16,12 @@
 
 	<script th:inline="javascript">
 		var stompClient = null;
-		var wssessionId = null;
 
-		/* Also adds data to the start form (step 2) */
 		function checkFileSize(evant, data) {
 			if (data.files[0].size > (150 * 1024 * 1024)) {
 				var MB = parseInt(data.files[0].size / (1024 * 1024));
 				alert("File is bigger than 150 MB! This file: " + MB + "MB");
 			} else {
-				// connect();
 				$("#fileName_1").val(data.files[0].name);
 				data.submit();
 			}
@@ -43,23 +40,36 @@
 		}
 		function disableButton(id) {
 			$(id).prop("disabled", true);
+			$('label[for="' + id.replace('#', '') + '"]').addClass('disabled');
 		}
 		function enableButton(id) {
 			$(id).prop("disabled", false);
+			$('label[for="' + id.replace('#', '') + '"]').removeClass('disabled');
 		}
 		function markAsDone(id) {
-			$(id).removeClass('alert-warning');
-			$(id).addClass('alert-success');
+			$(id).removeClass('step-waiting step-active').addClass('step-done');
+		}
+		function markAsActive(id) {
+			$(id).removeClass('step-waiting step-done').addClass('step-active');
 		}
 		/*
-		 * Calling disconnect() will invalidate the wssessionId?
-		 * Would it be better to restart with a reload?
-		 * - new wssessionId
-		 * - if there is a old running deduplication, then its messages will be send to the subscription which is no longer valid,
-		 *   and not interfere with the current subscription 
+		 * crypto.randomUUID() is only available in secure contexts (HTTPS or localhost).
+		 * On plain HTTP it is undefined, so we fall back to a Math.random()-based UUID v4.
+		 * The UUID only needs to be unique per page load (used as a WebSocket session key),
+		 * so a non-cryptographic fallback is sufficient.
 		 */
+		function generateUUID() {
+			if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+				return crypto.randomUUID();
+			}
+			return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+				var r = Math.random() * 16 | 0;
+				return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+			});
+		}
 		function disconnect() {
 			if (stompClient !== null) {
+				stompClient.disconnect();
 			}
 			console.log("Disconnected");
 		}
@@ -69,14 +79,12 @@
 			connect();
 
 			function connect() {
+				var wssessionId = generateUUID();
+				$("#wssessionId").val(wssessionId);
 				var socket = new SockJS('/gs-guide-websocket');
 				stompClient = Stomp.over(socket);
-				stompClient.debug = null;	// disable debug, shorthand for: "stompClient.debug = function(str) {};" see https://stomp-js.github.io/stomp-websocket/codo/class/Client.html 
+				stompClient.debug = null;
 				stompClient.connect({}, function (frame) {
-					// subscribe to a user specific URL (see the controller for more info)
-					var wssessionId = /\/([^\/]+)\/websocket/.exec(socket._transport.url)[1];
-					// console.log("connected, session id: " + wssessionId);
-					$("#wssessionId").val(wssessionId);
 					stompClient.subscribe('/topic/messages-' + wssessionId, function (stompMessage) {
 						let message = JSON.parse(stompMessage.body).name
 						if (message.match("^DONE")) {
@@ -84,6 +92,7 @@
 							$('#results').html(message);
 							enableButton('#buttonResultFile');
 							markAsDone('#step2');
+							markAsActive('#step3');
 						} else if (message.match("^ERROR")) {
 							$('#results').removeClass('alert-warning');
 							$('#results').addClass('alert-danger');
@@ -101,7 +110,6 @@
 			}
 
 			$('#file').change(function () {
-				// solution for "fakepath" problem: remove everything before the fileName
 				var fileName = $("#file").val();
 				var myRegex = /^(.+\\)([^\\]+)$/;
 				var match = myRegex.exec(fileName);
@@ -126,9 +134,12 @@
 					if (data.textStatus == "success") {
 						showProgress(0);
 						$('#results').html("<span>File " + data.files[0].name + " has been uploaded</span>");
+						$('#fileName_display').text(data.files[0].name);
 						disableButton('#fileUpload1');
 						enableButton('#buttonStartDeduplication');
 						markAsDone('#step1');
+						markAsActive('#step2');
+						showDiv('#step2-progress');
 					}
 				},
 				error: function (jqXHR, data, thrownError) {
@@ -146,8 +157,8 @@
 			$('#buttonStartDeduplication').on('click', function (event) {
 				event.preventDefault();
 				disableButton('#buttonStartDeduplication');
-				$("#fileNameResultFile").val($('#fileName_1').val());	// in getResultFile_form
-				$("#markModeResultFile").val($('#markMode').prop("checked"));	// in getResultFile_form
+				$("#fileNameResultFile").val($('#fileName_1').val());
+				$("#markModeResultFile").val($('#markMode').prop("checked"));
 
 				$.ajax({
 					url: '/startOneFile',
@@ -173,212 +184,200 @@
 
 		});
 	</script>
-	<style>
-		#steps h3 {
-			margin-top: 0px;
-		}
-	</style>
 </head>
 
 <body>
-	<div class="container-fluid">
-		<div class="row">
-			<div class="col-3">
-				<nav id="menu" class="navbar navbar-light bg-light" style="position: fixed;">
-					<div class="container-fluid">
-						<div class="navbar-nav" id="navmenu">
-							<nav class="nav nav-pills flex-column small">
-								<a class="nav-link" href="#start">Top</a>
-								<a class="nav-link" href="#introduction">Introduction</a>
-								<a class="nav-link" href="#steps" target="_self">Steps</a>
-								<!-- <a class="nav-link" href="#why">Why DedupEndNote?</a> -->
-								<a class="nav-link" href="#how">How it works</a>
-								<a class="nav-link" href="#output">Output</a>
-								<a class="nav-link" href="#markModeText">Mark mode</a>
-								<!-- <a class="nav-link" href="#performance">Performance</a> -->
-								<a class="nav-link" href="#citing">How to cite</a>
-								<a class="nav-link" href="#issues">Issues and feature requests</a>
-								<a class="nav-link external-link" href="/changelog" target="window2">Changelog</a>
-								<a class="nav-link external-link" href="/details" target="window2">Details, lots of
-									details ...</a>
-							</nav>
-						</div>
-					</div>
-				</nav>
+	<nav class="navbar navbar-light bg-light border-bottom fixed-top">
+		<div class="container">
+			<span class="navbar-brand fw-bold">DedupEndNote <small class="fw-normal text-muted fs-6">v1.1.5</small></span>
+			<div class="d-flex gap-2">
+				<a href="/twofiles" class="btn btn-outline-secondary btn-sm">Deduplicate 2 files</a>
+				<a href="/details" target="window2" class="btn btn-outline-secondary btn-sm">Details ↗</a>
+				<a href="/changelog" target="window2" class="btn btn-outline-secondary btn-sm">Changelog ↗</a>
+				<a href="/" class="btn btn-primary btn-sm">Restart</a>
 			</div>
-			<div class="col-7" data-bs-spy="scroll" data-bs-target="#navmenu">
-				<h1 id="start">DedupEndNote (version 1.1.5 2026-03-27)</h1>
-				<div class="row border border-primary rounded alert alert-secondary" id="step1">
-					<div class="col-3">
-						<h4>1. INPUT FILE</h4>
+		</div>
+	</nav>
+
+	<div class="container" style="padding-top: 4.5rem;">
+		<div class="row">
+			<div class="col-8 offset-2">
+				<h1 class="mb-1">Deduplicate 1 file</h1>
+				<p class="text-muted mb-4">Use <a class="link-underline-light" href="/twofiles">Deduplicate 2 files</a> to compare a new set of records against an existing one</p>
+
+				<!-- Step 1: Upload -->
+				<div id="step1" class="step-card step-active">
+					<div class="step-header">
+						<h4><span class="step-number">1</span>Input File</h4>
 					</div>
-					<div class="col-9">
-						<form class="form-horizontal" id="upload_form" method="post" enctype="multipart/form-data"
-							th:action="@{|/uploadFile|}">
-							<div class="input-group">
-								<label for="oldFile" class="form-label">Select the EndNote / Zotero RIS file to
-									deduplicate<br />(use <a class="link-underline-light" href="/twofiles">Deduplicate 2
-										files</a> to deduplicate an new set of records against an old set)</label><br />
-								<input type="file" id="fileUpload1" name="file" />
-							</div>
-						</form>
-					</div>
+					<p class="step-subtitle">Select an EndNote or Zotero export in RIS format (.ris or .txt)</p>
+					<form class="form-horizontal" id="upload_form" method="post" enctype="multipart/form-data"
+						th:action="@{|/uploadFile|}">
+						<div>
+							<label for="fileUpload1" class="btn btn-outline-secondary btn-sm">Choose file</label>
+							<input type="file" id="fileUpload1" name="file" class="d-none" />
+							<span id="fileName_display" class="ms-2 small text-muted"></span>
+						</div>
+					</form>
 				</div>
-				<div class="row border border-primary rounded alert alert-secondary" id="step2">
-					<div class="col-3">
-						<h4>2. START</h4>
+
+				<!-- Step 2: Start -->
+				<div id="step2" class="step-card step-waiting">
+					<div class="step-header">
+						<h4><span class="step-number">2</span>Start</h4>
 					</div>
-					<div class="col-9">
-						<form class="form-horizontal" id="start_form" method="post" action="">
-							<input type="hidden" id="fileName_1" name="fileName_1" value="" />
-							<input type="hidden" id="wssessionId" name="wssessionId" value="" />
-							<div class="form-check form-check-inline">
-								<input class="form-check-input" type="checkbox" id="markMode" name="markMode" />
-								<label class="form-check-label" for="file"> Do NOT deduplicate the file but mark the
-									duplicate records (see <a class="link-underline-light" href="#markModeText">Mark
-										mode</a>)</label>
-							</div>
-							<div>
-								<button type="submit" id="buttonStartDeduplication" disabled
-									class="btn btn-primary mb-2">Start deduplication</button>
-							</div>
-						</form>
-					</div>
-				</div>
-				<div class="row border border-primary rounded alert alert-secondary" id="step3">
-					<div class="col-3">
-						<h4>3. RESULT</h4>
-					</div>
-					<div class="col-9">
-						<form class="form-horizontal" id="getResultFile_form" method="post"
-							th:action="@{|/getResultFile|}">
-							<input type="hidden" name="fileNameResultFile" id="fileNameResultFile" />
-							<input type="hidden" name="markModeResultFile" id="markModeResultFile" />
-							<!-- nodig om submit() voor IE te laten werken -->
-							<button type="submit" id="buttonResultFile" disabled class="btn btn-primary mb-2"
-								onclick="this.form.submit(); markAsDone('#step3');">Get the result</button>
-						</form>
-					</div>
-				</div>
-				<div class="row" style="margin-top: 10px;">
-					<div class="col-10 border border-primary rounded">
-						<h4>Progress</h4>
+					<form class="form-horizontal" id="start_form" method="post" action="">
+						<input type="hidden" id="fileName_1" name="fileName_1" value="" />
+						<input type="hidden" id="wssessionId" name="wssessionId" value="" />
+						<div class="form-check form-check-inline mb-2">
+							<input class="form-check-input" type="checkbox" id="markMode" name="markMode" />
+							<label class="form-check-label" for="markMode">Do NOT deduplicate but mark the duplicate records (see Mark mode below)</label>
+						</div>
+						<div>
+							<button type="submit" id="buttonStartDeduplication" disabled
+								class="btn btn-primary mb-2">Start deduplication</button>
+						</div>
+					</form>
+					<div id="step2-progress" class="d-none mt-2">
 						<div id="progress" class="progress" style="height: 20px;">
 							<div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0"
 								aria-valuemax="100"></div>
 						</div>
-						<p id="results" class="alert alert-warning">Waiting for new input file ...</p>
-					</div>
-					<div class="col-1"></div>
-					<div class="col-1">
-						<a class="btn btn-primary" href="/" role="button">Restart</a>
+						<p id="results" class="alert alert-warning mt-2">Waiting for new input file ...</p>
 					</div>
 				</div>
 
-				<div style="margin-top: 30px;">
-					<h3 id="introduction">Introduction</h3>
-					<p><b>DedupEndNote</b> is a tool for removing duplicate records from EndNote or Zotero databases
-						exported in <b>RIS format</b>.
-						It is more flexible than the built in deduplication features in EndNote or Zotero,
-						and identifies a lot more duplicates that those programs.</p>
-					<p>You can:</p>
-					<ul>
-						<li>Deduplicate a single file (this page)</li>
-						<li>Compare a new file against an existing file (see <a class="link-underline-light"
-								href="/twofiles">Deduplicate 2 files</a>)</li>
-					</ul>
-
-					<p>The program has been tested on EndNote and Zotero databases with records from:
-						CINAHL (EBSCOHost), ClinicalTrials.gov, Cochrane Library, EMBASE (OVID and Embase.com), Medline
-						(OVID), PsycINFO (OVID), PubMed, Scopus, Web of Science (very few tests with conference papers).
-					</p>
-
-					<h2 id="steps">Steps</h2>
-					<p>Deduplicate one file:</p>
-					<ul>
-						<li>Export an EndNote / Zotero database into a file in RIS format</li>
-						<li>Upload this file in DedupEndNote</li>
-						<li>Save the results file with deduplicated records</li>
-						<li>Import this results file into a <b>new</b> EndNote / Zotero database</li>
-					</ul>
-					<p>Deduplicate a new file against an existing file / EndNote database: see <a
-							class="link-underline-light" href="/twofiles">Deduplicate 2
-							files</a></p>
-
-					<!--
-					<h3>Why Use DedupEndNote?</h3>
-					<ul>
-						<li><b>Higher detection rate</b> – EndNote and Zotero often miss duplicates, even with a
-							maintained Journals List.</li>
-						<li><b>More forgiving matching</b> – DedupEndNote tolerates small differences in metadata that
-							would
-							cause other tools to miss a match.</li>
-						<li><b>Works across sources</b> – Useful for PubMed, Cochrane, Web of Science, and other
-							databases that
-							lack robust deduplication.</li>
-					</ul>
-				-->
-
-					<div class="alert alert-warning" role="alert">
-						The page <a class="link-underline-light" href="/details" target="window2">Details, lots of
-							details ...</a> has a lot more detailed information on the following subjects.
+				<!-- Step 3: Result -->
+				<div id="step3" class="step-card step-waiting">
+					<div class="step-header">
+						<h4><span class="step-number">3</span>Result</h4>
 					</div>
+					<form class="form-horizontal" id="getResultFile_form" method="post"
+						th:action="@{|/getResultFile|}">
+						<input type="hidden" name="fileNameResultFile" id="fileNameResultFile" />
+						<input type="hidden" name="markModeResultFile" id="markModeResultFile" />
+						<button type="submit" id="buttonResultFile" disabled class="btn btn-primary mb-2"
+							onclick="this.form.submit(); markAsDone('#step3');">Get the result</button>
+					</form>
+				</div>
 
-					<div class="d-flex justify-content-between">
-						<span class="h3" id="how">How it works</span>
+				<!-- Documentation accordion -->
+				<div class="accordion mt-4" id="docsAccordion">
+					<div class="accordion-item">
+						<h2 class="accordion-header">
+							<button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseIntro">
+								Introduction
+							</button>
+						</h2>
+						<div id="collapseIntro" class="accordion-collapse collapse" data-bs-parent="#docsAccordion">
+							<div class="accordion-body">
+								<p><b>DedupEndNote</b> is a tool for removing duplicate records from EndNote or Zotero databases exported in <b>RIS format</b>.
+								It is more flexible than the built-in deduplication features in EndNote or Zotero, and identifies more duplicates.</p>
+								<p>You can:</p>
+								<ul>
+									<li>Deduplicate a single file (this page)</li>
+									<li>Compare a new file against an existing file (see <a class="link-underline-light" href="/twofiles">Deduplicate 2 files</a>)</li>
+								</ul>
+								<p>The program has been tested on EndNote and Zotero databases with records from:
+								CINAHL (EBSCOHost), ClinicalTrials.gov, Cochrane Library, EMBASE (OVID and Embase.com), Medline (OVID), PsycINFO (OVID), PubMed, Scopus, Web of Science.</p>
+							</div>
+						</div>
 					</div>
-					<p>DedupEndNote compares each pair of records in up to five stages, stopping early if a mismatch is
-						found:</p>
-					<ol>
-						<li><b>Publication Year</b>: Matches if the years are the same or differ by at most one year.
-						</li>
-						<li><b>Starting Page or DOI</b>: Compares page numbers and DOIs with preprocessing to handle
-							variations.</li>
-						<li><b>Authors</b>: Uses Jaro-Winkler similarity on up to the first 40 authors, with name
-							normalization.</li>
-						<li><b>Title</b>: Compares normalized or reversed titles.</li>
-						<li><b>ISBN / ISSN / Journal</b>: Matches exact ISBNs or ISSNs or compares normalized journal
-							titles.</li>
-					</ol>
-					<p>If a pair scores YES in all applicable comparisons, they are considered duplicates.</p>
-
-					<h3 id="output">Output</h3>
-					<p>By default, only the first record in each duplicate set is kept. The output file:</p>
-					<ul>
-						<li>Preserves all unique records</li>
-						<li>Enriches them with missing data from duplicates (e.g., DOI, journal name, publication year,
-							pages)</li>
-						<li>Normalizes certain fields (e.g., DOI format, page ranges)</li>
-					</ul>
-
-					<h3 id="markModeText">Mark mode</h3>
-					<p>Instead of removing duplicates, Mark Mode labels them for manual review:</p>
-					<ul>
-						<li>The ID of the first record in each duplicate set is copied to the <b>Label (LB)</b> field of
-							all duplicates.</li>
-						<li>The original Label content is overwritten.</li>
-						<li>No enrichment or normalization is performed.</li>
-					</ul>
-					<p>This mode is useful if you want to merge records manually in EndNote.</p>
-
-					<!-- <h3 id="performance">Performance</h3>
-					<ul>
-						<li>DedupEndNote is slower than EndNote/Zotero because it performs more detailed comparisons.
-						</li>
-						<li>Example: Deduplicating a 115 MB RIS file (~15,000 records) takes ~20 seconds.</li>
-					</ul> -->
-
-					<h3 id="citing">How to cite</h3>
-					<p>If you use DedupEndNote, please cite:</p>
-					<p>Lobbestael, G. (2026). DedupEndNote (Version 1.1.4) [Computer software].
-						https://github.com/globbestael/DedupEndNote</p>
-
-					<h3 id="issues">Issues and feature requests</h3>
-					<div>If you have any questions about the tool or come across a problem when trying to use it,
-						please raise an issue on the <a class="link-underline-light"
-							href="https://github.com/globbestael/DedupEndNote" target="github">GitHub Repository</a>.
+					<div class="accordion-item">
+						<h2 class="accordion-header">
+							<button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseHow">
+								How it works
+							</button>
+						</h2>
+						<div id="collapseHow" class="accordion-collapse collapse" data-bs-parent="#docsAccordion">
+							<div class="accordion-body">
+								<div class="alert alert-warning" role="alert">
+									The page <a class="link-underline-light" href="/details" target="window2">Details, lots of details ...</a> has more detailed information.
+								</div>
+								<p>DedupEndNote compares each pair of records in up to five stages, stopping early if a mismatch is found:</p>
+								<ol>
+									<li><b>Publication Year</b>: Matches if the years are the same or differ by at most one year.</li>
+									<li><b>Starting Page or DOI</b>: Compares page numbers and DOIs with preprocessing to handle variations.</li>
+									<li><b>Authors</b>: Uses Jaro-Winkler similarity on up to the first 40 authors, with name normalization.</li>
+									<li><b>Title</b>: Compares normalized or reversed titles.</li>
+									<li><b>ISBN / ISSN / Journal</b>: Matches exact ISBNs or ISSNs or compares normalized journal titles.</li>
+								</ol>
+								<p>If a pair scores YES in all applicable comparisons, they are considered duplicates.</p>
+							</div>
+						</div>
+					</div>
+					<div class="accordion-item">
+						<h2 class="accordion-header">
+							<button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOutput">
+								Output
+							</button>
+						</h2>
+						<div id="collapseOutput" class="accordion-collapse collapse" data-bs-parent="#docsAccordion">
+							<div class="accordion-body">
+								<p>By default, only the first record in each duplicate set is kept. The output file:</p>
+								<ul>
+									<li>Preserves all unique records</li>
+									<li>Enriches them with missing data from duplicates (e.g., DOI, journal name, publication year, pages)</li>
+									<li>Normalizes certain fields (e.g., DOI format, page ranges)</li>
+								</ul>
+								<p>Steps to use the result:</p>
+								<ul>
+									<li>Export an EndNote / Zotero database into a file in RIS format</li>
+									<li>Upload this file in DedupEndNote</li>
+									<li>Save the results file with deduplicated records</li>
+									<li>Import this results file into a <b>new</b> EndNote / Zotero database</li>
+								</ul>
+							</div>
+						</div>
+					</div>
+					<div class="accordion-item">
+						<h2 class="accordion-header">
+							<button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseMarkMode">
+								Mark mode
+							</button>
+						</h2>
+						<div id="collapseMarkMode" class="accordion-collapse collapse" data-bs-parent="#docsAccordion">
+							<div class="accordion-body">
+								<p>Instead of removing duplicates, Mark Mode labels them for manual review:</p>
+								<ul>
+									<li>The ID of the first record in each duplicate set is copied to the <b>Label (LB)</b> field of all duplicates.</li>
+									<li>The original Label content is overwritten.</li>
+									<li>No enrichment or normalization is performed.</li>
+								</ul>
+								<p>This mode is useful if you want to merge records manually in EndNote.</p>
+							</div>
+						</div>
+					</div>
+					<div class="accordion-item">
+						<h2 class="accordion-header">
+							<button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCiting">
+								How to cite
+							</button>
+						</h2>
+						<div id="collapseCiting" class="accordion-collapse collapse" data-bs-parent="#docsAccordion">
+							<div class="accordion-body">
+								<p>If you use DedupEndNote, please cite:</p>
+								<p>Lobbestael, G. (2026). DedupEndNote (Version 1.1.4) [Computer software].
+								https://github.com/globbestael/DedupEndNote</p>
+							</div>
+						</div>
+					</div>
+					<div class="accordion-item">
+						<h2 class="accordion-header">
+							<button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseIssues">
+								Issues and feature requests
+							</button>
+						</h2>
+						<div id="collapseIssues" class="accordion-collapse collapse" data-bs-parent="#docsAccordion">
+							<div class="accordion-body">
+								If you have any questions about the tool or come across a problem when trying to use it,
+								please raise an issue on the <a class="link-underline-light"
+									href="https://github.com/globbestael/DedupEndNote" target="github">GitHub Repository</a>.
+							</div>
+						</div>
 					</div>
 				</div>
+
 			</div>
 		</div>
 	</div>

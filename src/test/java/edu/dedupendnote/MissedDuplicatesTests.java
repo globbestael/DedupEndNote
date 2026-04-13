@@ -12,9 +12,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
@@ -25,19 +22,11 @@ import edu.dedupendnote.utils.MemoryAppender;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@SpringBootTest
-class MissedDuplicatesTests extends BaseTest {
+class MissedDuplicatesTests extends AbstractIntegrationTest {
 	@Autowired
 	DeduplicationService deduplicationService;
 
-	@MockitoBean
-	SimpMessagingTemplate simpMessagingTemplate;
-
 	private final MemoryAppender memoryAppender = new MemoryAppender();
-
-	String homeDir = System.getProperty("user.home");
-	String testdir = homeDir + "/dedupendnote_files/";
-	String wssessionId = "";
 
 	//	static Logger logger = null;
 
@@ -46,9 +35,9 @@ class MissedDuplicatesTests extends BaseTest {
 
 	/*
 	 * For each source in the @ParameterizedTest a new memoryAppender is added.
-	 * 
+	 *
 	 * Trying to reuse the memoryAppender (even by giving it a name) doesn't work.
-	 * 
+	 *
 	 * FIXME: There is a big overlap with ValidationTests::writeFNandFPresults in initialization of the memoryAppender
 	 */
 	@BeforeEach
@@ -74,8 +63,10 @@ class MissedDuplicatesTests extends BaseTest {
 
 	/*
 	 * Solved cases
-	 * 		//  "'/own/missed_duplicates/9165.txt', 2, 1", // solved
+	 *
+	 	//  "'/own/missed_duplicates/9165.txt', 2, 1", // solved
 		//  "'/own/missed_duplicates/Rofo.txt', 3, 1",
+		// "'/own/missed_duplicates/chinese_and_english_title.txt', 2, 1", // 1 ST in Chinese, 1 ST and 2 TI in English, 1 T3 = '-1'
 		// Solved: authors in ALL are treated better
 		// "'/ASySD/dedupendnote_files/missed_duplicates/SRSR_Human_52927.txt', 2, 1",
 		// "'/problems/AI_Query_2022_missed_duplicates_1.txt', 2, 1",
@@ -129,13 +120,14 @@ class MissedDuplicatesTests extends BaseTest {
 	// @formatter:on
 	void deduplicateMissedDuplicates(String fileName, int total, int totalWritten) {
 		log.debug("Log level should be debug");
-		String inputFileName = testdir + fileName;
+		String inputFileName = testDir + fileName;
 		boolean markMode = false;
 		String outputFileName = UtilitiesService.createOutputFileName(inputFileName, markMode);
 		assertThat(new File(inputFileName)).exists();
 
 		String resultString = deduplicationService.deduplicateOneFile(inputFileName, outputFileName, markMode,
-				wssessionId);
+				message -> {
+				});
 
 		System.err.println("Messages: " + memoryAppender.filterByPatterns(tracePatterns, Level.TRACE));
 		assertThat(memoryAppender.filterByPatterns(tracePatterns, Level.TRACE).size()).isGreaterThan(0);

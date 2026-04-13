@@ -2,37 +2,33 @@ package edu.dedupendnote;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import edu.dedupendnote.services.DeduplicationService;
 import edu.dedupendnote.services.UtilitiesService;
 
-@SpringBootTest
-class TwoFilesTest {
+class TwoFilesTest extends AbstractIntegrationTest {
 	@Autowired
 	DeduplicationService deduplicationService;
 
-	@MockitoBean
-	SimpMessagingTemplate simpMessagingTemplate;
-
-	String homeDir = System.getProperty("user.home");
-	String testdir = homeDir + "/dedupendnote_files/experiments/";
-	String wssessionId = "";
+	@Override
+	@BeforeEach
+	void initTestDir() {
+		testDir = baseDir + "/experiments/";
+	}
 
 	@Test
 	void deduplicate_OK() {
-		String oldFileName = testdir + "TwoFiles_1.txt";
-		String newFileName = testdir + "TwoFiles_2.txt";
+		String oldFileName = testDir + "TwoFiles_1.txt";
+		String newFileName = testDir + "TwoFiles_2.txt";
 		boolean markMode = false;
 		String outputFileName = UtilitiesService.createOutputFileName(newFileName, markMode);
 
 		String resultString = deduplicationService.deduplicateTwoFiles(newFileName, oldFileName, outputFileName,
-				markMode, wssessionId);
+				markMode, message -> {});
 		System.err.println(resultString);
 		assertThat(resultString).startsWith(
 				"DONE: DedupEndNote removed 551 publications from the new set, and has written 114 publications.");
@@ -41,13 +37,13 @@ class TwoFilesTest {
 	@Disabled("TODO: Why was this disabled")
 	@Test
 	void files_without_IDs() {
-		String oldFileName = testdir + "Recurrance_rate_EndNote_Library_original_deduplicated.txt";
-		String newFileName = testdir + "Recurrence_rate_search_updated_sept_18_deduplicated.txt";
+		String oldFileName = testDir + "Recurrance_rate_EndNote_Library_original_deduplicated.txt";
+		String newFileName = testDir + "Recurrence_rate_search_updated_sept_18_deduplicated.txt";
 		boolean markMode = false;
 		String outputFileName = UtilitiesService.createOutputFileName(newFileName, markMode);
 
 		String resultString = deduplicationService.deduplicateTwoFiles(newFileName, oldFileName, outputFileName,
-				markMode, wssessionId);
+				markMode, message -> {});
 		System.err.println(resultString);
 		assertThat(resultString).startsWith("ERROR: The second input file contains records without IDs");
 	}

@@ -14,25 +14,26 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
-import org.apache.commons.text.similarity.JaroWinklerSimilarity;
 import org.assertj.core.api.SoftAssertions;
 // import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.springframework.boot.test.context.TestConfiguration;
 
+import edu.dedupendnote.BaseTest;
 import edu.dedupendnote.domain.Publication;
 
-//@Slf4j
-//@ExtendWith(TimingExtension.class)
-@TestConfiguration
-class JaroWinklerTitleTest {
-	String homeDir = System.getProperty("user.home");
-
-	String testdir = homeDir + "/dedupendnote_files";
-	JaroWinklerSimilarity jws = new JaroWinklerSimilarity();
+/*
+	FIXME: This test file probably should be split into 2 files:
+	- most tests are unit tests
+	- there are a small number of tests which read external data. Because thiese methods use the baseDir / testDir variable,
+	  the whole test class is treated as integrationTest 
+	  	- extends AbstractIntegrationTest
+		- @SpringBootTest
+		- @ActiveProfiles("test")
+*/
+class JaroWinklerTitleTest extends BaseTest {
 
 	@ParameterizedTest(name = "{index}: jaroWinkler({0}, {1})={2}")
 	@MethodSource("positiveArgumentProvider")
@@ -459,7 +460,7 @@ class JaroWinklerTitleTest {
 
 	@Test
 	void testErrataFromFile() throws IOException {
-		String fileName = testdir + "/all/all__ST_TI_ending_with_round_bracket.txt";
+		String fileName = testDir + "/all/all__ST_TI_ending_with_round_bracket.txt";
 		Path path = Path.of(fileName);
 		List<String> lines = Files.readAllLines(path);
 
@@ -479,7 +480,7 @@ class JaroWinklerTitleTest {
 
 	@Test
 	void testPositiveCommentsFromFile() throws IOException {
-		String fileName = testdir + "/all/All__comment__positive_examples.txt";
+		String fileName = testDir + "/all/All__comment__positive_examples.txt";
 		Path path = Path.of(fileName);
 		List<String> lines = Files.readAllLines(path);
 
@@ -508,7 +509,7 @@ class JaroWinklerTitleTest {
 
 	@Test
 	void testNegativeCommentsFromFile() throws IOException {
-		String fileName = testdir + "/all/All__comment__negative_examples.txt";
+		String fileName = testDir + "/all/All__comment__negative_examples.txt";
 		Path path = Path.of(fileName);
 		List<String> lines = Files.readAllLines(path);
 
@@ -532,7 +533,7 @@ class JaroWinklerTitleTest {
 
 	@Test
 	void testPositiveCommentsAndRepliesFromFile() throws IOException {
-		String fileName = testdir + "/all/All__comment_AND_reply__positive_examples.txt";
+		String fileName = testDir + "/all/All__comment_AND_reply__positive_examples.txt";
 		Path path = Path.of(fileName);
 		List<String> lines = Files.readAllLines(path);
 

@@ -10,21 +10,15 @@ import java.util.List;
 import static java.util.function.Predicate.not;
 import java.util.stream.Stream;
 
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.slf4j.LoggerFactory;
 
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.Logger;
-import ch.qos.logback.classic.LoggerContext;
 import edu.dedupendnote.BaseTest;
 import edu.dedupendnote.domain.Publication;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 class JournalsBaseTest extends BaseTest {
-	String homeDir = System.getProperty("user.home");
-	String testdir = homeDir + "/dedupendnote_files";
+
 	List<Triple> localTriples = new ArrayList<>();
 
 	public record Triple(String journal1, String journal2, boolean similar) {
@@ -74,7 +68,7 @@ WHERE t1.title2 <> t2.title2
 	 */
 	// @formatter:on
 	protected List<Triple> getValidatedJournalPairs() throws IOException {
-		String fileName = testdir + "/experiments/validated_journal_pairs.txt";
+		String fileName = testDir + "/experiments/validated_journal_pairs.txt";
 		localTriples.clear();
 		Path path = Path.of(fileName);
 		Stream<String> lines = Files.lines(path);
@@ -95,14 +89,6 @@ WHERE t1.title2 <> t2.title2
 		assertThat(localTriples).as("There are more than 100 journal pairs").hasSizeGreaterThan(100);
 
 		return localTriples;
-	}
-
-	@BeforeAll
-	static void beforeAll() {
-		LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
-		Logger rootLogger = loggerContext.getLogger("edu.dedupendnote");
-		rootLogger.setLevel(Level.INFO);
-		log.debug("Logging level set to INFO");
 	}
 
 	@Test

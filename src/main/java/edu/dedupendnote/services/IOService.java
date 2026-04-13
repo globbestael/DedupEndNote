@@ -1,6 +1,8 @@
 package edu.dedupendnote.services;
 
 import java.io.BufferedReader;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.io.BufferedWriter;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -13,10 +15,12 @@ import java.util.Map;
 import java.util.SequencedSet;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Service;
@@ -140,7 +144,13 @@ public class IOService {
 	 * - no / harldy any normalization
 	 * - result stored in a Map<String, String>
 	 */
-	public List<Publication> readPublications(String inputFileName) {
+	private long countRecords(String fileName) throws IOException {
+		try (Stream<String> lines = Files.lines(Path.of(fileName))) {
+			return lines.filter(l -> l.startsWith("ER  - ")).count();
+		}
+	}
+
+	public List<Publication> readPublications(String inputFileName, Consumer<String> progressReporter) {
 		List<Publication> publications = new ArrayList<>();
 		String fieldContent = null;
 		String fieldName = null;
@@ -158,6 +168,13 @@ public class IOService {
 
 		boolean hasBom = UtilitiesService.detectBom(inputFileName);
 		int missingId = 1;
+		long totalRecords;
+		try {
+			totalRecords = countRecords(inputFileName);
+		} catch (IOException e) {
+			totalRecords = 0;
+		}
+		int lastPct = -1;
 
 		// Line starting with "TY - " triggers creation of record, line starting with
 		// "ER - " signals end of record
@@ -231,6 +248,13 @@ public class IOService {
 							addReversedTitles(publication);
 						}
 						publications.add(publication);
+						if (totalRecords > 0) {
+							int newPct = (int)(100L * publications.size() / totalRecords);
+							if (newPct != lastPct) {
+								progressReporter.accept("PROGRESS: " + newPct);
+								lastPct = newPct;
+							}
+						}
 
 						journalCache = null;
 						titleCache = null;
@@ -321,8 +345,8 @@ public class IOService {
 					 */
 					// @formatter:on
 					case "T3": // Book section
-						if (!fieldContent.startsWith("Retract")
-								&& !CONFERENCE_PATTERN.matcher(fieldContent).matches()) {
+						if (!fieldContent.startsWith("Retract") && !CONFERENCE_PATTERN.matcher(fieldContent).matches()
+								&& fieldContent.length() > 3) {
 							addNormalizedJournal(fieldContent, publication, fieldName);
 							addNormalizedTitle(fieldContent, publication);
 

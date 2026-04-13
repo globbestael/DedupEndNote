@@ -18,8 +18,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 class AuthorsBaseTest extends BaseTest {
 
-	String homeDir = System.getProperty("user.home");
-	String testdir = homeDir + "/dedupendnote_files";
 	List<Triple> localTriples = new ArrayList<>();
 
 	@Test
@@ -103,7 +101,7 @@ class AuthorsBaseTest extends BaseTest {
 	 */
 	// @formatter:on
 	protected List<Triple> getValidatedAuthorsPairs() throws IOException {
-		String fileName = testdir + "/experiments/validated_authors_pairs.txt";
+		String fileName = testDir + "/experiments/validated_authors_pairs.txt";
 		localTriples.clear();
 		Path path = Path.of(fileName);
 		Stream<String> lines = Files.lines(path);

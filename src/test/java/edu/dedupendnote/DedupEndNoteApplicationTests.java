@@ -11,19 +11,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.Logger;
-import ch.qos.logback.classic.LoggerContext;
 import edu.dedupendnote.services.DeduplicationService;
 import edu.dedupendnote.services.IOService;
 import edu.dedupendnote.services.NormalizationService;
@@ -31,24 +24,14 @@ import edu.dedupendnote.services.UtilitiesService;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@SpringBootTest
-class DedupEndNoteApplicationTests {
+class DedupEndNoteApplicationTests extends AbstractIntegrationTest {
 	@Autowired
 	DeduplicationService deduplicationService;
 
-	@MockitoBean
-	SimpMessagingTemplate simpMessagingTemplate;
-
-	String homeDir = System.getProperty("user.home");
-	String testdir = homeDir + "/dedupendnote_files/experiments/";
-	String wssessionId = "";
-
-	@BeforeAll
-	static void beforeAll() {
-		LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
-		Logger rootLogger = loggerContext.getLogger("edu.dedupendnote");
-		rootLogger.setLevel(Level.INFO);
-		log.debug("Logging level set to INFO");
+	@Override
+	@BeforeEach
+	void initTestDir() {
+		testDir = baseDir + "/experiments/";
 	}
 
 	@Test
@@ -85,12 +68,12 @@ class DedupEndNoteApplicationTests {
 
 	@Test
 	void deduplicate_OK() {
-		String inputFileName = testdir + "t1.txt";
+		String inputFileName = testDir + "t1.txt";
 		boolean markMode = false;
 		String outputFileName = UtilitiesService.createOutputFileName(inputFileName, markMode);
 
 		String resultString = deduplicationService.deduplicateOneFile(inputFileName, outputFileName, markMode,
-				wssessionId);
+				message -> {});
 
 		assertThat(resultString).isEqualTo(deduplicationService.formatResultString(4, 1));
 		// assertThat(resultString).startsWith("DONE: DedupEndNote removed 3 records, and
@@ -102,25 +85,25 @@ class DedupEndNoteApplicationTests {
 			// "'DedupEndNote_portal_vein_thrombosis_37741.txt', 37741, 24382", // Very slow test
 			"'Non_Latin_input.txt', 2, 2", "'Dedup_PATIJ2_Possibly_missed.txt', 18, 12" })
 	void deduplicateSmallFiles(String fileName, int total, int totalWritten) {
-		String inputFileName = testdir + fileName;
+		String inputFileName = testDir + fileName;
 		boolean markMode = false;
 		String outputFileName = UtilitiesService.createOutputFileName(inputFileName, markMode);
 		assertThat(new File(inputFileName)).exists();
 
 		String resultString = deduplicationService.deduplicateOneFile(inputFileName, outputFileName, markMode,
-				wssessionId);
+				message -> {});
 
 		assertThat(resultString).isEqualTo(deduplicationService.formatResultString(total, totalWritten));
 	}
 
 	@Test
 	void deduplicate_withDuplicateIDs() {
-		String inputFileName = testdir + "Bestand_met_duplicate_IDs.txt";
+		String inputFileName = testDir + "Bestand_met_duplicate_IDs.txt";
 		boolean markMode = false;
 		String outputFileName = UtilitiesService.createOutputFileName(inputFileName, markMode);
 
 		String resultString = deduplicationService.deduplicateOneFile(inputFileName, outputFileName, markMode,
-				wssessionId);
+				message -> {});
 
 		assertThat(resultString)
 				.startsWith("ERROR: The IDs of the publications of input file " + inputFileName + " are not unique");

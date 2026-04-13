@@ -7,33 +7,18 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.slf4j.LoggerFactory;
-import org.springframework.boot.test.context.TestConfiguration;
 import edu.dedupendnote.domain.Publication;
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.Logger;
-import ch.qos.logback.classic.LoggerContext;
 import lombok.extern.slf4j.Slf4j;
 
 /*
  * Testing the threshold of author comparison with the authors of validated duplicates
  */
 @Slf4j
-@TestConfiguration
 class AuthorsComparisonThresholdTest extends AuthorsBaseTest {
 
 	List<Triple> triples = new ArrayList<>();
-
-	@BeforeAll
-	static void beforeAll() {
-		LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
-		Logger rootLogger = loggerContext.getLogger("edu.dedupendnote");
-		rootLogger.setLevel(Level.INFO);
-		log.debug("Logging level set to INFO");
-	}
 
 	@BeforeEach
 	void before() throws IOException {
