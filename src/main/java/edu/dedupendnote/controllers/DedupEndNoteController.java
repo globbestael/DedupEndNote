@@ -64,6 +64,8 @@ public class DedupEndNoteController {
 	 * Web Socket: Messages should be sent to the individual user.
 	 * There is only server --> client communication (no @MessageMapping functions).
 	 * - the client generates a UUID (wssessionId) via crypto.randomUUID() and subscribes to "/topic/messages-[wssessionId]"
+	 *   TODO: crypto.randomUUID() only runs on localhost and secure connections.
+	 * 	 As a temporary fix, a local JS function is called to generate a UUID.
 	 * - the wssessionId is passed as a request parameter for startOneFile / startTwoFiles
 	 * - the controller creates a Consumer<String> that routes messages to "/topic/messages-[wssessionId]" via SimpMessagingTemplate
 	 * - the Consumer is passed to DeduplicationService, which calls it for each progress update
@@ -115,8 +117,8 @@ public class DedupEndNoteController {
 		String outputFileName = UtilitiesService.createOutputFileName(inputFileName, markMode);
 		String logPrefix = "1F" + (Boolean.TRUE.equals(markMode) ? "M" : "D");
 
-		Consumer<String> progressReporter = message ->
-				simpMessagingTemplate.convertAndSend("/topic/messages-" + wssessionId, new StompMessage(message));
+		Consumer<String> progressReporter = message -> simpMessagingTemplate
+				.convertAndSend("/topic/messages-" + wssessionId, new StompMessage(message));
 		try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
 			RequestAttributes requestAttributes = RequestContextHolder.currentRequestAttributes();
 			Future<String> future = executor.submit(() -> {
@@ -136,8 +138,8 @@ public class DedupEndNoteController {
 
 		String logPrefix = "2F" + (Boolean.TRUE.equals(markMode) ? "M" : "D");
 
-		Consumer<String> progressReporter = message ->
-				simpMessagingTemplate.convertAndSend("/topic/messages-" + wssessionId, new StompMessage(message));
+		Consumer<String> progressReporter = message -> simpMessagingTemplate
+				.convertAndSend("/topic/messages-" + wssessionId, new StompMessage(message));
 		try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
 			RequestAttributes requestAttributes = RequestContextHolder.currentRequestAttributes();
 			Future<String> future = executor.submit(() -> {
