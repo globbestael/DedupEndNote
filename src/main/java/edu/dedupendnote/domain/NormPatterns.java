@@ -154,7 +154,7 @@ public class NormPatterns {
 	 */
 	public static final Pattern JOURNAL_ENDING_ROUND_BRACKETS_PATTERN = Pattern.compile("\\([^\\)]+\\)$");
 
-	/*
+	/**
 	 * A number or ". Conference" and all following characters: The number and all following characters will be removed.
 	 * E.g.: 
 	 * - "Clinical neuropharmacology.12 Suppl 2 ()(pp v-xii; S1-105) 1989.Date of Publication: 1989." --> "Clinical neuropharmacology" 

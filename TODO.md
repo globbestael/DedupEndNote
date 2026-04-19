@@ -4,20 +4,17 @@
 - if both are isSeveralPages = false, then use a higher threshold for authors and/or title?
 - FP in BIG_SET for 8111 - 36423: 1. SP same, 2 Same because one AU is empty, NO 3 (TI comparison) because reply, 4 same Journal. One of PY = 0
 + TI normalization: 
-  + TI  - \d+[.:]\d* remove first part. Or should if there is a starting number, a second title without the number be added?
-  + TI  - Reprint( of)?
-  + TI  - .+(\(Reprinted.*$)
-  + TI  - .+(\(R\))
   - TI  - .+ et al: Does it make sense to split the title into 3 parts, and to remove the second part
     - part 1
     - part 2: " et al" with all text to the previous divider (start|.|:|...) an to the next divider (end||,|...)
     - part 3 
     Or maybe split all titles with " et al" by dividers, remove the parts with " et al", and join the rest with ": "
   - TI  - Images in ...\. (hepatology|clinical medicine|...)| Image of interest|Image of the month
-  - TI from Psychological Abstracts / PsyCNFO(?) uses "-" for compounds AND between main title and subtitle (several examples in McKeown test file)
+  - TI from Psychological Abstracts / PsycINFO(?) uses "-" for compounds AND between main title and subtitle (several examples in McKeown test file)
     Psilocybin-assisted psychotherapy for dying cancer patients-Aiding the final trip
 - T2 normalization
   - t2  - [^(\r]+\d+$:  '(' for journals with "(Berlin 2002)". 
+    ???: Previous regex invalid. Is "(Berlin 2002)" not removed with JOURNAL_ENDING_ROUND_BRACKETS_PATTERN?
     See also: 
     - https://clinicaltrials.gov/show/NCT01326949
     - http://www.who.int/trialsearch/Trial2.aspx?TrialID=JPRN-UMIN000015319
@@ -29,7 +26,7 @@
     - Non-Viral Vectors for Gene Therapy, Second Edition: Part 2
     - NTP Research Report on Systematic Literature Review on the Effects of Fluoride on Learning and Memory in Animal Studies: Research Report 1
     - The number can be added from the VL field: "T2  - Schizophrenia Bulletin" and "VL  - 45 (Supplement 2)"
-  - Health Technology Assessment (Pubmed; "Health Technol Assess"[Journal]) don't accept 1 or Roman numeral as starting page
+  - Health Technology Assessment (Pubmed; "Health Technol Assess"[Journal]) do not accept 1 or Roman numeral as starting page (but take the number of pages, or last page?)
  - T3: 
    - how many cases are there with Alternative journal name as content? There are examples in BIG_SET for PsycINFO_OVID records
      For WoS and PsycINFO chapters in a book within a series, the book title is T2, the book series is T3. Other databases often have only the
@@ -62,7 +59,7 @@
 - dedupe-sweep: data files: https://github.com/IEBH/dedupe-sweep/tree/master/test
 - problems/Conference_papers_skateboarding_20251207.txt: Conference papers from Scopus on skateboarding. 325 records, 2233 duplicates removed/
   How accurate is this given (1) this publication type and (2) most records are from the same database (that many duplicates? that many FP???)
-- McKeown_2021: how good is tghe quality of data
+- McKeown_2021: how good is the quality of the data
   - what is the origin of the bibliographic errors: the bibliographic database, EndNote import filter used, ...
 - SRA2_Cytology_screening: most of the FNs are caused by bibliographic errors in the pages field. 
   - what is the origin of the bibliographic errors: the bibliographic database, EndNote import filter used, ...
@@ -170,6 +167,12 @@ subject (portal vein thrombosis) was chosen after reading https://journals.plos.
 Logging configuration is spread over
 - logback-spring.xml
 - application(...).properties
+You can use in the logback-spring.xml:
+```
+  <springProfile name="dev | prd">
+    ...
+  </springProfile>
+```
 
 ## Multipart data upload and download
 https://www.baeldung.com/spring-streaming-multipart-data
