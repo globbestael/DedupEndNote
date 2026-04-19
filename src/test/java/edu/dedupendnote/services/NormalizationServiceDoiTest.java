@@ -9,10 +9,8 @@ import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.springframework.boot.test.context.TestConfiguration;
 
-@TestConfiguration
-class DoiTest {
+class NormalizationServiceDoiTest {
 
 	@ParameterizedTest(name = "{index}: addDois({0})=({1},{2})")
 	@MethodSource("argumentProvider")
@@ -37,7 +35,7 @@ class DoiTest {
 		/*
 		 * The following strings were taken from a UR field to test whether using this
 		 * field would add more duplicates. Verdict: NO, more false positives with corrections etc
-		 * !!! length check < 200 in addDois had to be relaxed 
+		 * !!! length check < 200 in addDois had to be relaxed
 		 */
 		//				arguments("http://ovidsp.ovid.com/ovidweb.cgi?T=JS&CSC=Y&NEWS=N&PAGE=fulltext&D=medl&AN=22897451 AND http://ZL9EQ5LQ7V.search.serialssolutions.com/?sid=OVID:medline&id=pmid:22897451&id=doi:10.3109%2F02699052.2012.706354&issn=0269-9052&isbn=&volume=26&issue=11&spage=1297&pages=1297-306&date=2012&title=Brain+Injury&atitle=Pre-treatment+compensation+use+is+a+stronger+correlate+of+measures+of+activity+limitations+than+cognitive+impairment.&aulast=Yutsis&pid=%3Cauthor%3EYutsis+M%3BBergquist+T%3BMicklewright+J%3BGehl+C%3BSmigielski+J%3BBrown+AW%3C%2Fauthor%3E%3CAN%3E22897451%3C%2FAN%3E%3CDT%3EJournal+Article%3C%2FDT%3E",
 		//						1, Set.of("10.3109/02699052.2012.706354")),

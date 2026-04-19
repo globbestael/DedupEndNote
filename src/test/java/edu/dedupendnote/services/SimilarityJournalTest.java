@@ -3,67 +3,22 @@ package edu.dedupendnote.services;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
-import java.util.List;
-import java.util.Set;
 import java.util.stream.Stream;
 
-import org.apache.commons.text.similarity.JaroWinklerSimilarity;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.springframework.boot.test.context.TestConfiguration;
 
 import edu.dedupendnote.domain.Publication;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-// @ExtendWith(TimingExtension.class)
-@TestConfiguration
-class JaroWinklerJournalTest {
-	JaroWinklerSimilarity jws = new JaroWinklerSimilarity();
-
-	/*
-	 * FIXME: Refactor
-	 * - Most tests should be moved to a NormalizationServiceTest
-	 * - and call NormalizationService.normalizeInputJournals
-	 * - the argumentProvider should provide the set of normalized journals (this has already partly been done for slashTest())
-	 * 
-	 * See https://github.com/globbestael/DedupEndNote/issues/50
-	 */
-
-	/*
-	 * Jarowinkler similarity > ComparisonService.JOURNAL_SIMILARITY_NO_REPLY for normalized journals
-	 */
-	@ParameterizedTest(name = "{index}: jaroWinkler({0}, {1})")
-	@MethodSource("positiveArgumentProvider")
-	void jwPositiveTest(String input1, String input2) {
-		Double similarity = jws.apply(NormalizationService.normalizeJournal(input1),
-				NormalizationService.normalizeJournal(input2));
-		// System.err.println(String.format("- 1: %s\n- 2: %s\n- 3: %s\n- 4: %s\n",
-		// input1, Publication.normalizeJava8(input1), input2,
-		// Publication.normalizeJava8(input2)));
-		assertThat(similarity).isGreaterThan(ComparisonService.JOURNAL_SIMILARITY_NO_REPLY);
-	}
-
-	/*
-	 * Is the Jarowinkler similarity <= ComparisonService.JOURNAL_SIMILARITY_NO_REPLY for normalized journals.
-	 * Does NOT compare by initials, ...
-	 */
-	@ParameterizedTest(name = "{index}: jaroWinkler({0}, {1})")
-	@MethodSource("negativeArgumentProvider")
-	void jwNegativeTest(String input1, String input2) {
-		Double similarity = jws.apply(NormalizationService.normalizeJournal(input1),
-				NormalizationService.normalizeJournal(input2));
-		System.err.println("- 1: %s\n- 2: %s\n- 3: %s\n- 4: %s\n".formatted(input1,
-				NormalizationService.normalizeTitle(input1), input2, NormalizationService.normalizeTitle(input2)));
-		assertThat(similarity).isLessThanOrEqualTo(ComparisonService.JOURNAL_SIMILARITY_NO_REPLY);
-	}
+class SimilarityJournalTest {
 
 	/*
 	 * full comparison for normalized journals: positive
 	 */
-	@ParameterizedTest(name = "{index}: jaroWinkler({0}, {1})")
+	@ParameterizedTest(name = "{index}: compareJournals({0}, {1})")
 	@MethodSource("fullPositiveArgumentProvider")
 	void fullPositiveTest(String input1, String input2) {
 		Publication p1 = new Publication();
@@ -80,7 +35,7 @@ class JaroWinklerJournalTest {
 	/*
 	 * full comparison for normalized journals: negative
 	 */
-	@ParameterizedTest(name = "{index}: jaroWinkler({0}, {1})")
+	@ParameterizedTest(name = "{index}: compareJournals({0}, {1})")
 	@MethodSource("fullNegativeArgumentProvider")
 	void fullNegativeTest(String input1, String input2) {
 		Publication p1 = new Publication();
@@ -88,79 +43,8 @@ class JaroWinklerJournalTest {
 		IOService.addNormalizedJournal(input1, p1, "T2");
 		IOService.addNormalizedJournal(input2, p2, "T2");
 
-		// log.debug("Result: {}", ComparisonService.compareJournals(p1, p2));
 		assertThat(ComparisonService.compareJournals(p1, p2, false))
 				.as("Journals are similar: %s versus %s", p1.getJournals(), p2.getJournals()).isFalse();
-	}
-
-	/*
-	 * journals which contain a slash
-	 */
-	@ParameterizedTest(name = "{index}: jaroWinkler({0}, {1})")
-	@MethodSource("slashArgumentProvider")
-	void slashTest(String input1, List<String> list) {
-		Publication p1 = new Publication();
-		IOService.addNormalizedJournal(input1, p1, "T2");
-
-		for (String j : p1.getJournals()) {
-			log.error("For input '{}': {}", input1, j);
-		}
-		assertThat(p1.getJournals()).containsAll(list);
-	}
-
-	@Test
-	void journalWithSquareBracketsAtEnd() {
-		Publication p1 = new Publication();
-		IOService.addNormalizedJournal("Zhonghua wai ke za zhi [Chinese journal of surgery]", p1, "T2");
-
-		assertThat(p1.getJournals()).hasSize(3);
-		assertThat(p1.getJournals()).containsAll(Set.of("Zhonghua wai ke za zhi", "Chinese journal of surgery",
-				"Zhonghua wai ke za zhi Chinese journal of surgery"));
-	}
-
-	@Test
-	void journalWithSquareBracketsAtStart() {
-		Publication p1 = new Publication();
-
-		IOService.addNormalizedJournal("[Rinsho ketsueki] The Japanese journal of clinical hematology", p1, "T2");
-
-		assertThat(p1.getJournals()).hasSize(3);
-		// The variant with both parts has NOT removed the leading article of secons part
-		assertThat(p1.getJournals()).containsAll(Set.of("Rinsho ketsueki", "Japanese journal of clinical hematology",
-				"Rinsho ketsueki The Japanese journal of clinical hematology"));
-	}
-
-	static Stream<Arguments> slashArgumentProvider() {
-		// @formatter:off
-		return Stream.of(
-			arguments(
-				"The Canadian Journal of Neurological Sciences / Le Journal Canadien Des Sciences Neurologiques",
-				List.of(
-					"Canadian Journal of Neurological Sciences",
-					"Journal Canadien Des Sciences Neurologiques")),
-			arguments(
-					"Doklady biological sciences : proceedings of the Academy of Sciences of the USSR, Biological sciences sections / translated from Russian",
-					List.of("Doklady biological sciences")),
-			arguments("Polski Przeglad Chirurgiczny/ Polish Journal of Surgery",
-					List.of(
-						"Polski Przeglad Chirurgiczny", 
-						"Polish Journal of Surgery")),
-			arguments("Hematology/Oncology Clinics of North America",
-					List.of("Hematology Oncology Clinics of North America")),
-			arguments(
-					"Zhen ci yan jiu = Acupuncture research / [Zhongguo yi xue ke xue yuan Yi xue qing bao yan jiu suo bian ji]",
-					List.of(
-						"Zhen ci yan jiu", 
-						"Acupuncture research",
-						"Zhongguo yi xue ke xue yuan Yi xue qing bao yan jiu suo bian ji")),
-			arguments("Anatomical Record. Part A, Discoveries in Molecular, Cellular, & Evolutionary Biology",
-				List.of(
-					// "Anatomical Record Part A Discoveries in Molecular Cellular Evolutionary Biology",
-					"Anatomical Record", 
-					"Part A Discoveries in Molecular Cellular Evolutionary Biology"))
-
-		// @formatter:on
-		);
 	}
 
 	static Stream<Arguments> fullPositiveArgumentProvider() {
@@ -178,7 +62,7 @@ class JaroWinklerJournalTest {
 			arguments("AJR Am J Roentgenol", "American Journal of Roentgenology"),
 			arguments("BMC Surg", "Bmc Surgery"),
 			arguments("Jpn J Clin Oncol", "Japanese Journal of Clinical Oncology"),
-			arguments("BMJ (Online)", "Bmj"), 
+			arguments("BMJ (Online)", "Bmj"),
 			arguments("BMJ (Online)", "British Medical Journal"),
 			arguments("Bmj", "British Medical Journal"),
 			arguments("J Med Ultrason (2001)", "Journal of Medical Ultrasonics"),
@@ -258,7 +142,7 @@ class JaroWinklerJournalTest {
 					"Arzneimittelforschung."),
 			arguments("Zhen.Ci.Yan.Jiu.",
 					"Zhen ci yan jiu = Acupuncture research / [Zhongguo yi xue ke xue yuan Yi xue qing bao yan jiu suo bian ji].39 (2) ()(pp 136-141) 2014.Date of Publication: Apr 2014."),
-			arguments("RSC Adv", "RSC ADVANCES"), 
+			arguments("RSC Adv", "RSC ADVANCES"),
 			arguments("Pleura Peritoneum", "PLEURA AND PERITONEUM"),
 			arguments("AJNR Am J Neuroradiol", "AMERICAN JOURNAL OF NEURORADIOLOGY"),
 			arguments("Samj South African Medical Journal", "South African Medical Journal"), // "Samj",  not "SAMJ"
@@ -285,7 +169,7 @@ class JaroWinklerJournalTest {
 			arguments( // this one matches because IOService.conferencePattern adds a second journal
 					"International Liver Transplantation Society. Annual International Congress. New York, NY United States.",
 					"International Liver Transplantation Society"),
-			arguments("Neuroendocrinology Letters.35 (2) ()(pp 129-136)", "Neuroendocrinology Letters"), 
+			arguments("Neuroendocrinology Letters.35 (2) ()(pp 129-136)", "Neuroendocrinology Letters"),
 			arguments("Journal of Thoracic Oncology", "Journal of Clinical Oncology"), // JWS 0.90952380
 			arguments("Journal of Thoracic Oncology", "Journal of Clinical Oncology. Conference"), // JWS 0.90952380
 			arguments( // see issue #1
@@ -304,8 +188,8 @@ class JaroWinklerJournalTest {
 				// Fixed: Patterns for journals used ".*(\\b|)", but this was changed to ".*\\b".
 				// This made up example was positive: Starts with "B" and has a "B" and "A" (all case insensitive)
 				arguments(
-					"BBA Clinical", 
-					"Biochimica et biophysica peracta nonclinical"), 
+					"BBA Clinical",
+					"Biochimica et biophysica peracta nonclinical"),
 				arguments( // see issue #1
 						"The Journal of the Kentucky Medical Association.95 (4) ()(pp 145-148) 1997.Date of Publication: Apr 1997.",
 						"J.Ky.Med.Assoc."),
@@ -313,26 +197,26 @@ class JaroWinklerJournalTest {
 						"Asia Pac J Sports Med Arthrosc Rehabil Technol",
 						"ASIA-PACIFIC JOURNAL OF SPORT MEDICINE ARTHROSCOPY REHABILITATION AND TECHNOLOGY"),
 				arguments( // different first letter --> compareJournals_...() not tried
-						"Macedonian Journal of Medical Sciences", 
+						"Macedonian Journal of Medical Sciences",
 						"Open Access Macedonian Journal of Medical Sciences"),
 				arguments( // different first letter --> compareJournals_...() not tried
-						"Rev Sci Tech", 
+						"Rev Sci Tech",
 						"OIE Revue Scientifique et Technique"),
 				arguments( // different first letter --> compareJournals_...() not tried
-						"Prz Menopauzalny", 
+						"Prz Menopauzalny",
 						"MENOPAUSE REVIEW-PRZEGLAD MENOPAUZALNY"),
 				arguments(
-					"Biol Aujourdhui", 
+					"Biol Aujourdhui",
 					"Biologie Aujourd'hui"),
 				arguments(
-					"Brain Res Brain Res Rev", 
+					"Brain Res Brain Res Rev",
 					"BRAIN RESEARCH REVIEWS"),
 				arguments(
-					"Clinical Neurosurgery", 
+					"Clinical Neurosurgery",
 					"NEUROSURGERY"),
 				arguments(
-					"Int Urogynecol J Pelvic Floor Dysfunct", 
-					"INTERNATIONAL UROGYNECOLOGY JOURNAL"), 
+					"Int Urogynecol J Pelvic Floor Dysfunct",
+					"INTERNATIONAL UROGYNECOLOGY JOURNAL"),
 				arguments( // "Part D" vs "D"
 						"Comp Biochem Physiol Part D Genomics Proteomics",
 						"COMPARATIVE BIOCHEMISTRY AND PHYSIOLOGY D-GENOMICS & PROTEOMICS"),
@@ -340,75 +224,10 @@ class JaroWinklerJournalTest {
 						"Philos Trans R Soc Lond B Biol Sci",
 						"Philosophical Transactions of the Royal Society B: Biological Sciences"),
 				arguments(
-					"No other examples yet", 
+					"No other examples yet",
 					"The same")
 			);
 		// @formatter:on
-	}
-
-	static Stream<Arguments> negativeArgumentProvider() {
-		// @formatter:off
-		return Stream.of(
-			arguments("British journal of surgery", "Surgery"),
-			arguments("British journal of surgery", "Journal of Surgery"),
-			arguments("Samj South African Medical Journal", "South African Medical Journal"), // "Samj", not"SAMJ"
-			arguments("Communications in Clinical Cytometry", "Cytometry"),
-			arguments("Zhonghua nei ke za zhi [Chinese journal of internal medicine]",
-					"Chung-Hua Nei Ko Tsa Chih Chinese Journal of Internal Medicine"),
-			arguments("Nippon Kyobu Geka Gakkai Zasshi - Journal of the Japanese Association for Thoracic Surgery",
-					"[Zasshi] [Journal]. Nihon Ky?bu Geka Gakkai"),
-			arguments("Rinsho Ketsueki", "[Rinshō ketsueki] The Japanese journal of clinical hematology"), 
-			// UTF8, but addJournals() would split this!
-			arguments("British journal of surgery", "Br J Surg"), // usable for abbreviations
-			arguments("JAMA", "JAMA-Journal of the American Medical Association"), // order doesn't matter
-			arguments("JAMA", "Journal of the American Medical Association"),
-			arguments("JAMA-Journal of the American Medical Association", "JAMA"),
-			arguments("Journal of the American Medical Association", "JAMA"),
-			arguments("JAMA", "Journal of the American Medical Association"),
-			arguments("Journal of the American Medical Association", "JAMA"),
-			arguments("Hepatology", "Hepatology International"), // !
-			arguments("AJR Am J Roentgenol", "American Journal of Roentgenology"),
-			arguments("BMC Surg", "Bmc Surgery"),
-			arguments("Jpn J Clin Oncol", "Japanese Journal of Clinical Oncology"),
-			arguments("J Hepatobiliary Pancreat Surg", "Journal of Hepato-Biliary-Pancreatic Surgery"),
-			arguments("BMJ (Online)", "Bmj"), 
-			arguments("BMJ (Online)", "British Medical Journal"),
-			arguments("Bmj", "British Medical Journal"),
-			arguments("J Med Ultrason (2001)", "Journal of Medical Ultrasonics"),
-			arguments("MMW Fortschr Med", "MMW Fortschritte der Medizin"),
-			arguments("Behavioral and Brain Functions Vol 10 Apr 2014, ArtID 11",
-					"Behavioral & Brain Functions [Electronic Resource]: BBF"),
-			arguments("[Technical report] SAM-TR. USAF School of Aerospace Medicine", "[Technical report] SAM-TR"),
-			arguments(
-					"Prilozi (Makedonska akademija na naukite i umetnostite. Oddelenie za medicinski nauki). 36 (3) (pp 35-41), 2015. Date of Publication: 2015.",
-					"Prilozi Makedonska Akademija Na Naukite I Umetnostite Oddelenie Za Medicinski Nauki"),
-			arguments(
-					"Prilozi (Makedonska akademija na naukite i umetnostite. Oddelenie za medicinski nauki). 36 (3) (pp 35-41), 2015. Date of Publication: 2015.",
-					"Prilozi (Makedonska akademija na naukite i umetnostite"),
-			// TODO: This would work if journals are also split on " - ", possibly as an extra journal variant
-			// see https://github.com/globbestael/DedupEndNote/issues/50
-			arguments("European Surgery - Acta Chirurgica Austriaca", "European Surgery"),
-			// TODO: This would work if journals are also split on " - ", possibly as an extra journal variant
-			arguments("European Surgery - Acta Chirurgica Austriaca", "Acta Chirurgica Austriaca"),
-			// TODO: This would work if journals are also split on "/", possibly as an extra journal variant
-			arguments(
-					"Chung-Kuo Hsiu Fu Chung Chien Wai Ko Tsa Chih/Chinese Journal of Reparative & Reconstructive Surgery",
-					"Zhongguo xiu fu chong jian wai ke za zhi = Zhongguo xiufu chongjian waike zazhi = Chinese journal of reparative and reconstructive surgery"),
-			// Fixed: Starts with "B" and has a "B" and "A" (all case insensitive)
-			arguments("BBA Clinical", "Biochimica et biophysica peracta nonclinical")
-		);
-		// @formatter:on
-	}
-
-	static Stream<Arguments> positiveArgumentProvider() {
-		return Stream.of(arguments("British journal of surgery", "British journal of surgery"),
-				arguments("JAMA-Journal of the American Medical Association",
-						"JAMA-Journal of the American Medical Association"),
-				arguments("Journal of Laparoendoscopic and Advanced Surgical Techniques",
-						"Journal of Laparoendoscopic & Advanced Surgical Techniques"),
-				arguments("Hepatogastroenterology", "Hepato-Gastroenterology"),
-				arguments("Lancet Haematol", "The Lancet Haematology"),
-				arguments("Hepatology", "Hepatology (Baltimore, Md.)"));
 	}
 
 }

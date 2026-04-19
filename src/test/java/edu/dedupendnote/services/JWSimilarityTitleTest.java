@@ -9,7 +9,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.SequencedSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -27,13 +26,13 @@ import edu.dedupendnote.domain.Publication;
 /*
 	FIXME: This test file probably should be split into 2 files:
 	- most tests are unit tests
-	- there are a small number of tests which read external data. Because thiese methods use the baseDir / testDir variable,
-	  the whole test class is treated as integrationTest 
+	- there are a small number of tests which read external data. Because these methods use the baseDir / testDir variable,
+	  the whole test class is treated as integrationTest
 	  	- extends AbstractIntegrationTest
 		- @SpringBootTest
 		- @ActiveProfiles("test")
 */
-class JaroWinklerTitleTest extends BaseTest {
+class JWSimilarityTitleTest extends BaseTest {
 
 	@ParameterizedTest(name = "{index}: jaroWinkler({0}, {1})={2}")
 	@MethodSource("positiveArgumentProvider")
@@ -114,14 +113,14 @@ class JaroWinklerTitleTest extends BaseTest {
 
 	/*
 	 * FIXME: Should there be 2 similarity scores, one for the first title (jwPositiveTest) and one for all titles (jwFullPositiveTest).
-	 * FIXME: tests for Phase titles and a dedicated argumentProvided becausae these titles are now compared to the normal threshold
+	 * FIXME: tests for Phase titles and a dedicated argumentProvider because these titles are now compared to the normal threshold
 	 */
 	// @formatter:off
 	static Stream<Arguments> positiveArgumentProvider() {
 		return Stream.of(
 				arguments(
 						"Comments about Glisson's capsule phleboliths and portal vein thrombosis [1]",
-						"COMMENTS ABOUT GLISSON CAPSULE PHLEBOLITHS AND PORTAL-VEIN THROMBOSIS", 
+						"COMMENTS ABOUT GLISSON CAPSULE PHLEBOLITHS AND PORTAL-VEIN THROMBOSIS",
 						0.93), // error "'s"
 				arguments(
 						"PORTAL VENOUS THROMBOSIS FOLLOWING SPELENECTOMY IN PORTAL-HYPERTENSION - RISKS AND MANAGEMENT",
@@ -144,13 +143,13 @@ class JaroWinklerTitleTest extends BaseTest {
 						1.0), // "<...>" replaced by nought: "y" vs "y 90"
 				arguments(
 						"Letter: portal vein obstruction--which subset of patients could benefit the most? Authors' reply",
-						"Letter: Portal vein obstruction - Which subset of patients could benefit the most?", 
+						"Letter: Portal vein obstruction - Which subset of patients could benefit the most?",
 						0.96), // bibliographic addition
 				arguments(
 						"90Y radioembolization using resin microspheres in patients with hepatocellular carcinoma and portal vein thrombosis",
 						"90Y RADIOEMBOLIZATION USING RESIN MICROSPHERES IN PATIENTS WITH HEPATOCELLULAR CARCINOMA AND PORTAL VEIN THROMBOSIS",
 						1.0), // case difference
-				arguments("Post Splenectomy Outcome in beta-Thalassemia", 
+				arguments("Post Splenectomy Outcome in beta-Thalassemia",
 						"Post Splenectomy Outcome in β-Thalassemia",
 						0.96), // Greek characters vs transcription
 				arguments(
@@ -177,7 +176,7 @@ class JaroWinklerTitleTest extends BaseTest {
 								"NF kappa B inhibition decreases hepatocyte proliferation but does not alter apoptosis in obstructive jaundice"),
 						0.996),
 				arguments(revertString("Case report. Duplication of the portal vein: a rare congenital anomaly"),
-						revertString("Duplication of the portal vein - A rare congenital anomaly"), 
+						revertString("Duplication of the portal vein - A rare congenital anomaly"),
 						0.96),
 				arguments(revertString(
 						"La sémantique de l'image radiologique. Intérêt du procédé de soustraction électronique en couleurs d'Oosterkamp en angiographie abdominale"),
@@ -198,7 +197,7 @@ class JaroWinklerTitleTest extends BaseTest {
 								"JAK2 Germline Genetic Variation In Budd-Chiari Syndrome and Portal Vein Thrombosis"),
 						0.91),
 				arguments("Is homozygous a-thalassaemia a lethal condition in the 1990s?",
-						"Is homozygous alpha-thalassaemia a lethal condition in the 1990s?", 
+						"Is homozygous alpha-thalassaemia a lethal condition in the 1990s?",
 						0.93),
 				arguments(
 						"¹⁸F-FDG PET metabolic parameters and MRI perfusion and diffusion parameters in hepatocellular carcinoma: a preliminary study",
@@ -213,16 +212,16 @@ class JaroWinklerTitleTest extends BaseTest {
 						"Y-90 Radioembolization for Locally Advanced Hepatocellular Carcinoma with Portal Vein Thrombosis: Long-Term Outcomes in a 185-Patient Cohort",
 						1.0), // variant chemical notations
 				arguments("Isolated portal vein thrombosis: An exceptional complication of chronic pancreatitis",
-						"ISOLATED PORTAL-VEIN THROMBOSIS - AN EXCEPTIONAL COMPLICATION OF CHRONIC-PANCREATITIS", 
+						"ISOLATED PORTAL-VEIN THROMBOSIS - AN EXCEPTIONAL COMPLICATION OF CHRONIC-PANCREATITIS",
 						0.94),
 				arguments(revertString("Complication-based learning curve in laparoscopic sleeve gastrectomy"),
-						revertString("Complications of laparoscopic sleeve gastrectomy"), 
+						revertString("Complications of laparoscopic sleeve gastrectomy"),
 						0.90), // example of FP
 				arguments(
 					"Case records of the Massachusetts General Hospital. Case 35-2007. A 30-year-old man with inflammatory bowel disease and recent onset of fever and bloody diarrhea",
 					"Case 35-2007: A 30-year-old man with inflammatory bowel disease and recent onset of fever and bloody diarrhea",
 					1.0),
-				arguments( // "Case 35-2007: " should be removed as ne of the titles?
+				arguments( // "Case 35-2007: " should be removed as one of the titles?
 					"Case records of the Massachusetts General Hospital. Case 35-2007. A 30-year-old man with inflammatory bowel disease and recent onset of fever and bloody diarrhea",
 					"A 30-year-old man with inflammatory bowel disease and recent onset of fever and bloody diarrhea",
 					1.0),
@@ -235,10 +234,10 @@ class JaroWinklerTitleTest extends BaseTest {
 						"\"Timing of chest tube removal after coronary artery bypass surgery.[Erratum appears in J Card Surg. 2011 Mar;26(2):244 Note: Yeshaaiahu, Michal [corrected to Yeshayahu, Michal]]\"",
 						1.0),
 				arguments("Psilocybin for the Treatment of Cluster Headache",
-						"Psilocybin for the Treatment of Migraine Headache", 
+						"Psilocybin for the Treatment of Migraine Headache",
 						0.9454),
 				arguments(revertString("Psilocybin for the Treatment of Cluster Headache"),
-						revertString("Psilocybin for the Treatment of Migraine Headache"), 
+						revertString("Psilocybin for the Treatment of Migraine Headache"),
 						0.91),
 				/*
 				 * Example 1 of a False Positive: Phase I and Phase I/II trial
@@ -275,7 +274,7 @@ class JaroWinklerTitleTest extends BaseTest {
 				// dasatinib (D) for treatment of metastatic breast cancer (MBC)"),
 				// revertString("Phase one one one/two two two trial of ixabepilone (Ixa)
 				// and dasatinib (D) for treatment of metastatic breast cancer (MBC)"),
-				// 0.9716), // example of False Positive, with "I" and "II" translated 
+				// 0.9716), // example of False Positive, with "I" and "II" translated
 				// arguments(
 				// revertString("Phase one one one one trial of ixabepilone (IXA) and
 				// dasatinib (D) for treatment of metastatic breast cancer (MBC)"),
@@ -320,7 +319,7 @@ class JaroWinklerTitleTest extends BaseTest {
 				// quadrupled as 1 word
 				arguments(
 					"Case report. Duplication of the portal vein: a rare congenital anomaly",
-					"Duplication of the portal vein - A rare congenital anomaly", 
+					"Duplication of the portal vein - A rare congenital anomaly",
 					1.0),
 				arguments( // matches on subtitle
 					"90 Y radioembolization for locally advanced hepatocellular carcinoma with portal vein thrombosis: Long-term outcomes in a 185-patient cohort",
@@ -328,7 +327,7 @@ class JaroWinklerTitleTest extends BaseTest {
 					1.0),
 				arguments(
 					"<<Except for the war's laws>>. Psychic trauma in soldiers murderers. French",
-					"Except for the war's laws. Psychic trauma in soldiers murderers. French", 
+					"Except for the war's laws. Psychic trauma in soldiers murderers. French",
 					1.0),
 				arguments(
 					"La sémantique de l'image radiologique. Intérêt du procédé de soustraction électronique en couleurs d'Oosterkamp en angiographie abdominale",
@@ -344,7 +343,7 @@ class JaroWinklerTitleTest extends BaseTest {
 						0.9474), // example of False Positive: difference at the end
 				arguments(
 						"What can psychoanalysis contribute to the current refugee crisis?: Preliminary reports from STEP-BY-STEP: A psychoanalytic pilot project for supporting refugees in a \"first reception camp\" and crisis interventions with traumatized refugees",
-						"What can psychoanalysis contribute to the current refugee crisis?", 
+						"What can psychoanalysis contribute to the current refugee crisis?",
 						1.0),
 				arguments(
 						"Phase 2 open-label study of single-agent sorafenib in treating advanced hepatocellular carcinoma in a hepatitis B-endemic Asian population: presence of lung metastasis predicts poor response",
@@ -352,11 +351,11 @@ class JaroWinklerTitleTest extends BaseTest {
 						1.0),
 				arguments(
 					revertString("<<Except for the war's laws>>. Psychic trauma in soldiers murderers. French"),
-					revertString("Except for the war's laws. Psychic trauma in soldiers murderers. French"), 
+					revertString("Except for the war's laws. Psychic trauma in soldiers murderers. French"),
 					1.0),
 				arguments(
-					"Was ist mit der Pfortader? Idiopathic phlethrombosis.", 
-					"Was ist mit der pfortader?", 
+					"Was ist mit der Pfortader? Idiopathic phlethrombosis.",
+					"Was ist mit der pfortader?",
 					0.89),
 				arguments(
 					"RETRACTED: Evaluation of the treatment strategies on patient-derived xenograft mice of human breast tumor (Retracted Article)",
@@ -375,7 +374,7 @@ class JaroWinklerTitleTest extends BaseTest {
 				),
 				arguments(	// First from "Ovid MEDLINE(R) PubMed-not-MEDLINE <2022>" with a T3 "Retraction of: Comp ...", second from Scopus
 					"Retraction: Intelligent Diagnosis of Cervical Cancer Based on Data Mining Algorithm (Computational and Mathematical Methods in Medicine (2021) 2021:9 (7690902) DOI: 10.1155/2021/7690902)",
-					"Retracted: Intelligent Diagnosis of Cervical Cancer Based on Data Mining Algorithm", 
+					"Retracted: Intelligent Diagnosis of Cervical Cancer Based on Data Mining Algorithm",
 					1.0),
 				arguments(
 					"A randomized phase 2 study of etaracizumab, a monoclonal antibody against integrin (alpha)v(beta)3, (plus or minus) dacarbazine in patients with stage IV metastatic melanoma",
@@ -394,15 +393,15 @@ class JaroWinklerTitleTest extends BaseTest {
 						0.71),
 				arguments( // different translations
 					"[Elimination of airborne allergens from the household environment]",
-					"Eviction of airborne allergens for the household environment. [French]", 
+					"Eviction of airborne allergens for the household environment. [French]",
 					0.83),
 				arguments( // different translations
 					"[Elimination of airborne allergens from the household environment]",
-					"Eviction of airborne allergens for the household environment", 
+					"Eviction of airborne allergens for the household environment",
 					0.83),
 				arguments( // different translations
 					"[Various aspects of respiratory emergencies in non-hospital practice]",
-					"Some aspects of respiratory emergencies in non-hospital practice. [French]", 
+					"Some aspects of respiratory emergencies in non-hospital practice. [French]",
 					0.81),
 				arguments( // heavy penalty on differences at start
 						"NFkappaB inhibition decreases hepatocyte proliferation but does not alter apoptosis in obstructive jaundice",
@@ -410,9 +409,9 @@ class JaroWinklerTitleTest extends BaseTest {
 						0.88),
 				arguments(
 					"The JAK2 46/1 haplotype in Budd-Chiari syndrome and portal vein thrombosis",
-					"JAK2 Germline Genetic Variation In Budd-Chiari Syndrome and Portal Vein Thrombosis", 
+					"JAK2 Germline Genetic Variation In Budd-Chiari Syndrome and Portal Vein Thrombosis",
 					0.85),
-				arguments( // Publication and separate rectraction notice (PubMed)
+				arguments( // Publication and separate retraction notice (PubMed)
 					"Retraction notice to \"Evaluation of the treatment strategies on patient-derived xenograft mice of human breast tumor\" [Eur. J. Pharmacol. 889 (2020) 173605]",
 					"Evaluation of the treatment strategies on patient-derived xenograft mice of human breast tumor",
 					0.78),
@@ -421,7 +420,7 @@ class JaroWinklerTitleTest extends BaseTest {
 				 */
 				arguments( // False Positive
 					"Complication-based learning curve in laparoscopic sleeve gastrectomy",
-					"Complications of laparoscopic sleeve gastrectomy", 
+					"Complications of laparoscopic sleeve gastrectomy",
 					0.87),
 				// arguments( // False Positive, with "I" and "II" translated and quadrupled with phase and next word repeated
 				// 	"Phase one Phase one Phase one Phase one trial of ixabepilone (IXA) and dasatinib (D) for treatment of metastatic breast cancer (MBC)",
@@ -560,43 +559,4 @@ class JaroWinklerTitleTest extends BaseTest {
 		softAssertions.assertAll();
 	}
 
-	@Test
-	void testTitleSplitter() {
-		Publication publication = new Publication();
-		String t1 = "Severe deficiency of the specific von Willebrand factor-cleaving protease";
-		String t2 = "ADAMTS 13 activity in a subgroup of children with atypical hemolytic uremic syndrome";
-		IOService.addNormalizedTitle(t1 + ": " + t2, publication);
-		SequencedSet<String> titles = publication.getTitles();
-
-		System.err.println(titles);
-		assertThat(titles).hasSize(3);
-
-		publication.getTitles().clear();
-		IOService.addNormalizedTitle(t1.substring(0, 10) + ": " + t2, publication);
-		titles = publication.getTitles();
-
-		System.err.println(titles);
-		assertThat(titles).as("First part smaller than 50, no split").hasSize(1);
-
-		publication.getTitles().clear();
-		IOService.addNormalizedTitle(t1 + ": " + t2.substring(0, 10), publication);
-		titles = publication.getTitles();
-
-		System.err.println(titles);
-		assertThat(titles).as("Second part smaller than 50, no split").hasSize(1);
-
-		publication.getTitles().clear();
-		IOService.addNormalizedTitle(t1.substring(0, 10) + ": " + t2.substring(0, 10), publication);
-		titles = publication.getTitles();
-
-		System.err.println(titles);
-		assertThat(titles).as("Both parts smaller than 50, no split").hasSize(1);
-
-		publication.getTitles().clear();
-		IOService.addNormalizedTitle(t1 + ": " + t2.substring(0, 10) + ": " + t2.substring(11), publication);
-		titles = publication.getTitles();
-
-		System.err.println(titles);
-		assertThat(titles).as("Second part has embedded colon").hasSize(3);
-	}
 }

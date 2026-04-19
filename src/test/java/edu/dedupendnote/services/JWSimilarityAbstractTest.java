@@ -13,8 +13,6 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.springframework.boot.test.context.TestConfiguration;
-
 import com.github.difflib.text.DiffRow;
 import com.github.difflib.text.DiffRowGenerator;
 
@@ -26,8 +24,7 @@ import info.debatty.java.stringsimilarity.RatcliffObershelp;
  * See <a href="https://stackoverflow.com/questions/47933755/junit-5-methodsource-in-nested-class">Stack Overflow</a> for several solutions,
  * and <a href="https://stackoverflow.com/questions/53975605/how-to-use-methodsource-defined-in-other-class-in-junit-5">here</a>
  */
-@TestConfiguration
-class AbstracttextTest {
+class JWSimilarityAbstractTest {
 	/*
 	 * This test file tries to find a workable solution for comparing abstracts
 	 * - JaroWinkler - JaroWinkler with cleaning of text
@@ -93,10 +90,8 @@ class AbstracttextTest {
 
 	RatcliffObershelp ro = new RatcliffObershelp();
 
-	@Nested
-	class JwsAbstracttextTest {
 		@ParameterizedTest(name = "{index}: jaroWinkler({0}, {1})={2}")
-		@MethodSource("edu.dedupendnote.services.AbstracttextTest#negativeArgumentProvider")
+		@MethodSource("negativeArgumentProvider")
 		void jwNegativeTest(String input1, String input2, double expected) {
 			String t1 = cleanAbstracttext(input1);
 			String t2 = cleanAbstracttext(input2);
@@ -114,7 +109,7 @@ class AbstracttextTest {
 		}
 
 		@ParameterizedTest(name = "{index}: jaroWinkler({0}, {1})={2}")
-		@MethodSource("edu.dedupendnote.services.AbstracttextTest#positiveArgumentProvider")
+		@MethodSource("positiveArgumentProvider")
 		void jwPositiveTest(String input1, String input2, double expected) {
 			// String diffsOfRawInput = getDiffs(input1, input2);
 			String t1 = cleanAbstracttext(input1);
@@ -131,7 +126,6 @@ class AbstracttextTest {
 				assertThat(similarity).as("JWS similarity too big. String: %s ...", t1.substring(0, 25))
 						.isEqualTo(expected, within(0.01));
 			}
-		}
 	}
 
 	// formatter::off
@@ -146,7 +140,7 @@ class AbstracttextTest {
 	@Nested
 	class RatcliffObershelpAbstracttextTest {
 		@ParameterizedTest(name = "{index}: RatcliffObershelp({0}, {1})={2}")
-		@MethodSource("edu.dedupendnote.AbstracttextTest#negativeArgumentProvider")
+		@MethodSource("edu.dedupendnote.services.JWSimilarityAbstractTest#negativeArgumentProvider")
 		void ratcliffObershelpNegative(String input1, String input2, double expected) {
 			System.err.println("RO: %.3f\tROlc: %.3f\tROclean: %.3f\tJWS: %.3f\tJWSclean: %.3f\texpected: %.3f"
 					.formatted(ro.similarity(input1, input2), ro.similarity(input1.toLowerCase(), input2.toLowerCase()),
@@ -157,7 +151,7 @@ class AbstracttextTest {
 		}
 
 		@ParameterizedTest(name = "{index}: RatcliffObershelp({0}, {1})={2}")
-		@MethodSource("edu.dedupendnote.AbstracttextTest#negativeArgumentProvider")
+		@MethodSource("edu.dedupendnote.services.JWSimilarityAbstractTest#negativeArgumentProvider")
 		void ratcliffObershelpNegative200(String input1, String input2, double expected) {
 			input1 = input1.substring(0, 200);
 			input2 = input2.substring(0, 200);
@@ -170,7 +164,7 @@ class AbstracttextTest {
 		}
 
 		@ParameterizedTest(name = "{index}: RatcliffObershelp({0}, {1})={2}")
-		@MethodSource("edu.dedupendnote.AbstracttextTest#positiveArgumentProvider")
+		@MethodSource("edu.dedupendnote.services.JWSimilarityAbstractTest#positiveArgumentProvider")
 		void ratcliffObershelpPositive(String input1, String input2, double expected) {
 			System.err.println("RO: %.3f\tROlc: %.3f\tROclean: %.3f\tJWS: %.3f\tJWSclean: %.3f\texpected: %.3f"
 					.formatted(ro.similarity(input1, input2), ro.similarity(input1.toLowerCase(), input2.toLowerCase()),
@@ -181,7 +175,7 @@ class AbstracttextTest {
 		}
 
 		@ParameterizedTest(name = "{index}: RatcliffObershelp({0}, {1})={2}")
-		@MethodSource("edu.dedupendnote.AbstracttextTest#positiveArgumentProvider")
+		@MethodSource("edu.dedupendnote.services.JWSimilarityAbstractTest#positiveArgumentProvider")
 		void ratcliffObershelpPositive200(String input1, String input2, double expected) {
 			input1 = input1.substring(0, 200);
 			input2 = input2.substring(0, 200);

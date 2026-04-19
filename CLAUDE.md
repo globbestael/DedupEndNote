@@ -2,6 +2,23 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+<!-- The section below is deliberately brief and trigger-based rather than prescriptive.
+     The list covers the five things that actually went stale in this project
+     (the test hierarchy was the one that just bit us). Placing it before "Commands"
+     means it appears early enough to be read before any task begins, not buried
+     after the architecture description. -->
+## Keeping this file current
+
+Update CLAUDE.md whenever a change affects something documented here. Triggers include:
+
+- Test class renamed, added, deleted, or reclassified (hierarchy section)
+- New service introduced or existing service's responsibility changed (services table)
+- Build command, Maven profile, or port changed (commands / configuration sections)
+- Architectural pattern added or removed (data flow, enrichment, modes)
+- Code quality plugin version bumped or new plugin added
+
+The update should land in the same commit as the code change.
+
 ## Commands
 
 ```bash
@@ -78,11 +95,14 @@ Tests live in `src/test/java/edu/dedupendnote/` and its `services/` subpackage. 
 - **`AbstractIntegrationTest`** — standalone (does not extend `BaseTest`); base for all `@SpringBootTest` tests; provides `@ActiveProfiles("test")`, `@Tag("integration")`, `@MockitoBean SimpMessagingTemplate`, `baseDir`, `testDir`, `@BeforeAll` (log level → INFO), `@BeforeEach initTestDir()`. Subclasses override `initTestDir()` when they need a subdirectory (e.g. `testDir = baseDir + "/experiments/"`).
 - **`AuthorsBaseTest extends BaseTest`** — shared logic for author-comparison tests (unit tests)
 - **`JournalsBaseTest extends BaseTest`** — shared logic for journal-comparison tests (unit tests)
-- **`JaroWinklerTitleTest extends BaseTest`** — title comparison tests (unit tests)
-- **`JaroWinklerAuthorsTest extends AuthorsBaseTest`** — has `@SpringBootTest` + `@Tag("integration")` directly; needs `@Autowired DeduplicationService`
-- Standalone unit test classes (no Spring context): `ComparisonServiceTest`, `DoiTest`, `PagesTest`, `NormalizationServiceTest`, etc.
+- **`JWSimilarityTitleTest extends BaseTest`** — title JWS-similarity tests (unit tests); also holds the out-of-scope `IOService` pattern tests
+- **`SimilarityAuthorTest extends AuthorsBaseTest`** — has `@SpringBootTest` + `@Tag("integration")` directly; tests `authorsComparisonService.compare` (boolean result)
+- **`JWSimilarityAuthorTest extends AuthorsBaseTest`** — plain JUnit 5, no Spring; tests raw `jws.apply` score
+- Standalone unit test classes (no Spring context): `ComparisonServiceTest`, `NormalizationServiceAuthorTest`, `NormalizationServiceJournalTest`, `NormalizationServiceTitleTest`, `NormalizationServicePagesTest`, `NormalizationServiceDoiTest`, `NormalizationServiceTextTest`, `SimilarityJournalTest`, `JWSimilarityJournalTest`, `JWSimilarityAbstractTest`, etc.
 
-The split is enforced via `@Tag("integration")` on `AbstractIntegrationTest` (and `JaroWinklerAuthorsTest`) and two Maven profiles in `pom.xml`: `unit-tests` (excludes the tag) and `integration-tests` (includes only the tag).
+Test files follow a three-category taxonomy per field: **Normalization** (`NormalizationService*Test`) / **Similarity** (`Similarity*Test`, boolean/equality result) / **JWSimilarity** (`JWSimilarity*Test`, raw JWS score vs threshold). Files are further split by Spring-context requirement.
+
+The split is enforced via `@Tag("integration")` on `AbstractIntegrationTest` (and `SimilarityAuthorTest`) and two Maven profiles in `pom.xml`: `unit-tests` (excludes the tag) and `integration-tests` (includes only the tag).
 
 ### Test profile
 
