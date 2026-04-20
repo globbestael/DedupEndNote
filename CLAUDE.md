@@ -87,22 +87,26 @@ Two compile-time plugins are active — violations are **build errors**:
 
 ## Testing
 
-Tests live in `src/test/java/edu/dedupendnote/` and its `services/` subpackage. Many tests validate against real-world datasets (SRA, McKeown, BIG_SET) and measure sensitivity/specificity.
+Tests live under `src/test/java/edu/dedupendnote/unit/` (no Spring context) and `src/test/java/edu/dedupendnote/integration/` (Spring Boot tests). Many tests validate against real-world datasets (SRA, McKeown, BIG_SET) and measure sensitivity/specificity.
 
 ### Test class hierarchy
 
-- **`BaseTest`** — provides `baseDir` (from `System.getProperty("user.home") + "/dedupendnote_files"`), `testDir`, `@BeforeEach initTestDir()`, plus utilities (`jws`, `getHighestSimilarityForAuthors`, `setLoggerToDebug`)
-- **`AbstractIntegrationTest`** — standalone (does not extend `BaseTest`); base for all `@SpringBootTest` tests; provides `@ActiveProfiles("test")`, `@Tag("integration")`, `@MockitoBean SimpMessagingTemplate`, `baseDir`, `testDir`, `@BeforeAll` (log level → INFO), `@BeforeEach initTestDir()`. Subclasses override `initTestDir()` when they need a subdirectory (e.g. `testDir = baseDir + "/experiments/"`).
-- **`AuthorsBaseTest extends BaseTest`** — shared logic for author-comparison tests (unit tests)
-- **`JournalsBaseTest extends BaseTest`** — shared logic for journal-comparison tests (unit tests)
-- **`JWSimilarityTitleTest extends BaseTest`** — title JWS-similarity tests (unit tests); also holds the out-of-scope `IOService` pattern tests
-- **`SimilarityAuthorTest extends AuthorsBaseTest`** — has `@SpringBootTest` + `@Tag("integration")` directly; tests `authorsComparisonService.compare` (boolean result)
-- **`JWSimilarityAuthorTest extends AuthorsBaseTest`** — plain JUnit 5, no Spring; tests raw `jws.apply` score
-- Standalone unit test classes (no Spring context): `ComparisonServiceTest`, `NormalizationServiceAuthorTest`, `NormalizationServiceJournalTest`, `NormalizationServiceTitleTest`, `NormalizationServicePagesTest`, `NormalizationServiceDoiTest`, `NormalizationServiceTextTest`, `SimilarityJournalTest`, `JWSimilarityJournalTest`, `JWSimilarityAbstractTest`, etc.
+**Unit (`edu.dedupendnote.unit.*`)**
+- **`unit/BaseTest`** — provides `baseDir` (from `System.getProperty("user.home") + "/dedupendnote_files"`), `testDir`, `@BeforeEach initTestDir()`, plus utilities (`jws`, `getHighestSimilarityForAuthors`, `setLoggerToDebug`)
+- **`unit/services/AuthorsBaseTest extends BaseTest`** — shared logic for author-comparison tests; public so `SimilarityAuthorTest` (integration) can extend it
+- **`unit/services/JournalsBaseTest extends BaseTest`** — shared logic for journal-comparison tests
+- **`unit/services/JWSimilarityTitleTest extends BaseTest`** — title JWS-similarity tests; also holds the out-of-scope `IOService` pattern tests
+- **`unit/services/JWSimilarityAuthorTest extends AuthorsBaseTest`** — plain JUnit 5, no Spring; tests raw `jws.apply` score
+- Standalone unit test classes (no Spring context): `ComparisonServiceTest`, `NormalizationService*Test` (6 files), `SimilarityJournalTest`, `JWSimilarityJournalTest`, `JWSimilarityAbstractTest`, `AuthorsComparisonThresholdTest`, `AuthorVariantsExperimentsTest`, etc.
+
+**Integration (`edu.dedupendnote.integration.*`)**
+- **`integration/AbstractIntegrationTest`** — base for all `@SpringBootTest` tests; provides `@ActiveProfiles("test")`, `@MockitoBean SimpMessagingTemplate`, `baseDir`, `testDir`, `@BeforeAll` (log level → INFO), `@BeforeEach initTestDir()`. Subclasses override `initTestDir()` when they need a subdirectory.
+- **`integration/services/SimilarityAuthorTest extends AuthorsBaseTest`** — has its own `@SpringBootTest`; tests `authorsComparisonService.compare` (boolean result)
+- Integration test classes extending `AbstractIntegrationTest`: `DedupEndNoteApplicationTests`, `MissedDuplicatesTests`, `TwoFilesTest`, `AuthorExperimentsTests`, `ValidationTests`
 
 Test files follow a three-category taxonomy per field: **Normalization** (`NormalizationService*Test`) / **Similarity** (`Similarity*Test`, boolean/equality result) / **JWSimilarity** (`JWSimilarity*Test`, raw JWS score vs threshold). Files are further split by Spring-context requirement.
 
-The split is enforced via `@Tag("integration")` on `AbstractIntegrationTest` (and `SimilarityAuthorTest`) and two Maven profiles in `pom.xml`: `unit-tests` (excludes the tag) and `integration-tests` (includes only the tag).
+The split is enforced by folder: `unit/` vs `integration/`. The two Maven profiles in `pom.xml` use path-based filters: `unit-tests` (excludes `**/integration/**`) and `integration-tests` (includes only `**/integration/**/*Test(s).java`). Selecting the folder in VS Code's Test Explorer automatically runs only that category.
 
 ### Test profile
 

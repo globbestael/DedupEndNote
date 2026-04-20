@@ -1,0 +1,165 @@
+package edu.dedupendnote.integration;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.StringReader;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Stream;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import edu.dedupendnote.services.DeduplicationService;
+import edu.dedupendnote.services.IOService;
+import edu.dedupendnote.services.NormalizationService;
+import edu.dedupendnote.services.UtilitiesService;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+class DedupEndNoteApplicationTests extends AbstractIntegrationTest {
+	@Autowired
+	DeduplicationService deduplicationService;
+
+	@Override
+	@BeforeEach
+	void initTestDir() {
+		testDir = baseDir + "/experiments/";
+	}
+
+	@Test
+	void contextLoads() {
+		assertThat(deduplicationService).isNotNull();
+	}
+
+	// Input file can contain LINE SEPARATOR (\u2028)
+	@Test
+	void lineSeparator() {
+		String line = "ST  - Total Pancreatectomy With Islet Cell Transplantation\u2028for the Treatment of Pancreatic Cancer";
+
+		// LINE SEPARATOR is not an end of line character for a Reader
+		try (StringReader stringReader = new StringReader(line);
+				BufferedReader bufferedReader = new BufferedReader(stringReader)) {
+			Stream<String> lines = bufferedReader.lines();
+			assertThat(lines.count()).as("LINE SEPARATOR is not an end of line character").isEqualTo(1);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		// LINE SEPARATOR messes with '.*$'
+		Matcher matcher = IOService.RIS_LINE_PATTERN.matcher(line);
+		assertThat(matcher.matches()).as("LINE SEPARATOR messes with '.*$'").isFalse();
+
+		// Replacing the LINE SEPARATOR is necessary
+		line = line.replaceAll("\\u2028", " ");
+		matcher = IOService.RIS_LINE_PATTERN.matcher(line);
+
+		assertThat(matcher.matches()).isTrue();
+		assertThat(matcher.group(1)).isEqualTo("ST");
+		assertThat(matcher.group(3)).endsWith("for the Treatment of Pancreatic Cancer");
+	}
+
+	@Test
+	void deduplicate_OK() {
+		String inputFileName = testDir + "t1.txt";
+		boolean markMode = false;
+		String outputFileName = UtilitiesService.createOutputFileName(inputFileName, markMode);
+
+		String resultString = deduplicationService.deduplicateOneFile(inputFileName, outputFileName, markMode,
+				message -> {});
+
+		assertThat(resultString).isEqualTo(deduplicationService.formatResultString(4, 1));
+		// assertThat(resultString).startsWith("DONE: DedupEndNote removed 3 records, and
+		// has written 1 records.");
+	}
+
+	@ParameterizedTest
+	@CsvSource({ "'test805.txt', 805, 631",
+			// "'DedupEndNote_portal_vein_thrombosis_37741.txt', 37741, 24382", // Very slow test
+			"'Non_Latin_input.txt', 2, 2", "'Dedup_PATIJ2_Possibly_missed.txt', 18, 12" })
+	void deduplicateSmallFiles(String fileName, int total, int totalWritten) {
+		String inputFileName = testDir + fileName;
+		boolean markMode = false;
+		String outputFileName = UtilitiesService.createOutputFileName(inputFileName, markMode);
+		assertThat(new File(inputFileName)).exists();
+
+		String resultString = deduplicationService.deduplicateOneFile(inputFileName, outputFileName, markMode,
+				message -> {});
+
+		assertThat(resultString).isEqualTo(deduplicationService.formatResultString(total, totalWritten));
+	}
+
+	@Test
+	void deduplicate_withDuplicateIDs() {
+		String inputFileName = testDir + "Bestand_met_duplicate_IDs.txt";
+		boolean markMode = false;
+		String outputFileName = UtilitiesService.createOutputFileName(inputFileName, markMode);
+
+		String resultString = deduplicationService.deduplicateOneFile(inputFileName, outputFileName, markMode,
+				message -> {});
+
+		assertThat(resultString)
+				.startsWith("ERROR: The IDs of the publications of input file " + inputFileName + " are not unique");
+	}
+
+	@Test
+	void addDois() {
+		String doiString = "10.1371/journal.pone.11 onzin http://dx.doi.org/10.1371/journal%2EPONE.22. 10.1371/journal.pone";
+		Set<String> dois = NormalizationService.normalizeInputDois(doiString);
+
+		assertThat(dois).containsOnly("10.1371/journal.pone.11", "10.1371/journal.pone.22", "10.1371/journal.pone");
+	}
+
+	@Test
+	void addDoisEscaped() {
+		String doiString = "10.1016/S0016-5085(18)34101-5 http://dx.doi.org/10.1016/S0016-5085%2818%2934101-5";
+		Set<String> dois = NormalizationService.normalizeInputDois(doiString);
+
+		assertThat(dois).containsOnly("10.1016/s0016-5085(18)34101-5"); // is lowercased!
+	}
+
+	@Test
+	void addIssns_valid() {
+		String issn = "0002-9343 (Print) 00029342 (Electronic) 0-9752298-0-X (ISBN) xxxxXXXX (all X-es)";
+
+		Set<String> issns = NormalizationService.normalizeInputIssns(issn).issns();
+
+		assertThat(issns).hasSize(3).containsAll(Set.of("00029343", "00029342", "XXXXXXXX"));
+	}
+
+	@Test
+	void addIssns_valid2() {
+		String issn = "0001-4079 (Print) 0001-4079";
+		Set<String> issns = NormalizationService.normalizeInputIssns(issn).issns();
+
+		assertThat(issns).hasSize(1).containsAll(Set.of("00014079"));
+	}
+
+	@Test
+	void addIssns_nonvalid() {
+		String issn = "a002-9343 (with letter) 00029342X (11 characters) 0-12-34567890x (12 characters)";
+
+		Set<String> issns = NormalizationService.normalizeInputIssns(issn).issns();
+
+		assertThat(issns).isEmpty();
+	}
+
+	@Test
+	void checkReply() {
+		Pattern replyPattern = Pattern.compile("(.*\\breply\\b.*|.*author(.+)respon.*|^response$)");
+		Stream<String> titles = Stream
+				.of("Could TIPS be Applied in All Kinds of Portal Vein Thrombosis: We are not Sure! Reply", "Reply");
+
+		titles.forEach(t -> assertThat(replyPattern.matcher(t.toLowerCase()).matches()).isTrue());
+	}
+
+	// FIXME: tests for markMode = true;
+
+}

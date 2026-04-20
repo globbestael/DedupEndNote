@@ -1,0 +1,92 @@
+package edu.dedupendnote.unit.services;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import edu.dedupendnote.services.DefaultAuthorsComparisonService;
+import edu.dedupendnote.domain.Publication;
+import lombok.extern.slf4j.Slf4j;
+
+/*
+ * Testing the threshold of author comparison with the authors of validated duplicates
+ */
+@Slf4j
+class AuthorsComparisonThresholdTest extends AuthorsBaseTest {
+
+	List<Triple> triples = new ArrayList<>();
+
+	@BeforeEach
+	void before() throws IOException {
+		triples = getValidatedAuthorsPairs();
+	}
+
+	@Test
+	void test() {
+		// triples.stream().limit(5).forEach(System.err::println);
+		List<Triple> filledTriples = new ArrayList<>();
+
+		for (Triple triple : triples) {
+			Publication r1 = fillPublication(triple.authors1());
+			Publication r2 = fillPublication(triple.authors2());
+			/*
+			 * Can't use DefaultAuthorsComparisonService::compare because it returns in the loop as soon as a JWS is above a threshold.
+			 * This JWS is the minimally accepted similarity, not the highest similarity of all authors pairs.
+			 */
+			Triple updated = triple.withJws(getHighestSimilarityForAuthors(r1.getAllAuthors(), r2.getAllAuthors()));
+			if (!r1.getAllAuthors().isEmpty() && !r2.getAllAuthors().isEmpty()) {
+				filledTriples.add(updated);
+			}
+		}
+		// Show the 10 lowest JWS values
+		filledTriples.sort(Comparator.comparing(Triple::jws));
+
+		// The VS Code debug console does not show UTF-8 characters correctly with System.err::println
+		// triples.stream().limit(10).forEach(System.err::println);
+		filledTriples.stream().limit(10).forEach(t -> log.error(t.toString()));
+
+		// Print the triples which are below the AUTHOR_SIMILARITY_NO_REPLY
+		log.error("Current threshold does not accept following pairs: ");
+		for (Triple triple : filledTriples) {
+			if (triple.jws() < DefaultAuthorsComparisonService.AUTHOR_SIMILARITY_NO_REPLY) {
+				log.error("\n- {}\n- {}\n", triple.authors1(), triple.authors2());
+			}
+		}
+
+		/*
+		 * Show the top 10 percentiles with their JWS threshold.comparisonService
+		 * At present the threshold of the 98% percentile is used.
+		 * 
+		 * Not sure if the current selection of triples is right:
+		 * - (in SQL) only the cases where authors strings are different triples 
+		 * - distinct pairs? In getValidatedAuthorsPairs() the pairs were originally deduplicated
+		 * 
+		 * If all pairs (even if the same, and if not unique) are used, the 98% percentile would be higher.
+		 * But are these added cases the ones which make the choice of the compairson by JWS worthwhile?
+		 * 
+		 * TODO: Look at the pairs which are just above the current threshold. 
+		 * We know the current threshold is very forgiving, maybe too forgiving.
+		 * Does the authorComparison have any influence on the results?
+		 */
+		filledTriples.sort(Comparator.comparing(Triple::jws).reversed());
+
+		/*
+		 * These percentiles are for the DIFFERENT author strings (SQL used DISTINCT)
+		 */
+		for (int i = 100; i > 90; i--) {
+			System.err.println("At " + i + ": " + percentile(filledTriples, i));
+		}
+		assertThat(percentile(filledTriples, 98))
+				.as("98% of validated authors pairs are above the threshold AUTHOR_SIMILARITY_NO_REPLY")
+				.isGreaterThan(DefaultAuthorsComparisonService.AUTHOR_SIMILARITY_NO_REPLY);
+		assertThat(percentile(filledTriples, 99)).as(
+				"AUTHOR_SIMILARITY_NO_REPLY could have a higher value because 99% of validated authors pairs are above this threshold")
+				.isLessThan(DefaultAuthorsComparisonService.AUTHOR_SIMILARITY_NO_REPLY);
+
+	}
+}
