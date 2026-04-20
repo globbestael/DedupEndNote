@@ -62,7 +62,7 @@
 			if (typeof crypto !== 'undefined' && crypto.randomUUID) {
 				return crypto.randomUUID();
 			}
-			return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+			return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
 				var r = Math.random() * 16 | 0;
 				return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
 			});
@@ -189,7 +189,8 @@
 <body>
 	<nav class="navbar navbar-light bg-light border-bottom fixed-top">
 		<div class="container">
-			<span class="navbar-brand fw-bold">DedupEndNote <small class="fw-normal text-muted fs-6">v1.1.5</small></span>
+			<span class="navbar-brand fw-bold">DedupEndNote <small
+					class="fw-normal text-muted fs-6">v1.1.5</small></span>
 			<div class="d-flex gap-2">
 				<a href="/twofiles" class="btn btn-outline-secondary btn-sm">Deduplicate 2 files</a>
 				<a href="/details" target="window2" class="btn btn-outline-secondary btn-sm">Details ↗</a>
@@ -203,7 +204,8 @@
 		<div class="row">
 			<div class="col-8 offset-2">
 				<h1 class="mb-1">Deduplicate 1 file</h1>
-				<p class="text-muted mb-4">Use <a class="link-underline-light" href="/twofiles">Deduplicate 2 files</a> to compare a new set of records against an existing one</p>
+				<p class="text-muted mb-4">Use <a class="link-underline-light" href="/twofiles">Deduplicate 2 files</a>
+					to compare a new set of records against an existing one</p>
 
 				<!-- Step 1: Upload -->
 				<div id="step1" class="step-card step-active">
@@ -231,7 +233,8 @@
 						<input type="hidden" id="wssessionId" name="wssessionId" value="" />
 						<div class="form-check form-check-inline mb-2">
 							<input class="form-check-input" type="checkbox" id="markMode" name="markMode" />
-							<label class="form-check-label" for="markMode">Do NOT deduplicate but mark the duplicate records (see Mark mode below)</label>
+							<label class="form-check-label" for="markMode">Do NOT deduplicate but mark the duplicate
+								records (see Mark mode below)</label>
 						</div>
 						<div>
 							<button type="submit" id="buttonStartDeduplication" disabled
@@ -252,8 +255,7 @@
 					<div class="step-header">
 						<h4><span class="step-number">3</span>Result</h4>
 					</div>
-					<form class="form-horizontal" id="getResultFile_form" method="post"
-						th:action="@{|/getResultFile|}">
+					<form class="form-horizontal" id="getResultFile_form" method="post" th:action="@{|/getResultFile|}">
 						<input type="hidden" name="fileNameResultFile" id="fileNameResultFile" />
 						<input type="hidden" name="markModeResultFile" id="markModeResultFile" />
 						<button type="submit" id="buttonResultFile" disabled class="btn btn-primary mb-2"
@@ -265,50 +267,64 @@
 				<div class="accordion mt-4" id="docsAccordion">
 					<div class="accordion-item">
 						<h2 class="accordion-header">
-							<button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseIntro">
+							<button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+								data-bs-target="#collapseIntro">
 								Introduction
 							</button>
 						</h2>
 						<div id="collapseIntro" class="accordion-collapse collapse" data-bs-parent="#docsAccordion">
 							<div class="accordion-body">
-								<p><b>DedupEndNote</b> is a tool for removing duplicate records from EndNote or Zotero databases exported in <b>RIS format</b>.
-								It is more flexible than the built-in deduplication features in EndNote or Zotero, and identifies more duplicates.</p>
+								<p><b>DedupEndNote</b> is a tool for removing duplicate records from EndNote or Zotero
+									databases exported in <b>RIS format</b>.
+									It is more flexible than the built-in deduplication features in EndNote or Zotero,
+									and identifies more duplicates.</p>
 								<p>You can:</p>
 								<ul>
 									<li>Deduplicate a single file (this page)</li>
-									<li>Compare a new file against an existing file (see <a class="link-underline-light" href="/twofiles">Deduplicate 2 files</a>)</li>
+									<li>Compare a new file against an existing file (see <a class="link-underline-light"
+											href="/twofiles">Deduplicate 2 files</a>)</li>
 								</ul>
 								<p>The program has been tested on EndNote and Zotero databases with records from:
-								CINAHL (EBSCOHost), ClinicalTrials.gov, Cochrane Library, EMBASE (OVID and Embase.com), Medline (OVID), PsycINFO (OVID), PubMed, Scopus, Web of Science.</p>
+									CINAHL (EBSCOHost), ClinicalTrials.gov, Cochrane Library, EMBASE (OVID and
+									Embase.com), Medline (OVID), PsycINFO (OVID), PubMed, Scopus, Web of Science.</p>
 							</div>
 						</div>
 					</div>
 					<div class="accordion-item">
 						<h2 class="accordion-header">
-							<button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseHow">
+							<button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+								data-bs-target="#collapseHow">
 								How it works
 							</button>
 						</h2>
 						<div id="collapseHow" class="accordion-collapse collapse" data-bs-parent="#docsAccordion">
 							<div class="accordion-body">
 								<div class="alert alert-warning" role="alert">
-									The page <a class="link-underline-light" href="/details" target="window2">Details, lots of details ...</a> has more detailed information.
+									The page <a class="link-underline-light" href="/details" target="window2">Details,
+										lots of details ...</a> has more detailed information.
 								</div>
-								<p>DedupEndNote compares each pair of records in up to five stages, stopping early if a mismatch is found:</p>
+								<p>DedupEndNote compares each pair of records in up to five stages, stopping early if a
+									mismatch is found:</p>
 								<ol>
-									<li><b>Publication Year</b>: Matches if the years are the same or differ by at most one year.</li>
-									<li><b>Starting Page or DOI</b>: Compares page numbers and DOIs with preprocessing to handle variations.</li>
-									<li><b>Authors</b>: Uses Jaro-Winkler similarity on up to the first 40 authors, with name normalization.</li>
+									<li><b>Publication Year</b>: Matches if the years are the same or differ by at most
+										one year.</li>
+									<li><b>Starting Page or DOI</b>: Compares page numbers and DOIs with preprocessing
+										to handle variations.</li>
+									<li><b>Authors</b>: Uses Jaro-Winkler similarity on up to the first 40 authors, with
+										name normalization.</li>
 									<li><b>Title</b>: Compares normalized or reversed titles.</li>
-									<li><b>ISBN / ISSN / Journal</b>: Matches exact ISBNs or ISSNs or compares normalized journal titles.</li>
+									<li><b>ISBN / ISSN / Journal</b>: Matches exact ISBNs or ISSNs or compares
+										normalized journal titles.</li>
 								</ol>
-								<p>If a pair scores YES in all applicable comparisons, they are considered duplicates.</p>
+								<p>If a pair scores YES in all applicable comparisons, they are considered duplicates.
+								</p>
 							</div>
 						</div>
 					</div>
 					<div class="accordion-item">
 						<h2 class="accordion-header">
-							<button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOutput">
+							<button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+								data-bs-target="#collapseOutput">
 								Output
 							</button>
 						</h2>
@@ -317,7 +333,8 @@
 								<p>By default, only the first record in each duplicate set is kept. The output file:</p>
 								<ul>
 									<li>Preserves all unique records</li>
-									<li>Enriches them with missing data from duplicates (e.g., DOI, journal name, publication year, pages)</li>
+									<li>Enriches them with missing data from duplicates (e.g., DOI, journal name,
+										publication year, pages)</li>
 									<li>Normalizes certain fields (e.g., DOI format, page ranges)</li>
 								</ul>
 								<p>Steps to use the result:</p>
@@ -332,7 +349,8 @@
 					</div>
 					<div class="accordion-item">
 						<h2 class="accordion-header">
-							<button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseMarkMode">
+							<button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+								data-bs-target="#collapseMarkMode">
 								Mark mode
 							</button>
 						</h2>
@@ -340,7 +358,8 @@
 							<div class="accordion-body">
 								<p>Instead of removing duplicates, Mark Mode labels them for manual review:</p>
 								<ul>
-									<li>The ID of the first record in each duplicate set is copied to the <b>Label (LB)</b> field of all duplicates.</li>
+									<li>The ID of the first record in each duplicate set is copied to the <b>Label
+											(LB)</b> field of all duplicates.</li>
 									<li>The original Label content is overwritten.</li>
 									<li>No enrichment or normalization is performed.</li>
 								</ul>
@@ -350,21 +369,23 @@
 					</div>
 					<div class="accordion-item">
 						<h2 class="accordion-header">
-							<button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCiting">
+							<button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+								data-bs-target="#collapseCiting">
 								How to cite
 							</button>
 						</h2>
 						<div id="collapseCiting" class="accordion-collapse collapse" data-bs-parent="#docsAccordion">
 							<div class="accordion-body">
 								<p>If you use DedupEndNote, please cite:</p>
-								<p>Lobbestael, G. (2026). DedupEndNote (Version 1.1.4) [Computer software].
-								https://github.com/globbestael/DedupEndNote</p>
+								<p>Lobbestael, G. (2026). DedupEndNote (Version 1.1.5) [Computer software].
+									https://github.com/globbestael/DedupEndNote</p>
 							</div>
 						</div>
 					</div>
 					<div class="accordion-item">
 						<h2 class="accordion-header">
-							<button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseIssues">
+							<button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+								data-bs-target="#collapseIssues">
 								Issues and feature requests
 							</button>
 						</h2>
@@ -372,7 +393,8 @@
 							<div class="accordion-body">
 								If you have any questions about the tool or come across a problem when trying to use it,
 								please raise an issue on the <a class="link-underline-light"
-									href="https://github.com/globbestael/DedupEndNote" target="github">GitHub Repository</a>.
+									href="https://github.com/globbestael/DedupEndNote" target="github">GitHub
+									Repository</a>.
 							</div>
 						</div>
 					</div>
