@@ -8,7 +8,8 @@
             "mainClass": "edu.dedupendnote.DedupEndNoteApplication",
             "projectName": "DedupEndNote",
             "args": "",
-            "envFile": "${workspaceFolder}/.env"
+            "envFile": "${workspaceFolder}/.env",
+            "vmArgs": "-Dstdout.encoding=UTF-8 -Dstderr.encoding=UTF-8"
         }
     ]
 }

@@ -10,5 +10,17 @@
         "editor.tabSize": 4
     },
     "java.configuration.updateBuildConfiguration": "interactive",
-    "java.compile.nullAnalysis.mode": "automatic"
+    "java.compile.nullAnalysis.mode": "automatic",
+    "debug.console.fontFamily": "Courier New",
+    "java.debug.settings.console": "integratedTerminal",
+    // Forces the JVM's stdout/stderr to UTF-8 when VS Code's Java Test Runner executes tests.
+    // Without this, Windows defaults to the system code page (e.g. CP1252), causing non-ASCII
+    // characters above U+007F to display as question marks in the debug/test output console.
+    // Note: launch.json vmArgs covers the Spring Boot app; this separate setting covers test runs.
+    "java.test.config": {
+        "vmArgs": [
+            "-Dstdout.encoding=UTF-8",
+            "-Dstderr.encoding=UTF-8"
+        ]
+    }
 }

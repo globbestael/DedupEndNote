@@ -150,6 +150,13 @@
 				<artifactId>spring-boot-maven-plugin</artifactId>
 			</plugin>
 			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<argLine>-Dstdout.encoding=UTF-8 -Dstderr.encoding=UTF-8</argLine>
+				</configuration>
+			</plugin>
+			<plugin>
 		        <groupId>org.openrewrite.maven</groupId>
 		        <artifactId>rewrite-maven-plugin</artifactId>
 		        <version>6.26.0</version>
