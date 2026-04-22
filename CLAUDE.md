@@ -16,6 +16,7 @@ Update CLAUDE.md whenever a change affects something documented here. Triggers i
 - Build command, Maven profile, or port changed (commands / configuration sections)
 - Architectural pattern added or removed (data flow, enrichment, modes)
 - Code quality plugin version bumped or new plugin added
+- Plan-file naming convention changed (plans section)
 
 The update should land in the same commit as the code change.
 
@@ -114,6 +115,8 @@ The split is enforced by folder: `unit/` vs `integration/`. The two Maven profil
 ## Plans
 
 Executed implementation plans are saved in `.plans/` at the repo root. Each file is a Markdown document describing context, changes made, files modified, and how to verify.
+
+Filename format: `YYYY-MM-DD-HHMM-<slug>.md`, where the date/time is the commit time of the plan's execution (local time, minute precision). This makes the folder strictly sortable by filename alone — no `git log` needed to disambiguate plans committed on the same day.
 
 ## Configuration
 
