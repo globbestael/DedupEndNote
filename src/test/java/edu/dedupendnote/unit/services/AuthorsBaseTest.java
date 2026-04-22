@@ -17,7 +17,7 @@ import edu.dedupendnote.domain.Publication;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class AuthorsBaseTest extends BaseTest {
+class AuthorsBaseTest extends BaseTest {
 
 	List<Triple> localTriples = new ArrayList<>();
 

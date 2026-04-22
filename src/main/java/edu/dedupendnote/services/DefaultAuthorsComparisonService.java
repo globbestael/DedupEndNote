@@ -74,6 +74,10 @@ public class DefaultAuthorsComparisonService implements AuthorsComparisonService
 		return false;
 	}
 
+	/*
+	 * This function is used only in tests (JWSimilarityAuthorTest) to get not the boolean return of compare(), 
+	 * but the actual similarity.
+	 */
 	@Override
 	public Double getSimilarity() {
 		return similarity;

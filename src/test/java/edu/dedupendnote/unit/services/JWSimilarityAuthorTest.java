@@ -10,16 +10,31 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import edu.dedupendnote.services.AuthorsComparisonService;
 import edu.dedupendnote.services.DefaultAuthorsComparisonService;
 import edu.dedupendnote.domain.Publication;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 class JWSimilarityAuthorTest extends AuthorsBaseTest {
+	AuthorsComparisonService authorsComparisonService = new DefaultAuthorsComparisonService();
 
 	/*
-	 * Uses a minimal copy of the real AuthorComparator and returns the highest
-	 * similarity. BRITTLE because of copied code!
+	 * The following test can be seen as a learning test: the behaviour tested is NOT the real behaviour of production code
+	 * (return true as soon as one couple of authors string is above a threshold). It rather shows that some authors strings
+	 * (the transposed authors strings) may have a higher JWS than the normal authors strings.
+	 * However:
+	 * - the first couple of authors strings above the treshold may be a transposed couple
+	 * - there are no examples where the non-transposed couple is below the treshold and the transposed couple is above the treshold
+	 * 
+	 * If you want a test which shows the value of transposition of author names, then a better test would be test
+	 * - comparing the JWS of the first (non-transposed) author strings with the JWS of the non-first (transposed) author strings
+	 * - showing that the second JWS can be higher than the first JWS
+	 * - showing that the first JWS can be below the treshold and the second above the treshold
+	 *
+	 * Looks for the highest similarity of ALL authors strings.
+	 * Uses a minimal copy of the real AuthorComparator and returns the highest similarity. 
+	 * BRITTLE because of copied code!
 	 */
 	@ParameterizedTest(name = "{index}: jaroWinkler({0}, {1})={3}")
 	@MethodSource("positiveAuthorsProvider")
@@ -27,7 +42,7 @@ class JWSimilarityAuthorTest extends AuthorsBaseTest {
 			double highSimilarity) {
 		Publication r1 = fillPublication(input1);
 		Publication r2 = fillPublication(input2);
-
+		// printMultipleAuthorStrings(input1, input2, r1, r2);
 		Double highestSimilarity = 0.0;
 
 		for (String authors1 : r1.getAllAuthors()) {
@@ -46,17 +61,40 @@ class JWSimilarityAuthorTest extends AuthorsBaseTest {
 	}
 
 	/*
-	 * Compares only the first author lists.
-	 *
-	 * FIXME: this test and jwFullNegativeTest in SimilarityAuthorTest have same results, i.e. jwFullNegativeTest has no cases where the non-first authorlists
-	 * have higher similarity than the first authorlists.
-	 * negativeAuthorsProvider has NOT for all arguments 2 expected similarity results.
+	 * Uses the real AuthorComparator and the first similarity above the
+	 * AUTHOR_SIMILARITY_NO_REPLY threshold. There may be other author lists that have
+	 * higher similarity. So this test can not be used to determine a sensible threshold.
+	 */
+	@ParameterizedTest(name = "{index}: jaroWinkler({0}, {1})={2}")
+	@MethodSource("positiveAuthorsProvider")
+	void jwFullPositiveTest_lowest_accepted_similarity(String input1, String input2, double lowestAcceptedSimilarity,
+			double highestSimilarity) {
+		Publication r1 = fillPublication(input1);
+		Publication r2 = fillPublication(input2);
+		// printMultipleAuthorStrings(input1, input2, r1, r2);
+
+		authorsComparisonService.compare(r1, r2);
+		Double similarity = authorsComparisonService.getSimilarity();
+
+		assertThat(similarity).as("\nAuthors1: %s\nAuthors2: %s", r1.getAllAuthors().get(0), r2.getAllAuthors().get(0))
+				.isEqualTo(lowestAcceptedSimilarity, within(0.01))
+				.isGreaterThan(DefaultAuthorsComparisonService.AUTHOR_SIMILARITY_NO_REPLY);
+	}
+
+	/*
+	 * FIXME: The negative tests are not complete:
+	 * - The argument provider negativeAuthorsProvider has many cases with only 3 arguments
+	 *   There is therefore no test which compares the similarity tot the 4th argument (highest value including transposed authors)
+	 * - Why is the result of jwFullNegativeTest_not_transposed (only first author string) always 
+	 *   the same as jwFullNegativeTest_with_transposed?
+	 *   ANSWER: there are no good test cases for this
 	 */
 	@ParameterizedTest(name = "{index}: jaroWinkler({0}, {1})={2}")
 	@MethodSource("negativeAuthorsProvider")
-	void jwFullNegativeTest_defective(String input1, String input2, double expected) {
+	void jwFullNegativeTest_not_transposed(String input1, String input2, double expected) {
 		Publication r1 = fillPublication(input1);
 		Publication r2 = fillPublication(input2);
+		// printMultipleAuthorStrings(input1, input2, r1, r2);
 
 		Double similarity = jws.apply(r1.getAllAuthors().get(0), r2.getAllAuthors().get(0));
 
@@ -64,7 +102,24 @@ class JWSimilarityAuthorTest extends AuthorsBaseTest {
 				.isLessThan(DefaultAuthorsComparisonService.AUTHOR_SIMILARITY_NO_REPLY);
 	}
 
-	// The 3rd argument is JWS score without transposed authors, the 4th argument with transposed authors
+	@ParameterizedTest(name = "{index}: jaroWinkler({0}, {1})={2}")
+	@MethodSource("negativeAuthorsProvider")
+	void jwFullNegativeTest_with_transposed(String input1, String input2, double expected) {
+		Publication r1 = fillPublication(input1);
+		Publication r2 = fillPublication(input2);
+		// printMultipleAuthorStrings(input1, input2, r1, r2);
+
+		authorsComparisonService.compare(r1, r2);
+		Double similarity = authorsComparisonService.getSimilarity();
+
+		assertThat(similarity).isEqualTo(expected, within(0.01))
+				.isLessThan(DefaultAuthorsComparisonService.AUTHOR_SIMILARITY_NO_REPLY);
+	}
+
+	/*  
+	 * The 3rd argument is the JWS score of the first couple of authors strings above the treshold, 
+	 * the 4th argument the highest JWS score of any couple of author strings.
+	 */
 	static Stream<Arguments> positiveAuthorsProvider() {
 		// @formatter:off
 		return Stream.of(
@@ -148,8 +203,8 @@ class JWSimilarityAuthorTest extends AuthorsBaseTest {
 				0.82, 0.82), // Example from McKeown (Ovid DB cctr: First is compared as Heekeren K NADJSMOMKKAGMAGME
 			arguments(
 				"DIMASCIO, R; MARCHIOLI, R; TOGNONI, G",
-				"Di Mascio, R; Marchioli, R; Tognoni, G", 0.86,
-				0.86), // ALL CAPITALS
+				"Di Mascio, R; Marchioli, R; Tognoni, G", 
+				0.86, 0.86), // ALL CAPITALS
 			arguments(
 				"Schwartzberg, L. S.; Blakely, L. J.; Schnell, F.; Christianson, D.; Andrews, M.; Johns, A.; Walker, M.",
 				"Schwartzberg, L. S.; Tauer, K. W.; Schnell, F. M.; Hermann, R.; Rubin, P.; Christianson, D.; Weinstein, P.; Epperson, A.; Walker, M.",
@@ -194,6 +249,11 @@ class JWSimilarityAuthorTest extends AuthorsBaseTest {
 		// @formatter:on
 	}
 
+	/*  
+	 * The 3rd argument is the JWS score of the first couple of authors strings above the treshold, 
+	 * the 4th argument the highest JWS score of any couple of author strings.
+	 * But not all Arguments have a 4th argument!
+	 */
 	static Stream<Arguments> negativeAuthorsProvider() {
 		// @formatter:off
 		return Stream.of(
@@ -254,4 +314,18 @@ class JWSimilarityAuthorTest extends AuthorsBaseTest {
 		// @formatter:on
 	}
 
+	private void printMultipleAuthorStrings(String input1, String input2, Publication r1, Publication r2) {
+		if (r1.getAllAuthors().size() > 1) {
+			System.err.println("For %s there are more than 1 author lists: ".formatted(input1));
+			for (String authors : r1.getAllAuthors()) {
+				System.err.println("\t- %s".formatted(authors));
+			}
+		}
+		if (r2.getAllAuthors().size() > 1) {
+			System.err.println("For %s there are more than 1 author lists: ".formatted(input2));
+			for (String authors : r2.getAllAuthors()) {
+				System.err.println("\t- %s".formatted(authors));
+			}
+		}
+	}
 }
