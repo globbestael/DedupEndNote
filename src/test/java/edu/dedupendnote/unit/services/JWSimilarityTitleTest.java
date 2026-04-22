@@ -25,15 +25,6 @@ import edu.dedupendnote.services.IOService;
 import edu.dedupendnote.unit.BaseTest;
 import edu.dedupendnote.domain.Publication;
 
-/*
-	FIXME: This test file probably should be split into 2 files:
-	- most tests are unit tests
-	- there are a small number of tests which read external data. Because these methods use the baseDir / testDir variable,
-	  the whole test class is treated as integrationTest
-	  	- extends AbstractIntegrationTest
-		- @SpringBootTest
-		- @ActiveProfiles("test")
-*/
 class JWSimilarityTitleTest extends BaseTest {
 
 	@ParameterizedTest(name = "{index}: jaroWinkler({0}, {1})={2}")
