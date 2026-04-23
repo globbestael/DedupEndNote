@@ -65,7 +65,12 @@ class NormalizationServiceTextTest {
 				System.err.println("\tSOME CHARACTERS are changed to a null String or to more than 1 character!");
 			}
 			for (int i = 0; i < input.length(); i++) {
-				if (ownResult.charAt(i) != commonsResult.charAt(i)) {
+				System.err.println("Char %d of input %s and ownResults %d and commonsResult %d and input %d"
+						.formatted(i, input.charAt(i), ownResult.length(), commonsResult.length(), commons.length()));
+				if (ownResult.length() == i || commonsResult.length() == i) {
+					System.err.println("Char %d of input is out ofLength of ownResult or commonsResult".formatted(i));
+					break;
+				} else if (ownResult.charAt(i) != commonsResult.charAt(i)) {
 					String inputChar = String.valueOf(input.charAt(i));
 					String ownChar = String.valueOf(ownResult.charAt(i));
 					String commonsChar = String.valueOf(commonsResult.charAt(i));
@@ -101,10 +106,16 @@ class NormalizationServiceTextTest {
 						 // ĄŁÓŚŻŹĆŃąłóśżźćń
 						"AOSZZCN aoszzcn", // Ł and ł are removed
 						"ALOSZZCN aloszzcn"),
-				arguments( // CJK
+				arguments( 
+					/* 
+						CJK. The following Korean test is probably not correct for the Apache transformation.
+						Korean has 2 implementations for Hangul (precomposed and composed), see https://en.wikipedia.org/wiki/Hangul
+						It looks as if the input string (arg 1) is precomposed, and the Apache Commons string (arg 3) is composed.
+						The Length of arg 1 = 26 and of arg 3 = 53
+					*/
 						"잊지마 넌 흐린 어둠사이 왼손으로 그린 별 하나",
-						"       ",
-						"잊지마 넌 흐린 어둠사이 왼손으로 그린 별 하나"),
+						"       ", // only the spaces are kept (and not yet merged to 1 space)
+						"잊지마 넌 흐린 어둠사이 왼손으로 그린 별 하나"),
 				arguments( // ligatures, dedupendnote replaces them with space, Apache keeps ligatures
 						"æ œ ﬁ",
 						"  ", // dedupendnote removes ligatures

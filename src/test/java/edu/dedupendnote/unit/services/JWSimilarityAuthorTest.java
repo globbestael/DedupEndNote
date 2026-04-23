@@ -54,8 +54,7 @@ class JWSimilarityAuthorTest extends AuthorsBaseTest {
 			}
 		}
 
-		assertThat(highestSimilarity)
-				.as("\nAuthors1: %s\nAuthors2: %s", r1.getAllAuthors().get(0), r2.getAllAuthors().get(0))
+		assertThat(highestSimilarity).as("\nAuthors1: %s\nAuthors2: %s", r1.getAllAuthors(), r2.getAllAuthors())
 				.isEqualTo(highSimilarity, within(0.01))
 				.isGreaterThan(DefaultAuthorsComparisonService.AUTHOR_SIMILARITY_NO_REPLY);
 	}
@@ -76,7 +75,7 @@ class JWSimilarityAuthorTest extends AuthorsBaseTest {
 		authorsComparisonService.compare(r1, r2);
 		Double similarity = authorsComparisonService.getSimilarity();
 
-		assertThat(similarity).as("\nAuthors1: %s\nAuthors2: %s", r1.getAllAuthors().get(0), r2.getAllAuthors().get(0))
+		assertThat(similarity).as("\nAuthors1: %s\nAuthors2: %s", r1.getAllAuthors(), r2.getAllAuthors())
 				.isEqualTo(lowestAcceptedSimilarity, within(0.01))
 				.isGreaterThan(DefaultAuthorsComparisonService.AUTHOR_SIMILARITY_NO_REPLY);
 	}
