@@ -91,42 +91,42 @@ class JWSimilarityAbstractTest {
 
 	RatcliffObershelp ro = new RatcliffObershelp();
 
-		@ParameterizedTest(name = "{index}: jaroWinkler({0}, {1})={2}")
-		@MethodSource("negativeArgumentProvider")
-		void jwNegativeTest(String input1, String input2, double expected) {
-			String t1 = cleanAbstracttext(input1);
-			String t2 = cleanAbstracttext(input2);
-			Double similarity = jws.apply(t1, t2);
-			/*
-			 * Awful way to get and print the differences between 2 strings to the console tab (instead of the JUnit tab)
-			 */
-			if (similarity <= (expected - 0.01d)) {
-				assertThat(similarity).isLessThanOrEqualTo(expected);
-			} else {
-				System.err.println("Diffs: " + getDiffs(t1, t2));
-				assertThat(similarity).as("JWS similarity too small. String: %s ...", t1.substring(0, 25))
-						.isLessThanOrEqualTo(expected);
-			}
+	@ParameterizedTest(name = "{index}: jaroWinkler({0}, {1})={2}")
+	@MethodSource("negativeArgumentProvider")
+	void jwNegativeTest(String input1, String input2, double expected) {
+		String t1 = cleanAbstracttext(input1);
+		String t2 = cleanAbstracttext(input2);
+		Double similarity = jws.apply(t1, t2);
+		/*
+		 * Awful way to get and print the differences between 2 strings to the console tab (instead of the JUnit tab)
+		 */
+		if (similarity <= (expected - 0.01d)) {
+			assertThat(similarity).isLessThanOrEqualTo(expected);
+		} else {
+			System.err.println("Diffs: " + getDiffs(t1, t2));
+			assertThat(similarity).as("JWS similarity too small. String: %s ...", t1.substring(0, 25))
+					.isLessThanOrEqualTo(expected);
 		}
+	}
 
-		@ParameterizedTest(name = "{index}: jaroWinkler({0}, {1})={2}")
-		@MethodSource("positiveArgumentProvider")
-		void jwPositiveTest(String input1, String input2, double expected) {
-			// String diffsOfRawInput = getDiffs(input1, input2);
-			String t1 = cleanAbstracttext(input1);
-			String t2 = cleanAbstracttext(input2);
-			Double similarity = jws.apply(t1, t2);
+	@ParameterizedTest(name = "{index}: jaroWinkler({0}, {1})={2}")
+	@MethodSource("positiveArgumentProvider")
+	void jwPositiveTest(String input1, String input2, double expected) {
+		// String diffsOfRawInput = getDiffs(input1, input2);
+		String t1 = cleanAbstracttext(input1);
+		String t2 = cleanAbstracttext(input2);
+		Double similarity = jws.apply(t1, t2);
 
-			/*
-			 * Awful way to get and print the differences between 2 strings to the console tab (instead of the JUnit tab)
-			 */
-			if (similarity >= (expected - 0.01d) && similarity <= (expected + 0.01d)) {
-				assertThat(similarity).isEqualTo(expected, within(0.01));
-			} else {
-				System.err.println("Diffs: " + getDiffs(t1, t2));
-				assertThat(similarity).as("JWS similarity too big. String: %s ...", t1.substring(0, 25))
-						.isEqualTo(expected, within(0.01));
-			}
+		/*
+		 * Awful way to get and print the differences between 2 strings to the console tab (instead of the JUnit tab)
+		 */
+		if (similarity >= (expected - 0.01d) && similarity <= (expected + 0.01d)) {
+			assertThat(similarity).isEqualTo(expected, within(0.01));
+		} else {
+			System.err.println("Diffs: " + getDiffs(t1, t2));
+			assertThat(similarity).as("JWS similarity too big. String: %s ...", t1.substring(0, 25)).isEqualTo(expected,
+					within(0.01));
+		}
 	}
 
 	// formatter::off
@@ -217,7 +217,7 @@ class JWSimilarityAbstractTest {
 		text = text.replaceAll(
 				"^(aim(s?)|background(s?)|context|importance|introduction|objective(s?)|purpose|question|study objective|synopsis|(\\w+(\\s\\w+)?:\\s?))",
 				"");
-		// FIXME: replace with NormalizationService::normalizrHyhensAndWhitespace?
+		// FIXME: replace with NormalizationService::normalizeHyhensAndWhitespace?
 		// replace HYPHEN with HYPHEN-MINUS
 		text = text.replaceAll("\u2010", "\u002D");
 		// remove THIN SPACE. Some databases use THIN SPACE within "30 mg", others use no character

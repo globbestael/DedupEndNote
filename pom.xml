@@ -13,7 +13,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>4.0.5</version>
+		<version>4.0.6</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 
@@ -109,6 +109,10 @@
 		    <artifactId>bootstrap</artifactId>
 		    <version>5.3.8</version>
 		</dependency>
+		<!--
+			Maven Central says that jquery-ui 1.14.2 and jquery-file-upload 10.32.0 hav no dependencies, 
+			but without a jquery webjar there are errors (missing jQuery) when a file is uploaded.
+		-->
 		<dependency>
 		    <groupId>org.webjars</groupId>
 		    <artifactId>jquery</artifactId>
@@ -117,12 +121,12 @@
 		<dependency>
 			<groupId>org.webjars</groupId>
 			<artifactId>jquery-ui</artifactId>
-			<version>1.13.2</version>
+			<version>1.14.2</version>
 		</dependency>
 		<dependency>
 		    <groupId>org.webjars.bowergithub.blueimp</groupId>
 		    <artifactId>jquery-file-upload</artifactId>
-		    <version>10.31.0</version>
+		    <version>10.32.0</version>
 		</dependency>
 		<dependency>
 			<groupId>org.webjars.npm</groupId>
