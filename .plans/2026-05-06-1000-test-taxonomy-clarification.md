@@ -1,5 +1,7 @@
 # Test taxonomy clarification — introduce validation/ package
 
+**Status: executed**
+
 ## Context
 
 The current two-way split (unit / integration) is misleading. `ValidationTests.checkAllTruthFiles` is not an integration test in the conventional sense: it does not assert on the externally observable behaviour of `deduplicateOneFile`. It is a performance measurement tool that compares deduplication results against manually validated truth files and reports sensitivity/specificity. Grouping it with the integration tests obscures this purpose and risks running it routinely (it is slow and requires large truth files that are not in git).

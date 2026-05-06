@@ -1,4 +1,4 @@
-package edu.dedupendnote.integration.services;
+package edu.dedupendnote.validation;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -38,6 +38,7 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 import edu.dedupendnote.integration.AbstractIntegrationTest;
+import edu.dedupendnote.integration.services.RecordDBService;
 import edu.dedupendnote.services.DeduplicationService;
 import edu.dedupendnote.services.IOService;
 import edu.dedupendnote.domain.Publication;
