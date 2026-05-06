@@ -1,4 +1,4 @@
-package edu.dedupendnote.integration.services;
+package edu.dedupendnote.validation.services;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;

@@ -1,4 +1,4 @@
-package edu.dedupendnote.integration.domain;
+package edu.dedupendnote.validation.domain;
 
 import java.util.List;
 import java.util.Map;

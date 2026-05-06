@@ -1,5 +1,7 @@
 # Extract ValidationService — shared postprocessing for production and alternative validation
 
+**Status: executed**
+
 ## Context
 
 `ValidationTests.checkResults()` currently mixes three concerns:
