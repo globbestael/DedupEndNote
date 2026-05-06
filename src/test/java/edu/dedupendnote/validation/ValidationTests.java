@@ -16,7 +16,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.fail;
 
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeAll;
@@ -678,15 +677,14 @@ class ValidationTests extends AbstractIntegrationTest {
 	}
 
 	private List<Publication> deduplicate(String inputFileName) {
-		List<Publication> publications = ioService.readPublications(inputFileName, message -> {});
-
-		String s = deduplicationService.doSanityChecks(publications, inputFileName);
-		if (s != null) {
-			fail(s);
-		}
-
-		deduplicationService.searchYearOneFile(publications, message -> {});
-		return publications;
+		/*
+		 * Run deduplicateOneFile in mark mode and read the marked output.
+		 * This closes the gap between validation and production: validation now exercises
+		 * the exact code path the production deployment runs, instead of mimicking it.
+		 */
+		String markFileName = inputFileName + "_mark.txt";
+		deduplicationService.deduplicateOneFile(inputFileName, markFileName, /* markMode= */ true, message -> {});
+		return ioService.readPublications(markFileName, message -> {}, /* includeLabelField= */ true);
 	}
 
 

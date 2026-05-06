@@ -99,7 +99,7 @@ Tests live under three roots, each with a corresponding Maven profile:
 
 **Integration tests** assert on the string returned by `deduplicateOneFile` (or record counts) on small known inputs — they are regression guards that fail if behaviour changes.
 
-**Validation tests** measure sensitivity/specificity against manually validated truth files in `~/dedupendnote_files` (not in git). They are slow and intended to be run before releases or after structural changes, not on every commit.
+**Validation tests** measure sensitivity/specificity against manually validated truth files in `~/dedupendnote_files` (not in git). They are slow and intended to be run before releases or after structural changes, not on every commit. Validation runs `deduplicateOneFile` in mark mode to exercise the full production code path, then re-reads the mark-mode output with `includeLabelField=true` to extract deduplication groups.
 
 ### Test class hierarchy
 

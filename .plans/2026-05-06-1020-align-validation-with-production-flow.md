@@ -1,5 +1,7 @@
 # Align ValidationOfProduction with the production flow
 
+**Status: executed (duration baselines in validationResultsMap not yet updated — requires a validation test run)**
+
 ## Context
 
 The private `deduplicate()` helper in `ValidationTests` currently calls `ioService.readPublications()` + `deduplicationService.doSanityChecks()` + `deduplicationService.searchYearOneFile()`. The production path through `deduplicateOneFile` adds two more steps: enrichment (copying missing fields from duplicate records to kept records) and writing the output file. If either of these steps were ever to have a side effect on which records are marked as duplicates, the validation test would not catch it.
