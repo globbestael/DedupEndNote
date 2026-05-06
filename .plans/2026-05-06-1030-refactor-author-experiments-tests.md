@@ -1,5 +1,7 @@
 # Refactor AuthorExperimentsTests to use shared validation infrastructure
 
+**Status: executed (used SRA2_Haematology — has TN=1186, FP=1, making specificity improvement visible)**
+
 ## Context
 
 `AuthorExperimentsTests.higherAuthorSimilarityFindsLessDuplicates` currently deduplicates the same file **twice** — once with the production engine, once with an experimental engine — and asserts only on raw duplicate counts. This has two weaknesses:
