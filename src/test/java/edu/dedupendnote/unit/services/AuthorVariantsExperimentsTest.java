@@ -342,9 +342,13 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 		bothBelow.sort(new TripleComparatorDefault());
 
 		if (!onlySummary) {
-			System.err.println("\nDefault algorithm better than algorithm " + nameExperiment
-					+ "\n=========================================");
-			better.stream().forEach(t -> System.err.println(showTripleComparison(t)));
+			// System.err.println("\nDefault algorithm better than algorithm " + nameExperiment
+			// 		+ "\n=========================================");
+			// better.stream().forEach(t -> System.err.println(showTripleComparison(t)));
+
+			log.error("\nDefault algorithm better than algorithm {}\n=========================================",
+					nameExperiment);
+			better.stream().forEach(t -> log.error(showTripleComparison(t)));
 
 			System.err.println("\nDefault algorithm worse than algorithm " + nameExperiment
 					+ "\n=========================================");
