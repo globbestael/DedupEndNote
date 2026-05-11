@@ -57,7 +57,7 @@ DedupEndNote is a Spring Boot 4.0 / Java 21 web app that deduplicates bibliograp
 | `ComparisonService` | ~337 | 5-step duplicate detection algorithm |
 | `IOService` | ~980 | Parses and writes RIS files; normalizes fields during read |
 | `NormalizationService` | ~991 | Normalizes authors, titles, DOIs, pages, journals |
-| `DefaultAuthorsComparisonService` | — | Jaro-Winkler author matching |
+| `DefaultAuthorsComparisonService` | — | Jaro-Winkler author matching; thresholds injectable via `AuthorThresholds` record |
 
 ### 5-step comparison algorithm (all steps must pass)
 1. Publication year (±1 year, exact for Cochrane)
@@ -117,8 +117,7 @@ Tests live under three roots, each with a corresponding Maven profile:
 
 **Validation (`edu.dedupendnote.validation.*`)**
 - **`validation/ValidationTests`** — measures sensitivity/specificity of the production deduplication engine across 14 validated real-world datasets; not a regression guard but a performance monitor. Requires truth files in `~/dedupendnote_files` (not in git). Run with `-Pvalidation-tests`.
-- **`validation/experiments/AuthorExperimentsTests`** — runs an experimental `AuthorsComparisonService` implementation against a validated dataset and asserts on relative sensitivity/specificity. The `experiments` sub-package holds non-production `*ComparisonService` implementations used for controlled A/B experiments.
-- **`validation/experiments/ExperimentalAuthorsComparisonService`** — first non-production implementation of `AuthorsComparisonService`; uses thresholds at 1.0 so no author match ever succeeds (worst-case experiment).
+- **`validation/experiments/AuthorExperimentsTests`** — runs `DefaultAuthorsComparisonService` with experimental thresholds (`AuthorThresholds(1.0, 1.0, 1.0)`) against a validated dataset and asserts on relative sensitivity/specificity. The `experiments` sub-package holds controlled A/B experiments against production-engine baselines.
 - **`validation/services/ValidationService`** — test-only Spring `@Service` that encapsulates the truth-file scoring logic (TP/FP/FN/TN computation, FN/FP analysis file writing). Shared by `ValidationTests` and future experiments tests.
 - **`validation/services/RecordDBService`** — test-only Spring `@Service` for reading/writing the tab-delimited DB export format.
 - **`validation/domain/ValidationResult`** — POJO holding per-dataset scores (sensitivity, specificity, precision, accuracy, F1, FN/FP pair maps).

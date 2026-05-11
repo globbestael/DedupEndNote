@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import edu.dedupendnote.services.AuthorThresholds;
 import edu.dedupendnote.services.DefaultAuthorsComparisonService;
 import edu.dedupendnote.services.IOService;
 import edu.dedupendnote.domain.Publication;
@@ -327,7 +328,7 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 
 	private void showTripleComparisonDetails(String nameExperiment, List<Triple> triples, boolean onlySummary) {
 		// double threshold = 0.85;
-		double threshold = DefaultAuthorsComparisonService.AUTHOR_SIMILARITY_NO_REPLY;
+		double threshold = AuthorThresholds.DEFAULT.noReply();
 
 		List<Triple> better = new ArrayList<>(
 				triples.stream().filter(t -> t.jws() > threshold && t.expJws() <= threshold).toList());

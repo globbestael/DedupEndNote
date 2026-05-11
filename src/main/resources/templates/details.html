@@ -48,7 +48,7 @@
                                     they the same?</a></li>
                             <li><a href="#authors" class="link-underline-light">Authors: Is the Jaro-Winkler similarity
                                     of the first 40 authors &gt; <span
-                                        th:text="${T(edu.dedupendnote.services.DefaultAuthorsComparisonService).AUTHOR_SIMILARITY_NO_REPLY}">-0.67?</span></a>
+                                        th:text="${T(edu.dedupendnote.services.AuthorThresholds).DEFAULT.noReply()}">-0.67?</span></a>
                             </li>
                             <li><a href="#titles" class="link-underline-light">Title: Is the Jaro-Winkler similarity of
                                     (one of) the normalized titles &gt; <span
@@ -102,7 +102,7 @@
                         </ul>
 
                         <h3 id="authors">3. Authors: Is the Jaro-Winkler similarity of the first 40 authors &gt; <span
-                                th:text="${T(edu.dedupendnote.services.DefaultAuthorsComparisonService).AUTHOR_SIMILARITY_NO_REPLY}">-0.67</span>?
+                                th:text="${T(edu.dedupendnote.services.AuthorThresholds).DEFAULT.noReply()}">-0.67</span>?
                         </h3>
                         <p>Jaro-Winkler similarity: See this <a
                                 href="https://en.wikipedia.org/wiki/Jaro%E2%80%93Winkler_distance"
@@ -172,7 +172,7 @@
                             <li>Insufficient data: If one of the records is a reply, erratum or comment (see below), the
                                 titles are not compared / the answer is YES (but the Jaro-Winkler similarity of the
                                 authors should be &gt; <span
-                                    th:text="${T(edu.dedupendnote.services.DefaultAuthorsComparisonService).AUTHOR_SIMILARITY_REPLY_SUFFICIENT_STARTPAGES_OR_DOIS}">-0.75</span>
+                                    th:text="${T(edu.dedupendnote.services.AuthorThresholds).DEFAULT.replySufficientStartPagesOrDois()}">-0.75</span>
                                 and the comparison between the journals is more strict).</li>
                         </ul>
 
@@ -1110,21 +1110,21 @@
                                             <td rowspan="3">Authors</td>
                                             <td>default (i.e. not a Reply)</td>
                                             <td
-                                                th:text="${T(edu.dedupendnote.services.DefaultAuthorsComparisonService).AUTHOR_SIMILARITY_NO_REPLY}">
+                                                th:text="${T(edu.dedupendnote.services.AuthorThresholds).DEFAULT.noReply()}">
                                                 -0.67</td>
                                             <td></td>
                                         </tr>
                                         <tr>
                                             <td>Reply and sufficient Start Pages</td>
                                             <td
-                                                th:text="${T(edu.dedupendnote.services.DefaultAuthorsComparisonService).AUTHOR_SIMILARITY_REPLY_SUFFICIENT_STARTPAGES_OR_DOIS}">
+                                                th:text="${T(edu.dedupendnote.services.AuthorThresholds).DEFAULT.replySufficientStartPagesOrDois()}">
                                                 -0.75</td>
                                             <td>When a Reply the titles are not compared</td>
                                         </tr>
                                         <tr>
                                             <td>Reply and insufficient Start Pages</td>
                                             <td
-                                                th:text="${T(edu.dedupendnote.services.DefaultAuthorsComparisonService).AUTHOR_SIMILARITY_REPLY_INSUFFICIENT_STARTPAGES_AND_DOIS}">
+                                                th:text="${T(edu.dedupendnote.services.AuthorThresholds).DEFAULT.replyInsufficientStartPagesAndDois()}">
                                                 -0.80</td>
                                             <td>When a Reply the titles are not compared</td>
                                         </tr>

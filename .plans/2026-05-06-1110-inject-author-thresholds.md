@@ -1,6 +1,6 @@
 # Inject `AuthorThresholds` into `DefaultAuthorsComparisonService`
 
-**Status: pending**
+**Status: executed**
 
 ## Context
 

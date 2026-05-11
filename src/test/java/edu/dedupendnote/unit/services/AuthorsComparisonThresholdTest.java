@@ -9,6 +9,7 @@ import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import edu.dedupendnote.services.AuthorThresholds;
 import edu.dedupendnote.services.DefaultAuthorsComparisonService;
 import edu.dedupendnote.domain.Publication;
 import lombok.extern.slf4j.Slf4j;
@@ -53,7 +54,7 @@ class AuthorsComparisonThresholdTest extends AuthorsBaseTest {
 		// Print the triples which are below the AUTHOR_SIMILARITY_NO_REPLY
 		log.error("Current threshold does not accept following pairs: ");
 		for (Triple triple : filledTriples) {
-			if (triple.jws() < DefaultAuthorsComparisonService.AUTHOR_SIMILARITY_NO_REPLY) {
+			if (triple.jws() < AuthorThresholds.DEFAULT.noReply()) {
 				log.error("\n- {}\n- {}\n", triple.authors1(), triple.authors2());
 			}
 		}
@@ -83,10 +84,10 @@ class AuthorsComparisonThresholdTest extends AuthorsBaseTest {
 		}
 		assertThat(percentile(filledTriples, 98))
 				.as("98% of validated authors pairs are above the threshold AUTHOR_SIMILARITY_NO_REPLY")
-				.isGreaterThan(DefaultAuthorsComparisonService.AUTHOR_SIMILARITY_NO_REPLY);
+				.isGreaterThan(AuthorThresholds.DEFAULT.noReply());
 		assertThat(percentile(filledTriples, 99)).as(
 				"AUTHOR_SIMILARITY_NO_REPLY could have a higher value because 99% of validated authors pairs are above this threshold")
-				.isLessThan(DefaultAuthorsComparisonService.AUTHOR_SIMILARITY_NO_REPLY);
+				.isLessThan(AuthorThresholds.DEFAULT.noReply());
 
 	}
 }

@@ -10,7 +10,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import edu.dedupendnote.domain.Publication;
 import edu.dedupendnote.integration.AbstractIntegrationTest;
+import edu.dedupendnote.services.AuthorThresholds;
 import edu.dedupendnote.services.ComparisonService;
+import edu.dedupendnote.services.DefaultAuthorsComparisonService;
 import edu.dedupendnote.services.DeduplicationService;
 import edu.dedupendnote.services.IOService;
 import edu.dedupendnote.validation.domain.ValidationResult;
@@ -44,9 +46,11 @@ class AuthorExperimentsTests extends AbstractIntegrationTest {
 		String outputFile = subdir + "Haematology_experimental_to_validate.txt";
 		String truthFile  = subdir + "Haematology_TRUTH.txt";
 
-		// Experimental engine: higher author thresholds (> 1.0, so no author match ever succeeds)
+		// Threshold == 1.0 (the max JWS score) — similarity > 1.0 is never true, so no author
+		// match ever succeeds; sensitivity drops to 0%, specificity reaches 100%.
 		DeduplicationService expService = new DeduplicationService(new ComparisonService());
-		expService.setAuthorsComparisonService(new ExperimentalAuthorsComparisonService());
+		AuthorThresholds noMatchThresholds = new AuthorThresholds(1.0, 1.0, 1.0);
+		expService.setAuthorsComparisonService(new DefaultAuthorsComparisonService(noMatchThresholds));
 
 		long start = System.currentTimeMillis();
 		expService.deduplicateOneFile(inputFile, markFile, /* markMode= */ true, message -> {});

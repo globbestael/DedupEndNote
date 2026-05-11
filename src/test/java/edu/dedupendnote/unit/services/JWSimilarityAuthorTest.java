@@ -10,6 +10,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import edu.dedupendnote.services.AuthorThresholds;
 import edu.dedupendnote.services.AuthorsComparisonService;
 import edu.dedupendnote.services.DefaultAuthorsComparisonService;
 import edu.dedupendnote.domain.Publication;
@@ -56,7 +57,7 @@ class JWSimilarityAuthorTest extends AuthorsBaseTest {
 
 		assertThat(highestSimilarity).as("\nAuthors1: %s\nAuthors2: %s", r1.getAllAuthors(), r2.getAllAuthors())
 				.isEqualTo(highSimilarity, within(0.01))
-				.isGreaterThan(DefaultAuthorsComparisonService.AUTHOR_SIMILARITY_NO_REPLY);
+				.isGreaterThan(AuthorThresholds.DEFAULT.noReply());
 	}
 
 	/*
@@ -77,7 +78,7 @@ class JWSimilarityAuthorTest extends AuthorsBaseTest {
 
 		assertThat(similarity).as("\nAuthors1: %s\nAuthors2: %s", r1.getAllAuthors(), r2.getAllAuthors())
 				.isEqualTo(lowestAcceptedSimilarity, within(0.01))
-				.isGreaterThan(DefaultAuthorsComparisonService.AUTHOR_SIMILARITY_NO_REPLY);
+				.isGreaterThan(AuthorThresholds.DEFAULT.noReply());
 	}
 
 	/*
@@ -98,7 +99,7 @@ class JWSimilarityAuthorTest extends AuthorsBaseTest {
 		Double similarity = jws.apply(r1.getAllAuthors().get(0), r2.getAllAuthors().get(0));
 
 		assertThat(similarity).isEqualTo(expected, within(0.01))
-				.isLessThan(DefaultAuthorsComparisonService.AUTHOR_SIMILARITY_NO_REPLY);
+				.isLessThan(AuthorThresholds.DEFAULT.noReply());
 	}
 
 	@ParameterizedTest(name = "{index}: jaroWinkler({0}, {1})={2}")
@@ -112,7 +113,7 @@ class JWSimilarityAuthorTest extends AuthorsBaseTest {
 		Double similarity = authorsComparisonService.getSimilarity();
 
 		assertThat(similarity).isEqualTo(expected, within(0.01))
-				.isLessThan(DefaultAuthorsComparisonService.AUTHOR_SIMILARITY_NO_REPLY);
+				.isLessThan(AuthorThresholds.DEFAULT.noReply());
 	}
 
 	/*  
