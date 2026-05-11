@@ -1,4 +1,4 @@
-package edu.dedupendnote.validation.alternatives;
+package edu.dedupendnote.validation.experiments;
 
 import org.apache.commons.text.similarity.JaroWinklerSimilarity;
 

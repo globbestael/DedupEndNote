@@ -2,6 +2,8 @@
 
 **Status: executed (used SRA2_Haematology — has TN=1186, FP=1, making specificity improvement visible)**
 
+**Note:** The `validation/alternatives/` package referenced in this plan was renamed to `validation/experiments/` by `2026-05-06-1100-rename-alternatives-to-experiments.md`.
+
 ## Context
 
 `AuthorExperimentsTests.higherAuthorSimilarityFindsLessDuplicates` currently deduplicates the same file **twice** — once with the production engine, once with an experimental engine — and asserts only on raw duplicate counts. This has two weaknesses:
