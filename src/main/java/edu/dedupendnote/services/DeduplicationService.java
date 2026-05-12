@@ -28,7 +28,6 @@ public class DeduplicationService {
 
 	private final ComparisonService comparisonService;
 
-	private AuthorsComparisonService authorsComparisonService;
 	private final IOService ioService;
 
 	// the DOIs have been lowercased
@@ -89,7 +88,6 @@ public class DeduplicationService {
 	// @formatter:on
 
 	public DeduplicationService(ComparisonService comparisonService) {
-		this.authorsComparisonService = new DefaultAuthorsComparisonService();
 		this.ioService = new IOService();
 		this.comparisonService = comparisonService;
 	}
@@ -130,11 +128,11 @@ public class DeduplicationService {
 				if (log.isTraceEnabled()) {
 					log.trace("\nStarting comparison {} - {}", pivot.getId(), p.getId());
 				}
-				if (ComparisonService.compareStartPagesOrDois(p, pivot, map)
-						&& authorsComparisonService.compare(p, pivot) && ComparisonService.compareTitles(p, pivot)
+				if (comparisonService.compareStartPagesOrDois(p, pivot, map)
+						&& comparisonService.compareAuthors(p, pivot) && comparisonService.compareTitles(p, pivot)
 						&& (ComparisonService.compareSameDois(p, pivot, map.get("isSameDois"))
 								|| ComparisonService.compareIssns(p, pivot, map.get("isSameDois"))
-								|| ComparisonService.compareJournals(p, pivot, map.get("isSameDois")))) {
+								|| comparisonService.compareJournals(p, pivot, map.get("isSameDois")))) {
 
 					noOfDuplicates++;
 					// set the label
@@ -454,10 +452,6 @@ l						 * 		V 		W 		X
 				+ " duplicates, and has written " + totalWritten + " publications.";
 	}
 
-	public AuthorsComparisonService getAuthorsComparisonService() {
-		return authorsComparisonService;
-	}
-
 	/*
 	 * For 1 file:
 	 * - order year descending
@@ -531,10 +525,6 @@ l						 * 		V 		W 		X
 		}
 		// log.debug("cumulativePercentages: " + cumulativePercentages);
 		return cumulativePercentages;
-	}
-
-	public void setAuthorsComparisonService(AuthorsComparisonService authorsComparisonService) {
-		this.authorsComparisonService = authorsComparisonService;
 	}
 
 }

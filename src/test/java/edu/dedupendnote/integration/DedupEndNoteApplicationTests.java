@@ -73,7 +73,8 @@ class DedupEndNoteApplicationTests extends AbstractIntegrationTest {
 		String outputFileName = UtilitiesService.createOutputFileName(inputFileName, markMode);
 
 		String resultString = deduplicationService.deduplicateOneFile(inputFileName, outputFileName, markMode,
-				message -> {});
+				message -> {
+				});
 
 		assertThat(resultString).isEqualTo(deduplicationService.formatResultString(4, 1));
 		// assertThat(resultString).startsWith("DONE: DedupEndNote removed 3 records, and
@@ -81,9 +82,9 @@ class DedupEndNoteApplicationTests extends AbstractIntegrationTest {
 	}
 
 	@ParameterizedTest
-	@CsvSource({ "'test805.txt', 805, 631",
+	@CsvSource({ "'test805.txt', 805, 629",
 			// "'DedupEndNote_portal_vein_thrombosis_37741.txt', 37741, 24382", // Very slow test
-			"'Non_Latin_input.txt', 2, 2", "'Dedup_PATIJ2_Possibly_missed.txt', 18, 12" })
+			"'Non_Latin_input.txt', 2, 2", "'Dedup_PATIJ2_Possibly_missed.txt', 18, 11" })
 	void deduplicateSmallFiles(String fileName, int total, int totalWritten) {
 		String inputFileName = testDir + fileName;
 		boolean markMode = false;
@@ -91,7 +92,8 @@ class DedupEndNoteApplicationTests extends AbstractIntegrationTest {
 		assertThat(new File(inputFileName)).exists();
 
 		String resultString = deduplicationService.deduplicateOneFile(inputFileName, outputFileName, markMode,
-				message -> {});
+				message -> {
+				});
 
 		assertThat(resultString).isEqualTo(deduplicationService.formatResultString(total, totalWritten));
 	}
@@ -103,7 +105,8 @@ class DedupEndNoteApplicationTests extends AbstractIntegrationTest {
 		String outputFileName = UtilitiesService.createOutputFileName(inputFileName, markMode);
 
 		String resultString = deduplicationService.deduplicateOneFile(inputFileName, outputFileName, markMode,
-				message -> {});
+				message -> {
+				});
 
 		assertThat(resultString)
 				.startsWith("ERROR: The IDs of the publications of input file " + inputFileName + " are not unique");

@@ -54,10 +54,13 @@ DedupEndNote is a Spring Boot 4.0 / Java 21 web app that deduplicates bibliograp
 | Service | Lines | Responsibility |
 |---|---|---|
 | `DeduplicationService` | ~547 | Orchestrates the full pipeline; accepts a `Consumer<String> progressReporter` for progress reporting |
-| `ComparisonService` | ~337 | 5-step duplicate detection algorithm |
+| `ComparisonService` | ~90 | Thin orchestrator: holds four injected per-field comparison services; retains `compareIssns` and `compareSameDois` as static helpers |
 | `IOService` | ~980 | Parses and writes RIS files; normalizes fields during read |
 | `NormalizationService` | ~991 | Normalizes authors, titles, DOIs, pages, journals |
 | `DefaultAuthorsComparisonService` | — | Jaro-Winkler author matching; thresholds injectable via `AuthorThresholds` record |
+| `DefaultTitleComparisonService` | — | JWS title matching; thresholds injectable via `TitleThresholds` record |
+| `DefaultJournalComparisonService` | — | Journal matching with abbreviation/initialism heuristics; thresholds injectable via `JournalThresholds` record |
+| `DefaultPagesComparisonService` | — | Exact-equality pages-or-DOI step (no thresholds) |
 
 ### 5-step comparison algorithm (all steps must pass)
 1. Publication year (±1 year, exact for Cochrane)

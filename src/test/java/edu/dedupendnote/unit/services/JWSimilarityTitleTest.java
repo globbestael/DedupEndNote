@@ -20,8 +20,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import edu.dedupendnote.services.ComparisonService;
 import edu.dedupendnote.services.IOService;
+import edu.dedupendnote.services.TitleThresholds;
 import edu.dedupendnote.unit.BaseTest;
 import edu.dedupendnote.domain.Publication;
 
@@ -52,7 +52,7 @@ class JWSimilarityTitleTest extends BaseTest {
 				.isEqualTo(expected, within(0.01));
 		softAssertions.assertThat(highestSimilarity)
 				.as("\nTitle1: %s\nTitle2: %s\nGreaterThanOrEqualTo threshold", p1.getTitles(), p2.getTitles())
-				.isGreaterThanOrEqualTo(ComparisonService.TITLE_SIMILARITY_SUFFICIENT_STARTPAGES_OR_DOIS);
+				.isGreaterThanOrEqualTo(TitleThresholds.DEFAULT.sufficientStartPagesOrDois());
 		softAssertions.assertAll();
 	}
 
@@ -65,7 +65,7 @@ class JWSimilarityTitleTest extends BaseTest {
 	// System.err.println("- 1: %s\n- 2: %s\n- 3: %s\n- 4: %s\n".formatted(input1,
 	// NormalizationService.normalizeTitle(input1), input2, NormalizationService.normalizeTitle(input2)));
 	// assertThat(similarity).isEqualTo(expected, within(0.01))
-	// .isLessThan(ComparisonService.TITLE_SIMILARITY_SUFFICIENT_STARTPAGES_OR_DOIS);
+	// .isLessThan(TitleThresholds.DEFAULT.sufficientStartPagesOrDois());
 	// }
 
 	static String revertString(String s) {
@@ -100,7 +100,7 @@ class JWSimilarityTitleTest extends BaseTest {
 				.isEqualTo(expected, within(0.01));
 		softAssertions.assertThat(highestSimilarity)
 				.as("\nTitle1: %s\nTitle2: %s\nGreaterThanOrEqualTo threshold", highestTitle1, highestTitle2)
-				.isLessThan(ComparisonService.TITLE_SIMILARITY_SUFFICIENT_STARTPAGES_OR_DOIS);
+				.isLessThan(TitleThresholds.DEFAULT.sufficientStartPagesOrDois());
 		softAssertions.assertAll();
 	}
 

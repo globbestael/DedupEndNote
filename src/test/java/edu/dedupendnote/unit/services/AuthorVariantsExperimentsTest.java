@@ -13,7 +13,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import edu.dedupendnote.services.AuthorThresholds;
-import edu.dedupendnote.services.DefaultAuthorsComparisonService;
 import edu.dedupendnote.services.IOService;
 import edu.dedupendnote.domain.Publication;
 import edu.dedupendnote.unit.domain.PublicationExperiment;
@@ -344,7 +343,7 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 
 		if (!onlySummary) {
 			// System.err.println("\nDefault algorithm better than algorithm " + nameExperiment
-			// 		+ "\n=========================================");
+			// + "\n=========================================");
 			// better.stream().forEach(t -> System.err.println(showTripleComparison(t)));
 
 			log.error("\nDefault algorithm better than algorithm {}\n=========================================",

@@ -1,6 +1,6 @@
 # Extract `TitleComparisonService`, `JournalComparisonService`, `PagesComparisonService`
 
-**Status: pending**
+**Status: executed**
 
 ## Context
 
@@ -146,6 +146,8 @@ Note: `compareStartPagesOrDois` mutates `map` (writes `isSameDois`) as a side-ef
 
 ### 9. Refactor `ComparisonService`
 
+This step also absorbs `authorsComparisonService` from `DeduplicationService` — all four field-comparison services live on `ComparisonService` as `private final` fields, constructor-injected. This unifies the wiring pattern and removes the setter/getter from `DeduplicationService`.
+
 Remove:
 - The three static fields `ABBREVIATION_CACHE`, `INITIALISM_CACHE`, `STARTING_INITIALISM_CACHE` (moved to `DefaultJournalComparisonService`).
 - Constants `JOURNAL_SIMILARITY_*`, `TITLE_SIMILARITY_*` (moved to threshold records).
@@ -153,8 +155,9 @@ Remove:
 - Private helpers `compareJournals_First*` (moved to `DefaultJournalComparisonService`).
 
 Add:
-- Three injected fields:
+- Four injected fields:
   ```java
+  private final AuthorsComparisonService authorsComparisonService;
   private final TitleComparisonService titleComparisonService;
   private final JournalComparisonService journalComparisonService;
   private final PagesComparisonService pagesComparisonService;
@@ -162,23 +165,29 @@ Add:
 - No-arg constructor (used by Spring `@Service` and by `new ComparisonService()` in tests):
   ```java
   public ComparisonService() {
-      this(new DefaultTitleComparisonService(),
+      this(new DefaultAuthorsComparisonService(),
+           new DefaultTitleComparisonService(),
            new DefaultJournalComparisonService(),
            new DefaultPagesComparisonService());
   }
   ```
-- Three-arg constructor for experiments:
+- Four-arg constructor for experiments:
   ```java
-  public ComparisonService(TitleComparisonService titleComparisonService,
+  public ComparisonService(AuthorsComparisonService authorsComparisonService,
+                           TitleComparisonService titleComparisonService,
                            JournalComparisonService journalComparisonService,
                            PagesComparisonService pagesComparisonService) {
+      this.authorsComparisonService = authorsComparisonService;
       this.titleComparisonService = titleComparisonService;
       this.journalComparisonService = journalComparisonService;
       this.pagesComparisonService = pagesComparisonService;
   }
   ```
-- Three thin instance-method delegates (so `DeduplicationService` call sites change minimally):
+- Four thin instance-method delegates (so `DeduplicationService` call sites change minimally):
   ```java
+  public boolean compareAuthors(Publication r1, Publication r2) {
+      return authorsComparisonService.compare(r1, r2);
+  }
   public boolean compareTitles(Publication r1, Publication r2) {
       return titleComparisonService.compare(r1, r2);
   }
@@ -192,27 +201,59 @@ Add:
 
 Keep `compareIssns` and `compareSameDois` as `public static` methods — no change.
 
-### 10. Update `DeduplicationService` call sites
+### 10. Update `DeduplicationService`
 
-`DeduplicationService` (lines 133–137) currently calls:
+Remove the `authorsComparisonService` field, its initialization in the constructor, its getter, and its setter:
+- Line 31: delete `private AuthorsComparisonService authorsComparisonService;`
+- Line 92: delete `this.authorsComparisonService = new DefaultAuthorsComparisonService();`
+- Lines 457–459: delete `getAuthorsComparisonService()` method
+- Lines 536–538: delete `setAuthorsComparisonService()` method
+
+Update the comparison call (lines 133–137):
 
 ```java
+// Before
 ComparisonService.compareStartPagesOrDois(p, pivot, map)
-ComparisonService.compareTitles(p, pivot)
-ComparisonService.compareJournals(p, pivot, map.get("isSameDois"))
+    && authorsComparisonService.compare(p, pivot)
+    && ComparisonService.compareTitles(p, pivot)
+    && (ComparisonService.compareSameDois(...)
+        || ComparisonService.compareIssns(...)
+        || ComparisonService.compareJournals(...))
+
+// After
+comparisonService.compareStartPagesOrDois(p, pivot, map)
+    && comparisonService.compareAuthors(p, pivot)
+    && comparisonService.compareTitles(p, pivot)
+    && (ComparisonService.compareSameDois(...)
+        || ComparisonService.compareIssns(...)
+        || comparisonService.compareJournals(...))
 ```
 
-After step 9, `compareStartPagesOrDois` etc. are instance methods, not static. Replace each call with:
+`compareIssns` and `compareSameDois` remain as `ComparisonService.compareIssns(...)` / `ComparisonService.compareSameDois(...)` (still static).
+
+### 11. Update `AuthorExperimentsTests`
+
+The test currently creates a `DeduplicationService` and then calls `setAuthorsComparisonService()` on it. Replace the setter-based wiring with a 4-arg `ComparisonService` constructor:
 
 ```java
-comparisonService.compareStartPagesOrDois(p, pivot, map)
-comparisonService.compareTitles(p, pivot)
-comparisonService.compareJournals(p, pivot, map.get("isSameDois"))
+// Before
+DeduplicationService expService = new DeduplicationService(new ComparisonService());
+AuthorThresholds noMatchThresholds = new AuthorThresholds(1.0, 1.0, 1.0);
+expService.setAuthorsComparisonService(new DefaultAuthorsComparisonService(noMatchThresholds));
+
+// After
+AuthorThresholds noMatchThresholds = new AuthorThresholds(1.0, 1.0, 1.0);
+ComparisonService cs = new ComparisonService(
+        new DefaultAuthorsComparisonService(noMatchThresholds),
+        new DefaultTitleComparisonService(),
+        new DefaultJournalComparisonService(),
+        new DefaultPagesComparisonService());
+DeduplicationService expService = new DeduplicationService(cs);
 ```
 
-`compareIssns` and `compareSameDois` remain `ComparisonService.compareIssns(...)` / `ComparisonService.compareSameDois(...)`.
+The comment, assertions, dataset, and surrounding test logic are unchanged.
 
-### 11. Update unit tests
+### 12. Update unit tests
 
 Three test files call the static methods directly:
 - `src/test/java/edu/dedupendnote/unit/services/ComparisonServiceTest.java`
@@ -225,16 +266,19 @@ Approach per file:
 
 Tests referencing `JOURNAL_SIMILARITY_NO_REPLY`, `JOURNAL_SIMILARITY_REPLY`, `TITLE_SIMILARITY_*` constants must be updated to use `JournalThresholds.DEFAULT.noReply()`, `TitleThresholds.DEFAULT.sufficientStartPagesOrDois()`, etc.
 
-### 12. Update CLAUDE.md
+### 13. Update CLAUDE.md
 
-Update services table — add new rows and revise the `ComparisonService` row:
+Update services table — add new rows and revise the `ComparisonService` and `DeduplicationService` rows:
 
 | Service | Responsibility |
 |---|---|
-| `ComparisonService` | Orchestrates the 5-step algorithm via three injected per-field comparison services; retains `compareIssns` and `compareSameDois` as static helpers |
+| `ComparisonService` | Orchestrates the 5-step algorithm via four injected per-field comparison services (`AuthorsComparisonService`, `TitleComparisonService`, `JournalComparisonService`, `PagesComparisonService`); retains `compareIssns` and `compareSameDois` as static helpers |
+| `DefaultAuthorsComparisonService` | Jaro-Winkler author matching; thresholds injectable via `AuthorThresholds` |
 | `DefaultTitleComparisonService` | JWS title matching; thresholds injectable via `TitleThresholds` |
 | `DefaultJournalComparisonService` | Journal matching with abbreviation/initialism heuristics; thresholds injectable via `JournalThresholds` |
 | `DefaultPagesComparisonService` | Exact-equality pages-or-DOI step (no thresholds) |
+
+Remove `DefaultAuthorsComparisonService` from the standalone row (it is now described in the table above). Remove `setAuthorsComparisonService` / `getAuthorsComparisonService` from the `DeduplicationService` description if mentioned.
 
 ## Files modified
 
@@ -246,8 +290,9 @@ Update services table — add new rows and revise the `ComparisonService` row:
 - `src/main/java/edu/dedupendnote/services/DefaultJournalComparisonService.java` (new)
 - `src/main/java/edu/dedupendnote/services/PagesComparisonService.java` (new)
 - `src/main/java/edu/dedupendnote/services/DefaultPagesComparisonService.java` (new)
-- `src/main/java/edu/dedupendnote/services/ComparisonService.java` (heavily modified)
-- `src/main/java/edu/dedupendnote/services/DeduplicationService.java` (static → instance calls)
+- `src/main/java/edu/dedupendnote/services/ComparisonService.java` (heavily modified; gains `authorsComparisonService`)
+- `src/main/java/edu/dedupendnote/services/DeduplicationService.java` (loses `authorsComparisonService` field/getter/setter; static → instance calls)
+- `src/test/java/edu/dedupendnote/validation/experiments/AuthorExperimentsTests.java` (setter → constructor wiring)
 - `src/test/java/edu/dedupendnote/unit/services/ComparisonServiceTest.java`
 - `src/test/java/edu/dedupendnote/unit/services/SimilarityJournalTest.java`
 - `src/test/java/edu/dedupendnote/unit/services/JournalsBaseTest.java`
@@ -263,3 +308,4 @@ Update services table — add new rows and revise the `ComparisonService` row:
 5. Spot-check: deduplicate one real dataset before and after the change and `diff` the output — byte-identical.
 6. `grep -r "JOURNAL_SIMILARITY_\|TITLE_SIMILARITY_" src/` — no matches.
 7. `grep -r "ComparisonService\.compareTitles\|ComparisonService\.compareJournals\|ComparisonService\.compareStartPagesOrDois" src/` — no matches (all calls now go through instance methods).
+8. `grep -r "setAuthorsComparisonService\|getAuthorsComparisonService" src/` — no matches.
