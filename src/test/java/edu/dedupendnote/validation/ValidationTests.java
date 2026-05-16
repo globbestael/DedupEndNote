@@ -188,7 +188,7 @@ class ValidationTests extends AbstractIntegrationTest {
 	}
 
 	private void printValidationResult(String setName, ValidationResult newV, @Nullable ValidationResult oldV) {
-		System.err.println(
+		System.out.println(
 				"\nResults: " + setName + (oldV == null ? "" : ": HAS DIFFERENT RESULTS (first new, second old)"));
 		System.out.println(TABLE_HEADER);
 		System.out.println(TABLE_DIVIDER);
@@ -196,7 +196,7 @@ class ValidationTests extends AbstractIntegrationTest {
 		if (oldV != null) {
 			printIndividualValidationResult(oldV);
 		}
-		System.err.flush();
+		System.out.flush();
 	}
 
 	private void printIndividualValidationResult(ValidationResult v) {

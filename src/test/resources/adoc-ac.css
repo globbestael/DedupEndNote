@@ -1,0 +1,16 @@
+td:has(.red) {
+  background-color: #ffcccc;
+  text-align: right;
+}
+
+table,
+th,
+td {
+  border: 1px solid black;
+}
+
+h1 {
+  background-color: green;
+}
+
+*/

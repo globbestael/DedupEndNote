@@ -22,5 +22,14 @@
             "-Dstdout.encoding=UTF-8",
             "-Dstderr.encoding=UTF-8"
         ]
-    }
+    },
+    "[asciidoctor]": {
+        "editor.insertSpaces": false,
+        "editor.detectIndentation": false,
+        "editor.tabSize": 4
+    },
+    "asciidoc.preview.style": "src/test/resources/adoc-ac.css",
+    //"markdown.styles": [
+    //    "src/test/resources/adoc-ac.css"
+    //]
 }

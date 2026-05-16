@@ -1,0 +1,172 @@
+// :docinfo: shared
+# Test
+
+[cols="1,>1,>1", options="header", frame=all, grid=all]
+
+|===
+| *Name* | *Perc* | *F1-score*
+
+| *Model A*
+
+>| 0.95
+| >0.92
+
+| *Model B*
+
+| >0.88
+| >0.85
+|===
+
+
+[format="tsv", options="header", frame=all, grid=all]
+
+|===
+**Name**    **Perc**    **F1-score**
+*Model A*   >0.95   0.92
+**Model B** 0.88    0.85
+**model c** 0.1 0.2
+|===
+
+[format="tsv", options="header", frame=all, grid=all]
+
+|===
+*Name*	*Perc*	*F1-score*
+*Row 111*	>95%	0.92
+*Row 211*	88%	0.85
+*Row 511*	87%	0.01
+|===
+
+
+[cols="1,>1,>1", options="header", frame=all, grid=all]
+
+|===
+|*Naam* | *Perc* | *F1-score*
+|*Row 111* | 95% | 0.92
+|*Row 211* | 88% | 0.85
+|*Row 511* | 87% | 0.01
+|===
+
+Results: AI_subset: HAS DIFFERENT RESULTS (first new, second old)
+
+[cols="1,>1,>1,>1,>1,>1,>1,>1,>1,>1,>1,>1,>1", options="header", frame=all, grid=all]
+
+|===
+|   TOTAL | % dup |      TP |      FN |  Sensitivity |      TN |      FP |  Specificity |    Precision |     Accuracy |     F1 |    Time | Uniq dupl
+|    3083 |       16,74% |     507 |       9 |       98,26% |    2567 |       0 |     100,00% |     100,00% |      99,70% |      99,12% |+++<span class='red'>15,61</span>+++|       218
+|    3083 |       16,74% |     507 |       9 |       98,26% |    2567 |       0 |     100,00% |     100,00% |      99,70% |      99,12% |+++<span class='red'>29,00</span>+++|       218
+|===
+
+Results: AI_subset: HAS DIFFERENT RESULTS (first new, second old)
+
+[cols="1,>1,>1,>1,>1,>1,>1,>1,>1,>1,>1,>1,>1", options="header", frame=all, grid=all]
+
+|===
+|   TOTAL | % dup |      TP |      FN |  Sensitivity |      TN |      FP |  Specificity |    Precision |     Accuracy |     F1 |    Time | Uniq dupl
+
+|    3083 
+|       16,74% 
+|     507 
+|       9 
+|       98,26% 
+|    2567 
+|       0 
+|     100,00% 
+|     100,00% 
+|      99,70% 
+|      99,12% 
+|+++<span class='red'>15,61<span>+++ 
+|       218
+
+|    3083 
+|       16,74% 
+|     507 
+|       9 
+|       98,26% 
+|    2567 
+|       0 
+|     100,00% 
+|     100,00% 
+|      99,70% 
+|      99,12% 
+|+++<span class='red'>29,00</span>+++
+|       218
+|===
+
+Results: ASySD_Cardiac_human: HAS DIFFERENT RESULTS (first new, second old)
+
+|   TOTAL | % duplicates |      TP |      FN |  Sensitivity |      TN |      FP |  Specificity |    Precision |     Accuracy |     F1-score |    Duration | Uniq dupl |
+|---------|--------------|---------|---------|--------------|---------|---------|--------------|--------------|--------------|--------------|-------------|-----------|
+|    8948 |       75,59% |    6759 |       5 |       99,93% |    2183 |       1 |      99,954% |      99,985% |      99,933% |      99,956% |       17,11 |      3238 |
+
+Results: ASySD_Diabetes: HAS DIFFERENT RESULTS (first new, second old)
+|    8948 |       75,59% |    6759 |       5 |       99,93% |    2183 |       1 |      99,954% |      99,985% |      99,933% |      99,956% |        3,70 |      3238 |
+|   TOTAL | % duplicates |      TP |      FN |  Sensitivity |      TN |      FP |  Specificity |    Precision |     Accuracy |     F1-score |    Duration | Uniq dupl |
+|---------|--------------|---------|---------|--------------|---------|---------|--------------|--------------|--------------|--------------|-------------|-----------|
+|    1845 |       98,75% |    1811 |      11 |       99,40% |      21 |       2 |      91,304% |      99,890% |      99,295% |      99,642% |        4,04 |       563 |
+|    1845 |       98,75% |    1811 |      11 |       99,40% |      21 |       2 |      91,304% |      99,890% |      99,295% |      99,642% |        1,00 |       563 |
+|   TOTAL | % duplicates |      TP |      FN |  Sensitivity |      TN |      FP |  Specificity |    Precision |     Accuracy |     F1-score |    Duration | Uniq dupl |
+|---------|--------------|---------|---------|--------------|---------|---------|--------------|--------------|--------------|--------------|-------------|-----------|
+
+Results: ASySD_Neuroimaging: HAS DIFFERENT RESULTS (first new, second old)
+|    3438 |       63,76% |    2181 |      11 |       99,50% |    1244 |       2 |      99,839% |      99,908% |      99,622% |      99,703% |        5,43 |       896 |
+|    3438 |       63,76% |    2181 |      11 |       99,50% |    1244 |       2 |      99,839% |      99,908% |      99,622% |      99,703% |        1,35 |       896 |
+|   TOTAL | % duplicates |      TP |      FN |  Sensitivity |      TN |      FP |  Specificity |    Precision |     Accuracy |     F1-score |    Duration | Uniq dupl |
+|---------|--------------|---------|---------|--------------|---------|---------|--------------|--------------|--------------|--------------|-------------|-----------|
+
+Results: ASySD_SRSR_Human: HAS DIFFERENT RESULTS (first new, second old)
+|   53001 |       52,79% |   27945 |      36 |       99,87% |   25016 |       4 |      99,984% |      99,986% |      99,925% |      99,928% |      249,16 |     11130 |
+|   53001 |       52,79% |   27945 |      36 |       99,87% |   25016 |       4 |      99,984% |      99,986% |      99,925% |      99,928% |      100,00 |     11130 |
+|   TOTAL | % duplicates |      TP |      FN |  Sensitivity |      TN |      FP |  Specificity |    Precision |     Accuracy |     F1-score |    Duration | Uniq dupl |
+|---------|--------------|---------|---------|--------------|---------|---------|--------------|--------------|--------------|--------------|-------------|-----------|
+
+Results: BIG_SET: HAS DIFFERENT RESULTS (first new, second old)
+|    5082 |       79,57% |    3952 |      92 |       97,73% |    1030 |       8 |      99,229% |      99,798% |      98,032% |      98,751% |       91,97 |      1444 |
+|    5082 |       79,57% |    3952 |      92 |       97,73% |    1030 |       8 |      99,229% |      99,798% |      98,032% |      98,751% |       66,00 |      1444 |
+
+Results: Clinical_trials: HAS DIFFERENT RESULTS (first new, second old)
+|   TOTAL | % duplicates |      TP |      FN |  Sensitivity |      TN |      FP |  Specificity |    Precision |     Accuracy |     F1-score |    Duration | Uniq dupl |
+|---------|--------------|---------|---------|--------------|---------|---------|--------------|--------------|--------------|--------------|-------------|-----------|
+|     219 |      100,00% |     219 |       0 |      100,00% |       0 |       0 |         NaN% |     100,000% |     100,000% |     100,000% |        0,30 |        87 |
+
+Results: McKeown_2021: HAS DIFFERENT RESULTS (first new, second old)
+|     219 |      100,00% |     219 |       0 |      100,00% |       0 |       0 |         NaN% |     100,000% |     100,000% |     100,000% |        0,19 |        87 |
+|   TOTAL | % duplicates |      TP |      FN |  Sensitivity |      TN |      FP |  Specificity |    Precision |     Accuracy |     F1-score |    Duration | Uniq dupl |
+|---------|--------------|---------|---------|--------------|---------|---------|--------------|--------------|--------------|--------------|-------------|-----------|
+|    3130 |       65,69% |    2023 |      33 |       98,39% |    1074 |       0 |     100,000% |     100,000% |      98,946% |      99,191% |        3,40 |       820 |
+|    3130 |       65,69% |    2023 |      33 |       98,39% |    1074 |       0 |     100,000% |     100,000% |      98,946% |      99,191% |        0,80 |       820 |
+|   TOTAL | % duplicates |      TP |      FN |  Sensitivity |      TN |      FP |  Specificity |    Precision |     Accuracy |     F1-score |    Duration | Uniq dupl |
+|---------|--------------|---------|---------|--------------|---------|---------|--------------|--------------|--------------|--------------|-------------|-----------|
+
+Results: SRA2_Cytology_screening: HAS DIFFERENT RESULTS (first new, second old)
+|    1856 |       75,11% |    1361 |      33 |       97,63% |     462 |       0 |     100,000% |     100,000% |      98,222% |      98,802% |        2,30 |       623 |
+|    1856 |       75,11% |    1361 |      33 |       97,63% |     462 |       0 |     100,000% |     100,000% |      98,222% |      98,802% |        0,40 |       623 |
+|   TOTAL | % duplicates |      TP |      FN |  Sensitivity |      TN |      FP |  Specificity |    Precision |     Accuracy |     F1-score |    Duration | Uniq dupl |
+|---------|--------------|---------|---------|--------------|---------|---------|--------------|--------------|--------------|--------------|-------------|-----------|
+
+Results: SRA2_Haematology: HAS DIFFERENT RESULTS (first new, second old)
+|    1415 |       16,11% |     222 |       6 |       97,37% |    1186 |       1 |      99,916% |      99,552% |      99,505% |      98,448% |        1,75 |       106 |
+|    1415 |       16,11% |     222 |       6 |       97,37% |    1186 |       1 |      99,916% |      99,552% |      99,505% |      98,448% |        0,30 |       106 |
+|   TOTAL | % duplicates |      TP |      FN |  Sensitivity |      TN |      FP |  Specificity |    Precision |     Accuracy |     F1-score |    Duration | Uniq dupl |
+|---------|--------------|---------|---------|--------------|---------|---------|--------------|--------------|--------------|--------------|-------------|-----------|
+
+Results: SRA2_Respiratory: HAS DIFFERENT RESULTS (first new, second old)
+|    1988 |       39,54% |     768 |      18 |       97,71% |    1202 |       0 |     100,000% |     100,000% |      99,095% |      98,842% |        2,64 |       356 |
+
+Results: SRA2_Stroke: HAS DIFFERENT RESULTS (first new, second old)
+|    1988 |       39,54% |     768 |      18 |       97,71% |    1202 |       0 |     100,000% |     100,000% |      99,095% |      98,842% |        0,80 |       356 |
+|   TOTAL | % duplicates |      TP |      FN |  Sensitivity |      TN |      FP |  Specificity |    Precision |     Accuracy |     F1-score |    Duration | Uniq dupl |
+|---------|--------------|---------|---------|--------------|---------|---------|--------------|--------------|--------------|--------------|-------------|-----------|
+|    1292 |       39,09% |     497 |       8 |       98,42% |     787 |       0 |     100,000% |     100,000% |      99,381% |      99,202% |        1,83 |       190 |
+
+Results: TIL: HAS DIFFERENT RESULTS (first new, second old)
+|    1292 |       39,09% |     497 |       8 |       98,42% |     787 |       0 |     100,000% |     100,000% |      99,381% |      99,202% |        0,32 |       190 |
+|   TOTAL | % duplicates |      TP |      FN |  Sensitivity |      TN |      FP |  Specificity |    Precision |     Accuracy |     F1-score |    Duration | Uniq dupl |
+|---------|--------------|---------|---------|--------------|---------|---------|--------------|--------------|--------------|--------------|-------------|-----------|
+|    1092 |       64,10% |     696 |       4 |       99,43% |     392 |       0 |     100,000% |     100,000% |      99,634% |      99,713% |       42,28 |       262 |
+|    1092 |       64,10% |     696 |       4 |       99,43% |     392 |       0 |     100,000% |     100,000% |      99,634% |      99,713% |        9,00 |       262 |
+|   TOTAL | % duplicates |      TP |      FN |  Sensitivity |      TN |      FP |  Specificity |    Precision |     Accuracy |     F1-score |    Duration | Uniq dupl |
+|---------|--------------|---------|---------|--------------|---------|---------|--------------|--------------|--------------|--------------|-------------|-----------|
+
+Results: TIL_Zotero: HAS DIFFERENT RESULTS (first new, second old)
+|    1092 |       64,10% |     695 |       5 |       99,29% |     392 |       0 |     100,000% |     100,000% |      99,542% |      99,642% |       37,97 |       262 |
+|    1092 |       64,10% |     695 |       5 |       99,29% |     392 |       0 |     100,000% |     100,000% |      99,542% |      99,642% |        9,00 |       262 |
