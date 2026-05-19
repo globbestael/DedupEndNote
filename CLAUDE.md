@@ -17,6 +17,7 @@ Update CLAUDE.md whenever a change affects something documented here. Triggers i
 - Architectural pattern added or removed (data flow, enrichment, modes)
 - Code quality plugin version bumped or new plugin added
 - Plan-file naming convention changed (plans section)
+- Release workflow or version-management mechanism changed (configuration section)
 
 The update should land in the same commit as the code change.
 
@@ -145,6 +146,15 @@ Filename format: `YYYY-MM-DD-HHMM-<slug>.md`, where the date/time is the commit 
 - `server.port=9777`
 - `spring.servlet.multipart.max-file-size=150MB`
 - `dedup.upload-dir` — directory for uploaded/output files
+
+### Version number
+
+The user-facing version is defined once: `<app.version>x.y.z</app.version>` in `pom.xml`'s `<properties>` section. Everything else derives from it at build time:
+- `application.properties` contains `app.version=@app.version@` (Maven-filtered at build)
+- `AppVersionAdvice` reads `${app.version}` and injects `appVersion` into every Thymeleaf model — consumed by `index.html` (navbar + citing accordion) and `twofiles.html` (navbar)
+- `src/main/cff/citation.cff` is the template; `maven-resources-plugin` filters it to the root `citation.cff` on every build
+
+**Release workflow:** update `<app.version>` in `pom.xml` → run `./mvnw package` → commit `pom.xml` and the regenerated root `citation.cff` → add the new `<h2>` + `<ul>` entry to `changelog.html` manually.
 
 ## Agent skills
 
