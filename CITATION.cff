@@ -1,5 +1,9 @@
 # This CITATION.cff file was generated with cffinit.
 # Visit https://bit.ly/cffinit to generate yours today!
+#
+# TEMPLATE FILE — do not edit the generated citation.cff at the project root directly.
+# Edit this file instead; the root citation.cff is regenerated from here during every build
+# (./mvnw generate-resources or ./mvnw package).
 
 cff-version: 1.2.0
 title: DedupEndNote
@@ -12,5 +16,5 @@ authors:
     family-names: Lobbestael
 repository-code: 'https://github.com/globbestael/DedupEndNote'
 url: 'http://dedupendnote.nl'
-version: 1.1.5
+version: 1.1.6
 date-released: '2026-04-13'
