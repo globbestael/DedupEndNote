@@ -9,7 +9,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import edu.dedupendnote.services.ComparisonService;
+import edu.dedupendnote.services.DefaultJournalComparisonService;
 import edu.dedupendnote.services.IOService;
 import edu.dedupendnote.domain.Publication;
 import lombok.extern.slf4j.Slf4j;
@@ -30,7 +30,7 @@ class SimilarityJournalTest {
 		IOService.addNormalizedJournal(input1, p1, "T2");
 		IOService.addNormalizedJournal(input2, p2, "T2");
 
-		assertThat(ComparisonService.compareJournals(p1, p2, false))
+		assertThat(new DefaultJournalComparisonService().compare(p1, p2, false))
 				.as("Journals are NOT similar: " + p1.getJournals() + " versus " + p2.getJournals()).isTrue();
 	}
 
@@ -45,7 +45,7 @@ class SimilarityJournalTest {
 		IOService.addNormalizedJournal(input1, p1, "T2");
 		IOService.addNormalizedJournal(input2, p2, "T2");
 
-		assertThat(ComparisonService.compareJournals(p1, p2, false))
+		assertThat(new DefaultJournalComparisonService().compare(p1, p2, false))
 				.as("Journals are similar: %s versus %s", p1.getJournals(), p2.getJournals()).isFalse();
 	}
 

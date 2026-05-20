@@ -8,13 +8,18 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class DefaultAuthorsComparisonService implements AuthorsComparisonService {
 
-	public static final Double AUTHOR_SIMILARITY_NO_REPLY = 0.67;
-	public static final Double AUTHOR_SIMILARITY_REPLY_INSUFFICIENT_STARTPAGES_AND_DOIS = 0.80;
-	public static final Double AUTHOR_SIMILARITY_REPLY_SUFFICIENT_STARTPAGES_OR_DOIS = 0.75;
-
 	private static JaroWinklerSimilarity jws = new JaroWinklerSimilarity();
 
+	private final AuthorThresholds thresholds;
 	private Double similarity = 0.0;
+
+	public DefaultAuthorsComparisonService() {
+		this(AuthorThresholds.DEFAULT);
+	}
+
+	public DefaultAuthorsComparisonService(AuthorThresholds thresholds) {
+		this.thresholds = thresholds;
+	}
 
 	/*
 	 * See AuthorVariantsExperimentsTest for possible enhancements.
@@ -54,14 +59,14 @@ public class DefaultAuthorsComparisonService implements AuthorsComparisonService
 				similarity = jws.apply(authors1, authors2);
 				if (isReply) {
 					if (!(sufficientStartPages || sufficientDois)
-							&& similarity > AUTHOR_SIMILARITY_REPLY_INSUFFICIENT_STARTPAGES_AND_DOIS) {
+							&& similarity > thresholds.replyInsufficientStartPagesAndDois()) {
 						return true;
 					}
 					if ((sufficientStartPages || sufficientDois)
-							&& similarity > AUTHOR_SIMILARITY_REPLY_SUFFICIENT_STARTPAGES_OR_DOIS) {
+							&& similarity > thresholds.replySufficientStartPagesOrDois()) {
 						return true;
 					}
-				} else if (similarity > AUTHOR_SIMILARITY_NO_REPLY) {
+				} else if (similarity > thresholds.noReply()) {
 					log.trace("- 2. Author similarity {} is above threshold", similarity);
 					return true;
 				}

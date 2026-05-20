@@ -151,6 +151,24 @@ public class IOService {
 	}
 
 	public List<Publication> readPublications(String inputFileName, Consumer<String> progressReporter) {
+		return readPublications(inputFileName, progressReporter, false);
+	}
+
+	/**
+	 * Reads a RIS file into Publication objects, optionally reading the LB (Label) field.
+	 *
+	 * <p>The Label field is normally skipped during reading. Mark mode writes the ID of the
+	 * kept record into the LB field of every duplicate; this deliberately overwrites any LB
+	 * content from the user's original file, which is documented behaviour. To avoid carrying
+	 * a stale label from a previously marked file into a new deduplication run, the two-arg
+	 * {@link #readPublications(String, Consumer)} always passes {@code includeLabelField=false}.
+	 *
+	 * <p>Pass {@code includeLabelField=true} ONLY when reading a mark-mode output file for
+	 * validation purposes (ValidationTests / ValidationService). No production caller should
+	 * pass {@code true}.
+	 */
+	public List<Publication> readPublications(String inputFileName, Consumer<String> progressReporter,
+			boolean includeLabelField) {
 		List<Publication> publications = new ArrayList<>();
 		String fieldContent = null;
 		String fieldName = null;
@@ -269,6 +287,12 @@ public class IOService {
 						break;
 					case "J2": // Alternate journal
 						addNormalizedJournal(fieldContent, publication, fieldName);
+						break;
+					case "LB": // Label (deduplication group ID written by mark mode)
+						if (includeLabelField) {
+							// LB is a single short integer ID; continuation lines are not expected
+							publication.setLabel(fieldContent);
+						}
 						break;
 					case "OP":
 						// in PubMed: original title, in Web of Science (at least for conference papers): conference

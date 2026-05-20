@@ -93,7 +93,7 @@ public class Publication {
 	/*
 	 * Publications which are replies need special treatment. See the Pattern in the {@link IOService.replyPattern} 
 	 * - publication pairs where one of them is isReply == true, aren't compared for title (always true)
-	 * - journals are compared stricter (see DeduplicationService.JOURNAL_SIMILARITY_NO_REPLY < DeduplicationService.JOURNAL_SIMILARITY_NO_REPLY)
+	 * - journals are compared stricter (JournalThresholds.DEFAULT.reply() > JournalThresholds.DEFAULT.noReply())
 	 * - in enrich() the longest title of a duplicate set is used
 	 */
 	private boolean isReply = false;

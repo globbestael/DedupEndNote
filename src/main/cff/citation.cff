@@ -1,0 +1,20 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+#
+# TEMPLATE FILE — do not edit the generated citation.cff at the project root directly.
+# Edit this file instead; the root citation.cff is regenerated from here during every build
+# (./mvnw generate-resources or ./mvnw package).
+
+cff-version: 1.2.0
+title: DedupEndNote
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: G.
+    family-names: Lobbestael
+repository-code: 'https://github.com/globbestael/DedupEndNote'
+url: 'http://dedupendnote.nl'
+version: ${app.version}
+date-released: '2026-04-13'

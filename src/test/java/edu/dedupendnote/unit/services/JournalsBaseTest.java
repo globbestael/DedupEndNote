@@ -12,7 +12,7 @@ import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
 
-import edu.dedupendnote.services.ComparisonService;
+import edu.dedupendnote.services.DefaultJournalComparisonService;
 import edu.dedupendnote.services.IOService;
 import edu.dedupendnote.unit.BaseTest;
 import edu.dedupendnote.domain.Publication;
@@ -105,7 +105,7 @@ WHERE t1.title2 <> t2.title2
 			Publication p2 = new Publication();
 			IOService.addNormalizedJournal(triple.journal2(), p2, "T2");
 
-			triples.set(i, triple.withSimilar(ComparisonService.compareJournals(p1, p2, false)));
+			triples.set(i, triple.withSimilar(new DefaultJournalComparisonService().compare(p1, p2, false)));
 		}
 
 		// triples.stream().filter(t -> t.similar() == false).forEach(System.err::println);

@@ -11,12 +11,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Update CLAUDE.md whenever a change affects something documented here. Triggers include:
 
-- Test class renamed, added, deleted, or reclassified (hierarchy section)
+- Test class renamed, added, deleted, or reclassified (hierarchy section), or moved between unit / integration / validation categories
 - New service introduced or existing service's responsibility changed (services table)
 - Build command, Maven profile, or port changed (commands / configuration sections)
 - Architectural pattern added or removed (data flow, enrichment, modes)
 - Code quality plugin version bumped or new plugin added
 - Plan-file naming convention changed (plans section)
+- Release workflow or version-management mechanism changed (configuration section)
 
 The update should land in the same commit as the code change.
 
@@ -31,6 +32,7 @@ The update should land in the same commit as the code change.
 ./mvnw test                                    # Run all tests
 ./mvnw test -Punit-tests                       # Run only unit tests (no Spring context, fast)
 ./mvnw test -Pintegration-tests               # Run only integration tests (@SpringBootTest)
+./mvnw test -Pvalidation-tests               # Run only validation tests (slow, requires truth files)
 ./mvnw -Dtest=ClassNameTest test              # Run a single test class
 ./mvnw -Dtest=ClassNameTest#methodName test   # Run a single test method
 ```
@@ -53,10 +55,13 @@ DedupEndNote is a Spring Boot 4.0 / Java 21 web app that deduplicates bibliograp
 | Service | Lines | Responsibility |
 |---|---|---|
 | `DeduplicationService` | ~547 | Orchestrates the full pipeline; accepts a `Consumer<String> progressReporter` for progress reporting |
-| `ComparisonService` | ~337 | 5-step duplicate detection algorithm |
+| `ComparisonService` | ~90 | Thin orchestrator: holds four injected per-field comparison services; retains `compareIssns` and `compareSameDois` as static helpers |
 | `IOService` | ~980 | Parses and writes RIS files; normalizes fields during read |
 | `NormalizationService` | ~991 | Normalizes authors, titles, DOIs, pages, journals |
-| `DefaultAuthorsComparisonService` | — | Jaro-Winkler author matching |
+| `DefaultAuthorsComparisonService` | — | Jaro-Winkler author matching; thresholds injectable via `AuthorThresholds` record |
+| `DefaultTitleComparisonService` | — | JWS title matching; thresholds injectable via `TitleThresholds` record |
+| `DefaultJournalComparisonService` | — | Journal matching with abbreviation/initialism heuristics; thresholds injectable via `JournalThresholds` record |
+| `DefaultPagesComparisonService` | — | Exact-equality pages-or-DOI step (no thresholds) |
 
 ### 5-step comparison algorithm (all steps must pass)
 1. Publication year (±1 year, exact for Cochrane)
@@ -88,7 +93,17 @@ Two compile-time plugins are active — violations are **build errors**:
 
 ## Testing
 
-Tests live under `src/test/java/edu/dedupendnote/unit/` (no Spring context) and `src/test/java/edu/dedupendnote/integration/` (Spring Boot tests). Many tests validate against real-world datasets (SRA, McKeown, BIG_SET) and measure sensitivity/specificity.
+Tests live under three roots, each with a corresponding Maven profile:
+
+| Folder | Profile | Spring context | Run frequency |
+|---|---|---|---|
+| `src/test/java/edu/dedupendnote/unit/` | `unit-tests` | No | Every commit |
+| `src/test/java/edu/dedupendnote/integration/` | `integration-tests` | `@SpringBootTest` | Every commit |
+| `src/test/java/edu/dedupendnote/validation/` | `validation-tests` | `@SpringBootTest` | On demand |
+
+**Integration tests** assert on the string returned by `deduplicateOneFile` (or record counts) on small known inputs — they are regression guards that fail if behaviour changes.
+
+**Validation tests** measure sensitivity/specificity against manually validated truth files in `~/dedupendnote_files` (not in git). They are slow and intended to be run before releases or after structural changes, not on every commit. Validation runs `deduplicateOneFile` in mark mode to exercise the full production code path, then re-reads the mark-mode output with `includeLabelField=true` to extract deduplication groups.
 
 ### Test class hierarchy
 
@@ -102,15 +117,22 @@ Tests live under `src/test/java/edu/dedupendnote/unit/` (no Spring context) and 
 
 **Integration (`edu.dedupendnote.integration.*`)**
 - **`integration/AbstractIntegrationTest`** — base for all `@SpringBootTest` tests; provides `@ActiveProfiles("test")`, `@MockitoBean SimpMessagingTemplate`, `baseDir`, `testDir`, `@BeforeAll` (log level → INFO), `@BeforeEach initTestDir()`. Subclasses override `initTestDir()` when they need a subdirectory.
-- Integration test classes extending `AbstractIntegrationTest`: `DedupEndNoteApplicationTests`, `MissedDuplicatesTests`, `TwoFilesTest`, `AuthorExperimentsTests`, `ValidationTests`
+- Integration test classes extending `AbstractIntegrationTest`: `DedupEndNoteApplicationTests`, `MissedDuplicatesTests`, `TwoFilesTests`
+
+**Validation (`edu.dedupendnote.validation.*`)**
+- **`validation/ValidationTests`** — measures sensitivity/specificity of the production deduplication engine across 14 validated real-world datasets; not a regression guard but a performance monitor. Requires truth files in `~/dedupendnote_files` (not in git). Run with `-Pvalidation-tests`.
+- **`validation/experiments/AuthorExperimentsTests`** — runs `DefaultAuthorsComparisonService` with experimental thresholds (`AuthorThresholds(1.0, 1.0, 1.0)`) against a validated dataset and asserts on relative sensitivity/specificity. The `experiments` sub-package holds controlled A/B experiments against production-engine baselines.
+- **`validation/services/ValidationService`** — test-only Spring `@Service` that encapsulates the truth-file scoring logic (TP/FP/FN/TN computation, FN/FP analysis file writing). Shared by `ValidationTests` and future experiments tests.
+- **`validation/services/RecordDBService`** — test-only Spring `@Service` for reading/writing the tab-delimited DB export format.
+- **`validation/domain/ValidationResult`** — POJO holding per-dataset scores (sensitivity, specificity, precision, accuracy, F1, FN/FP pair maps).
 
 Test files follow a three-category taxonomy per field: **Normalization** (`NormalizationService*Test`) / **Similarity** (`Similarity*Test`, boolean/equality result) / **JWSimilarity** (`JWSimilarity*Test`, raw JWS score vs threshold). Files are further split by Spring-context requirement.
 
-The split is enforced by folder: `unit/` vs `integration/`. The two Maven profiles in `pom.xml` use path-based filters: `unit-tests` (excludes `**/integration/**`) and `integration-tests` (includes only `**/integration/**/*Test(s).java`). Selecting the folder in VS Code's Test Explorer automatically runs only that category.
+The split is enforced by folder. The Maven profiles in `pom.xml` use path-based filters: `unit-tests` (excludes `**/integration/**` and `**/validation/**`), `integration-tests` (includes only `**/integration/**/*Tests.java`), `validation-tests` (includes only `**/validation/**/*Tests.java`). Selecting the folder in VS Code's Test Explorer automatically runs only that category.
 
 ### Test profile
 
-`@ActiveProfiles("test")` on `AbstractIntegrationTest` activates the `test` profile for all integration tests, loading `src/main/resources/application-test.properties`. Unit tests don't start Spring and get `baseDir` directly from `BaseTest` via `System.getProperty("user.home")`.
+`@ActiveProfiles("test")` on `AbstractIntegrationTest` activates the `test` profile for all integration and validation tests, loading `src/main/resources/application-test.properties`. Unit tests don't start Spring and get `baseDir` directly from `BaseTest` via `System.getProperty("user.home")`.
 
 ## Plans
 
@@ -124,3 +146,26 @@ Filename format: `YYYY-MM-DD-HHMM-<slug>.md`, where the date/time is the commit 
 - `server.port=9777`
 - `spring.servlet.multipart.max-file-size=150MB`
 - `dedup.upload-dir` — directory for uploaded/output files
+
+### Version number
+
+The user-facing version is defined once: `<app.version>x.y.z</app.version>` in `pom.xml`'s `<properties>` section. Everything else derives from it at build time:
+- `application.properties` contains `app.version=@app.version@` (Maven-filtered at build)
+- `AppVersionAdvice` reads `${app.version}` and injects `appVersion` into every Thymeleaf model — consumed by `index.html` (navbar + citing accordion) and `twofiles.html` (navbar)
+- `src/main/cff/citation.cff` is the template; `maven-resources-plugin` filters it to the root `citation.cff` on every build
+
+**Release workflow:** update `<app.version>` in `pom.xml` → run `./mvnw package` → commit `pom.xml` and the regenerated root `citation.cff` → add the new `<h2>` + `<ul>` entry to `changelog.html` manually.
+
+## Agent skills
+
+### Issue tracker
+
+Issues live as local markdown files under `.scratch/`. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Uses the default five-role vocabulary (needs-triage, needs-info, ready-for-agent, ready-for-human, wontfix). See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context layout: one `CONTEXT.md` + `docs/adr/` at the repo root. See `docs/agents/domain.md`.

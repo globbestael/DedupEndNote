@@ -4,7 +4,8 @@
       "Bash(git:*)",
       "Bash(./mvnw clean *)",
       "Bash(./mvnw -Punit-tests test)",
-      "Bash(./mvnw -Punit-tests test -q)"
+      "Bash(./mvnw -Punit-tests test -q)",
+      "Bash(./mvnw -Pintegration-tests test)"
     ]
   }
 }

@@ -10,7 +10,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import edu.dedupendnote.services.ComparisonService;
+import edu.dedupendnote.services.JournalThresholds;
 import edu.dedupendnote.services.NormalizationService;
 import lombok.extern.slf4j.Slf4j;
 
@@ -20,18 +20,18 @@ class JWSimilarityJournalTest {
 	JaroWinklerSimilarity jws = new JaroWinklerSimilarity();
 
 	/*
-	 * Jarowinkler similarity > ComparisonService.JOURNAL_SIMILARITY_NO_REPLY for normalized journals
+	 * Jarowinkler similarity > JournalThresholds.DEFAULT.noReply() for normalized journals
 	 */
 	@ParameterizedTest(name = "{index}: jaroWinkler({0}, {1})")
 	@MethodSource("positiveArgumentProvider")
 	void jwPositiveTest(String input1, String input2) {
 		Double similarity = jws.apply(NormalizationService.normalizeJournal(input1),
 				NormalizationService.normalizeJournal(input2));
-		assertThat(similarity).isGreaterThan(ComparisonService.JOURNAL_SIMILARITY_NO_REPLY);
+		assertThat(similarity).isGreaterThan(JournalThresholds.DEFAULT.noReply());
 	}
 
 	/*
-	 * Is the Jarowinkler similarity <= ComparisonService.JOURNAL_SIMILARITY_NO_REPLY for normalized journals.
+	 * Is the Jarowinkler similarity <= JournalThresholds.DEFAULT.noReply() for normalized journals.
 	 * Does NOT compare by initials, ...
 	 */
 	@ParameterizedTest(name = "{index}: jaroWinkler({0}, {1})")
@@ -41,7 +41,7 @@ class JWSimilarityJournalTest {
 				NormalizationService.normalizeJournal(input2));
 		System.err.println("- 1: %s\n- 2: %s\n- 3: %s\n- 4: %s\n".formatted(input1,
 				NormalizationService.normalizeTitle(input1), input2, NormalizationService.normalizeTitle(input2)));
-		assertThat(similarity).isLessThanOrEqualTo(ComparisonService.JOURNAL_SIMILARITY_NO_REPLY);
+		assertThat(similarity).isLessThanOrEqualTo(JournalThresholds.DEFAULT.noReply());
 	}
 
 	static Stream<Arguments> negativeArgumentProvider() {

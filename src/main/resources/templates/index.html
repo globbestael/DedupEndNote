@@ -190,7 +190,7 @@
 	<nav class="navbar navbar-light bg-light border-bottom fixed-top">
 		<div class="container">
 			<span class="navbar-brand fw-bold">DedupEndNote <small
-					class="fw-normal text-muted fs-6">v1.1.5</small></span>
+					class="fw-normal text-muted fs-6" th:text="'v' + ${appVersion}">v1.1.5</small></span>
 			<div class="d-flex gap-2">
 				<a href="/twofiles" class="btn btn-outline-secondary btn-sm">Deduplicate 2 files</a>
 				<a href="/details" target="window2" class="btn btn-outline-secondary btn-sm">Details ↗</a>
@@ -377,7 +377,7 @@
 						<div id="collapseCiting" class="accordion-collapse collapse" data-bs-parent="#docsAccordion">
 							<div class="accordion-body">
 								<p>If you use DedupEndNote, please cite:</p>
-								<p>Lobbestael, G. (2026). DedupEndNote (Version 1.1.5) [Computer software].
+								<p>Lobbestael, G. (2026). DedupEndNote (Version <span th:text="${appVersion}">1.1.5</span>) [Computer software].
 									https://github.com/globbestael/DedupEndNote</p>
 							</div>
 						</div>

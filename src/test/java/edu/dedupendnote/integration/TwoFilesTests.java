@@ -10,7 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import edu.dedupendnote.services.DeduplicationService;
 import edu.dedupendnote.services.UtilitiesService;
 
-class TwoFilesTest extends AbstractIntegrationTest {
+class TwoFilesTests extends AbstractIntegrationTest {
 	@Autowired
 	DeduplicationService deduplicationService;
 
