@@ -127,9 +127,9 @@
 			<version>1.14.2</version>
 		</dependency>
 		<dependency>
-		    <groupId>org.webjars.bowergithub.blueimp</groupId>
-		    <artifactId>jquery-file-upload</artifactId>
-		    <version>10.32.0</version>
+			<groupId>org.webjars.npm</groupId>
+			<artifactId>blueimp-file-upload</artifactId>
+			<version>10.32.0</version>
 		</dependency>
 		<dependency>
 			<groupId>org.webjars.npm</groupId>
