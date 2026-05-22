@@ -109,7 +109,7 @@ class DedupEndNoteApplicationTests extends AbstractIntegrationTest {
 				});
 
 		assertThat(resultString)
-				.startsWith("ERROR: The IDs of the bibliographicItems of input file " + inputFileName + " are not unique");
+				.startsWith("ERROR: The IDs of the bibliographic items of input file " + inputFileName + " are not unique");
 	}
 
 	@Test

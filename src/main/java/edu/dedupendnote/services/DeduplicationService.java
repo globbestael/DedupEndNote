@@ -214,7 +214,7 @@ l						 * 		V 		W 		X
 					}
 				}
 			}
-			progressReporter.accept("Working on %d for %d bibliographicItems (marked %d duplicates)".formatted(year,
+			progressReporter.accept("Working on %d for %d bibliographic items (marked %d duplicates)".formatted(year,
 					noOfBibliographicItems, noOfDuplicates));
 		}
 	}
@@ -249,7 +249,7 @@ l						 * 		V 		W 		X
 			int numberWritten = ioService.writeMarkedBibliographicItems(bibliographicItems, inputFileName,
 					outputFileName);
 			long labeledBibliographicItems = bibliographicItems.stream().filter(r -> r.getLabel() != null).count();
-			s = "DONE: DedupEndNote has written " + numberWritten + " bibliographicItems with "
+			s = "DONE: DedupEndNote has written " + numberWritten + " bibliographic items with "
 					+ labeledBibliographicItems + " duplicates marked in the Label field.";
 			progressReporter.accept(s);
 			return s;
@@ -311,7 +311,7 @@ l						 * 		V 		W 		X
 					outputFileName);
 			long numberLabeledBibliographicItems = bibliographicItems.stream()
 					.filter(r -> r.getLabel() != null && !r.isPresentInOldFile()).count();
-			s = "DONE: DedupEndNote has written %s bibliographicItems with %d duplicates marked in the Label field."
+			s = "DONE: DedupEndNote has written %s bibliographic items with %d duplicates marked in the Label field."
 					.formatted(numberWritten, numberLabeledBibliographicItems);
 			progressReporter.accept(s);
 			return s;
@@ -326,7 +326,7 @@ l						 * 		V 		W 		X
 		log.error("Publications to write: {}", filteredBibliographicItems.size());
 		int numberWritten = ioService.writeDeduplicatedBibliographicItems(filteredBibliographicItems, newInputFileName,
 				outputFileName);
-		s = "DONE: DedupEndNote removed %d bibliographicItems from the new set, and has written %d bibliographicItems."
+		s = "DONE: DedupEndNote removed %d bibliographic items from the new set, and has written %d bibliographic items."
 				.formatted((newBibliographicItems.size() - numberWritten), numberWritten);
 		progressReporter.accept(s);
 		return s;
@@ -335,14 +335,14 @@ l						 * 		V 		W 		X
 	public @Nullable String doSanityChecks(List<BibliographicItem> bibliographicItems, String fileName) {
 		if (containsBibliographicItemsWithoutId(bibliographicItems)) {
 			return "ERROR: The input file " + fileName
-					+ " contains bibliographicItems without IDs. The input file is not an Export as RIS-file from an EndNote library!";
+					+ " contains bibliographic items without IDs. The input file is not an Export as RIS-file from an EndNote library!";
 		}
 		if (containsOnlyBibliographicItemsWithoutPublicationYear(bibliographicItems)) {
-			return "ERROR: All bibliographicItems of the input file " + fileName
-					+ " have no BibliographicItem Year. The input file is not an Export as RIS-file from an EndNote library!";
+			return "ERROR: All bibliographic items of the input file " + fileName
+					+ " have no publication year. The input file is not an Export as RIS-file from an EndNote library!";
 		}
 		if (containsDuplicateIds(bibliographicItems)) {
-			return "ERROR: The IDs of the bibliographicItems of input file " + fileName
+			return "ERROR: The IDs of the bibliographic items of input file " + fileName
 					+ " are not unique. The input file is not an Export as RIS-file from 1 EndNote library!";
 		}
 		return null;
@@ -457,8 +457,8 @@ l						 * 		V 		W 		X
 	}
 
 	public String formatResultString(int total, int totalWritten) {
-		return "DONE: DedupEndNote has deduplicated " + total + " bibliographicItems, has removed "
-				+ (total - totalWritten) + " duplicates, and has written " + totalWritten + " bibliographicItems.";
+		return "DONE: DedupEndNote has deduplicated " + total + " bibliographic items, has removed "
+				+ (total - totalWritten) + " duplicates, and has written " + totalWritten + " bibliographic items.";
 	}
 
 	/*
@@ -486,7 +486,7 @@ l						 * 		V 		W 		X
 					yearSet.addAll(emptyYearlist.stream().filter(r -> r.getLabel() == null).toList());
 				}
 				yearSet.addAll(yearSets.getOrDefault(year - 1, List.of()));
-				progressReporter.accept("Working on " + year + " for " + yearSet.size() + " bibliographicItems");
+				progressReporter.accept("Working on " + year + " for " + yearSet.size() + " bibliographic items");
 				compareSet(yearSet, year, true, progressReporter);
 				progressReporter.accept("PROGRESS: " + cumulativePercentages.get(year));
 			}
@@ -517,7 +517,7 @@ l						 * 		V 		W 		X
 			}
 			yearSet.addAll(yearSets.get(year));
 			yearSet.addAll(yearSets.getOrDefault(year + 1, List.of()));
-			progressReporter.accept("Working on " + year + " for " + yearSet.size() + " bibliographicItems");
+			progressReporter.accept("Working on " + year + " for " + yearSet.size() + " bibliographic items");
 			compareSet(yearSet, year, false, progressReporter);
 			progressReporter.accept("PROGRESS: " + cumulativePercentages.get(year));
 		});

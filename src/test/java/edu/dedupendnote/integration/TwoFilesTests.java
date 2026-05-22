@@ -31,7 +31,7 @@ class TwoFilesTests extends AbstractIntegrationTest {
 				markMode, message -> {});
 		System.err.println(resultString);
 		assertThat(resultString).startsWith(
-				"DONE: DedupEndNote removed 551 bibliographicItems from the new set, and has written 114 bibliographicItems.");
+				"DONE: DedupEndNote removed 551 bibliographic items from the new set, and has written 114 bibliographic items.");
 	}
 
 	@Disabled("TODO: Why was this disabled")
