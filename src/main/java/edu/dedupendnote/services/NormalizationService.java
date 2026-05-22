@@ -32,6 +32,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class NormalizationService {
 
+	public static final int EARLIEST_PUBLICATION_YEAR = 1850;
+
 	/*
 	 * In Java 8 replaceAll via PATTERN.matcher(s).replaceAll(replacement) is faster than
 	 * s.replaceAll(replacement) See below for Java9Plus versions.
@@ -696,7 +698,7 @@ public class NormalizationService {
 		Matcher matcher = NormPatterns.PUBLICATION_YEAR_PATTERN.matcher(input);
 		if (matcher.find()) {
 			year = Integer.valueOf(matcher.group(2));
-			if (year < 1850) {
+			if (year < EARLIEST_PUBLICATION_YEAR) {
 				year = 0;
 			}
 		} else {
