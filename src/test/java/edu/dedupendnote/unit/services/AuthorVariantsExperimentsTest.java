@@ -43,8 +43,8 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 
 			triple = triple.withJws(getHighestSimilarityForAuthors(r1.getAllAuthors(), r2.getAllAuthors()));
 
-			r1 = fillPublicationAddAuthorsWithoutPreprocessing(triple.authors1());
-			r2 = fillPublicationAddAuthorsWithoutPreprocessing(triple.authors2());
+			r1 = fillBibliographicItemAddAuthorsWithoutPreprocessing(triple.authors1());
+			r2 = fillBibliographicItemAddAuthorsWithoutPreprocessing(triple.authors2());
 			filledTriples
 					.add(triple.withExpJws(getHighestSimilarityForAuthors(r1.getAllAuthors(), r2.getAllAuthors())));
 		}
@@ -81,8 +81,8 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 
 			triple = triple.withJws(getHighestSimilarityForAuthors(r1.getAllAuthors(), r2.getAllAuthors()));
 
-			r1 = fillPublicationAddAuthorsLimitedToFirstLetters(triple.authors1());
-			r2 = fillPublicationAddAuthorsLimitedToFirstLetters(triple.authors2());
+			r1 = fillBibliographicItemAddAuthorsLimitedToFirstLetters(triple.authors1());
+			r2 = fillBibliographicItemAddAuthorsLimitedToFirstLetters(triple.authors2());
 			filledTriples
 					.add(triple.withExpJws(getHighestSimilarityForAuthors(r1.getAllAuthors(), r2.getAllAuthors())));
 		}
@@ -105,8 +105,8 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 
 			triple = triple.withJws(getHighestSimilarityForAuthors(r1.getAllAuthors(), r2.getAllAuthors()));
 
-			r1 = fillPublicationAddAuthorsLimitedToFirstLetters_2(triple.authors1());
-			r2 = fillPublicationAddAuthorsLimitedToFirstLetters_2(triple.authors2());
+			r1 = fillBibliographicItemAddAuthorsLimitedToFirstLetters_2(triple.authors1());
+			r2 = fillBibliographicItemAddAuthorsLimitedToFirstLetters_2(triple.authors2());
 			filledTriples
 					.add(triple.withExpJws(getHighestSimilarityForAuthors(r1.getAllAuthors(), r2.getAllAuthors())));
 		}
@@ -120,8 +120,8 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 	void explainPoorResults_AuthorsLimitedToFirstLetters() {
 		String author1 = "de Ville de Goyet, J.";
 		String author2 = "Degoyet, J. D.";
-		BibliographicItem r1 = fillPublicationAddAuthorsLimitedToFirstLetters(author1);
-		BibliographicItem r2 = fillPublicationAddAuthorsLimitedToFirstLetters(author2);
+		BibliographicItem r1 = fillBibliographicItemAddAuthorsLimitedToFirstLetters(author1);
+		BibliographicItem r2 = fillBibliographicItemAddAuthorsLimitedToFirstLetters(author2);
 		String a1 = r1.getAllAuthors().get(0);
 		String a2 = r2.getAllAuthors().get(0);
 
@@ -273,7 +273,7 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 	 * - bad results with short author lists with differeent conventions, esp when sorting
 	 * 		"Weller, S. C." vs "WELLER, SC"		(WSC vs WS, sorting: CSW vs SW)
 	 */
-	private BibliographicItem fillPublicationAddAuthorsWithoutPreprocessing(String authors) {
+	private BibliographicItem fillBibliographicItemAddAuthorsWithoutPreprocessing(String authors) {
 		BibliographicItemExperiment r = new BibliographicItemExperiment();
 		List<String> authorList1 = Arrays.asList(authors.split("; "));
 		authorList1.stream().forEach(a -> r.addAuthorsWithoutPreprocessing(a));
@@ -281,7 +281,7 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 		return r;
 	}
 
-	private BibliographicItem fillPublicationAddAuthorsLimitedToFirstLetters(String authors) {
+	private BibliographicItem fillBibliographicItemAddAuthorsLimitedToFirstLetters(String authors) {
 		BibliographicItemExperiment r = new BibliographicItemExperiment();
 		List<String> authorList1 = Arrays.asList(authors.split("; "));
 		authorList1.stream().forEach(a -> r.addAuthorsLimitedToFirstLetters(a));
@@ -290,7 +290,7 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 		return r;
 	}
 
-	private BibliographicItem fillPublicationAddAuthorsLimitedToFirstLetters_2(String authors) {
+	private BibliographicItem fillBibliographicItemAddAuthorsLimitedToFirstLetters_2(String authors) {
 		BibliographicItemExperiment r = new BibliographicItemExperiment();
 		List<String> authorList1 = Arrays.asList(authors.split("; "));
 		authorList1.stream().forEach(a -> r.addAuthorsLimitedToFirstLetters_2(a));
