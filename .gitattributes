@@ -1,0 +1,9 @@
+# Normalise all text files to LF in the repository.
+* text=auto eol=lf
+
+# Explicitly mark binary files so Git never touches their line endings.
+*.jar binary
+*.png binary
+*.jpg binary
+*.pdf binary
+*.zip binary
