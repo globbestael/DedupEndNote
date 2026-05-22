@@ -1,4 +1,4 @@
-package edu.dedupendnote.services;
+﻿package edu.dedupendnote.services;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
@@ -68,13 +68,13 @@ public class NormalizationService {
 	 * -------------------------------
 	 * - CYK names: last and first names are often mixed up
 	 *   - "Chung, J. W." and "Jin Wook, Chung"
-	 *   - same publication:
+	 *   - same bibliographicItem:
 	 *     - Chuan-Xing, L.; Xu, H.; Bao-Shan, H.; Yong, L.; Pei-Jian, S.; Xian-Yi, Y.; Xiao-Ning, L.; Li-Gong, L.
 	 *     - Li, C. X.; He, X.; Hu, B. S.; Li, Y.; Shao, P. J.; Yu, X. Y.; Luo, X. N.; Lu, L. G.
-	 *   - same publication:
+	 *   - same bibliographicItem:
 	 *     - Chen, Y.; Chen, J.; Luo, B.
 	 *     - Yajin, C.; Jisheng, C.; Baoming, L.
-	 *   - both orders in same publication:
+	 *   - both orders in same bibliographicItem:
 	 *     - Jia-Wu, Li; Qiang, Lu; Yan, Luo; Li, Jia-Wu; Lu, Qiang; Luo, Yan [CINAHL: same 3 authors with transposed names]
 	 * 	   - But this also occurs in CINAHL without transposed authors:
 	 *        - Chung, R. T.; Iafrate, A. J.; Amrein, P. C.; Sahani, D. V.; Misdraji, J.; Chung, Raymond T.; Iafrate, A. John; Amrein, Philip C.; Sahani, Dushyant V.; Misdraji, Joseph
@@ -184,7 +184,7 @@ public class NormalizationService {
 
 	public static Set<String> normalizeInputDois(String doi) {
 		Set<String> dois = new HashSet<>();
-		// Scopus publications sometimes add Cited references in this field
+		// Scopus bibliographicItems sometimes add Cited references in this field
 		if (doi.length() > 200) {
 			return dois;
 		}
@@ -219,7 +219,7 @@ public class NormalizationService {
 	 * - (ISBN) conversion to ISBN-13 
 	 * - (ISSN) use of ISSN-L and the linking table: see
 	 * https://www.issn.org/understanding-the-issn/assignment-rules/the-issn-l-for-
-	 * publications-on-multiple-media/
+	 * bibliographicItems-on-multiple-media/
 	 *
 	 * Validation of ISSN and ISBN and conversion to ISBN-13 are possible with the Apache
 	 * Commons Validator:
@@ -262,7 +262,7 @@ public class NormalizationService {
 		// @formatter:off
 		/*
 		 * General:
-		 * - mark Cochrane publication
+		 * - mark Cochrane bibliographicItem
 		 * - remove unwanted parts
 		 * - split combined journal names into in separate journal names
 		 * - create other variant journal names
@@ -275,7 +275,7 @@ public class NormalizationService {
 			return Set.of(journal);
 		}
 		// Strip last part of "Clinical neuropharmacology.12 Suppl 2 ()(pp v-xii; S1-105) 1989.Date
-		// of Publication: 1989."
+		// of BibliographicItem: 1989."
 		Matcher matcher = NormPatterns.JOURNAL_EXTRA_PATTERN.matcher(journal);
 		if (matcher.matches()) {
 			journal = matcher.group(1);
@@ -372,15 +372,15 @@ public class NormalizationService {
 	 * normalizeInputPages: parses the different input strings with page numbers / article numbers to the fields
 	 * pageStart, pageEnd and pagesOutput.
 	 * 
-	 * - IOService::readPublications gathers the fieldContent for these fields in a map
-	 * - IOService::readPublications calls this parsing function when the last field (ER) of a publication is encountered
+	 * - IOService::readBibliographicItems gathers the fieldContent for these fields in a map
+	 * - IOService::readBibliographicItems calls this parsing function when the last field (ER) of a bibliographicItem is encountered
 	 *
 	 * 3 steps:
 	 * - normalize the content of the 3 fields
 	 * - choose which of these 3 field values will be used
 	 * - handle the chosen field value to get pageStart, pagesOutput and isSevtalPages
 	 */
-	public static PageRecord normalizeInputPages(Map<String, String> pagesInputMap, String publicationId) {
+	public static PageRecord normalizeInputPages(Map<String, String> pagesInputMap, String bibliographicItemId) {
 		String c7Pages = pagesInputMap.get("C7");
 		String sePages = pagesInputMap.get("SE");
 		String spPages = pagesInputMap.get("SP");
@@ -398,7 +398,7 @@ public class NormalizationService {
 		 */
 
 		if (c7Pages != null) {
-			c7Pages = initialPagesCleanup(c7Pages, publicationId);
+			c7Pages = initialPagesCleanup(c7Pages, bibliographicItemId);
 			originalPages = c7Pages;
 			c7Pages = clearPagesIfMonth(c7Pages);
 			// Cases like "Pii s1386-6346(02)00029-3"
@@ -426,20 +426,20 @@ public class NormalizationService {
 
 		if (sePages != null) {
 			if (c7Pages != null) {
-				log.error("Found a case with both C7 %s and SE %s(publication ID %s)".formatted(pagesInputMap.get("C7"),
-						pagesInputMap.get("SE"), publicationId));
+				log.error("Found a case with both C7 %s and SE %s(bibliographicItem ID %s)"
+						.formatted(pagesInputMap.get("C7"), pagesInputMap.get("SE"), bibliographicItemId));
 			}
 			if (sePages.length() > 30) {
 				sePages = null;
 			} else {
-				sePages = initialPagesCleanup(sePages, publicationId);
+				sePages = initialPagesCleanup(sePages, bibliographicItemId);
 				originalPages = sePages;
 				sePages = clearPagesIfMonth(sePages);
 			}
 		}
 
 		if (spPages != null) {
-			spPages = initialPagesCleanup(spPages, publicationId);
+			spPages = initialPagesCleanup(spPages, bibliographicItemId);
 			originalPages = spPages;
 			spPages = clearPagesIfMonth(spPages);
 			if (spPages != null) {
@@ -616,7 +616,7 @@ public class NormalizationService {
 		}
 		// A last check
 		if (isSeveralPages && (pageStart == null || pageStart.isEmpty())) {
-			// log.error("isSeveralPages is set but pageStart is null or empty for publicationId {}", publicationId);
+			// log.error("isSeveralPages is set but pageStart is null or empty for bibliographicItemnId {}", bibliographicItemId);
 			isSeveralPages = false;
 		}
 		return new PageRecord(originalPages, pageStart, pagesOutput, isSeveralPages);
@@ -639,7 +639,7 @@ public class NormalizationService {
 		return pages;
 	}
 
-	private static @Nullable String initialPagesCleanup(String pages, String publicationId) {
+	private static @Nullable String initialPagesCleanup(String pages, String bibliographicItemId) {
 		// Cochrane uses hyphen characters instead of minus
 		pages = pages.replaceAll("[\\u2010\\u00ad]", "-");
 
@@ -903,8 +903,8 @@ public class NormalizationService {
 		 * No. CD001727)". See also "Retraction note to: ..." (e.g. https://pubmed.ncbi.nlm.nih.gov/24577730/)
 		 */
 		/**
-		 * FIXME: Do a thorough check in the validation files to make sure that erratum publications do not remove the
-		 * original publications (erratum as first publication encountered). There are some tests in
+		 * FIXME: Do a thorough check in the validation files to make sure that erratum bibliographicItems do not remove the
+		 * original bibliographicItems (erratum as first bibliographicItem encountered). There are some tests in
 		 * {@link edu.dedupendnote.JaroWinklerTitleTest} (and an incomplete method
 		 * {@link edu.dedupendnote.JaroWinklerTitleTest#testErrata()})
 		 */

@@ -92,7 +92,7 @@ class MissedDuplicatesTests extends AbstractIntegrationTest {
 		 * False positives or negatives for these 2 versions of Cochrane review CD006069
 		 * 20282, 20456, 36223, 36439, 51545, 51546
 		 * The first 4 (in SRSR_Human_missed_2_4.txt) merges 20456 to 20282 
-		 * All 6 (in SRSR_Human_missed_2_4.txt) merges 20456 to 20282, and keeps 51546 as a second set with 1 publication
+		 * All 6 (in SRSR_Human_missed_2_4.txt) merges 20456 to 20282, and keeps 51546 as a second set with 1 bibliographicItem
 		 * 
 		 * The false merge of 20456 with 20282 is triggered by the comparison of 20456 with 36459
 		 * - 1. with doi / without doi
@@ -103,7 +103,7 @@ class MissedDuplicatesTests extends AbstractIntegrationTest {
 		 * - 4. same journal
 		 * And then the label of THE COMPARED JOURNAL (36459, label 20282) is copied to THE PIVOT (20456)"
 		 * 
-		 * On 2025-12-18 copying the label from the publication to the pivot has been disabled
+		 * On 2025-12-18 copying the label from the bibliographicItem to the pivot has been disabled
 		 */
 		"'/problems/Rayyan/missed_10_11.txt', 2, 1", // Rayyan
 		"'/problems/Rayyan/missed_251_252.txt', 2, 1", // Rayyan

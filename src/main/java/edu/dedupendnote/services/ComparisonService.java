@@ -5,7 +5,7 @@ import java.util.Map;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Service;
 
-import edu.dedupendnote.domain.Publication;
+import edu.dedupendnote.domain.BibliographicItem;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -34,26 +34,26 @@ public class ComparisonService {
         this.pagesComparisonService = pagesComparisonService;
     }
 
-    public boolean compareAuthors(Publication r1, Publication r2) {
+    public boolean compareAuthors(BibliographicItem r1, BibliographicItem r2) {
         return authorsComparisonService.compare(r1, r2);
     }
 
-    public boolean compareTitles(Publication r1, Publication r2) {
+    public boolean compareTitles(BibliographicItem r1, BibliographicItem r2) {
         return titleComparisonService.compare(r1, r2);
     }
 
-    public boolean compareJournals(Publication r1, Publication r2, @Nullable Boolean isSameDois) {
+    public boolean compareJournals(BibliographicItem r1, BibliographicItem r2, @Nullable Boolean isSameDois) {
         return journalComparisonService.compare(r1, r2, isSameDois);
     }
 
-    public boolean compareStartPagesOrDois(Publication r1, Publication r2, Map<String, @Nullable Boolean> map) {
+    public boolean compareStartPagesOrDois(BibliographicItem r1, BibliographicItem r2, Map<String, @Nullable Boolean> map) {
         return pagesComparisonService.compare(r1, r2, map);
     }
 
     /*
-     * Compares the ISBNs or the ISSNs of 2 publications
+     * Compares the ISBNs or the ISSNs of 2 bibliographicItems
      */
-    public static boolean compareIssns(Publication r1, Publication r2, @Nullable Boolean isSameDois) {
+    public static boolean compareIssns(BibliographicItem r1, BibliographicItem r2, @Nullable Boolean isSameDois) {
         if (!r1.getIsbns().isEmpty() && !r2.getIsbns().isEmpty()) {
             if (UtilitiesService.setsContainSameString(r1.getIsbns(), r2.getIsbns())) {
                 log.trace("- 4. ISBNs are the same");
@@ -77,9 +77,9 @@ public class ComparisonService {
     }
 
     /*
-     * Does NOT compare the DOIs of 2 publications, but the field map.isSameDois in the compareSet method
+     * Does NOT compare the DOIs of 2 bibliographicItems, but the field map.isSameDois in the compareSet method
      */
-    public static boolean compareSameDois(Publication r1, Publication r2, @Nullable Boolean isSameDois) {
+    public static boolean compareSameDois(BibliographicItem r1, BibliographicItem r2, @Nullable Boolean isSameDois) {
         if (Boolean.TRUE.equals(isSameDois)) {
             if (log.isTraceEnabled()) {
                 log.trace("- 4. DOIs are the same (ISSNs and Journals are NOT compared)");

@@ -4,7 +4,7 @@ import java.util.Set;
 
 import org.apache.commons.text.similarity.JaroWinklerSimilarity;
 
-import edu.dedupendnote.domain.Publication;
+import edu.dedupendnote.domain.BibliographicItem;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -23,12 +23,12 @@ public class DefaultTitleComparisonService implements TitleComparisonService {
     }
 
     @Override
-    public boolean compare(Publication r1, Publication r2) {
+    public boolean compare(BibliographicItem r1, BibliographicItem r2) {
         if (r1.isReply() || r2.isReply()) {
             return true;
         }
         if (r1.isClinicalTrialGov() && r2.isClinicalTrialGov()) {
-            log.trace("- 3. Both publications are from ClinicalTrials.gov");
+            log.trace("- 3. Both bibliographicItems are from ClinicalTrials.gov");
             return true;
         }
 
@@ -40,7 +40,7 @@ public class DefaultTitleComparisonService implements TitleComparisonService {
         boolean isPhase = r1.isPhase() || r2.isPhase();
 
         if (titles1.isEmpty() || titles2.isEmpty()) {
-            log.trace("- 3. No comparison of titles because no titles for at least one publication");
+            log.trace("- 3. No comparison of titles because no titles for at least one bibliographicItem");
             return true;
         }
         Double highestSimilarity = 0.0;

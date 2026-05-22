@@ -16,7 +16,7 @@ import edu.dedupendnote.services.DefaultJournalComparisonService;
 import edu.dedupendnote.services.DefaultTitleComparisonService;
 import edu.dedupendnote.services.IOService;
 import edu.dedupendnote.services.NormalizationService;
-import edu.dedupendnote.domain.Publication;
+import edu.dedupendnote.domain.BibliographicItem;
 
 @TestConfiguration
 class ComparisonServiceTest {
@@ -24,8 +24,8 @@ class ComparisonServiceTest {
 	@ParameterizedTest(name = "{index}: compareIssns({0}, {1})={2}")
 	@MethodSource("issnArgumentProvider")
 	void compareIssnsTest(String issn1, String issn2, boolean expected) {
-		Publication p1 = new Publication();
-		Publication p2 = new Publication();
+		BibliographicItem p1 = new BibliographicItem();
+		BibliographicItem p2 = new BibliographicItem();
 		p1.getIssns().addAll(NormalizationService.normalizeInputIssns(issn1).issns());
 		p2.getIssns().addAll(NormalizationService.normalizeInputIssns(issn2).issns());
 
@@ -36,8 +36,8 @@ class ComparisonServiceTest {
 	@ParameterizedTest(name = "{index}: compareJournals({0}, {1})={2}")
 	@MethodSource("journalArgumentProvider")
 	void compareJournalsTest(String journal1, String journal2, boolean expected) {
-		Publication p1 = new Publication();
-		Publication p2 = new Publication();
+		BibliographicItem p1 = new BibliographicItem();
+		BibliographicItem p2 = new BibliographicItem();
 		IOService.addNormalizedJournal(journal1, p1, "T2");
 		IOService.addNormalizedJournal(journal2, p2, "T2");
 
@@ -52,8 +52,8 @@ class ComparisonServiceTest {
 	@ParameterizedTest(name = "{index}: compareTitles({0}, {1})={2}")
 	@MethodSource("titleArgumentProvider")
 	void compareTitlesTest(String title1, String title2, boolean expected) {
-		Publication p1 = new Publication();
-		Publication p2 = new Publication();
+		BibliographicItem p1 = new BibliographicItem();
+		BibliographicItem p2 = new BibliographicItem();
 		IOService.addNormalizedTitle(title1, p1);
 		IOService.addNormalizedTitle(title2, p2);
 
@@ -70,7 +70,7 @@ class ComparisonServiceTest {
 				arguments("Different Journal", "Another Journal", false),
 				// own tests
 				arguments("Ann Intern Med", "ANNALS OF INTERNAL MEDICINE", true),
-				arguments("ARTHROSCOPY-THE JOURNAL OF ARTHROSCOPIC AND RELATED SURGERY", "Arthroscopy : the journal of arthroscopic & related surgery : official publication of the Arthroscopy Association of North America and the International Arthroscopy Association", true),
+				arguments("ARTHROSCOPY-THE JOURNAL OF ARTHROSCOPIC AND RELATED SURGERY", "Arthroscopy : the journal of arthroscopic & related surgery : official bibliographicItem of the Arthroscopy Association of North America and the International Arthroscopy Association", true),
 				// abbreviations which can't be matched
 				arguments("Un med canada", "Union Med Can", false)
 			);

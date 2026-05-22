@@ -7,17 +7,17 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import edu.dedupendnote.domain.AuthorRecord;
-import edu.dedupendnote.domain.Publication;
+import edu.dedupendnote.domain.BibliographicItem;
 import edu.dedupendnote.services.NormalizationService;
 
 /*
  * Used in tests for evaluating alternatives.
  *
- * This may be easier than using a strategy pattern for Publication.addAuthors(String author)
+ * This may be easier than using a strategy pattern for BibliographicItem.addAuthors(String author)
  * 
  * See https://github.com/globbestael/DedupEndNote/issues/51 for a big refactoring
  */
-public class PublicationExperiment extends Publication {
+public class BibliographicItemExperiment extends BibliographicItem {
 
 	Pattern firstLettersPattern = Pattern.compile("\\b[A-Z]");
 	Pattern toFirstLettersPattern = Pattern.compile("^(.*) ([A-Z]+)$");

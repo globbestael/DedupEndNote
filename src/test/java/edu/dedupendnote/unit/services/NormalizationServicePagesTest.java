@@ -14,7 +14,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import edu.dedupendnote.services.IOService;
 import edu.dedupendnote.services.NormalizationService;
 import edu.dedupendnote.domain.PageRecord;
-import edu.dedupendnote.domain.Publication;
+import edu.dedupendnote.domain.BibliographicItem;
 
 class NormalizationServicePagesTest {
 
@@ -47,7 +47,7 @@ class NormalizationServicePagesTest {
 	@MethodSource("addNormalizedPagesArgumentProvider")
 	void normalizePagesTest_new(String c7Input, String seInput, String spInput, String expectedPageStart,
 			boolean expectedIsSeveralPages) {
-		Publication publication = new Publication();
+		BibliographicItem bibliographicItem = new BibliographicItem();
 		Map<String, String> pagesMap = new HashMap<>();
 		if (c7Input != null) {
 			pagesMap.put("C7", c7Input);
@@ -58,13 +58,13 @@ class NormalizationServicePagesTest {
 		if (spInput != null) {
 			pagesMap.put("SP", spInput);
 		}
-		IOService.addNormalizedPages(pagesMap, publication);
+		IOService.addNormalizedPages(pagesMap, bibliographicItem);
 
 		SoftAssertions.assertSoftly(softAssertions -> {
-			softAssertions.assertThat(publication.getPageStart())
+			softAssertions.assertThat(bibliographicItem.getPageStart())
 					.as("PageStart comparison for %s, %s, %s".formatted(c7Input, seInput, spInput))
 					.isEqualTo(expectedPageStart);
-			softAssertions.assertThat(publication.isSeveralPages())
+			softAssertions.assertThat(bibliographicItem.isSeveralPages())
 					.as("IsSeveralPages comparison for %s, %s, %s".formatted(c7Input, seInput, spInput))
 					.isEqualTo(expectedIsSeveralPages);
 		});

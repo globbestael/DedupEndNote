@@ -15,7 +15,7 @@ import org.junit.jupiter.api.Test;
 import edu.dedupendnote.services.DefaultJournalComparisonService;
 import edu.dedupendnote.services.IOService;
 import edu.dedupendnote.unit.BaseTest;
-import edu.dedupendnote.domain.Publication;
+import edu.dedupendnote.domain.BibliographicItem;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -100,9 +100,9 @@ WHERE t1.title2 <> t2.title2
 
 		for (int i = 0; i < triples.size(); i++) {
 			Triple triple = triples.get(i);
-			Publication p1 = new Publication();
+			BibliographicItem p1 = new BibliographicItem();
 			IOService.addNormalizedJournal(triple.journal1(), p1, "T2");
-			Publication p2 = new Publication();
+			BibliographicItem p2 = new BibliographicItem();
 			IOService.addNormalizedJournal(triple.journal2(), p2, "T2");
 
 			triples.set(i, triple.withSimilar(new DefaultJournalComparisonService().compare(p1, p2, false)));

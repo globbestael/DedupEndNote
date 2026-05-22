@@ -15,8 +15,8 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
-import edu.dedupendnote.domain.Publication;
-import edu.dedupendnote.domain.PublicationDB;
+import edu.dedupendnote.domain.BibliographicItem;
+import edu.dedupendnote.domain.BibliographicItemDB;
 import edu.dedupendnote.services.IOService;
 import edu.dedupendnote.services.NormalizationService;
 import edu.dedupendnote.services.UtilitiesService;
@@ -27,7 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 public class RecordDBService {
 
 	/*
-	 * FIXME: These are the same fieldnames as the @JSonPropertyOrder({...}) of PublicationDB. 
+	 * FIXME: These are the same fieldnames as the @JSonPropertyOrder({...}) of BibliographicItemDB. 
 	 * Can a Spring property be used in both cases? 
 	 * See:
 	 * https://stackoverflow.com/questions/35089257/conditional-jsonproperty-using-jackson-with-spring-boot 
@@ -41,19 +41,19 @@ public class RecordDBService {
 			"title_truncated", "title", "title2", "volume", "issue", "pages", "article_number", "dois", "publ_type",
 			"database", "number_authors");
 
-	public int writeMarkedRecordsForDB(List<Publication> publications, String inputFileName, String outputFileName) {
-		List<PublicationDB> publicationDBs = convertToRecordDB(publications, inputFileName);
+	public int writeMarkedRecordsForDB(List<BibliographicItem> bibliographicItems, String inputFileName, String outputFileName) {
+		List<BibliographicItemDB> publicationDBs = convertToRecordDB(bibliographicItems, inputFileName);
 		int numberWritten = saveRecordDBs(publicationDBs, outputFileName);
 		return numberWritten;
 	}
 
-	public int saveRecordDBs(List<PublicationDB> publicationDBs, String outputFileName) {
+	public int saveRecordDBs(List<BibliographicItemDB> publicationDBs, String outputFileName) {
 		// FIXME: alter to validation_results? Plus date?
 		outputFileName = outputFileName.replace("mark.", "markDB.");
 		log.debug("Start writing {} records to file {}", publicationDBs.size(), outputFileName);
 		try (BufferedWriter bw = new BufferedWriter(new FileWriter(outputFileName))) {
 			bw.write(DB_FIELDS.stream().collect(Collectors.joining("\t")) + "\n");
-			for (PublicationDB r : publicationDBs) {
+			for (BibliographicItemDB r : publicationDBs) {
 				writeRecordForDB(r, bw);
 			}
 		} catch (IOException e) {
@@ -63,17 +63,17 @@ public class RecordDBService {
 		return publicationDBs.size();
 	}
 
-	public List<PublicationDB> convertToRecordDB(List<Publication> publications, String inputFileName) {
+	public List<BibliographicItemDB> convertToRecordDB(List<BibliographicItem> bibliographicItems, String inputFileName) {
 		boolean hasBom = UtilitiesService.detectBom(inputFileName);
 
-		Map<String, Publication> recordIdMap = publications.stream()
+		Map<String, BibliographicItem> recordIdMap = bibliographicItems.stream()
 				.filter(r -> r.getId() != null && !r.getId().startsWith("-"))
-				.collect(Collectors.toMap(Publication::getId, Function.identity()));
+				.collect(Collectors.toMap(BibliographicItem::getId, Function.identity()));
 
-		List<PublicationDB> publicationDBs = new ArrayList<>();
+		List<BibliographicItemDB> publicationDBs = new ArrayList<>();
 		String fieldContent = null;
 		String fieldName = null;
-		PublicationDB publicationDB = new PublicationDB();
+		BibliographicItemDB publicationDB = new BibliographicItemDB();
 		Integer phantomId = 0;
 		String realId = null;
 
@@ -82,7 +82,7 @@ public class RecordDBService {
 				br.skip(1);
 			}
 			String line;
-			Publication publication = null;
+			BibliographicItem bibliographicItem = null;
 			while ((line = br.readLine()) != null) {
 				line = NormalizationService.normalizeHyphensAndWhitespace(line);
 				Matcher matcher = IOService.RIS_LINE_PATTERN.matcher(line);
@@ -107,17 +107,17 @@ public class RecordDBService {
 						if (realId == null) {
 							publicationDB.setId(phantomId);
 						}
-						publication = recordIdMap.get(String.valueOf(publicationDB.getId()));
-						if (publication != null) {
-							if (publication.getLabel() != null) {
-								publicationDB.setDedupid(Integer.valueOf(publication.getLabel()));
+						bibliographicItem = recordIdMap.get(String.valueOf(publicationDB.getId()));
+						if (bibliographicItem != null) {
+							if (bibliographicItem.getLabel() != null) {
+								publicationDB.setDedupid(Integer.valueOf(bibliographicItem.getLabel()));
 							}
 							publicationDBs.add(publicationDB);
 						}
-						publicationDB = new PublicationDB();
+						publicationDB = new BibliographicItemDB();
 						realId = null;
 						break;
-					case "ID": // EndNote Publication number
+					case "ID": // EndNote BibliographicItem number
 						publicationDB.setId(Integer.valueOf(fieldContent));
 						realId = line.substring(6);
 						break;
@@ -159,7 +159,7 @@ public class RecordDBService {
 		return publicationDBs;
 	}
 
-	private void writeRecordForDB(PublicationDB publicationDB, BufferedWriter bw) throws IOException {
+	private void writeRecordForDB(BibliographicItemDB publicationDB, BufferedWriter bw) throws IOException {
 		if (!publicationDB.getAuthorsList().isEmpty()) {
 			String authors = publicationDB.getAuthorsList().stream().collect(Collectors.joining("; "));
 			publicationDB.setAuthorsTruncated(authors.substring(0, Math.min(authors.length(), 254)));

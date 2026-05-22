@@ -48,7 +48,7 @@ DedupEndNote is a Spring Boot 4.0 / Java 21 web app that deduplicates bibliograp
 
 ### Key packages
 - `controllers/` — HTTP endpoints; file upload and dedup triggers; uses virtual threads (Java 21) for concurrent dedup runs; creates the `Consumer<String>` that routes progress messages to WebSocket
-- `domain/` — `Publication` (core model), `PublicationDB` (in-memory store), `NormPatterns` (50+ compiled regex patterns)
+- `domain/` — `BibliographicItem` (core model; domain term: Bibliographic Item), `BibliographicItemDB` (in-memory store), `NormPatterns` (50+ compiled regex patterns)
 - `services/` — business logic (see below)
 
 ### Services and their responsibilities
@@ -74,7 +74,7 @@ DedupEndNote is a Spring Boot 4.0 / Java 21 web app that deduplicates bibliograp
 ```
 Upload RIS file(s)
   → DeduplicationService (virtual thread)
-    → IOService.readPublications()   — parse + normalize all fields
+    → IOService.readBibliographicItems()   — parse + normalize all fields
     → ComparisonService              — O(n²) pair comparison, year-bucketed
     → DeduplicationService           — mark/remove duplicates, enrich kept records
     → IOService.writeOutput()        — write result RIS file

@@ -5,14 +5,14 @@ import java.util.Set;
 
 import org.jspecify.annotations.Nullable;
 
-import edu.dedupendnote.domain.Publication;
+import edu.dedupendnote.domain.BibliographicItem;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class DefaultPagesComparisonService implements PagesComparisonService {
 
     @Override
-    public boolean compare(Publication r1, Publication r2, Map<String, @Nullable Boolean> map) {
+    public boolean compare(BibliographicItem r1, BibliographicItem r2, Map<String, @Nullable Boolean> map) {
         Set<String> dois1 = r1.getDois();
         Set<String> dois2 = r2.getDois();
         boolean bothCochrane = r1.isCochrane() && r2.isCochrane();

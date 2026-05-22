@@ -157,8 +157,8 @@ public class NormPatterns {
 	/**
 	 * A number or ". Conference" and all following characters: The number and all following characters will be removed.
 	 * E.g.: 
-	 * - "Clinical neuropharmacology.12 Suppl 2 ()(pp v-xii; S1-105) 1989.Date of Publication: 1989." --> "Clinical neuropharmacology" 
-	 * - "European Respiratory Journal. Conference: European Respiratory Society Annual Congress" (Cochrane publications) --> "European Respiratory Journal"
+	 * - "Clinical neuropharmacology.12 Suppl 2 ()(pp v-xii; S1-105) 1989.Date of BibliographicItem: 1989." --> "Clinical neuropharmacology" 
+	 * - "European Respiratory Journal. Conference: European Respiratory Society Annual Congress" (Cochrane bibliographicItems) --> "European Respiratory Journal"
 	 */
 	public static final Pattern JOURNAL_EXTRA_PATTERN = Pattern.compile("^(.+?)((\\d+|\\. Conference.*))$");
 
@@ -294,7 +294,7 @@ public class NormPatterns {
 	 * The ValidationTest files showed 3 more examples: <35 vs. =/> <35 vs. > <ORIGINAL>
 	 *
 	 * e.g. in title Comparison of liver transplant outcomes for recipients with MELD <35 Vs. >35 The "<ORIGINAL>" cases
-	 * in the SRA2_Respiratory file with publications < 2000. Original database of publications unknown.
+	 * in the SRA2_Respiratory file with bibliographicItems < 2000. Original database of bibliographicItems unknown.
 	 *
 	 * Based on these results, the crude pointyBracketsPattern (regex "<[^>]+>") hasn't been changed. The method
 	 * normalizeJava8(...) has code (commented out) for comparing the crude and explicit version

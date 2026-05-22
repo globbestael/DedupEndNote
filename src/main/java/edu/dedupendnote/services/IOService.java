@@ -28,14 +28,14 @@ import org.springframework.stereotype.Service;
 import edu.dedupendnote.domain.AuthorRecord;
 import edu.dedupendnote.domain.IsbnIssnRecord;
 import edu.dedupendnote.domain.PageRecord;
-import edu.dedupendnote.domain.Publication;
-import edu.dedupendnote.domain.PublicationDB;
+import edu.dedupendnote.domain.BibliographicItem;
+import edu.dedupendnote.domain.BibliographicItemDB;
 import edu.dedupendnote.domain.TitleRecord;
 import lombok.extern.slf4j.Slf4j;
 
 /*
- * The input method readPublications calls the NormalizationService for some of the field data. 
- * This IOService class has a couple of methods (addNormalized...) which are used in readPublications 
+ * The input method readBibliographicItems calls the NormalizationService for some of the field data. 
+ * This IOService class has a couple of methods (addNormalized...) which are used in readBibliographicItems 
  * but also in the fixtures of the unit tests.
  */
 @Slf4j
@@ -43,7 +43,7 @@ import lombok.extern.slf4j.Slf4j;
 public class IOService {
 
 	/*
-	 * The titles of publications in these journals / books, are NOT normalized.
+	 * The titles of bibliographicItems in these journals / books, are NOT normalized.
 	 * The format of the titles of these journals / books is the output of addNormalizedJournal
 	 */
 	// @formatter:off
@@ -112,12 +112,12 @@ public class IOService {
 	 * - "Up-dating the monograph." [corrected] Cytolytic immune lymphocytes in the armamentarium of the human host
 	 * In the last example the correction follows the "[corrected]"?
 	 * 
-	 * Errata are treated in the same was as replies: In IOService::readPublications titles which match 
-	 * the erratumPattern also set the Publication::isReply field. In the comparisons of the DeduplicationService
+	 * Errata are treated in the same was as replies: In IOService::readBibliographicItems titles which match 
+	 * the erratumPattern also set the BibliographicItem::isReply field. In the comparisons of the DeduplicationService
 	 * and in the enrich steps they are treated exactly like replies.
 	 * 
 	 * Because the errata titles are skipped in the DeduplicationService::compareTtitlesm, there is NO proprocessing
-	 * of them in Publication::addTitles.
+	 * of them in BibliographicItem::addTitles.
 	 */
 	// @formatter:on
 	// FIXME: Can some of these 4 patterns be merged?
@@ -138,9 +138,9 @@ public class IOService {
 	public static final Pattern RIS_LINE_PATTERN = Pattern.compile("(^[A-Z][A-Z0-9])( {2}-[ ,\\u00A0])(.*)$");
 
 	/*
-	 * readPublications: called in the first phase (before the comparison of publications), includes normalization of data.
+	 * readBibliographicItems: called in the first phase (before the comparison of bibliographicItems), includes normalization of data.
 	 * 
-	 * There are several public write... methods in this class which read the publications:
+	 * There are several public write... methods in this class which read the bibliographicItems:
 	 * - no / harldy any normalization
 	 * - result stored in a Map<String, String>
 	 */
@@ -150,39 +150,39 @@ public class IOService {
 		}
 	}
 
-	public List<Publication> readPublications(String inputFileName, Consumer<String> progressReporter) {
-		return readPublications(inputFileName, progressReporter, false);
+	public List<BibliographicItem> readBibliographicItems(String inputFileName, Consumer<String> progressReporter) {
+		return readBibliographicItems(inputFileName, progressReporter, false);
 	}
 
 	/**
-	 * Reads a RIS file into Publication objects, optionally reading the LB (Label) field.
+	 * Reads a RIS file into BibliographicItem objects, optionally reading the LB (Label) field.
 	 *
 	 * <p>The Label field is normally skipped during reading. Mark mode writes the ID of the
 	 * kept record into the LB field of every duplicate; this deliberately overwrites any LB
 	 * content from the user's original file, which is documented behaviour. To avoid carrying
 	 * a stale label from a previously marked file into a new deduplication run, the two-arg
-	 * {@link #readPublications(String, Consumer)} always passes {@code includeLabelField=false}.
+	 * {@link #readBibliographicItems(String, Consumer)} always passes {@code includeLabelField=false}.
 	 *
 	 * <p>Pass {@code includeLabelField=true} ONLY when reading a mark-mode output file for
 	 * validation purposes (ValidationTests / ValidationService). No production caller should
 	 * pass {@code true}.
 	 */
-	public List<Publication> readPublications(String inputFileName, Consumer<String> progressReporter,
+	public List<BibliographicItem> readBibliographicItems(String inputFileName, Consumer<String> progressReporter,
 			boolean includeLabelField) {
-		List<Publication> publications = new ArrayList<>();
+		List<BibliographicItem> bibliographicItems = new ArrayList<>();
 		String fieldContent = null;
 		String fieldName = null;
 		Map<String, String> pagesInputMap = new HashMap<>();
 		String previousFieldName = "XYZ";
 		/*
-		 * With publications from clinicaltrials.gov the raw title must be recorded in publication.title. The publications
+		 * With bibliographicItems from clinicaltrials.gov the raw title must be recorded in bibliographicItem.title. The bibliographicItems
 		 * can be identified by the content of the T2 or UR field. The first comes before the TI field, 
 		 * the second after the TI field. We need this titleCache field for this second case, but use it after
 		 * reading the ER field
 		 */
 		String titleCache = null;
 		String journalCache = null;
-		Publication publication = new Publication();
+		BibliographicItem bibliographicItem = new BibliographicItem();
 
 		boolean hasBom = UtilitiesService.detectBom(inputFileName);
 		int missingId = 1;
@@ -217,10 +217,10 @@ public class IOService {
 						if (fieldContent.contains("; ")) {
 							List<String> authors = Arrays.asList(fieldContent.split("; "));
 							for (String author : authors) {
-								addNormalizedAuthor(author, publication);
+								addNormalizedAuthor(author, bibliographicItem);
 							}
 						} else {
-							addNormalizedAuthor(fieldContent, publication);
+							addNormalizedAuthor(fieldContent, bibliographicItem);
 						}
 						break;
 					case "C7": // article number (Scopus and WoS when imported as RIS format)
@@ -230,7 +230,7 @@ public class IOService {
 						if (fieldContent.startsWith("ARTN ")) {
 							pagesInputMap.put("C7", fieldContent);
 						} else {
-							publication.getDois().addAll(NormalizationService.normalizeInputDois(fieldContent));
+							bibliographicItem.getDois().addAll(NormalizationService.normalizeInputDois(fieldContent));
 						}
 						previousFieldName = fieldName;
 						break;
@@ -242,32 +242,32 @@ public class IOService {
 						pagesInputMap.put("SP", sp + "-" + fieldContent);
 						break;
 					case "ER":
-						if (publication.getId() == null) {
-							publication.setId(Integer.toString(missingId++));
+						if (bibliographicItem.getId() == null) {
+							bibliographicItem.setId(Integer.toString(missingId++));
 						}
-						if (publication.isClinicalTrialGov()) {
-							publication.getAuthors().clear();
-							String journal = publication.getJournals().stream()
+						if (bibliographicItem.isClinicalTrialGov()) {
+							bibliographicItem.getAuthors().clear();
+							String journal = bibliographicItem.getJournals().stream()
 									.filter(j -> j.startsWith("https://clinicaltrials.gov")).findFirst().orElse(null);
 							if (journal != null) {
 								// should handle EndNoe records which have already been standardized
 								String ctgId = journal.substring(journal.length() - 11);
 								if (ctgId.startsWith("NCT")) {
 									pagesInputMap.put("SP", ctgId);
-									publication.getJournals().remove(journal);
-									publication.getJournals().add("https://clinicaltrials.gov");
+									bibliographicItem.getJournals().remove(journal);
+									bibliographicItem.getJournals().add("https://clinicaltrials.gov");
 								}
 							}
-							publication.setTitle(titleCache);
+							bibliographicItem.setTitle(titleCache);
 						}
-						fillAllAuthors(publication);
-						addNormalizedPages(pagesInputMap, publication);
-						if (publication.isSeveralPages) {
-							addReversedTitles(publication);
+						fillAllAuthors(bibliographicItem);
+						addNormalizedPages(pagesInputMap, bibliographicItem);
+						if (bibliographicItem.isSeveralPages) {
+							addReversedTitles(bibliographicItem);
 						}
-						publications.add(publication);
+						bibliographicItems.add(bibliographicItem);
 						if (totalRecords > 0) {
-							int newPct = (int)(100L * publications.size() / totalRecords);
+							int newPct = (int) (100L * bibliographicItems.size() / totalRecords);
 							if (newPct != lastPct) {
 								progressReporter.accept("PROGRESS: " + newPct);
 								lastPct = newPct;
@@ -276,41 +276,42 @@ public class IOService {
 
 						journalCache = null;
 						titleCache = null;
-						publication = new Publication();
+						bibliographicItem = new BibliographicItem();
 						pagesInputMap.clear();
-						log.debug("Publication read with id {} and title: {}", publication.getId(),
-								(publication.getTitles().isEmpty() ? "(none)" : publication.getTitles().getFirst()));
+						log.debug("BibliographicItem read with id {} and title: {}", bibliographicItem.getId(),
+								(bibliographicItem.getTitles().isEmpty() ? "(none)"
+										: bibliographicItem.getTitles().getFirst()));
 						break;
-					case "ID": // EndNote Publication number
-						publication.setId(fieldContent);
+					case "ID": // EndNote BibliographicItem number
+						bibliographicItem.setId(fieldContent);
 						// log.debug("Read ID {}", fieldContent);
 						break;
 					case "J2": // Alternate journal
-						addNormalizedJournal(fieldContent, publication, fieldName);
+						addNormalizedJournal(fieldContent, bibliographicItem, fieldName);
 						break;
 					case "LB": // Label (deduplication group ID written by mark mode)
 						if (includeLabelField) {
 							// LB is a single short integer ID; continuation lines are not expected
-							publication.setLabel(fieldContent);
+							bibliographicItem.setLabel(fieldContent);
 						}
 						break;
 					case "OP":
 						// in PubMed: original title, in Web of Science (at least for conference papers): conference
 						// title
-						if ("CONF".equals(publication.getReferenceType())) {
-							addNormalizedJournal(fieldContent, publication, fieldName);
+						if ("CONF".equals(bibliographicItem.getReferenceType())) {
+							addNormalizedJournal(fieldContent, bibliographicItem, fieldName);
 						} else {
-							addNormalizedTitle(fieldContent, publication);
+							addNormalizedTitle(fieldContent, bibliographicItem);
 						}
 						break;
-					case "PY": // Publication year
-						publication
+					case "PY": // BibliographicItem year
+						bibliographicItem
 								.setPublicationYear(NormalizationService.normalizeInputPublicationYear(fieldContent));
 						break;
 					case "SN": // ISSN / ISBN
 						IsbnIssnRecord normalized = NormalizationService.normalizeInputIssns(line);
-						publication.getIsbns().addAll(normalized.isbns());
-						publication.getIssns().addAll(normalized.issns());
+						bibliographicItem.getIsbns().addAll(normalized.isbns());
+						bibliographicItem.getIssns().addAll(normalized.issns());
 						previousFieldName = fieldName;
 						break;
 					// Ovid Medline in RIS export has author address in repeatable M2 field,
@@ -329,15 +330,15 @@ public class IOService {
 					 * See below in continuation line of TI for PubMed chapters
 					 */
 					case "ST": // Original Title in Scopus
-						addNormalizedTitle(fieldContent, publication);
+						addNormalizedTitle(fieldContent, bibliographicItem);
 						break;
 					case "T2": // Journal title / Book title
 						journalCache = fieldContent;
 						if (fieldContent.startsWith("http") && fieldContent.contains("//clinicaltrials.gov")) {
 							fieldContent = fieldContent.replace("http:", "https:");
-							publication.setClinicalTrialGov(true);
+							bibliographicItem.setClinicalTrialGov(true);
 						}
-						addNormalizedJournal(fieldContent, publication, fieldName);
+						addNormalizedJournal(fieldContent, bibliographicItem, fieldName);
 						break;
 					// @formatter:off
 					/*
@@ -348,7 +349,7 @@ public class IOService {
 					 * T3 for PsycINFO (OVID) also puts alternative journal names in this field, sometimes more than one separated with a comma:
 					 * 		T2  - Archives of Neurology
 					 * 		T3  - A.M.A. Archives of Neurology, JAMA Neurology
-					 *   ???: Many cases where T3 has the predecessor(s) of the journal of the publication.
+					 *   ???: Many cases where T3 has the predecessor(s) of the journal of the bibliographicItem.
 					 *   BUT: PsycINFO (OVID) also has the original title in T2 and the journal of T3 (ovid URL has "D=psyc10":is this PsycINFO?)
 					 * T3 for PubMed can have "Retraction of: ...", "Retraction in: ...", ... e.g.
 					 * - Retraction of: Cancer Lett. 2022 Mar 31;529:19-36. doi: 10.1016/j.canlet.2021.12.032 PMID: 34979165 [https://pubmed.ncbi.nlm.nih.gov/34979165]
@@ -371,15 +372,15 @@ public class IOService {
 					case "T3": // Book section
 						if (!fieldContent.startsWith("Retract") && !CONFERENCE_PATTERN.matcher(fieldContent).matches()
 								&& fieldContent.length() > 3) {
-							addNormalizedJournal(fieldContent, publication, fieldName);
-							addNormalizedTitle(fieldContent, publication);
+							addNormalizedJournal(fieldContent, bibliographicItem, fieldName);
+							addNormalizedTitle(fieldContent, bibliographicItem);
 
 							// This commented out code was an unsuccessful attempt to make better choices with the
 							// McKeown test file.
 							// See Github issue 53
 							//
-							// if (!publication.getIsbns().isEmpty()) {
-							// addNormalizedJournal(fieldContent, publication, fieldName);
+							// if (!bibliographicItem.getIsbns().isEmpty()) {
+							// addNormalizedJournal(fieldContent, bibliographicItem, fieldName);
 							// } else {
 							// /*
 							// * Compare its length with the length of the (cached)Journal (T2) and of the first title
@@ -388,13 +389,13 @@ public class IOService {
 							// */
 							// int jlength = Math.abs(journalCache.length() - fieldContent.length());
 							// int tlength = Math
-							// .abs(publication.getTitles().getFirst().length() - fieldContent.length());
-							// log.error("\nTI: {}\nJO: {}\nT3: {}\n\n", publication.getTitles().getFirst(),
+							// .abs(bibliographicItem.getTitles().getFirst().length() - fieldContent.length());
+							// log.error("\nTI: {}\nJO: {}\nT3: {}\n\n", bibliographicItem.getTitles().getFirst(),
 							// journalCache, fieldContent);
 							// if (jlength < tlength - 15) {
-							// addNormalizedJournal(fieldContent, publication, fieldName);
+							// addNormalizedJournal(fieldContent, bibliographicItem, fieldName);
 							// } else {
-							// addNormalizedTitle(fieldContent, publication);
+							// addNormalizedTitle(fieldContent, bibliographicItem);
 							// }
 							// }
 						}
@@ -402,39 +403,39 @@ public class IOService {
 					// ??? in Embase the original title is on the continuation line of ST and TI:
 					// "Een 45-jarige patiente met chronische koliekachtige abdominale pijn". Not found in test set!
 					case "TI": // Title
-						addNormalizedTitle(fieldContent, publication);
-						// Don't do this in IOService::readPublications because these 2 patterns are only applied to TI
+						addNormalizedTitle(fieldContent, bibliographicItem);
+						// Don't do this in IOService::readBibliographicItems because these 2 patterns are only applied to TI
 						// field, not to the other fields which are added to List<String> titles
 						if (REPLY_PATTERN.matcher(fieldContent.toLowerCase()).matches()
 								|| ERRATUM_PATTERN.matcher(fieldContent).matches()
 								|| (fieldContent.endsWith(")") && SOURCE_PATTERN.matcher(fieldContent).matches())
 								|| COMMENT_PATTERN.matcher(fieldContent).matches()) {
-							publication.setReply(true);
-							publication.setTitle(fieldContent);
+							bibliographicItem.setReply(true);
+							bibliographicItem.setTitle(fieldContent);
 						}
 						if (PHASE_PATTERN.matcher(fieldContent.toLowerCase()).matches()) {
-							publication.setPhase(true);
+							bibliographicItem.setPhase(true);
 						}
 						titleCache = fieldContent;
 						previousFieldName = fieldName;
 						break;
 					// TODO: When does TT occur? is translated (i.e. original?) title
 					case "TY": // Type
-						publication = new Publication();
-						publication.setReferenceType(fieldContent);
+						bibliographicItem = new BibliographicItem();
+						bibliographicItem.setReferenceType(fieldContent);
 						break;
 					// do not use UR to extract more DOI's: see https://github.com/globbestael/DedupEndNote/issues/14
 					case "UR":
 						if (fieldContent.startsWith("http") && fieldContent.contains("//clinicaltrials.gov")) {
 							fieldContent = fieldContent.replace("http:", "https:");
-							publication.setClinicalTrialGov(true);
-							addNormalizedJournal(fieldContent, publication, fieldName);
+							bibliographicItem.setClinicalTrialGov(true);
+							addNormalizedJournal(fieldContent, bibliographicItem, fieldName);
 						}
 						previousFieldName = fieldName;
 						break;
 					case "VL":
 						if (fieldContent.length() > 10 && journalCache != null) {
-							addNormalizedJournal(journalCache + ". " + fieldContent, publication, fieldName);
+							addNormalizedJournal(journalCache + ". " + fieldContent, bibliographicItem, fieldName);
 						}
 						previousFieldName = fieldName;
 						break;
@@ -445,12 +446,12 @@ public class IOService {
 				} else { // continuation line
 					switch (previousFieldName) {
 					case "DO":
-						publication.getDois().addAll(NormalizationService.normalizeInputDois(line));
+						bibliographicItem.getDois().addAll(NormalizationService.normalizeInputDois(line));
 						break;
 					case "SN":
 						IsbnIssnRecord normalized = NormalizationService.normalizeInputIssns(line);
-						publication.getIsbns().addAll(normalized.isbns());
-						publication.getIssns().addAll(normalized.issns());
+						bibliographicItem.getIsbns().addAll(normalized.isbns());
+						bibliographicItem.getIssns().addAll(normalized.issns());
 						break;
 					/*
 					 * The ST field with continuation line has the same content as the TI field with its continuation line.
@@ -474,21 +475,21 @@ public class IOService {
 						 * This switch statement does not need to have a case for ST. The solution (below) would be
 						 * even be more complex if there was a case ST.
 						 */
-						if ("CHAP".equals(publication.getReferenceType())) {
-							publication.getTitles().clear();
-							addNormalizedTitle(line, publication);
+						if ("CHAP".equals(bibliographicItem.getReferenceType())) {
+							bibliographicItem.getTitles().clear();
+							addNormalizedTitle(line, bibliographicItem);
 						} else {
 							/*
 							* EMBASE original title (at least for articles).
 							*/
-							addNormalizedTitle(line, publication);
+							addNormalizedTitle(line, bibliographicItem);
 						}
 						break;
 					case "UR":
 						if (line.startsWith("http") && line.contains("//clinicaltrials.gov")) {
 							line = line.replace("http:", "https:");
-							publication.setClinicalTrialGov(true);
-							addNormalizedJournal(line, publication, "UR");
+							bibliographicItem.setClinicalTrialGov(true);
+							addNormalizedJournal(line, bibliographicItem, "UR");
 						}
 						break;
 					default:
@@ -505,62 +506,63 @@ public class IOService {
 			log.error("In field {} with content {}: other exception: {}", fieldName, fieldContent, e.getMessage());
 			e.printStackTrace();
 		}
-		log.debug("Publications read: {}", publications.size());
-		return publications;
+		log.debug("Publications read: {}", bibliographicItems.size());
+		return bibliographicItems;
 	}
 
-	public static void addNormalizedAuthor(String fieldContent, Publication publication) {
+	public static void addNormalizedAuthor(String fieldContent, BibliographicItem bibliographicItem) {
 		AuthorRecord normalizedAuthor = NormalizationService.normalizeInputAuthors(fieldContent);
 		if (normalizedAuthor.author() != null) {
-			publication.getAuthors().add(normalizedAuthor.author());
-			publication.getAuthorsTransposed().add(normalizedAuthor.authorTransposed());
+			bibliographicItem.getAuthors().add(normalizedAuthor.author());
+			bibliographicItem.getAuthorsTransposed().add(normalizedAuthor.authorTransposed());
 			if (normalizedAuthor.isAuthorTransposed()) {
-				publication.setAuthorsAreTransposed(true);
+				bibliographicItem.setAuthorsAreTransposed(true);
 			}
 		}
 	}
 
-	public static void addNormalizedJournal(String fieldContent, Publication publication, String fieldName) {
+	public static void addNormalizedJournal(String fieldContent, BibliographicItem bibliographicItem,
+			String fieldName) {
 		if (fieldContent.toLowerCase().contains("cochrane")) {
-			publication.setCochrane(true);
+			bibliographicItem.setCochrane(true);
 		}
-		publication.getJournals().addAll(NormalizationService.normalizeInputJournals(fieldContent, fieldName));
+		bibliographicItem.getJournals().addAll(NormalizationService.normalizeInputJournals(fieldContent, fieldName));
 	}
 
-	public static void addNormalizedPages(Map<String, String> pagesInputMap, Publication publication) {
-		publication.setPagesInput(pagesInputMap.toString());
+	public static void addNormalizedPages(Map<String, String> pagesInputMap, BibliographicItem bibliographicItem) {
+		bibliographicItem.setPagesInput(pagesInputMap.toString());
 
-		if (publication.isCochrane() && pagesInputMap.isEmpty()) {
-			String c7 = getCochranePagesFromDoi(publication);
+		if (bibliographicItem.isCochrane() && pagesInputMap.isEmpty()) {
+			String c7 = getCochranePagesFromDoi(bibliographicItem);
 			if (c7 != null) {
 				pagesInputMap.put("C7", c7);
 			}
 		}
 
-		String publicationId = (publication.getId() == null ? "0" : publication.getId());
+		String bibliographicItemId = (bibliographicItem.getId() == null ? "0" : bibliographicItem.getId());
 
-		PageRecord normalizedPages = NormalizationService.normalizeInputPages(pagesInputMap, publicationId);
-		publication.setPageStart(normalizedPages.pageStart());
-		publication.setPagesOutput(normalizedPages.pagesOutput());
-		publication.setSeveralPages(normalizedPages.isSeveralPages());
+		PageRecord normalizedPages = NormalizationService.normalizeInputPages(pagesInputMap, bibliographicItemId);
+		bibliographicItem.setPageStart(normalizedPages.pageStart());
+		bibliographicItem.setPagesOutput(normalizedPages.pagesOutput());
+		bibliographicItem.setSeveralPages(normalizedPages.isSeveralPages());
 	}
 
-	public static void addNormalizedTitle(String fieldContent, Publication publication) {
-		if (UtilitiesService.setsContainSameString(skipNormalizationTitleFor, publication.getJournals())) {
-			publication.getTitles().clear();
-			publication.getTitles().add(fieldContent);
+	public static void addNormalizedTitle(String fieldContent, BibliographicItem bibliographicItem) {
+		if (UtilitiesService.setsContainSameString(skipNormalizationTitleFor, bibliographicItem.getJournals())) {
+			bibliographicItem.getTitles().clear();
+			bibliographicItem.getTitles().add(fieldContent);
 		} else {
 			TitleRecord normalizedTitle = NormalizationService.normalizeInputTitles(fieldContent);
-			publication.getTitles().addAll(normalizedTitle.titles());
+			bibliographicItem.getTitles().addAll(normalizedTitle.titles());
 			if (normalizedTitle.originalTitle() != null) {
-				publication.setTitle(normalizedTitle.originalTitle());
+				bibliographicItem.setTitle(normalizedTitle.originalTitle());
 			}
 		}
 	}
 
-	public static void addReversedTitles(Publication publication) {
-		if (!UtilitiesService.setsContainSameString(skipNormalizationTitleFor, publication.getJournals())) {
-			SequencedSet<String> titles = publication.getTitles();
+	public static void addReversedTitles(BibliographicItem bibliographicItem) {
+		if (!UtilitiesService.setsContainSameString(skipNormalizationTitleFor, bibliographicItem.getJournals())) {
+			SequencedSet<String> titles = bibliographicItem.getTitles();
 			if (!titles.isEmpty()) {
 				List<String> reversed = new ArrayList<>();
 				for (String t : titles) {
@@ -571,19 +573,19 @@ public class IOService {
 		}
 	}
 
-	public static void fillAllAuthors(Publication publication) {
-		List<String> authors = publication.getAuthors();
+	public static void fillAllAuthors(BibliographicItem bibliographicItem) {
+		List<String> authors = bibliographicItem.getAuthors();
 		if (authors.isEmpty()) {
 			return;
 		}
 
 		String s = authors.stream().limit(40).collect(Collectors.joining("; "));
-		publication.getAllAuthors().add(s);
+		bibliographicItem.getAllAuthors().add(s);
 		// DONT: lowercasing the names makes different authors closer to 1.0
 
-		if (publication.isAuthorsAreTransposed()) {
-			publication.getAllAuthors()
-					.add(publication.getAuthorsTransposed().stream().limit(40).collect(Collectors.joining("; ")));
+		if (bibliographicItem.isAuthorsAreTransposed()) {
+			bibliographicItem.getAllAuthors()
+					.add(bibliographicItem.getAuthorsTransposed().stream().limit(40).collect(Collectors.joining("; ")));
 		}
 	}
 
@@ -591,25 +593,25 @@ public class IOService {
 	/**
 	 * - PageStart (PG) and DOIs (DO) are replaced or inserted, but written at the same place as in the input file to
 	 *   make comparisons between input file and output file easier.
-	 * - Absent Publication year (PY) is replaced if there is one found in a duplicate record.
+	 * - Absent BibliographicItem year (PY) is replaced if there is one found in a duplicate record.
 	 * - Author (AU) Anonymous is skipped.
 	 * - Title (TI) is replaced with the longest duplicate title when it contains "Reply".
 	 * - Article Number (C7) is skipped.
 	 * - Absent Journal Name (T2) is copied from J2 (or filed in based on DOI foor SSRN): for embase.com records
 	 *   (but no check on this origin!)
 	 *
-	 * Publications are read into a TreeMap, with continuation lines added. 
-	 * writePublications(...) does the replacements, and writes to the output file.
+	 * bibliographicItems are read into a TreeMap, with continuation lines added. 
+	 * writebibliographicItems(...) does the replacements, and writes to the output file.
 	 */
 	// @formatter:off
-	public int writeDeduplicatedPublications(List<Publication> publications, String inputFileName, String outputFileName) {
+	public int writeDeduplicatedBibliographicItems(List<BibliographicItem> bibliographicItems, String inputFileName, String outputFileName) {
 		log.debug("Start writing to file {}", outputFileName);
-		List<Publication> recordsToKeep = publications.stream().filter(Publication::isKeptPublication).toList();
-		log.debug("Publications to be kept: {}", recordsToKeep.size());
+		List<BibliographicItem> bibliographicItemsToKeep = bibliographicItems.stream().filter(BibliographicItem::isKeptBibliographicItem).toList();
+		log.debug("Publications to be kept: {}", bibliographicItemsToKeep.size());
 
-		Map<String, Publication> recordIdMap = publications.stream()
+		Map<String, BibliographicItem> recordIdMap = bibliographicItems.stream()
 			.filter(p -> p.getId() != null && !p.getId().startsWith("-"))
-			.collect(Collectors.toMap(Publication::getId, Function.identity()));
+			.collect(Collectors.toMap(BibliographicItem::getId, Function.identity()));
 
 		int numberWritten = 0;
 		int lineNumber = 0;
@@ -626,7 +628,7 @@ public class IOService {
 				br.skip(1);
 			}
 			String line;
-			Publication publication = null;
+			BibliographicItem bibliographicItem = null;
 			Integer phantomId = 0;
 			String realId = null;
 
@@ -643,23 +645,23 @@ public class IOService {
 						map.put(fieldName, fieldContent);
 						phantomId++;
 						if (realId == null) {
-							publication = recordIdMap.get(phantomId.toString());
-							if (publication != null) {
-								publication.setId(phantomId.toString());
+							bibliographicItem = recordIdMap.get(phantomId.toString());
+							if (bibliographicItem != null) {
+								bibliographicItem.setId(phantomId.toString());
 								map.put("ID", phantomId.toString());
 							}
 						}
-						if (publication != null && publication.isKeptPublication()) {
-							writePublication(map, publication, bw, true);
+						if (bibliographicItem != null && bibliographicItem.isKeptBibliographicItem()) {
+							writeBibliographicItem(map, bibliographicItem, bw, true);
 							numberWritten++;
 						}
 						map.clear();
 						realId = null;
 						break;
-					case "ID": // EndNote Publication number
+					case "ID": // EndNote BibliographicItem number
 						map.put(fieldName, fieldContent);
 						realId = line.substring(6);
-						publication = recordIdMap.get(realId);
+						bibliographicItem = recordIdMap.get(realId);
 						break;
 					default:
 						if (map.containsKey(fieldName)) {
@@ -689,14 +691,14 @@ public class IOService {
 		return numberWritten;
 	}
 
-	public int writeMarkedPublications(List<Publication> publications, String inputFileName, String outputFileName) {
+	public int writeMarkedBibliographicItems(List<BibliographicItem> bibliographicItems, String inputFileName, String outputFileName) {
 		log.debug("Start writing to file {}", outputFileName);
-		List<Publication> recordsToKeep = publications.stream().filter(Publication::isKeptPublication).toList();
-		log.debug("Publications to be kept: {}", recordsToKeep.size());
+		List<BibliographicItem> bibliographicItemsToKeep = bibliographicItems.stream().filter(BibliographicItem::isKeptBibliographicItem).toList();
+		log.debug("Publications to be kept: {}", bibliographicItemsToKeep.size());
 
-		Map<String, Publication> recordIdMap = publications.stream()
+		Map<String, BibliographicItem> recordIdMap = bibliographicItems.stream()
 			.filter(p -> p.getId() != null && !p.getId().startsWith("-"))
-			.collect(Collectors.toMap(Publication::getId, Function.identity()));
+			.collect(Collectors.toMap(BibliographicItem::getId, Function.identity()));
 
 		int numberWritten = 0;
 		String fieldContent = null;
@@ -712,7 +714,7 @@ public class IOService {
 				br.skip(1);
 			}
 			String line;
-			Publication publication = null;
+			BibliographicItem bibliographicItem = null;
 			Integer phantomId = 0;
 			String realId = null;
 
@@ -727,27 +729,27 @@ public class IOService {
 					case "ER":
 						phantomId++;
 						if (realId == null) {
-							publication = recordIdMap.get(phantomId.toString());
-							if (publication != null) {
-								publication.setId(phantomId.toString());
+							bibliographicItem = recordIdMap.get(phantomId.toString());
+							if (bibliographicItem != null) {
+								bibliographicItem.setId(phantomId.toString());
 							}
 							map.put("ID", phantomId.toString());
 						}
-						if (publication != null && publication.isKeptPublication()) {
+						if (bibliographicItem != null && bibliographicItem.isKeptBibliographicItem()) {
 							map.put(fieldName, fieldContent);
-							if (publication.getLabel() != null) {
-								map.put("LB", publication.getLabel());
+							if (bibliographicItem.getLabel() != null) {
+								map.put("LB", bibliographicItem.getLabel());
 							}
-							writePublication(map, publication, bw, false);
+							writeBibliographicItem(map, bibliographicItem, bw, false);
 							numberWritten++;
 						}
 						map.clear();
 						realId = null;
 						break;
-					case "ID": // EndNote Publication number
+					case "ID": // EndNote BibliographicItem number
 						map.put(fieldName, fieldContent);
 						realId = fieldContent;
-						publication = recordIdMap.get(realId);
+						bibliographicItem = recordIdMap.get(realId);
 						break;
 					case "LB":
 						break; // to ensure that the present Label is not used.
@@ -775,26 +777,26 @@ public class IOService {
 	 * Ordering of an EndNote export RIS file: the fields are ordered
 	 * alphabetically, except for TY (first), and ID and ER (last fields)
 	 */
-	private void writePublication(Map<String, String> map, @Nullable Publication publication, BufferedWriter bw, boolean enhance)
+	private void writeBibliographicItem(Map<String, String> map, @Nullable BibliographicItem bibliographicItem, BufferedWriter bw, boolean enhance)
 			throws IOException {
-		if (enhance && publication != null) {
-			if (!publication.getDois().isEmpty()) {
+		if (enhance && bibliographicItem != null) {
+			if (!bibliographicItem.getDois().isEmpty()) {
 				map.put("DO", "https://doi.org/"
-						+ publication.getDois().stream().collect(Collectors.joining("\nhttps://doi.org/")));
+						+ bibliographicItem.getDois().stream().collect(Collectors.joining("\nhttps://doi.org/")));
 			}
-			if (publication.getPagesOutput() == null || publication.getPagesOutput().isEmpty()) {
+			if (bibliographicItem.getPagesOutput() == null || bibliographicItem.getPagesOutput().isEmpty()) {
 				map.remove("SP");
 			} else {
-				map.put("SP", publication.getPagesOutput());
+				map.put("SP", bibliographicItem.getPagesOutput());
 			}
-			if (publication.isReply() || publication.getTitle() != null) {
-				map.put("TI", publication.getTitle());
-				map.put("ST", publication.getTitle());
+			if (bibliographicItem.isReply() || bibliographicItem.getTitle() != null) {
+				map.put("TI", bibliographicItem.getTitle());
+				map.put("ST", bibliographicItem.getTitle());
 			}
-			if (publication.isClinicalTrialGov()) {
+			if (bibliographicItem.isClinicalTrialGov()) {
 				map.put("TY", "JOUR");
 				map.put("T2", "https://clinicaltrials.gov");
-				String url = "https://clinicaltrials.gov/study/" + publication.getPageStart();
+				String url = "https://clinicaltrials.gov/study/" + bibliographicItem.getPageStart();
 				List<String> urlList = new ArrayList<>();
 				if (map.containsKey("UR")) {
 					String urls = map.get("UR");
@@ -814,11 +816,11 @@ public class IOService {
 			}
 
 			// Some unusual authors should be kept, e.g. Group authors 
-			if (publication.getAuthors().isEmpty() && ("Anonymous".equals(map.get("AU")) || "Nct".equals(map.get("AU")))) {
+			if (bibliographicItem.getAuthors().isEmpty() && ("Anonymous".equals(map.get("AU")) || "Nct".equals(map.get("AU")))) {
 				map.remove("AU");
 			}
-			if (!map.containsKey("PY") && publication.getPublicationYear() != 0) {
-				map.put("PY", publication.getPublicationYear().toString());
+			if (!map.containsKey("PY") && bibliographicItem.getPublicationYear() != 0) {
+				map.put("PY", bibliographicItem.getPublicationYear().toString());
 			}
 			if (!map.containsKey("T2")) {
 				if (map.containsKey("J2")) {
@@ -857,18 +859,18 @@ public class IOService {
 	 * Label.
 	 *
 	 * @param inputFileName  filename of a RIS export file
-	 * @param truthRecords   List<PublicationDB> of validated records (TAB delimited export file from validation DB)
+	 * @param truthRecords   List<BibliographicItemDB> of validated records (TAB delimited export file from validation DB)
 	 * @param outputFileName filename of a RIS file
 	 */
-	public void writeRisWithTRUTH(List<PublicationDB> truthRecords, String inputFileName, String outputFileName) {
+	public void writeRisWithTRUTH(List<BibliographicItemDB> truthRecords, String inputFileName, String outputFileName) {
 		int numberWritten = 0;
 		String fieldContent = null;
 		String fieldName = null;
 		String previousFieldName = "XYZ";
 		Map<String, String> map = new TreeMap<>();
 
-		Map<Integer, PublicationDB> truthMap = truthRecords.stream()
-				.collect(Collectors.toMap(PublicationDB::getId, Function.identity()));
+		Map<Integer, BibliographicItemDB> truthMap = truthRecords.stream()
+				.collect(Collectors.toMap(BibliographicItemDB::getId, Function.identity()));
 
 		boolean hasBom = UtilitiesService.detectBom(inputFileName);
 
@@ -893,9 +895,9 @@ public class IOService {
 							map.put(fieldName, fieldContent);
 							if (truthMap.containsKey(id)) {
 								if (truthMap.get(id).isTruePositive()) {
-									PublicationDB publicationDB = truthMap.get(id);
-									if (publicationDB.getDedupid() != null) {
-										map.put("LB", publicationDB.getDedupid().toString());
+									BibliographicItemDB bibliographicItemDB = truthMap.get(id);
+									if (bibliographicItemDB.getDedupid() != null) {
+										map.put("LB", bibliographicItemDB.getDedupid().toString());
 									} else {
 										map.put("LB", "");
 									}
@@ -907,12 +909,12 @@ public class IOService {
 							} else {
 								map.put("CA", "Unknown");
 							}
-							writePublication(map, null, bw, false);
+							writeBibliographicItem(map, null, bw, false);
 							numberWritten++;
 						}
 						map.clear();
 						break;
-					case "ID": // EndNote Publication number
+					case "ID": // EndNote BibliographicItem number
 						map.put(fieldName, fieldContent);
 						id = Integer.valueOf(fieldContent);
 						break;
@@ -935,15 +937,15 @@ public class IOService {
 		log.debug("Finished writing to file. # records: {}", numberWritten);
 	}
 
-	public void writeRisWithTRUTH_forDS(List<PublicationDB> truthRecords, String inputFileName, String outputFileName) {
+	public void writeRisWithTRUTH_forDS(List<BibliographicItemDB> truthRecords, String inputFileName, String outputFileName) {
 		int numberWritten = 0;
 		String fieldContent = null;
 		String fieldName = null;
 		String previousFieldName = "XYZ";
 		Map<String, String> map = new TreeMap<>();
 
-		Map<Integer, PublicationDB> truthMap = truthRecords.stream()
-				.collect(Collectors.toMap(PublicationDB::getId, Function.identity()));
+		Map<Integer, BibliographicItemDB> truthMap = truthRecords.stream()
+				.collect(Collectors.toMap(BibliographicItemDB::getId, Function.identity()));
 
 		boolean hasBom = UtilitiesService.detectBom(inputFileName);
 
@@ -969,9 +971,9 @@ public class IOService {
 							if (truthMap.containsKey(id)) {
 								map.put("CA", map.getOrDefault("CA", "").toUpperCase());
 								if (truthMap.get(id).isTruePositive()) {
-									PublicationDB publicationDB = truthMap.get(id);
-									if (publicationDB.getDedupid() != null) {
-										map.put("LB", publicationDB.getDedupid().toString());
+									BibliographicItemDB bibliographicItemDB = truthMap.get(id);
+									if (bibliographicItemDB.getDedupid() != null) {
+										map.put("LB", bibliographicItemDB.getDedupid().toString());
 									} else {
 										map.put("LB", "");
 									}
@@ -981,12 +983,12 @@ public class IOService {
 							} else {
 								map.put("CA", map.getOrDefault("CA", "").toLowerCase());
 							}
-							writePublication(map, null, bw, false);
+							writeBibliographicItem(map, null, bw, false);
 							numberWritten++;
 						}
 						map.clear();
 						break;
-					case "ID": // EndNote Publication number
+					case "ID": // EndNote BibliographicItem number
 						map.put(fieldName, fieldContent);
 						id = Integer.valueOf(fieldContent);
 						break;
@@ -1010,13 +1012,13 @@ public class IOService {
 	}
 
 	/**
-	 * Tries to extract ArticleNumber (C7) from the DOI of Cochrane publication.
+	 * Tries to extract ArticleNumber (C7) from the DOI of Cochrane bibliographicItem.
 	 * This function is only called if (1) isCochrane and (2) pagesInputMap is empty
 	 */
-	private static @Nullable String getCochranePagesFromDoi(Publication publication) {
+	private static @Nullable String getCochranePagesFromDoi(BibliographicItem bibliographicItem) {
 		String c7 = null;
-		log.debug("Reached Cochrane publication without pageStart, getting it from the DOIs: {}", publication.getAuthors());
-		for (String doi : publication.getDois()) {
+		log.debug("Reached Cochrane bibliographicItem without pageStart, getting it from the DOIs: {}", bibliographicItem.getAuthors());
+		for (String doi : bibliographicItem.getDois()) {
 			Matcher matcher = DeduplicationService.COCHRANE_DOI_PATTERN.matcher(doi);
 			if (matcher.matches()) {
 				c7 = matcher.group(1);

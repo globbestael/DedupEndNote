@@ -8,7 +8,7 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import edu.dedupendnote.domain.Publication;
+import edu.dedupendnote.domain.BibliographicItem;
 import edu.dedupendnote.integration.AbstractIntegrationTest;
 import edu.dedupendnote.services.AuthorThresholds;
 import edu.dedupendnote.services.ComparisonService;
@@ -61,12 +61,12 @@ class AuthorExperimentsTests extends AbstractIntegrationTest {
 
 		long start = System.currentTimeMillis();
 		expService.deduplicateOneFile(inputFile, markFile, /* markMode= */ true, message -> {});
-		List<Publication> publications = ioService.readPublications(markFile, message -> {}, /* includeLabelField= */ true);
+		List<BibliographicItem> bibliographicItems = ioService.readBibliographicItems(markFile, message -> {}, /* includeLabelField= */ true);
 		long duration = System.currentTimeMillis() - start;
 
 		ValidationResult expResult = validationService.checkResults(
 				"SRA2_Haematology_experimental", inputFile, outputFile, truthFile,
-				publications, duration, /* withTracing= */ false, expService);
+				bibliographicItems, duration, /* withTracing= */ false, expService);
 
 		// Higher author thresholds miss more duplicates (lower sensitivity) …
 		assertThat(expResult.getSensitivity()).isLessThan(baseline.getSensitivity());

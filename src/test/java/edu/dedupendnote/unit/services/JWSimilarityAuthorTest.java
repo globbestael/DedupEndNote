@@ -14,7 +14,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import edu.dedupendnote.services.AuthorThresholds;
 import edu.dedupendnote.services.AuthorsComparisonService;
 import edu.dedupendnote.services.DefaultAuthorsComparisonService;
-import edu.dedupendnote.domain.Publication;
+import edu.dedupendnote.domain.BibliographicItem;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -42,8 +42,8 @@ class JWSimilarityAuthorTest extends AuthorsBaseTest {
 	@MethodSource("positiveAuthorsProvider")
 	void jwFullPositiveTest_highest_similarity(String input1, String input2, double lowestAcceptedSimilarity,
 			double highSimilarity) {
-		Publication r1 = fillPublication(input1);
-		Publication r2 = fillPublication(input2);
+		BibliographicItem r1 = fillBibliographicItem(input1);
+		BibliographicItem r2 = fillBibliographicItem(input2);
 		// printMultipleAuthorStrings(input1, input2, r1, r2);
 		Double highestSimilarity = 0.0;
 
@@ -69,8 +69,8 @@ class JWSimilarityAuthorTest extends AuthorsBaseTest {
 	@MethodSource("positiveAuthorsProvider")
 	void jwFullPositiveTest_lowest_accepted_similarity(String input1, String input2, double lowestAcceptedSimilarity,
 			double highestSimilarity) {
-		Publication r1 = fillPublication(input1);
-		Publication r2 = fillPublication(input2);
+		BibliographicItem r1 = fillBibliographicItem(input1);
+		BibliographicItem r2 = fillBibliographicItem(input2);
 		// printMultipleAuthorStrings(input1, input2, r1, r2);
 
 		authorsComparisonService.compare(r1, r2);
@@ -91,8 +91,8 @@ class JWSimilarityAuthorTest extends AuthorsBaseTest {
 	@ParameterizedTest(name = "{index}: jaroWinkler({0}, {1})={2}")
 	@MethodSource("negativeAuthorsProvider")
 	void jwFullNegativeTest_not_transposed(String input1, String input2, double expected) {
-		Publication r1 = fillPublication(input1);
-		Publication r2 = fillPublication(input2);
+		BibliographicItem r1 = fillBibliographicItem(input1);
+		BibliographicItem r2 = fillBibliographicItem(input2);
 		// printMultipleAuthorStrings(input1, input2, r1, r2);
 
 		Double similarity = jws.apply(r1.getAllAuthors().get(0), r2.getAllAuthors().get(0));
@@ -103,8 +103,8 @@ class JWSimilarityAuthorTest extends AuthorsBaseTest {
 	@ParameterizedTest(name = "{index}: jaroWinkler({0}, {1})={2}")
 	@MethodSource("negativeAuthorsProvider")
 	void jwFullNegativeTest_with_transposed(String input1, String input2, double expected) {
-		Publication r1 = fillPublication(input1);
-		Publication r2 = fillPublication(input2);
+		BibliographicItem r1 = fillBibliographicItem(input1);
+		BibliographicItem r2 = fillBibliographicItem(input2);
 		// printMultipleAuthorStrings(input1, input2, r1, r2);
 
 		authorsComparisonService.compare(r1, r2);
@@ -311,7 +311,7 @@ class JWSimilarityAuthorTest extends AuthorsBaseTest {
 		// @formatter:on
 	}
 
-	private void printMultipleAuthorStrings(String input1, String input2, Publication r1, Publication r2) {
+	private void printMultipleAuthorStrings(String input1, String input2, BibliographicItem r1, BibliographicItem r2) {
 		if (r1.getAllAuthors().size() > 1) {
 			System.err.println("For %s there are more than 1 author lists: ".formatted(input1));
 			for (String authors : r1.getAllAuthors()) {
@@ -328,6 +328,6 @@ class JWSimilarityAuthorTest extends AuthorsBaseTest {
 
 	@Disabled("To prevent 'The method ... is never used' problem for printMultipleAuthorStrings")
 	void testDummy() {
-		printMultipleAuthorStrings("", "", new Publication(), new Publication());
+		printMultipleAuthorStrings("", "", new BibliographicItem(), new BibliographicItem());
 	}
 }

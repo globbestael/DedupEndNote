@@ -10,7 +10,7 @@ import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import edu.dedupendnote.services.AuthorThresholds;
-import edu.dedupendnote.domain.Publication;
+import edu.dedupendnote.domain.BibliographicItem;
 import lombok.extern.slf4j.Slf4j;
 
 /*
@@ -32,8 +32,8 @@ class AuthorsComparisonThresholdTest extends AuthorsBaseTest {
 		List<Triple> filledTriples = new ArrayList<>();
 
 		for (Triple triple : triples) {
-			Publication r1 = fillPublication(triple.authors1());
-			Publication r2 = fillPublication(triple.authors2());
+			BibliographicItem r1 = fillBibliographicItem(triple.authors1());
+			BibliographicItem r2 = fillBibliographicItem(triple.authors2());
 			/*
 			 * Can't use DefaultAuthorsComparisonService::compare because it returns in the loop as soon as a JWS is above a threshold.
 			 * This JWS is the minimally accepted similarity, not the highest similarity of all authors pairs.

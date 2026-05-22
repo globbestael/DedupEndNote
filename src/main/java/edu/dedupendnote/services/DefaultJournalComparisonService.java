@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 import org.apache.commons.text.similarity.JaroWinklerSimilarity;
 import org.jspecify.annotations.Nullable;
 
-import edu.dedupendnote.domain.Publication;
+import edu.dedupendnote.domain.BibliographicItem;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -33,7 +33,7 @@ public class DefaultJournalComparisonService implements JournalComparisonService
     }
 
     @Override
-    public boolean compare(Publication r1, Publication r2, @Nullable Boolean isSameDois) {
+    public boolean compare(BibliographicItem r1, BibliographicItem r2, @Nullable Boolean isSameDois) {
         if (!r1.getIsbns().isEmpty() && !r2.getIsbns().isEmpty()) {
             return false;
         }
@@ -42,7 +42,7 @@ public class DefaultJournalComparisonService implements JournalComparisonService
         boolean isReply = r1.isReply() || r2.isReply();
 
         if (set1.isEmpty() || set2.isEmpty()) {
-            log.trace("- 4. At least 1 of the publications has no journal");
+            log.trace("- 4. At least 1 of the bibliographicItems has no journal");
             return false;
         }
 
