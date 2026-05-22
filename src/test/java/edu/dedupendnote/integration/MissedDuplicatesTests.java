@@ -17,6 +17,7 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 import edu.dedupendnote.services.DeduplicationService;
+import edu.dedupendnote.domain.DeduplicationMode;
 import edu.dedupendnote.services.UtilitiesService;
 import edu.dedupendnote.integration.utils.MemoryAppender;
 import lombok.extern.slf4j.Slf4j;
@@ -121,11 +122,11 @@ class MissedDuplicatesTests extends AbstractIntegrationTest {
 	void deduplicateMissedDuplicates(String fileName, int total, int totalWritten) {
 		log.debug("Log level should be debug");
 		String inputFileName = testDir + fileName;
-		boolean markMode = false;
-		String outputFileName = UtilitiesService.createOutputFileName(inputFileName, markMode);
+		DeduplicationMode mode = DeduplicationMode.REMOVE;
+		String outputFileName = UtilitiesService.createOutputFileName(inputFileName, mode);
 		assertThat(new File(inputFileName)).exists();
 
-		String resultString = deduplicationService.deduplicateOneFile(inputFileName, outputFileName, markMode,
+		String resultString = deduplicationService.deduplicateOneFile(inputFileName, outputFileName, mode,
 				message -> {
 				});
 
@@ -134,6 +135,6 @@ class MissedDuplicatesTests extends AbstractIntegrationTest {
 		assertThat(resultString).isEqualTo(deduplicationService.formatResultString(total, totalWritten));
 	}
 
-	// FIXME: tests for markMode = true;
+	// FIXME: tests for mode = true;
 
 }

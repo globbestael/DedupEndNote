@@ -24,6 +24,7 @@ import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.multipart.MultipartFile;
 
+import edu.dedupendnote.domain.DeduplicationMode;
 import edu.dedupendnote.domain.StompMessage;
 import edu.dedupendnote.services.DeduplicationService;
 import edu.dedupendnote.services.UtilitiesService;
@@ -75,7 +76,8 @@ public class DedupEndNoteController {
 	@PostMapping(value = "/getResultFile", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
 	public void getResultFile(@RequestParam("fileNameResultFile") String fileName,
 			@RequestParam("markModeResultFile") boolean markMode, HttpServletResponse response) {
-		String outputFileName = UtilitiesService.createOutputFileName(fileName, markMode);
+		DeduplicationMode mode = DeduplicationMode.from(markMode);
+		String outputFileName = UtilitiesService.createOutputFileName(fileName, mode);
 
 		Path path = Path.of(uploadDir, outputFileName);
 		response.setContentType("text/plain");
@@ -114,8 +116,9 @@ public class DedupEndNoteController {
 	public ResponseEntity<String> startOneFile(@RequestParam("fileName_1") String inputFileName,
 			@RequestParam(required = false, defaultValue = "false") boolean markMode, @RequestParam String wssessionId)
 			throws Exception {
-		String outputFileName = UtilitiesService.createOutputFileName(inputFileName, markMode);
-		String logPrefix = "1F" + (Boolean.TRUE.equals(markMode) ? "M" : "D");
+		DeduplicationMode mode = DeduplicationMode.from(markMode);
+		String outputFileName = UtilitiesService.createOutputFileName(inputFileName, mode);
+		String logPrefix = "1F" + (mode == DeduplicationMode.MARK ? "M" : "D");
 
 		Consumer<String> progressReporter = message -> simpMessagingTemplate
 				.convertAndSend("/topic/messages-" + wssessionId, new StompMessage(message));
@@ -124,7 +127,7 @@ public class DedupEndNoteController {
 			Future<String> future = executor.submit(() -> {
 				RequestContextHolder.setRequestAttributes(requestAttributes);
 				return deduplicationService.deduplicateOneFile(uploadDir + File.separator + inputFileName,
-						uploadDir + File.separator + outputFileName, markMode, progressReporter);
+						uploadDir + File.separator + outputFileName, mode, progressReporter);
 			});
 			log.info("Writing to result: {}: {}", logPrefix, future.get());
 			return ResponseEntity.ok("{ \"result\": " + future.get());
@@ -135,8 +138,8 @@ public class DedupEndNoteController {
 	public ResponseEntity<String> startTwoFiles(@RequestParam String oldFile, @RequestParam String newFile,
 			@RequestParam(required = false, defaultValue = "false") boolean markMode, @RequestParam String wssessionId)
 			throws InterruptedException, ExecutionException {
-
-		String logPrefix = "2F" + (Boolean.TRUE.equals(markMode) ? "M" : "D");
+		DeduplicationMode mode = DeduplicationMode.from(markMode);
+		String logPrefix = "2F" + (mode == DeduplicationMode.MARK ? "M" : "D");
 
 		Consumer<String> progressReporter = message -> simpMessagingTemplate
 				.convertAndSend("/topic/messages-" + wssessionId, new StompMessage(message));
@@ -146,7 +149,7 @@ public class DedupEndNoteController {
 				RequestContextHolder.setRequestAttributes(requestAttributes);
 				return deduplicationService.deduplicateTwoFiles(uploadDir + File.separator + newFile,
 						uploadDir + File.separator + oldFile,
-						uploadDir + File.separator + UtilitiesService.createOutputFileName(newFile, markMode), markMode,
+						uploadDir + File.separator + UtilitiesService.createOutputFileName(newFile, mode), mode,
 						progressReporter);
 			});
 			log.info("Writing to result: {}: {}", logPrefix, future.get());

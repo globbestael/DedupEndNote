@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.context.annotation.RequestScope;
 
 import edu.dedupendnote.domain.BibliographicItem;
+import edu.dedupendnote.domain.DeduplicationMode;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
@@ -232,7 +233,7 @@ l						 * 		V 		W 		X
 		return bibliographicItems.stream().filter(r -> r.getId() == null).count() > 0L;
 	}
 
-	public String deduplicateOneFile(String inputFileName, String outputFileName, boolean markMode,
+	public String deduplicateOneFile(String inputFileName, String outputFileName, DeduplicationMode mode,
 			Consumer<String> progressReporter) {
 		progressReporter.accept("Reading file " + inputFileName);
 		List<BibliographicItem> bibliographicItems = ioService.readBibliographicItems(inputFileName, progressReporter);
@@ -245,7 +246,7 @@ l						 * 		V 		W 		X
 
 		searchYearOneFile(bibliographicItems, progressReporter);
 
-		if (markMode) { // no enrich(), and add / overwrite LB (label) field
+		if (mode == DeduplicationMode.MARK) {
 			int numberWritten = ioService.writeMarkedBibliographicItems(bibliographicItems, inputFileName,
 					outputFileName);
 			long labeledBibliographicItems = bibliographicItems.stream().filter(r -> r.getLabel() != null).count();
@@ -267,7 +268,7 @@ l						 * 		V 		W 		X
 	}
 
 	public String deduplicateTwoFiles(String newInputFileName, String oldInputFileName, String outputFileName,
-			boolean markMode, Consumer<String> progressReporter) {
+			DeduplicationMode mode, Consumer<String> progressReporter) {
 		// read the old bibliographicItems and mark them as present, then add the new bibliographicItems
 		log.info("oldInputFileName: {}", oldInputFileName);
 		log.info("newInputFileName: {}", newInputFileName);
@@ -285,7 +286,7 @@ l						 * 		V 		W 		X
 		 * identifying duplicate bibliographicItems) will be unique over both lists.
 		 * When writing the deduplicated bibliographicItems for the second list, bibliographicItems with label "-..." can
 		 * be skipped because they are duplicates of bibliographicItems from the first list.
-		 * When markMode is set, these bibliographicItems are written.
+		 * When MARK mode is set, these bibliographicItems are written.
 		 * Because of this "-", the bibliographicItems which have duplicates in the first file (label = "-...")
 		 * can be distinguished from bibliographicItems which have duplicates in the second file.
 		 */
@@ -306,7 +307,7 @@ l						 * 		V 		W 		X
 
 		searchYearTwoFiles(bibliographicItems, progressReporter);
 
-		if (markMode) { // no enrich(), and add / overwrite LB (label) field
+		if (mode == DeduplicationMode.MARK) {
 			int numberWritten = ioService.writeMarkedBibliographicItems(bibliographicItems, newInputFileName,
 					outputFileName);
 			long numberLabeledBibliographicItems = bibliographicItems.stream()

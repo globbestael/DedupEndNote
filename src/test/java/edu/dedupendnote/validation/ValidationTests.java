@@ -27,6 +27,7 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 import edu.dedupendnote.integration.AbstractIntegrationTest;
+import edu.dedupendnote.domain.DeduplicationMode;
 import edu.dedupendnote.services.DeduplicationService;
 import edu.dedupendnote.services.IOService;
 import edu.dedupendnote.domain.BibliographicItem;
@@ -682,7 +683,7 @@ class ValidationTests extends AbstractIntegrationTest {
 		 * the exact code path the production deployment runs, instead of mimicking it.
 		 */
 		String markFileName = inputFileName + "_mark.txt";
-		deduplicationService.deduplicateOneFile(inputFileName, markFileName, /* markMode= */ true, message -> {});
+		deduplicationService.deduplicateOneFile(inputFileName, markFileName, DeduplicationMode.MARK, message -> {});
 		return ioService.readBibliographicItems(markFileName, message -> {}, /* includeLabelField= */ true);
 	}
 
