@@ -11,7 +11,7 @@ A real-world scholarly item — book, journal article, conference abstract — t
 _Avoid_: bibliographic item, record, reference, citation
 
 **Bibliographic Item**:
-A database record containing partial information copied from a Publication (author names, title, journal, pages, abstract — but not full text); the central object DedupEndNote operates on. The recorded information may differ from the original Publication because databases apply their own conventions (e.g. full author names reduced to initials). A Publication exists before any Bibliographic Item for it is created. _Code term_: `Publication`.
+A database record containing partial information copied from a Publication (author names, title, journal, pages, abstract — but not full text); the central object DedupEndNote operates on. The recorded information may differ from the original Publication because databases apply their own conventions (e.g. full author names reduced to initials). A Publication exists before any Bibliographic Item for it is created. _Code class_: `BibliographicItem`.
 _Avoid_: publication (reserved for the real-world item), record, reference, citation
 
 **Duplicate**:
@@ -149,7 +149,7 @@ _Avoid_: missed duplicate, under-deduplication
 
 ## Flagged ambiguities
 
-- "Publication" was previously used to mean both the real-world scholarly item and the database record — resolved: **Publication** is the real-world item; **Bibliographic Item** is the database record. The code uses the class name `Publication` for what the domain calls a Bibliographic Item.
+- "Publication" was previously used to mean both the real-world scholarly item and the database record — resolved: **Publication** is the real-world item; **Bibliographic Item** is the database record. The code class is now `BibliographicItem`, completing the alignment with the domain model.
 - "Bibliographic database" was previously used as a catch-all — resolved: **Bibliographic database** (read-only, e.g. PubMed) and **Reference manager database** (read-write, e.g. EndNote) are distinct concepts with different roles in the workflow.
 - "Publication Set" was used to mean Duplicate Set — resolved: the full set of all input Bibliographic Items has no canonical term; **Duplicate Set** is the term for a group of duplicates.
 - "Letter" and "Reply" were considered as separate terms — resolved for now: **Reply** is the umbrella term. Letter may be promoted to its own category in future.
