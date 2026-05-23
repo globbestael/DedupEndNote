@@ -28,13 +28,15 @@
                 <h2 class="bg-success-subtle">1.1.7 (2026-XX-XX)</h2>
                 <ul>
                     <li>Bug fix: the Details page showed a hardcoded earliest publication year instead of
-                        the actual value used by the application.</li>
+                        the actual value used by the application</li>
+                    <li>Added a Glossary to the Details page</li>
                     <li>Internal:
                         <ul>
                             <li>Rename core class <code>Publication</code> → <code>BibliographicItem</code>
                                 to align code with the domain language</li>
                             <li>Introduce <code>DeduplicationMode</code> enum (<code>REMOVE</code> /
-                                <code>MARK</code>) replacing a boolean flag</li>
+                                <code>MARK</code>) replacing a boolean flag
+                            </li>
                             <li>Add <code>.gitattributes</code> to normalise line endings; fix stray
                                 UTF-8 BOM characters in Java source files</li>
                         </ul>

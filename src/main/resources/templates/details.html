@@ -28,6 +28,7 @@
                             <a href="#special_cases" class="nav-link">Special cases</a>
                             <a href="#limitations" class="nav-link">Limitations</a>
                             <a href="#faq" class="nav-link">FAQ</a>
+                            <a href="#glossary" class="nav-link">Glossary</a>
                             <a href="#developers" class="nav-link">For developers</a>
                         </nav>
                     </div>
@@ -2263,6 +2264,61 @@
                         <p>"Cabot RC, Scully RE, Mark EJ, McNeely WF, McNeely BU" in (1) were the (associate) editors of
                             the NEJM in 1991, "Podolsky DK, Lewandrowski KB" in (2) described the case, all authors in
                             (3) discussed the case.</p>
+                    </div>
+
+                    <div id="glossary">
+                        <h2 class="bg-success-subtle">Glossary</h2>
+                        <dl>
+                            <dt><strong>Bibliographic Item</strong></dt>
+                            <dd>A database record describing a publication — the author names, title, journal, year,
+                                pages, and abstract that a bibliographic database (PubMed, EMBASE, Web of Science, ...)
+                                stores. One publication can have multiple bibliographic items, one per database that
+                                indexed it, and those items may differ in detail (abbreviated author names, different
+                                page formats, etc.). DedupEndNote operates on bibliographic items.
+                                <br /><em>Also called in other contexts:</em> record, reference, citation.
+                            </dd>
+
+                            <dt><strong>Duplicate Set</strong></dt>
+                            <dd>A group of two or more bibliographic items that all represent the same publication.
+                                DedupEndNote identifies these groups and either removes the extras (Remove Mode) or
+                                labels them (Mark Mode).
+                            </dd>
+
+                            <dt><strong>Kept Bibliographic Item</strong></dt>
+                            <dd>The bibliographic item within a Duplicate Set that is written to the output file. In
+                                Remove Mode it is also enriched with any useful data found in the other items of the
+                                set. The kept item is the first one DedupEndNote encounters when processing the input
+                                file in year order; you can influence which item is kept by the order of the records
+                                in your export file (see <a href="#preferredOrder">FAQ 5</a>).
+                            </dd>
+
+                            <dt><strong>Enrichment</strong></dt>
+                            <dd>After identifying a Duplicate Set, DedupEndNote supplements the Kept Bibliographic Item
+                                with data from the other items in the set: a missing DOI, a missing publication year,
+                                missing or abbreviated page numbers, or a longer title. Enrichment only happens in
+                                Remove Mode; in Mark Mode all items are written as-is.
+                            </dd>
+
+                            <dt><strong>Remove Mode</strong></dt>
+                            <dd>The default operating mode. All bibliographic items identified as duplicates are removed
+                                from the output; only the Kept Bibliographic Item is written, after Enrichment.
+                            </dd>
+
+                            <dt><strong>Mark Mode</strong></dt>
+                            <dd>An alternative mode where all bibliographic items are written to the output file.
+                                Duplicates are identified by a Label — the ID of the Kept Bibliographic Item is written
+                                into the Label (LB) field of every item in the Duplicate Set. Use this mode when you
+                                want to inspect or manually merge duplicates inside your reference manager, or when you
+                                want to compare DedupEndNote's results with those of another deduplication tool.
+                            </dd>
+
+                            <dt><strong>Label</strong></dt>
+                            <dd>The value that DedupEndNote writes into the RIS <code>LB</code> field in Mark Mode.
+                                It contains the ID of the Kept Bibliographic Item, so all items in a Duplicate Set
+                                share the same Label. In EndNote you can find all duplicates by searching for
+                                "Label is greater than 0" and sort on the Label field to group them.
+                            </dd>
+                        </dl>
                     </div>
 
                     <div id="developers">
