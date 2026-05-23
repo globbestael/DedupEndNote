@@ -18,7 +18,8 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.annotation.RequestScope;
 
-import edu.dedupendnote.domain.Publication;
+import edu.dedupendnote.domain.BibliographicItem;
+import edu.dedupendnote.domain.DeduplicationMode;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
@@ -39,51 +40,51 @@ public class DeduplicationService {
 	 * Procedure for 1 file:
 	 *
 	 * 1. Do preliminary checks on the input file (EndNote IDs are present and unique) and exit when the checks do not pass.
-	 * 2. Read all EndNote publications from inputfile and make Publication objects only with the fields relevant for deduplication.
+	 * 2. Read all EndNote bibliographicItems from inputfile and make BibliographicItem objects only with the fields relevant for deduplication.
 	 *    Normalize fields as much as possible while calling the setters.
 	 *    Normalize the rest as the last field (EndNote ER field) is read.
-	 *    (All publications start with kepPublication = true (default))
-	 * 3. Deduplicate the publications.
+	 *    (All bibliographicItems start with kepBibliographicItem = true (default))
+	 * 3. Deduplicate the bibliographicItems.
 	 *    When duplicates are found:
 	 *    - put the id (EndNote ID field) of the first duplicate into the label (EndNote LB field) of all the duplicates
-	 *    - set kepPublication = false for all but the first duplicate
+	 *    - set kepBibliographicItem = false for all but the first duplicate
 	 *  4. Enrich the first duplicate with data from the other duplicates (DOI, starting page)
-	 *  5. Read the input file again, extract the ID and get the corresponding publication.
-	 *     If the publication is keptPublication = true,
-	 *     copy the original content of the fields of this publication from the input file to the output file
+	 *  5. Read the input file again, extract the ID and get the corresponding bibliographicItem.
+	 *     If the bibliographicItem is kepBibliographicItem = true,
+	 *     copy the original content of the fields of this bibliographicItem from the input file to the output file
 	 *     except for the fields where content is standardized (DOI) or where content is enriched from the duplicates.
 	 *
-	 *   If markMode is set, publications are not enriched and ALL publications are written back.
-	 *   If a publication is a duplicate, the Label field (LB) contains the ID of the first duplicate found.
+	 *   If markMode is set, bibliographicItems are not enriched and ALL bibliographicItems are written back.
+	 *   If a bibliographicItem is a duplicate, the Label field (LB) contains the ID of the first duplicate found.
 	 *
 	 *
 	 * Procedure for 2 files:
 	 *
-	 * 1. Do preliminary checks on input file for old publications (EndNote IDs are present and unique) and exit when the checks do not pass.
-	 * 2. Read all EndNote publications from this inputfile and make Publication objects only with the fields relevant for deduplication.
+	 * 1. Do preliminary checks on input file for old bibliographicItems (EndNote IDs are present and unique) and exit when the checks do not pass.
+	 * 2. Read all EndNote bibliographicItems from this inputfile and make BibliographicItem objects only with the fields relevant for deduplication.
 	 *    Normalize fields as much as possible while calling the setters.
 	 *    Normalize the rest as the last field (EndNote ER field) is read.
 	 *    Alter the ID by prefixing them with "-" (to distinguish them from the IDs of the second file and making them unique over both files).
-	 *    All OLD publications start with kepPublication = false and presentInOldFile = true.
-	 * 3. Do preliminary checks on input file for new publications (EndNote IDs are present and unique) and exit when the checks do not pass.
-	 * 4. Read all EndNote publications from this inputfile and make Publication objects only with the fields relevant for deduplication.
+	 *    All OLD bibliographicItems start with kepBibliographicItem = false and presentInOldFile = true.
+	 * 3. Do preliminary checks on input file for new bibliographicItems (EndNote IDs are present and unique) and exit when the checks do not pass.
+	 * 4. Read all EndNote bibliographicItems from this inputfile and make BibliographicItem objects only with the fields relevant for deduplication.
 	 *    Normalize fields as much as possible while calling the setters.
 	 *    Normalize the rest as the last field (EndNote ER field) is read.
-	 *    All NEW publications start with keptPublication = true (default)  and presentInOldFile = false (default).
-	 * 5. Deduplicate the publications.
+	 *    All NEW bibliographicItems start with kepBibliographicItem = true (default)  and presentInOldFile = false (default).
+	 * 5. Deduplicate the bibliographicItems.
 	 *    When duplicates are found:
 	 *    - put the id (EndNote ID field) of the first duplicate into the label (EndNote LB field) of all the duplicates
-	 *    - set keptPublication = false for all but the first duplicate
+	 *    - set kepBibliographicItem = false for all but the first duplicate
 	 * 6. Enrich the first duplicate with data from the other duplicates (DOI, starting page)
-	 *    only if the label exists and does not start with "-", i.e. is NOT a duplicate from an OLD publication.
-	 * 7. Read the NEW input file again, extract the ID and get the corresponding publication.
-	 *    If the publication is keptPublication = true,
-	 *    copy the original content of the fields of this publication from the input file to the output file
+	 *    only if the label exists and does not start with "-", i.e. is NOT a duplicate from an OLD bibliographicItem.
+	 * 7. Read the NEW input file again, extract the ID and get the corresponding bibliographicItem.
+	 *    If the bibliographicItem is kepBibliographicItem = true,
+	 *    copy the original content of the fields of this bibliographicItem from the input file to the output file
 	 *    except for the fields where content is standardized (DOI) or where content is enriched from the duplicates.
 	 *
-	 *  If markMode is set, publications are not enriched and ALL publications of the NEW inputfile are written back.
-	 *  If a publication is a duplicate, the Label field (LB) contains the ID of the first duplicate found.
-	 *  If the label starts with "-", it is a duplicate from a publication from the OLD input file.
+	 *  If markMode is set, bibliographicItems are not enriched and ALL bibliographicItems of the NEW inputfile are written back.
+	 *  If a bibliographicItem is a duplicate, the Label field (LB) contains the ID of the first duplicate found.
+	 *  If the label starts with "-", it is a duplicate from a bibliographicItem from the OLD input file.
 	 */
 	// @formatter:on
 
@@ -92,39 +93,40 @@ public class DeduplicationService {
 		this.comparisonService = comparisonService;
 	}
 
-	public void compareSet(List<Publication> publications, Integer year, boolean descending, Consumer<String> progressReporter) {
-		int noOfPublications = publications.size();
+	public void compareSet(List<BibliographicItem> bibliographicItems, Integer year, boolean descending,
+			Consumer<String> progressReporter) {
+		int noOfBibliographicItems = bibliographicItems.size();
 		int noOfDuplicates = 0;
 		/*
-		 * This Map holds temporary results of the comparison between 2 publications.
+		 * This Map holds temporary results of the comparison between 2 bibliographicItems.
 		 * At present there is only 1 key (isSameDois). If we need more keys, a POJO would be better?
 		 * 
 		 * isSameDois is three-valued: null (i.e uninitialized), false, true
 		 * Don't initialize here as "new HashMap<>(Map.of("isSameDois", null))" because null values are not allowed.
 		 * 
 		 * This three-valuedness was an attempt to lower the False Positives. ComparisonService.compareIssns and compareJournals
-		 * would short circuit when isSameDois == false (both publications have DOIs but they are different).
+		 * would short circuit when isSameDois == false (both bibliographicItems have DOIs but they are different).
 		 * FPs didn't go down, however there were more FNs (especially with errors in DOIs)
 		 */
 		Map<String, @Nullable Boolean> map = new HashMap<>();
 		// Map<String, Boolean> map = new HashMap<>(Map.of("isSameDois", null));
 
-		while (publications.size() > 1) {
-			Publication pivot = publications.remove(0);
+		while (bibliographicItems.size() > 1) {
+			BibliographicItem pivot = bibliographicItems.remove(0);
 			/*
-			 * If descending / OneFile mode: only publications of year1 should be compared to publications of year1 and year2.
-			 * The publications of year2 will be compared in the next pair of years.
-			 * If ascending / TwoFile mode: publicationYear 0 publications are at the head of the publicationList!
+			 * If descending / OneFile mode: only bibliographicItems of year1 should be compared to bibliographicItems of year1 and year2.
+			 * The bibliographicItems of year2 will be compared in the next pair of years.
+			 * If ascending / TwoFile mode: publicationYear 0 bibliographicItems are at the head of the bibliographicItemList!
 			 */
 			if ((descending && pivot.getPublicationYear() < year)
 					|| (!descending && pivot.getPublicationYear() != 0 && pivot.getPublicationYear() > year)) {
 				break;
 			}
 
-			for (Publication p : publications) {
+			for (BibliographicItem p : bibliographicItems) {
 				map.put("isSameDois", null);
 				// log.atDebug().setMessage("Clear results previous comparison {}")
-				// .addArgument(() -> pivot.getLogLines().removeAll(publication.getLogLines())).log();
+				// .addArgument(() -> pivot.getLogLines().removeAll(bibliographicItem.getLogLines())).log();
 				if (log.isTraceEnabled()) {
 					log.trace("\nStarting comparison {} - {}", pivot.getId(), p.getId());
 				}
@@ -143,15 +145,15 @@ public class DeduplicationService {
 					} else if (p.getLabel() != null) {
 						// @formatter:off
 						/**
-						 * THIS COPYING OF THE LABEL FROM THE PUBLICATION p TO THE PIVOT HAS BEEN DISABLED 
+						 * THIS COPYING OF THE LABEL FROM THE BIBLIOGRAPHICITEM p TO THE PIVOT HAS BEEN DISABLED 
 						 * because it reduces the FPs at a smell cost of more FNs.
 						 * 
-						 * Labels can be promoted from a publication to the pivot without a label:
+						 * Labels can be promoted from a bibliographicItem to the pivot without a label:
 						 * - in loop N with pivot V 
-						 *   - publication W is NOT seen as similar and gets no label
-						 *   - publication X is seen as similar and gets V as label
+						 *   - bibliographicItem W is NOT seen as similar and gets no label
+						 *   - bibliographicItem X is seen as similar and gets V as label
 						 * - in loop N + 1 with pivot W
-						 *   - publication X is seen as similar and its label V is promoted to label of pivot W
+						 *   - bibliographicItem X is seen as similar and its label V is promoted to label of pivot W
 						 * 
 						 * 		V 		W 		X 
 						 * SP	1-26	291-316	(None) 
@@ -213,216 +215,224 @@ l						 * 		V 		W 		X
 					}
 				}
 			}
-			progressReporter.accept("Working on %d for %d publications (marked %d duplicates)".formatted(year,
-					noOfPublications, noOfDuplicates));
+			progressReporter.accept("Working on %d for %d bibliographic items (marked %d duplicates)".formatted(year,
+					noOfBibliographicItems, noOfDuplicates));
 		}
 	}
 
-	private boolean containsDuplicateIds(List<Publication> publications) {
-		return !publications.stream().map(Publication::getId).allMatch(new HashSet<>()::add);
+	private boolean containsDuplicateIds(List<BibliographicItem> bibliographicItems) {
+		return !bibliographicItems.stream().map(BibliographicItem::getId).allMatch(new HashSet<>()::add);
 	}
 
-	private boolean containsOnlyPublicationsWithoutPublicationYear(List<Publication> publications) {
-		return publications.stream().filter(r -> r.getPublicationYear() == 0).count() == publications.size();
+	private boolean containsOnlyBibliographicItemsWithoutPublicationYear(List<BibliographicItem> bibliographicItems) {
+		return bibliographicItems.stream().filter(r -> r.getPublicationYear() == 0).count() == bibliographicItems
+				.size();
 	}
 
-	private boolean containsPublicationsWithoutId(List<Publication> publications) {
-		return publications.stream().filter(r -> r.getId() == null).count() > 0L;
+	private boolean containsBibliographicItemsWithoutId(List<BibliographicItem> bibliographicItems) {
+		return bibliographicItems.stream().filter(r -> r.getId() == null).count() > 0L;
 	}
 
-	public String deduplicateOneFile(String inputFileName, String outputFileName, boolean markMode,
+	public String deduplicateOneFile(String inputFileName, String outputFileName, DeduplicationMode mode,
 			Consumer<String> progressReporter) {
 		progressReporter.accept("Reading file " + inputFileName);
-		List<Publication> publications = ioService.readPublications(inputFileName, progressReporter);
+		List<BibliographicItem> bibliographicItems = ioService.readBibliographicItems(inputFileName, progressReporter);
 
-		String s = doSanityChecks(publications, inputFileName);
+		String s = doSanityChecks(bibliographicItems, inputFileName);
 		if (s != null) {
 			progressReporter.accept(s);
 			return s;
 		}
 
-		searchYearOneFile(publications, progressReporter);
+		searchYearOneFile(bibliographicItems, progressReporter);
 
-		if (markMode) { // no enrich(), and add / overwrite LB (label) field
-			int numberWritten = ioService.writeMarkedPublications(publications, inputFileName, outputFileName);
-			long labeledPublications = publications.stream().filter(r -> r.getLabel() != null).count();
-			s = "DONE: DedupEndNote has written " + numberWritten + " publications with " + labeledPublications
-					+ " duplicates marked in the Label field.";
+		if (mode == DeduplicationMode.MARK) {
+			int numberWritten = ioService.writeMarkedBibliographicItems(bibliographicItems, inputFileName,
+					outputFileName);
+			long labeledBibliographicItems = bibliographicItems.stream().filter(r -> r.getLabel() != null).count();
+			s = "DONE: DedupEndNote has written " + numberWritten + " bibliographic items with "
+					+ labeledBibliographicItems + " duplicates marked in the Label field.";
 			progressReporter.accept(s);
 			return s;
 		}
 
-		progressReporter.accept("Enriching the " + publications.size() + " deduplicated results");
-		enrich(publications);
-		progressReporter.accept("Saving the " + publications.size() + " deduplicated results");
-		int numberWritten = ioService.writeDeduplicatedPublications(publications, inputFileName, outputFileName);
-		s = formatResultString(publications.size(), numberWritten);
+		progressReporter.accept("Enriching the " + bibliographicItems.size() + " deduplicated results");
+		enrich(bibliographicItems);
+		progressReporter.accept("Saving the " + bibliographicItems.size() + " deduplicated results");
+		int numberWritten = ioService.writeDeduplicatedBibliographicItems(bibliographicItems, inputFileName,
+				outputFileName);
+		s = formatResultString(bibliographicItems.size(), numberWritten);
 		progressReporter.accept(s);
 
 		return s;
 	}
 
 	public String deduplicateTwoFiles(String newInputFileName, String oldInputFileName, String outputFileName,
-			boolean markMode, Consumer<String> progressReporter) {
-		// read the old publications and mark them as present, then add the new publications
+			DeduplicationMode mode, Consumer<String> progressReporter) {
+		// read the old bibliographicItems and mark them as present, then add the new bibliographicItems
 		log.info("oldInputFileName: {}", oldInputFileName);
 		log.info("newInputFileName: {}", newInputFileName);
-		List<Publication> publications = ioService.readPublications(oldInputFileName, progressReporter);
+		List<BibliographicItem> bibliographicItems = ioService.readBibliographicItems(oldInputFileName,
+				progressReporter);
 
-		String s = doSanityChecks(publications, oldInputFileName);
+		String s = doSanityChecks(bibliographicItems, oldInputFileName);
 		if (s != null) {
 			progressReporter.accept(s);
 			return s;
 		}
 
 		/*
-		 * Put "-" before the IDs of the old publications. In this way the labels of the publications (used for
-		 * identifying duplicate publications) will be unique over both lists.
-		 * When writing the deduplicated publications for the second list, publications with label "-..." can
-		 * be skipped because they are duplicates of publications from the first list.
-		 * When markMode is set, these publications are written.
-		 * Because of this "-", the publications which have duplicates in the first file (label = "-...")
-		 * can be distinguished from publications which have duplicates in the second file.
+		 * Put "-" before the IDs of the old bibliographicItems. In this way the labels of the bibliographicItems (used for
+		 * identifying duplicate bibliographicItems) will be unique over both lists.
+		 * When writing the deduplicated bibliographicItems for the second list, bibliographicItems with label "-..." can
+		 * be skipped because they are duplicates of bibliographicItems from the first list.
+		 * When MARK mode is set, these bibliographicItems are written.
+		 * Because of this "-", the bibliographicItems which have duplicates in the first file (label = "-...")
+		 * can be distinguished from bibliographicItems which have duplicates in the second file.
 		 */
-		publications.forEach(r -> {
+		bibliographicItems.forEach(r -> {
 			r.setId("-" + r.getId());
 			r.setPresentInOldFile(true);
 		});
 
-		List<Publication> newPublications = ioService.readPublications(newInputFileName, progressReporter);
-		s = doSanityChecks(newPublications, newInputFileName);
+		List<BibliographicItem> newBibliographicItems = ioService.readBibliographicItems(newInputFileName,
+				progressReporter);
+		s = doSanityChecks(newBibliographicItems, newInputFileName);
 		if (s != null) {
 			progressReporter.accept(s);
 			return s;
 		}
-		publications.addAll(newPublications);
-		log.info("Publications read from 2 files: {}", publications.size());
+		bibliographicItems.addAll(newBibliographicItems);
+		log.info("Publications read from 2 files: {}", bibliographicItems.size());
 
-		searchYearTwoFiles(publications, progressReporter);
+		searchYearTwoFiles(bibliographicItems, progressReporter);
 
-		if (markMode) { // no enrich(), and add / overwrite LB (label) field
-			int numberWritten = ioService.writeMarkedPublications(publications, newInputFileName, outputFileName);
-			long numberLabeledPublications = publications.stream()
+		if (mode == DeduplicationMode.MARK) {
+			int numberWritten = ioService.writeMarkedBibliographicItems(bibliographicItems, newInputFileName,
+					outputFileName);
+			long numberLabeledBibliographicItems = bibliographicItems.stream()
 					.filter(r -> r.getLabel() != null && !r.isPresentInOldFile()).count();
-			s = "DONE: DedupEndNote has written %s publications with %d duplicates marked in the Label field."
-					.formatted(numberWritten, numberLabeledPublications);
+			s = "DONE: DedupEndNote has written %s bibliographic items with %d duplicates marked in the Label field."
+					.formatted(numberWritten, numberLabeledBibliographicItems);
 			progressReporter.accept(s);
 			return s;
 		}
 
-		enrich(publications);
-		// Get the publications from the new file that are not duplicates or not duplicates of publications of the old
+		enrich(bibliographicItems);
+		// Get the bibliographicItems from the new file that are not duplicates or not duplicates of bibliographicItems of the old
 		// file
-		List<Publication> filteredPublications = publications.stream()
+		List<BibliographicItem> filteredBibliographicItems = bibliographicItems.stream()
 				.filter(r -> !r.isPresentInOldFile() && (r.getLabel() == null || !r.getLabel().startsWith("-")))
 				.toList();
-		log.error("Publications to write: {}", filteredPublications.size());
-		int numberWritten = ioService.writeDeduplicatedPublications(filteredPublications, newInputFileName,
+		log.error("Publications to write: {}", filteredBibliographicItems.size());
+		int numberWritten = ioService.writeDeduplicatedBibliographicItems(filteredBibliographicItems, newInputFileName,
 				outputFileName);
-		s = "DONE: DedupEndNote removed %d publications from the new set, and has written %d publications."
-				.formatted((newPublications.size() - numberWritten), numberWritten);
+		s = "DONE: DedupEndNote removed %d bibliographic items from the new set, and has written %d bibliographic items."
+				.formatted((newBibliographicItems.size() - numberWritten), numberWritten);
 		progressReporter.accept(s);
 		return s;
 	}
 
-	public @Nullable String doSanityChecks(List<Publication> publications, String fileName) {
-		if (containsPublicationsWithoutId(publications)) {
+	public @Nullable String doSanityChecks(List<BibliographicItem> bibliographicItems, String fileName) {
+		if (containsBibliographicItemsWithoutId(bibliographicItems)) {
 			return "ERROR: The input file " + fileName
-					+ " contains publications without IDs. The input file is not an Export as RIS-file from an EndNote library!";
+					+ " contains bibliographic items without IDs. The input file is not an Export as RIS-file from an EndNote library!";
 		}
-		if (containsOnlyPublicationsWithoutPublicationYear(publications)) {
-			return "ERROR: All publications of the input file " + fileName
-					+ " have no Publication Year. The input file is not an Export as RIS-file from an EndNote library!";
+		if (containsOnlyBibliographicItemsWithoutPublicationYear(bibliographicItems)) {
+			return "ERROR: All bibliographic items of the input file " + fileName
+					+ " have no publication year. The input file is not an Export as RIS-file from an EndNote library!";
 		}
-		if (containsDuplicateIds(publications)) {
-			return "ERROR: The IDs of the publications of input file " + fileName
+		if (containsDuplicateIds(bibliographicItems)) {
+			return "ERROR: The IDs of the bibliographic items of input file " + fileName
 					+ " are not unique. The input file is not an Export as RIS-file from 1 EndNote library!";
 		}
 		return null;
 	}
 
-	private void enrich(List<Publication> publications) {
+	private void enrich(List<BibliographicItem> bibliographicItems) {
 		log.debug("Start enrich");
-		// First the publications with duplicates
-		Map<String, List<Publication>> labelMap = publications.stream()
+		// First the bibliographicItems with duplicates
+		Map<String, List<BibliographicItem>> labelMap = bibliographicItems.stream()
 				// when comparing 2 files, duplicates from the old file start with "-"
 				.filter(r -> r.getLabel() != null && !r.getLabel().startsWith("-"))
-				.collect(Collectors.groupingBy(Publication::getLabel));
-		log.debug("Number of duplicate lists {}, and IDs of kept publications: {}", labelMap.size(), labelMap.keySet());
-		List<Publication> publicationList;
+				.collect(Collectors.groupingBy(BibliographicItem::getLabel));
+		log.debug("Number of duplicate lists {}, and IDs of kept bibliographicItems: {}", labelMap.size(),
+				labelMap.keySet());
+		List<BibliographicItem> bibliographicItemList;
 		if (!labelMap.isEmpty()) {
-			for (Map.Entry<String, List<Publication>> entry : labelMap.entrySet()) {
-				publicationList = entry.getValue();
-				Publication publicationToKeep = publicationList.remove(0);
-				log.debug("Kept: {}: {}", publicationToKeep.getId(),
-						(publicationToKeep.getTitles().isEmpty() ? "(no titles found)"
-								: publicationToKeep.getTitles().getFirst()));
-				// Don't set keptPublication in compareSet(): trouble when multiple duplicates and no publication year
-				publicationList.stream().forEach(r -> r.setKeptPublication(false));
+			for (Map.Entry<String, List<BibliographicItem>> entry : labelMap.entrySet()) {
+				bibliographicItemList = entry.getValue();
+				BibliographicItem bibliographicItemToKeep = bibliographicItemList.remove(0);
+				log.debug("Kept: {}: {}", bibliographicItemToKeep.getId(),
+						(bibliographicItemToKeep.getTitles().isEmpty() ? "(no titles found)"
+								: bibliographicItemToKeep.getTitles().getFirst()));
+				// Don't set keptPublication in compareSet(): trouble when multiple duplicates and no bibliographicItem year
+				bibliographicItemList.stream().forEach(r -> r.setKeptBibliographicItem(false));
 
 				// Reply and Retraction: replace the title with the longest title from the duplicates
-				if (publicationToKeep.isReply()
-						|| (!publicationToKeep.isClinicalTrialGov() && publicationToKeep.getTitle() != null)) {
-					log.debug("Publication {} is a reply: ", publicationToKeep.getId());
-					String longestTitle = publicationList.stream()
-							// .filter(Publication::isReply)
+				if (bibliographicItemToKeep.isReply() || (!bibliographicItemToKeep.isClinicalTrialGov()
+						&& bibliographicItemToKeep.getTitle() != null)) {
+					log.debug("BibliographicItem {} is a reply: ", bibliographicItemToKeep.getId());
+					String longestTitle = bibliographicItemList.stream()
+							// .filter(BibliographicItem::isReply)
 							.map(r -> {
 								log.debug("Reply {} has title: {}.", r.getId(), r.getTitle());
 								return r.getTitle() != null ? r.getTitle() : r.getTitles().getFirst();
 							}).max(Comparator.comparingInt(String::length)).orElse("");
-					// There are cases where not all titles are recognized as replies -> publication.title can be null
-					if (publicationToKeep.getTitle() == null
-							|| publicationToKeep.getTitle().length() < longestTitle.length()) {
-						log.debug("REPLY: changing title {}\nto {}", publicationToKeep.getTitle(), longestTitle);
-						publicationToKeep.setTitle(longestTitle);
+					// There are cases where not all titles are recognized as replies -> bibliographicItem.title can be null
+					if (bibliographicItemToKeep.getTitle() == null
+							|| bibliographicItemToKeep.getTitle().length() < longestTitle.length()) {
+						log.debug("REPLY: changing title {}\nto {}", bibliographicItemToKeep.getTitle(), longestTitle);
+						bibliographicItemToKeep.setTitle(longestTitle);
 					}
 				}
 				// Clinical trials from ClinicalTrials.gov: replace the title with the shortest title from the
 				// duplicates
-				if (publicationToKeep.isClinicalTrialGov()) {
-					log.debug("Publication {} is a trial: ", publicationToKeep.getId());
-					String shortestTitle = publicationList.stream().map(r -> {
+				if (bibliographicItemToKeep.isClinicalTrialGov()) {
+					log.debug("BibliographicItem {} is a trial: ", bibliographicItemToKeep.getId());
+					String shortestTitle = bibliographicItemList.stream().map(r -> {
 						log.debug("Trial {} has title: {}.", r.getId(), r.getTitle());
 						return r.getTitle() != null ? r.getTitle() : r.getTitles().getFirst();
 					}).min(Comparator.comparingInt(String::length)).orElse("");
-					// There are cases where publication.title can be null (??)
-					if (publicationToKeep.getTitle() == null
-							|| publicationToKeep.getTitle().length() > shortestTitle.length()) {
-						log.debug("Trial: changing title {}\nto {}", publicationToKeep.getTitle(), shortestTitle);
-						publicationToKeep.setTitle(shortestTitle);
+					// There are cases where bibliographicItem.title can be null (??)
+					if (bibliographicItemToKeep.getTitle() == null
+							|| bibliographicItemToKeep.getTitle().length() > shortestTitle.length()) {
+						log.debug("Trial: changing title {}\nto {}", bibliographicItemToKeep.getTitle(), shortestTitle);
+						bibliographicItemToKeep.setTitle(shortestTitle);
 					}
 				}
 
 				// Gather all the DOIs
-				final Set<String> dois = publicationToKeep.getDois();
-				for (Publication p : publicationList) {
+				final Set<String> dois = bibliographicItemToKeep.getDois();
+				for (BibliographicItem p : bibliographicItemList) {
 					if (!p.getDois().isEmpty()) {
 						dois.addAll(p.getDois());
 					}
 				}
 				if (!dois.isEmpty()) {
-					publicationToKeep.setDois(dois);
+					bibliographicItemToKeep.setDois(dois);
 				}
 
-				// Add missing publication year
-				if (publicationToKeep.getPublicationYear() == 0) {
-					log.debug("Reached publication without publicationYear");
-					publicationList.stream().filter(r -> r.getPublicationYear() != 0).findFirst()
-							.ifPresent(r -> publicationToKeep.setPublicationYear(r.getPublicationYear()));
+				// Add missing bibliographicItem year
+				if (bibliographicItemToKeep.getPublicationYear() == 0) {
+					log.debug("Reached bibliographicItem without publicationYear");
+					bibliographicItemList.stream().filter(r -> r.getPublicationYear() != 0).findFirst()
+							.ifPresent(r -> bibliographicItemToKeep.setPublicationYear(r.getPublicationYear()));
 				}
 
-				if (publicationToKeep.isCochrane() && publicationToKeep.getPagesOutput() != null) {
-					// replaceCochranePageStart(publicationToKeep, publicationList);
-					publicationToKeep.setPagesOutput(publicationToKeep.getPagesOutput().toUpperCase());
+				if (bibliographicItemToKeep.isCochrane() && bibliographicItemToKeep.getPagesOutput() != null) {
+					// replaceCochranePageStart(bibliographicItemToKeep, bibliographicItemList);
+					bibliographicItemToKeep.setPagesOutput(bibliographicItemToKeep.getPagesOutput().toUpperCase());
 				}
 
 				// Add missing pagesOutput
-				if (publicationToKeep.getPagesOutput() == null || publicationToKeep.getPagesOutput().isEmpty()) {
-					log.debug("Reached publication without pagesOutput: {}", publicationToKeep.getId());
-					publicationList.stream().filter(r -> r.getPagesOutput() != null).findFirst().ifPresent(r -> {
+				if (bibliographicItemToKeep.getPagesOutput() == null
+						|| bibliographicItemToKeep.getPagesOutput().isEmpty()) {
+					log.debug("Reached bibliographicItem without pagesOutput: {}", bibliographicItemToKeep.getId());
+					bibliographicItemList.stream().filter(r -> r.getPagesOutput() != null).findFirst().ifPresent(r -> {
 						// publicationToKeep.setPageStart(r.getPageStart());
 						// publicationToKeep.setPageEnd(r.getPageEnd());
-						publicationToKeep.setPagesOutput(r.getPagesOutput());
+						bibliographicItemToKeep.setPagesOutput(r.getPagesOutput());
 					});
 				}
 
@@ -431,13 +441,13 @@ l						 * 		V 		W 		X
 				 * 10.2298/sarh0902077c in test database, but the 2 duplicates have not the same
 				 * author forms: "Culafic, D." (WoS) and "Dorde, Ć" (Scopus, error)
 				 * Better example: 4605 in BIG_TEST without authors, 21391 with authors.
-				 * But publications can have different authors: in BIG_SET 4226 (none), 21471 (Banks ...), 36519 (Cabot ...)
+				 * But bibliographicItems can have different authors: in BIG_SET 4226 (none), 21471 (Banks ...), 36519 (Cabot ...)
 				 */
 			}
 		}
 
-		// Then the Cochrane publications without duplicates
-		for (Publication r : publications) {
+		// Then the Cochrane bibliographicItems without duplicates
+		for (BibliographicItem r : bibliographicItems) {
 			if (r.isCochrane() && r.getLabel() == null && r.getPagesOutput() != null) {
 				// replaceCochranePageStart(r, Collections.emptyList());
 				r.setPagesOutput(r.getPagesOutput().toUpperCase());
@@ -448,8 +458,8 @@ l						 * 		V 		W 		X
 	}
 
 	public String formatResultString(int total, int totalWritten) {
-		return "DONE: DedupEndNote has deduplicated " + total + " publications, has removed " + (total - totalWritten)
-				+ " duplicates, and has written " + totalWritten + " publications.";
+		return "DONE: DedupEndNote has deduplicated " + total + " bibliographic items, has removed "
+				+ (total - totalWritten) + " duplicates, and has written " + totalWritten + " bibliographic items.";
 	}
 
 	/*
@@ -457,26 +467,27 @@ l						 * 		V 		W 		X
 	 * - order year descending
 	 * - add empty years (year == 0 and not identified as duplicate yet) AFTER each year1
 	 *
-	 * Reason: we prefer the data (duplicate kept) which is most recent (e.g. complete publication BEFORE ahead
+	 * Reason: we prefer the data (duplicate kept) which is most recent (e.g. complete bibliographicItem BEFORE ahead
 	 * of print which is possibly from earlier year or without a year).
 	 */
-	public void searchYearOneFile(List<Publication> publications, Consumer<String> progressReporter) {
-		Map<Integer, List<Publication>> yearSets = publications.stream()
-				.collect(Collectors.groupingBy(Publication::getPublicationYear, TreeMap::new, Collectors.toList()))
+	public void searchYearOneFile(List<BibliographicItem> bibliographicItems, Consumer<String> progressReporter) {
+		Map<Integer, List<BibliographicItem>> yearSets = bibliographicItems.stream()
+				.collect(
+						Collectors.groupingBy(BibliographicItem::getPublicationYear, TreeMap::new, Collectors.toList()))
 				.descendingMap();
 
-		Map<Integer, Integer> cumulativePercentages = getCumulativePercentages(publications, yearSets);
+		Map<Integer, Integer> cumulativePercentages = getCumulativePercentages(bibliographicItems, yearSets);
 
-		List<Publication> emptyYearlist = yearSets.remove(0);
+		List<BibliographicItem> emptyYearlist = yearSets.remove(0);
 		// log.debug("YearSets: {}", yearSets.keySet().stream().sorted().toList());
 		yearSets.keySet().stream().forEach(year -> {
-			List<Publication> yearSet = yearSets.get(year);
+			List<BibliographicItem> yearSet = yearSets.get(year);
 			if (yearSet != null) {
 				if (emptyYearlist != null) {
 					yearSet.addAll(emptyYearlist.stream().filter(r -> r.getLabel() == null).toList());
 				}
 				yearSet.addAll(yearSets.getOrDefault(year - 1, List.of()));
-				progressReporter.accept("Working on " + year + " for " + yearSet.size() + " publications");
+				progressReporter.accept("Working on " + year + " for " + yearSet.size() + " bibliographic items");
 				compareSet(yearSet, year, true, progressReporter);
 				progressReporter.accept("PROGRESS: " + cumulativePercentages.get(year));
 			}
@@ -493,32 +504,32 @@ l						 * 		V 		W 		X
 	 * from earlier year or without a year and more probably in the old file than in the new file) BEFORE the complete data
 	 */
 	// @formatter:on
-	public void searchYearTwoFiles(List<Publication> publications, Consumer<String> progressReporter) {
-		Map<Integer, List<Publication>> yearSets = publications.stream()
-				.collect(Collectors.groupingBy(Publication::getPublicationYear, TreeMap::new, Collectors.toList()));
-		Map<Integer, Integer> cumulativePercentages = getCumulativePercentages(publications, yearSets);
+	public void searchYearTwoFiles(List<BibliographicItem> bibliographicItems, Consumer<String> progressReporter) {
+		Map<Integer, List<BibliographicItem>> yearSets = bibliographicItems.stream().collect(
+				Collectors.groupingBy(BibliographicItem::getPublicationYear, TreeMap::new, Collectors.toList()));
+		Map<Integer, Integer> cumulativePercentages = getCumulativePercentages(bibliographicItems, yearSets);
 
-		List<Publication> emptyYearlist = yearSets.remove(0);
+		List<BibliographicItem> emptyYearlist = yearSets.remove(0);
 		log.debug("YearSets: {}", yearSets.keySet().stream().toList());
 		yearSets.keySet().stream().forEach(year -> {
-			List<Publication> yearSet = new ArrayList<>();
+			List<BibliographicItem> yearSet = new ArrayList<>();
 			if (emptyYearlist != null) {
 				yearSet.addAll(emptyYearlist.stream().filter(r -> r.getLabel() == null).toList());
 			}
 			yearSet.addAll(yearSets.get(year));
 			yearSet.addAll(yearSets.getOrDefault(year + 1, List.of()));
-			progressReporter.accept("Working on " + year + " for " + yearSet.size() + " publications");
+			progressReporter.accept("Working on " + year + " for " + yearSet.size() + " bibliographic items");
 			compareSet(yearSet, year, false, progressReporter);
 			progressReporter.accept("PROGRESS: " + cumulativePercentages.get(year));
 		});
 	}
 
-	private Map<Integer, Integer> getCumulativePercentages(List<Publication> publications,
-			Map<Integer, List<Publication>> yearSets) {
+	private Map<Integer, Integer> getCumulativePercentages(List<BibliographicItem> bibliographicItems,
+			Map<Integer, List<BibliographicItem>> yearSets) {
 		Map<Integer, Integer> cumulativePercentages = new LinkedHashMap<>();
 		int current = 0;
-		Integer total = publications.size();
-		for (Map.Entry<Integer, List<Publication>> year : yearSets.entrySet()) {
+		Integer total = bibliographicItems.size();
+		for (Map.Entry<Integer, List<BibliographicItem>> year : yearSets.entrySet()) {
 			int simple = year.getValue().size();
 			cumulativePercentages.put(year.getKey(), 100 * (simple + current) / total);
 			current += simple;

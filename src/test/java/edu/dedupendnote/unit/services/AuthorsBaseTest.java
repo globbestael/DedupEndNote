@@ -13,7 +13,7 @@ import org.junit.jupiter.api.Test;
 
 import edu.dedupendnote.services.IOService;
 import edu.dedupendnote.unit.BaseTest;
-import edu.dedupendnote.domain.Publication;
+import edu.dedupendnote.domain.BibliographicItem;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -26,12 +26,12 @@ class AuthorsBaseTest extends BaseTest {
 		assertThat(1 * 1).isEqualTo(1);
 	}
 
-	protected Publication fillPublication(String authors) {
-		Publication publication = new Publication();
+	protected BibliographicItem fillBibliographicItem(String authors) {
+		BibliographicItem bibliographicItem = new BibliographicItem();
 		List<String> authorList1 = Arrays.asList(authors.split("; "));
-		authorList1.stream().forEach(author -> IOService.addNormalizedAuthor(author, publication));
-		IOService.fillAllAuthors(publication);
-		return publication;
+		authorList1.stream().forEach(author -> IOService.addNormalizedAuthor(author, bibliographicItem));
+		IOService.fillAllAuthors(bibliographicItem);
+		return bibliographicItem;
 	}
 
 	public record Triple(String authors1, String authors2, double jws, double expJws) {

@@ -12,6 +12,8 @@ import java.util.Set;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import edu.dedupendnote.domain.DeduplicationMode;
+
 @Service
 public class UtilitiesService {
 
@@ -37,10 +39,10 @@ public class UtilitiesService {
 		return hasBom;
 	}
 
-	public static String createOutputFileName(String fileName, boolean markMode) {
+	public static String createOutputFileName(String fileName, DeduplicationMode mode) {
 		String extension = StringUtils.getFilenameExtension(fileName);
 		return fileName.replaceAll("." + extension + "$",
-				(Boolean.TRUE.equals(markMode) ? "_mark." : "_deduplicated.") + extension);
+				(mode == DeduplicationMode.MARK ? "_mark." : "_deduplicated.") + extension);
 	}
 
 	/*

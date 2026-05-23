@@ -2,7 +2,7 @@ package edu.dedupendnote.services;
 
 import org.apache.commons.text.similarity.JaroWinklerSimilarity;
 
-import edu.dedupendnote.domain.Publication;
+import edu.dedupendnote.domain.BibliographicItem;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -25,7 +25,7 @@ public class DefaultAuthorsComparisonService implements AuthorsComparisonService
 	 * See AuthorVariantsExperimentsTest for possible enhancements.
 	 */
 	@Override
-	public boolean compare(Publication r1, Publication r2) {
+	public boolean compare(BibliographicItem r1, BibliographicItem r2) {
 		similarity = 0.0;
 		boolean isReply = r1.isReply() || r2.isReply();
 		boolean sufficientStartPages = r1.getPageStart() != null && r2.getPageStart() != null;

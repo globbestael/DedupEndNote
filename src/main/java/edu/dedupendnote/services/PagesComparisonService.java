@@ -4,8 +4,8 @@ import java.util.Map;
 
 import org.jspecify.annotations.Nullable;
 
-import edu.dedupendnote.domain.Publication;
+import edu.dedupendnote.domain.BibliographicItem;
 
 public interface PagesComparisonService {
-    boolean compare(Publication r1, Publication r2, Map<String, @Nullable Boolean> map);
+    boolean compare(BibliographicItem r1, BibliographicItem r2, Map<String, @Nullable Boolean> map);
 }

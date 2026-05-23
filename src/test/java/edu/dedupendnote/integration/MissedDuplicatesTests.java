@@ -17,6 +17,7 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 import edu.dedupendnote.services.DeduplicationService;
+import edu.dedupendnote.domain.DeduplicationMode;
 import edu.dedupendnote.services.UtilitiesService;
 import edu.dedupendnote.integration.utils.MemoryAppender;
 import lombok.extern.slf4j.Slf4j;
@@ -92,7 +93,7 @@ class MissedDuplicatesTests extends AbstractIntegrationTest {
 		 * False positives or negatives for these 2 versions of Cochrane review CD006069
 		 * 20282, 20456, 36223, 36439, 51545, 51546
 		 * The first 4 (in SRSR_Human_missed_2_4.txt) merges 20456 to 20282 
-		 * All 6 (in SRSR_Human_missed_2_4.txt) merges 20456 to 20282, and keeps 51546 as a second set with 1 publication
+		 * All 6 (in SRSR_Human_missed_2_4.txt) merges 20456 to 20282, and keeps 51546 as a second set with 1 bibliographicItem
 		 * 
 		 * The false merge of 20456 with 20282 is triggered by the comparison of 20456 with 36459
 		 * - 1. with doi / without doi
@@ -103,7 +104,7 @@ class MissedDuplicatesTests extends AbstractIntegrationTest {
 		 * - 4. same journal
 		 * And then the label of THE COMPARED JOURNAL (36459, label 20282) is copied to THE PIVOT (20456)"
 		 * 
-		 * On 2025-12-18 copying the label from the publication to the pivot has been disabled
+		 * On 2025-12-18 copying the label from the bibliographicItem to the pivot has been disabled
 		 */
 		"'/problems/Rayyan/missed_10_11.txt', 2, 1", // Rayyan
 		"'/problems/Rayyan/missed_251_252.txt', 2, 1", // Rayyan
@@ -121,11 +122,11 @@ class MissedDuplicatesTests extends AbstractIntegrationTest {
 	void deduplicateMissedDuplicates(String fileName, int total, int totalWritten) {
 		log.debug("Log level should be debug");
 		String inputFileName = testDir + fileName;
-		boolean markMode = false;
-		String outputFileName = UtilitiesService.createOutputFileName(inputFileName, markMode);
+		DeduplicationMode mode = DeduplicationMode.REMOVE;
+		String outputFileName = UtilitiesService.createOutputFileName(inputFileName, mode);
 		assertThat(new File(inputFileName)).exists();
 
-		String resultString = deduplicationService.deduplicateOneFile(inputFileName, outputFileName, markMode,
+		String resultString = deduplicationService.deduplicateOneFile(inputFileName, outputFileName, mode,
 				message -> {
 				});
 
@@ -134,6 +135,6 @@ class MissedDuplicatesTests extends AbstractIntegrationTest {
 		assertThat(resultString).isEqualTo(deduplicationService.formatResultString(total, totalWritten));
 	}
 
-	// FIXME: tests for markMode = true;
+	// FIXME: tests for mode = true;
 
 }

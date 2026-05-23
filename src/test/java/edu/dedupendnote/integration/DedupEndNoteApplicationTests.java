@@ -20,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import edu.dedupendnote.services.DeduplicationService;
 import edu.dedupendnote.services.IOService;
 import edu.dedupendnote.services.NormalizationService;
+import edu.dedupendnote.domain.DeduplicationMode;
 import edu.dedupendnote.services.UtilitiesService;
 import lombok.extern.slf4j.Slf4j;
 
@@ -69,10 +70,10 @@ class DedupEndNoteApplicationTests extends AbstractIntegrationTest {
 	@Test
 	void deduplicate_OK() {
 		String inputFileName = testDir + "t1.txt";
-		boolean markMode = false;
-		String outputFileName = UtilitiesService.createOutputFileName(inputFileName, markMode);
+		DeduplicationMode mode = DeduplicationMode.REMOVE;
+		String outputFileName = UtilitiesService.createOutputFileName(inputFileName, mode);
 
-		String resultString = deduplicationService.deduplicateOneFile(inputFileName, outputFileName, markMode,
+		String resultString = deduplicationService.deduplicateOneFile(inputFileName, outputFileName, mode,
 				message -> {
 				});
 
@@ -87,11 +88,11 @@ class DedupEndNoteApplicationTests extends AbstractIntegrationTest {
 			"'Non_Latin_input.txt', 2, 2", "'Dedup_PATIJ2_Possibly_missed.txt', 18, 11" })
 	void deduplicateSmallFiles(String fileName, int total, int totalWritten) {
 		String inputFileName = testDir + fileName;
-		boolean markMode = false;
-		String outputFileName = UtilitiesService.createOutputFileName(inputFileName, markMode);
+		DeduplicationMode mode = DeduplicationMode.REMOVE;
+		String outputFileName = UtilitiesService.createOutputFileName(inputFileName, mode);
 		assertThat(new File(inputFileName)).exists();
 
-		String resultString = deduplicationService.deduplicateOneFile(inputFileName, outputFileName, markMode,
+		String resultString = deduplicationService.deduplicateOneFile(inputFileName, outputFileName, mode,
 				message -> {
 				});
 
@@ -101,15 +102,15 @@ class DedupEndNoteApplicationTests extends AbstractIntegrationTest {
 	@Test
 	void deduplicate_withDuplicateIDs() {
 		String inputFileName = testDir + "Bestand_met_duplicate_IDs.txt";
-		boolean markMode = false;
-		String outputFileName = UtilitiesService.createOutputFileName(inputFileName, markMode);
+		DeduplicationMode mode = DeduplicationMode.REMOVE;
+		String outputFileName = UtilitiesService.createOutputFileName(inputFileName, mode);
 
-		String resultString = deduplicationService.deduplicateOneFile(inputFileName, outputFileName, markMode,
+		String resultString = deduplicationService.deduplicateOneFile(inputFileName, outputFileName, mode,
 				message -> {
 				});
 
 		assertThat(resultString)
-				.startsWith("ERROR: The IDs of the publications of input file " + inputFileName + " are not unique");
+				.startsWith("ERROR: The IDs of the bibliographic items of input file " + inputFileName + " are not unique");
 	}
 
 	@Test
@@ -163,6 +164,6 @@ class DedupEndNoteApplicationTests extends AbstractIntegrationTest {
 		titles.forEach(t -> assertThat(replyPattern.matcher(t.toLowerCase()).matches()).isTrue());
 	}
 
-	// FIXME: tests for markMode = true;
+	// FIXME: tests for mode = true;
 
 }

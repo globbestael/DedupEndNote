@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import edu.dedupendnote.services.DeduplicationService;
+import edu.dedupendnote.domain.DeduplicationMode;
 import edu.dedupendnote.services.UtilitiesService;
 
 class TwoFilesTests extends AbstractIntegrationTest {
@@ -24,14 +25,14 @@ class TwoFilesTests extends AbstractIntegrationTest {
 	void deduplicate_OK() {
 		String oldFileName = testDir + "TwoFiles_1.txt";
 		String newFileName = testDir + "TwoFiles_2.txt";
-		boolean markMode = false;
-		String outputFileName = UtilitiesService.createOutputFileName(newFileName, markMode);
+		DeduplicationMode mode = DeduplicationMode.REMOVE;
+		String outputFileName = UtilitiesService.createOutputFileName(newFileName, mode);
 
 		String resultString = deduplicationService.deduplicateTwoFiles(newFileName, oldFileName, outputFileName,
-				markMode, message -> {});
+				mode, message -> {});
 		System.err.println(resultString);
 		assertThat(resultString).startsWith(
-				"DONE: DedupEndNote removed 551 publications from the new set, and has written 114 publications.");
+				"DONE: DedupEndNote removed 551 bibliographic items from the new set, and has written 114 bibliographic items.");
 	}
 
 	@Disabled("TODO: Why was this disabled")
@@ -39,15 +40,15 @@ class TwoFilesTests extends AbstractIntegrationTest {
 	void files_without_IDs() {
 		String oldFileName = testDir + "Recurrance_rate_EndNote_Library_original_deduplicated.txt";
 		String newFileName = testDir + "Recurrence_rate_search_updated_sept_18_deduplicated.txt";
-		boolean markMode = false;
-		String outputFileName = UtilitiesService.createOutputFileName(newFileName, markMode);
+		DeduplicationMode mode = DeduplicationMode.REMOVE;
+		String outputFileName = UtilitiesService.createOutputFileName(newFileName, mode);
 
 		String resultString = deduplicationService.deduplicateTwoFiles(newFileName, oldFileName, outputFileName,
-				markMode, message -> {});
+				mode, message -> {});
 		System.err.println(resultString);
 		assertThat(resultString).startsWith("ERROR: The second input file contains records without IDs");
 	}
 
-	// FIXME: write tests for markMode = true
+	// FIXME: write tests for mode = true
 
 }

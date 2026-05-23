@@ -23,15 +23,15 @@ import org.junit.jupiter.params.provider.MethodSource;
 import edu.dedupendnote.services.IOService;
 import edu.dedupendnote.services.TitleThresholds;
 import edu.dedupendnote.unit.BaseTest;
-import edu.dedupendnote.domain.Publication;
+import edu.dedupendnote.domain.BibliographicItem;
 
 class JWSimilarityTitleTest extends BaseTest {
 
 	@ParameterizedTest(name = "{index}: jaroWinkler({0}, {1})={2}")
 	@MethodSource("positiveArgumentProvider")
 	void jwFullPositiveTest(String input1, String input2, double expected) {
-		Publication p1 = new Publication();
-		Publication p2 = new Publication();
+		BibliographicItem p1 = new BibliographicItem();
+		BibliographicItem p2 = new BibliographicItem();
 		IOService.addNormalizedTitle(input1, p1);
 		IOService.addNormalizedTitle(input2, p2);
 
@@ -75,8 +75,8 @@ class JWSimilarityTitleTest extends BaseTest {
 	@ParameterizedTest(name = "{index}: jaroWinkler({0}, {1})={2}")
 	@MethodSource("negativeArgumentProvider")
 	void jwFullNegativeTest(String input1, String input2, double expected) {
-		Publication p1 = new Publication();
-		Publication p2 = new Publication();
+		BibliographicItem p1 = new BibliographicItem();
+		BibliographicItem p2 = new BibliographicItem();
 		IOService.addNormalizedTitle(input1, p1);
 		IOService.addNormalizedTitle(input2, p2);
 
@@ -404,7 +404,7 @@ class JWSimilarityTitleTest extends BaseTest {
 					"The JAK2 46/1 haplotype in Budd-Chiari syndrome and portal vein thrombosis",
 					"JAK2 Germline Genetic Variation In Budd-Chiari Syndrome and Portal Vein Thrombosis",
 					0.85),
-				arguments( // Publication and separate retraction notice (PubMed)
+				arguments( // BibliographicItem and separate retraction notice (PubMed)
 					"Retraction notice to \"Evaluation of the treatment strategies on patient-derived xenograft mice of human breast tumor\" [Eur. J. Pharmacol. 889 (2020) 173605]",
 					"Evaluation of the treatment strategies on patient-derived xenograft mice of human breast tumor",
 					0.78),

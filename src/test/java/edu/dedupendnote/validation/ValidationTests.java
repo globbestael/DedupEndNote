@@ -27,10 +27,11 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 import edu.dedupendnote.integration.AbstractIntegrationTest;
+import edu.dedupendnote.domain.DeduplicationMode;
 import edu.dedupendnote.services.DeduplicationService;
 import edu.dedupendnote.services.IOService;
-import edu.dedupendnote.domain.Publication;
-import edu.dedupendnote.domain.PublicationDB;
+import edu.dedupendnote.domain.BibliographicItem;
+import edu.dedupendnote.domain.BibliographicItemDB;
 import edu.dedupendnote.validation.domain.ValidationResult;
 import edu.dedupendnote.validation.services.RecordDBService;
 import edu.dedupendnote.validation.services.ValidationService;
@@ -243,14 +244,14 @@ class ValidationTests extends AbstractIntegrationTest {
 	@Test
 	void readTruthFileTest() throws IOException {
 		String fileName = testDir + "/SRA2/Cytology_screening_TRUTH.txt";
-		List<PublicationDB> truthRecords = validationService.readTruthFile(fileName);
+		List<BibliographicItemDB> truthRecords = validationService.readTruthFile(fileName);
 
 		assertThat(truthRecords).hasSizeGreaterThan(10);
 
 		Map<Integer, Set<Integer>> trueDuplicateSets = truthRecords.stream().filter(r -> r.getDedupid() != null)
-				// .map(PublicationDB::getDedupid)
-				.collect(Collectors.groupingBy(PublicationDB::getDedupid,
-						Collectors.mapping(PublicationDB::getId, Collectors.toSet())));
+				// .map(BibliographicItemDB::getDedupid)
+				.collect(Collectors.groupingBy(BibliographicItemDB::getDedupid,
+						Collectors.mapping(BibliographicItemDB::getId, Collectors.toSet())));
 		assertThat(trueDuplicateSets).hasSizeGreaterThan(10);
 		trueDuplicateSets.entrySet().stream().limit(10).forEach(System.err::println);
 	}
@@ -259,14 +260,14 @@ class ValidationTests extends AbstractIntegrationTest {
 	ValidationResult checkResults(String setName, String inputFileName, String outputFileName, String truthFileName) throws IOException {
 		log.error("- Validating {}", setName);
 		long startTime = System.currentTimeMillis();
-		List<Publication> publications = deduplicate(inputFileName);
+		List<BibliographicItem> bibliographicItems = deduplicate(inputFileName);
 		long durationMs = System.currentTimeMillis() - startTime;
 		ValidationResult validationResult = validationService.checkResults(
 				setName, inputFileName, outputFileName, truthFileName,
-				publications, durationMs, withTracing, deduplicationService);
+				bibliographicItems, durationMs, withTracing, deduplicationService);
 
 		if (withTitleSplitterOutput) {
-			for (Publication p : publications) {
+			for (BibliographicItem p : bibliographicItems) {
 				for (String t : p.getTitles()) {
 					if (!titleCounter.containsKey(t)) {
 						titleCounter.put(t, 1);
@@ -548,7 +549,7 @@ class ValidationTests extends AbstractIntegrationTest {
 		String inputFileName = testDir + "/Dedupe-sweep/dedupendnote_files/BIG_SET_mark_DS.txt";
 		String outputFileName = testDir + "/Dedupe-sweep/dedupendnote_files/BIG_SET_mark_DS_with_TRUTH.txt";
 
-		List<PublicationDB> truthRecords = validationService.readTruthFile(truthFileName);
+		List<BibliographicItemDB> truthRecords = validationService.readTruthFile(truthFileName);
 		ioService.writeRisWithTRUTH_forDS(truthRecords, inputFileName, outputFileName);
 
 		assertThat(1*1).isEqualTo(1);
@@ -588,7 +589,7 @@ class ValidationTests extends AbstractIntegrationTest {
 	@Disabled("Only needed for initialisation of TRUTH file")
 	@Test
 	private void createRisWithTRUTH(String inputFileName, String truthFileName, String outputFileName) throws IOException {
-		List<PublicationDB> truthRecords = validationService.readTruthFile(truthFileName);
+		List<BibliographicItemDB> truthRecords = validationService.readTruthFile(truthFileName);
 		ioService.writeRisWithTRUTH(truthRecords, inputFileName, outputFileName);
 	}
 
@@ -603,8 +604,8 @@ class ValidationTests extends AbstractIntegrationTest {
 	 * @param outputFileName: a tab delimited file. Duplicate records have a non empty dedupid field.
 	 */
 	void createInitialTruthFile(String inputFileName, String outputFileName) {
-		List<Publication> publications = deduplicate(inputFileName);
-		List<PublicationDB> publicationDBs = recordDBService.convertToRecordDB(publications, inputFileName);
+		List<BibliographicItem> bibliographicItems = deduplicate(inputFileName);
+		List<BibliographicItemDB> publicationDBs = recordDBService.convertToRecordDB(bibliographicItems, inputFileName);
 		recordDBService.saveRecordDBs(publicationDBs, outputFileName);
 	}
 	
@@ -622,8 +623,8 @@ class ValidationTests extends AbstractIntegrationTest {
 	 */
 	void createInitialTruthFile(String inputFileName, String asysdInputfileName, String outputFileName) {
 		Map<Integer, Set<Integer>> goldMap = readASySDGoldFile(asysdInputfileName);
-		List<Publication> publications = deduplicate(inputFileName);
-		List<PublicationDB> publicationDBs = recordDBService.convertToRecordDB(publications, inputFileName);
+		List<BibliographicItem> bibliographicItems = deduplicate(inputFileName);
+		List<BibliographicItemDB> publicationDBs = recordDBService.convertToRecordDB(bibliographicItems, inputFileName);
 		
 		publicationDBs.forEach(r -> {
 			Integer id = r.getId();
@@ -675,15 +676,15 @@ class ValidationTests extends AbstractIntegrationTest {
 		return goldMap;
 	}
 
-	private List<Publication> deduplicate(String inputFileName) {
+	private List<BibliographicItem> deduplicate(String inputFileName) {
 		/*
 		 * Run deduplicateOneFile in mark mode and read the marked output.
 		 * This closes the gap between validation and production: validation now exercises
 		 * the exact code path the production deployment runs, instead of mimicking it.
 		 */
 		String markFileName = inputFileName + "_mark.txt";
-		deduplicationService.deduplicateOneFile(inputFileName, markFileName, /* markMode= */ true, message -> {});
-		return ioService.readPublications(markFileName, message -> {}, /* includeLabelField= */ true);
+		deduplicationService.deduplicateOneFile(inputFileName, markFileName, DeduplicationMode.MARK, message -> {});
+		return ioService.readBibliographicItems(markFileName, message -> {}, /* includeLabelField= */ true);
 	}
 
 

@@ -14,12 +14,12 @@ import org.junit.jupiter.api.Test;
 
 import edu.dedupendnote.services.AuthorThresholds;
 import edu.dedupendnote.services.IOService;
-import edu.dedupendnote.domain.Publication;
-import edu.dedupendnote.unit.domain.PublicationExperiment;
+import edu.dedupendnote.domain.BibliographicItem;
+import edu.dedupendnote.unit.domain.BibliographicItemExperiment;
 import lombok.extern.slf4j.Slf4j;
 
 /*
- * Test for comparing different implementations of author processing in Publication.
+ * Test for comparing different implementations of author processing in BibliographicItem.
  *
  * See AuthorExperimentsTests for tests of different implementations of author comparisons (i.e. in DeduplicationService).
  */
@@ -38,13 +38,13 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 	void compareAuthorsWithoutPreprocessingTest() throws IOException {
 
 		for (Triple triple : triples) {
-			Publication r1 = fillPublication(triple.authors1());
-			Publication r2 = fillPublication(triple.authors2());
+			BibliographicItem r1 = fillBibliographicItem(triple.authors1());
+			BibliographicItem r2 = fillBibliographicItem(triple.authors2());
 
 			triple = triple.withJws(getHighestSimilarityForAuthors(r1.getAllAuthors(), r2.getAllAuthors()));
 
-			r1 = fillPublicationAddAuthorsWithoutPreprocessing(triple.authors1());
-			r2 = fillPublicationAddAuthorsWithoutPreprocessing(triple.authors2());
+			r1 = fillBibliographicItemAddAuthorsWithoutPreprocessing(triple.authors1());
+			r2 = fillBibliographicItemAddAuthorsWithoutPreprocessing(triple.authors2());
 			filledTriples
 					.add(triple.withExpJws(getHighestSimilarityForAuthors(r1.getAllAuthors(), r2.getAllAuthors())));
 		}
@@ -76,13 +76,13 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 	void compareAuthorsLimitedToFirstLettersTest() throws IOException {
 
 		for (Triple triple : triples) {
-			Publication r1 = fillPublication(triple.authors1());
-			Publication r2 = fillPublication(triple.authors2());
+			BibliographicItem r1 = fillBibliographicItem(triple.authors1());
+			BibliographicItem r2 = fillBibliographicItem(triple.authors2());
 
 			triple = triple.withJws(getHighestSimilarityForAuthors(r1.getAllAuthors(), r2.getAllAuthors()));
 
-			r1 = fillPublicationAddAuthorsLimitedToFirstLetters(triple.authors1());
-			r2 = fillPublicationAddAuthorsLimitedToFirstLetters(triple.authors2());
+			r1 = fillBibliographicItemAddAuthorsLimitedToFirstLetters(triple.authors1());
+			r2 = fillBibliographicItemAddAuthorsLimitedToFirstLetters(triple.authors2());
 			filledTriples
 					.add(triple.withExpJws(getHighestSimilarityForAuthors(r1.getAllAuthors(), r2.getAllAuthors())));
 		}
@@ -100,13 +100,13 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 	void compareAuthorsLimitedToFirstLetters_2_Test() throws IOException {
 
 		for (Triple triple : triples) {
-			Publication r1 = fillPublication(triple.authors1());
-			Publication r2 = fillPublication(triple.authors2());
+			BibliographicItem r1 = fillBibliographicItem(triple.authors1());
+			BibliographicItem r2 = fillBibliographicItem(triple.authors2());
 
 			triple = triple.withJws(getHighestSimilarityForAuthors(r1.getAllAuthors(), r2.getAllAuthors()));
 
-			r1 = fillPublicationAddAuthorsLimitedToFirstLetters_2(triple.authors1());
-			r2 = fillPublicationAddAuthorsLimitedToFirstLetters_2(triple.authors2());
+			r1 = fillBibliographicItemAddAuthorsLimitedToFirstLetters_2(triple.authors1());
+			r2 = fillBibliographicItemAddAuthorsLimitedToFirstLetters_2(triple.authors2());
 			filledTriples
 					.add(triple.withExpJws(getHighestSimilarityForAuthors(r1.getAllAuthors(), r2.getAllAuthors())));
 		}
@@ -120,8 +120,8 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 	void explainPoorResults_AuthorsLimitedToFirstLetters() {
 		String author1 = "de Ville de Goyet, J.";
 		String author2 = "Degoyet, J. D.";
-		Publication r1 = fillPublicationAddAuthorsLimitedToFirstLetters(author1);
-		Publication r2 = fillPublicationAddAuthorsLimitedToFirstLetters(author2);
+		BibliographicItem r1 = fillBibliographicItemAddAuthorsLimitedToFirstLetters(author1);
+		BibliographicItem r2 = fillBibliographicItemAddAuthorsLimitedToFirstLetters(author2);
 		String a1 = r1.getAllAuthors().get(0);
 		String a2 = r2.getAllAuthors().get(0);
 
@@ -141,8 +141,8 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 	 * But implementing this will not be easy, and performance (speed, and memory?) might
 	 * be impacted. 
 	 * Possible solution 
-	 * - Publication.numberOfAuthors 
-	 * - Publication has an array endOffsets[numberOfAuthors] of ending offsets for each author 
+	 * - BibliographicItem.numberOfAuthors 
+	 * - BibliographicItem has an array endOffsets[numberOfAuthors] of ending offsets for each author 
 	 * - record 1: numberOfAuthors = n1 
 	 * - record 2: numberOfAuthors = n2 
 	 * - numberWanted = Math.min(n1, n2) 
@@ -155,8 +155,8 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 		triples.removeIf(t -> t.authors1().isEmpty() || t.authors2().isEmpty());
 
 		for (Triple triple : triples) {
-			Publication r1 = fillPublication(triple.authors1());
-			Publication r2 = fillPublication(triple.authors2());
+			BibliographicItem r1 = fillBibliographicItem(triple.authors1());
+			BibliographicItem r2 = fillBibliographicItem(triple.authors2());
 
 			triple = triple.withJws(getHighestSimilarityForAuthors(r1.getAllAuthors(), r2.getAllAuthors()));
 
@@ -164,10 +164,10 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 			List<String> authorList2 = Arrays.asList(triple.authors2().split("; "));
 			int min = Math.min(authorList1.size(), authorList2.size());
 
-			// r1 = fillPublication(authorList1.subList(0, min).stream().collect(Collectors.joining("; ")));
-			// r2 = fillPublication(authorList2.subList(0, min).stream().collect(Collectors.joining("; ")));
-			r1 = fillPublication(authorList1.stream().limit(min).collect(Collectors.joining("; ")));
-			r2 = fillPublication(authorList2.stream().limit(min).collect(Collectors.joining("; ")));
+			// r1 = fillBibliographicItem(authorList1.subList(0, min).stream().collect(Collectors.joining("; ")));
+			// r2 = fillBibliographicItem(authorList2.subList(0, min).stream().collect(Collectors.joining("; ")));
+			r1 = fillBibliographicItem(authorList1.stream().limit(min).collect(Collectors.joining("; ")));
+			r2 = fillBibliographicItem(authorList2.stream().limit(min).collect(Collectors.joining("; ")));
 			filledTriples
 					.add(triple.withExpJws(getHighestSimilarityForAuthors(r1.getAllAuthors(), r2.getAllAuthors())));
 		}
@@ -187,7 +187,7 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 	 *
 	 * Implementing this is quite easy. 
 	 * - mwah: in AuthorsComparator 
-	 * - better: in Publication: add only the first 10 authors
+	 * - better: in BibliographicItem: add only the first 10 authors
 	 */
 	// @formatter:on
 	@Test
@@ -195,8 +195,8 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 		int limit = 10;
 
 		for (Triple triple : triples) {
-			Publication r1 = fillPublication(triple.authors1());
-			Publication r2 = fillPublication(triple.authors2());
+			BibliographicItem r1 = fillBibliographicItem(triple.authors1());
+			BibliographicItem r2 = fillBibliographicItem(triple.authors2());
 
 			triple = triple.withJws(getHighestSimilarityForAuthors(r1.getAllAuthors(), r2.getAllAuthors()));
 
@@ -209,8 +209,8 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 				authorList2 = authorList2.subList(0, limit);
 			}
 
-			r1 = fillPublication(authorList1.stream().collect(Collectors.joining("; ")));
-			r2 = fillPublication(authorList2.stream().collect(Collectors.joining("; ")));
+			r1 = fillBibliographicItem(authorList1.stream().collect(Collectors.joining("; ")));
+			r2 = fillBibliographicItem(authorList2.stream().collect(Collectors.joining("; ")));
 			filledTriples
 					.add(triple.withExpJws(getHighestSimilarityForAuthors(r1.getAllAuthors(), r2.getAllAuthors())));
 		}
@@ -230,7 +230,7 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 	 *
 	 * Implementing this is quite easy 
 	 * - mwah: in AuthorsComparator 
-	 * - better: in Publication: add only the first 10 authors
+	 * - better: in BibliographicItem: add only the first 10 authors
 	 */
 	// @formatter:on
 	@Test
@@ -238,8 +238,8 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 		int limit = 5;
 
 		for (Triple triple : triples) {
-			Publication r1 = fillPublication(triple.authors1());
-			Publication r2 = fillPublication(triple.authors2());
+			BibliographicItem r1 = fillBibliographicItem(triple.authors1());
+			BibliographicItem r2 = fillBibliographicItem(triple.authors2());
 
 			triple = triple.withJws(getHighestSimilarityForAuthors(r1.getAllAuthors(), r2.getAllAuthors()));
 
@@ -252,8 +252,8 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 				authorList2 = authorList2.subList(0, limit);
 			}
 
-			r1 = fillPublication(authorList1.stream().collect(Collectors.joining("; ")));
-			r2 = fillPublication(authorList2.stream().collect(Collectors.joining("; ")));
+			r1 = fillBibliographicItem(authorList1.stream().collect(Collectors.joining("; ")));
+			r2 = fillBibliographicItem(authorList2.stream().collect(Collectors.joining("; ")));
 			filledTriples
 					.add(triple.withExpJws(getHighestSimilarityForAuthors(r1.getAllAuthors(), r2.getAllAuthors())));
 		}
@@ -273,16 +273,16 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 	 * - bad results with short author lists with differeent conventions, esp when sorting
 	 * 		"Weller, S. C." vs "WELLER, SC"		(WSC vs WS, sorting: CSW vs SW)
 	 */
-	private Publication fillPublicationAddAuthorsWithoutPreprocessing(String authors) {
-		PublicationExperiment r = new PublicationExperiment();
+	private BibliographicItem fillBibliographicItemAddAuthorsWithoutPreprocessing(String authors) {
+		BibliographicItemExperiment r = new BibliographicItemExperiment();
 		List<String> authorList1 = Arrays.asList(authors.split("; "));
 		authorList1.stream().forEach(a -> r.addAuthorsWithoutPreprocessing(a));
 		IOService.fillAllAuthors(r);
 		return r;
 	}
 
-	private Publication fillPublicationAddAuthorsLimitedToFirstLetters(String authors) {
-		PublicationExperiment r = new PublicationExperiment();
+	private BibliographicItem fillBibliographicItemAddAuthorsLimitedToFirstLetters(String authors) {
+		BibliographicItemExperiment r = new BibliographicItemExperiment();
 		List<String> authorList1 = Arrays.asList(authors.split("; "));
 		authorList1.stream().forEach(a -> r.addAuthorsLimitedToFirstLetters(a));
 		IOService.fillAllAuthors(r);
@@ -290,8 +290,8 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 		return r;
 	}
 
-	private Publication fillPublicationAddAuthorsLimitedToFirstLetters_2(String authors) {
-		PublicationExperiment r = new PublicationExperiment();
+	private BibliographicItem fillBibliographicItemAddAuthorsLimitedToFirstLetters_2(String authors) {
+		BibliographicItemExperiment r = new BibliographicItemExperiment();
 		List<String> authorList1 = Arrays.asList(authors.split("; "));
 		authorList1.stream().forEach(a -> r.addAuthorsLimitedToFirstLetters_2(a));
 		IOService.fillAllAuthors(r);

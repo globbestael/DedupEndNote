@@ -125,7 +125,7 @@
 				done: function (e, data) {
 					if (data.textStatus == "success") {
 						if (data.fileInput[0].id == 'fileUpload1') {
-							$('#results').html("<span>File " + data.files[0].name + " has been uploaded. Waiting for file with NEW records</span>");
+							$('#results').html("<span>File " + data.files[0].name + " has been uploaded. Waiting for file with NEW bibliographic items</span>");
 							$('#fileName_old_display').text(data.files[0].name);
 							disableButton('#fileUpload1');
 							enableButton('#fileUpload2');
@@ -209,13 +209,13 @@
 					<div class="step-header">
 						<h4><span class="step-number">1</span>Upload files</h4>
 					</div>
-					<p class="step-subtitle">Upload the OLD records first, then the NEW records</p>
+					<p class="step-subtitle">Upload the OLD bibliographic items first, then the NEW bibliographic items</p>
 					<form class="form-horizontal" id="upload_form" method="post" enctype="multipart/form-data"
 						th:action="@{|/uploadFile|}">
 						<div class="row g-3">
 							<div class="col-6">
 								<div id="step1a" class="step-subcard step-active">
-									<div class="fw-semibold mb-2">1a. OLD records</div>
+									<div class="fw-semibold mb-2">1a. OLD bibliographic items</div>
 									<input type="hidden" name="fileType" value="old" />
 									<label for="fileUpload1" class="btn btn-outline-secondary btn-sm">Choose file</label>
 									<input type="file" id="fileUpload1" name="file" class="d-none" />
@@ -224,7 +224,7 @@
 							</div>
 							<div class="col-6">
 								<div id="step1b" class="step-subcard step-waiting">
-									<div class="fw-semibold mb-2">1b. NEW records</div>
+									<div class="fw-semibold mb-2">1b. NEW bibliographic items</div>
 									<input type="hidden" name="fileType" value="new" />
 									<label for="fileUpload2" class="btn btn-outline-secondary btn-sm disabled">Choose file</label>
 									<input type="file" id="fileUpload2" disabled name="file" class="d-none" />
@@ -246,7 +246,7 @@
 						<input type="hidden" id="wssessionId" name="wssessionId" value="" />
 						<div class="form-check form-check-inline mb-2">
 							<input class="form-check-input" type="checkbox" id="markMode" name="markMode" />
-							<label class="form-check-label" for="markMode">Do NOT deduplicate but mark the duplicate records (see Mark mode below)</label>
+							<label class="form-check-label" for="markMode">Do NOT deduplicate but mark the duplicate bibliographic items (see Mark mode below)</label>
 						</div>
 						<div>
 							<button type="submit" id="buttonStartDeduplication" disabled
@@ -292,10 +292,10 @@
 									<li>Import the results from the second query into a <strong>new</strong> EndNote database NEW</li>
 									<li>Export the NEW EndNote database as NEW_RECORDS.txt</li>
 									<li>Upload these 2 RIS files on this page</li>
-									<li>DedupEndNote will deduplicate both files, and save only the records from NEW_RECORDS.txt which are not present in OLD_RECORDS.txt.
-										If a record occurs multiple times in NEW_RECORDS.txt, it will be saved only once</li>
+									<li>DedupEndNote will deduplicate both files, and save only the bibliographic items from NEW_RECORDS.txt which are not present in OLD_RECORDS.txt.
+										If a bibliographic item occurs multiple times in NEW_RECORDS.txt, it will be saved only once</li>
 									<li>Save the result file as a local file (NEW_RECORDS_deduplicated.txt)</li>
-									<li>Import NEW_RECORDS_deduplicated.txt in a new EndNote database if you want only to see the new records.
+									<li>Import NEW_RECORDS_deduplicated.txt in a new EndNote database if you want only to see the new bibliographic items.
 										Otherwise, import them into EndNote database OLD</li>
 								</ol>
 							</div>
@@ -314,11 +314,11 @@
 										an EndNote database. Some time later you execute that query again (maybe after changing the query)
 										in the same bibliographic database or a another query in another bibliographic database.
 										You want to know which results from the second query are not present yet in the existing EndNote database.</li>
-									<li>You have assigned the records in the original EndNote database to several groups. If you add
-										records from a new query to that EndNote database and deduplicate all records with DedupEndNote,
+									<li>You have assigned the bibliographic items in the original EndNote database to several groups. If you add
+										bibliographic items from a new query to that EndNote database and deduplicate all bibliographic items with DedupEndNote,
 										you would lose that grouping information: EndNote export files do not retain grouping information!</li>
 									<li>You have results from several bibliographic databases (PubMed, Cochrane, EMBASE, ...) and no
-										EndNote database yet. You prefer PubMed records above Cochrane records above EMBASE records ...<br />
+										EndNote database yet. You prefer PubMed bibliographic items above Cochrane bibliographic items above EMBASE bibliographic items ...<br />
 										See the <a href="/resources/faq.html#preferredOrder" target="window2">FAQ</a> for details.</li>
 								</ul>
 							</div>
@@ -332,18 +332,18 @@
 						</h2>
 						<div id="collapseMarkMode" class="accordion-collapse collapse" data-bs-parent="#docsAccordion">
 							<div class="accordion-body">
-								<p>In Mark mode the duplicate records in the file with new records are marked with the IDs of the first
-									record of a set of duplicate records.
-									If the duplicate record was found in the file with old records, the ID is preceded with "-".
-									When a record has no duplicates, no ID is used. The input file with new records is copied to the
-									output file but the IDs of the duplicate records are written to the Label field ("LB").
+								<p>In Mark mode the duplicate bibliographic items in the file with new bibliographic items are marked with the IDs of the first
+									bibliographic item of a set of duplicate bibliographic items.
+									If the duplicate bibliographic item was found in the file with old bibliographic items, the ID is preceded with "-".
+									When a bibliographic item has no duplicates, no ID is used. The input file with new bibliographic items is copied to the
+									output file but the IDs of the duplicate bibliographic items are written to the Label field ("LB").
 									The original content of the Label field is overwritten! The DOI and Pages fields are not changed.</p>
 								<p>After importing the result file ("..._mark.txt") into a new EndNote database, making the Label field
 									visible, and sorting on the Label field:</p>
 								<ul>
-									<li>records without Label content were unique in both files</li>
-									<li>records with a negative Label were already present in the file with old records</li>
-									<li>records with a positive Label had duplicates in the file with new records</li>
+									<li>bibliographic items without Label content were unique in both files</li>
+									<li>bibliographic items with a negative Label were already present in the file with old bibliographic items</li>
+									<li>bibliographic items with a positive Label had duplicates in the file with new bibliographic items</li>
 								</ul>
 							</div>
 						</div>
@@ -357,8 +357,8 @@
 						<div id="collapseCaveat" class="accordion-collapse collapse" data-bs-parent="#docsAccordion">
 							<div class="accordion-body">
 								<ul>
-									<li>If you have deleted records in the original EndNote database, and the second set contains
-										records which are duplicates of the deleted records, these records from the second set will be
+									<li>If you have deleted bibliographic items in the original EndNote database, and the second set contains
+										bibliographic items which are duplicates of the deleted bibliographic items, these bibliographic items from the second set will be
 										present in the deduplication results.
 										See the <a href="/resources/faq.html#groups" target="window2">FAQ</a> for a solution with new projects.</li>
 									<li>DO NOT use the output file of a deduplication as an inputfile for another deduplication.

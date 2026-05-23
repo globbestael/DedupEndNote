@@ -14,7 +14,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import edu.dedupendnote.services.IOService;
 import edu.dedupendnote.services.NormalizationService;
-import edu.dedupendnote.domain.Publication;
+import edu.dedupendnote.domain.BibliographicItem;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -33,7 +33,7 @@ class NormalizationServiceJournalTest {
 	@ParameterizedTest(name = "{index}: slashTest({0}, {1})")
 	@MethodSource("slashArgumentProvider")
 	void slashTest(String input1, List<String> list) {
-		Publication p1 = new Publication();
+		BibliographicItem p1 = new BibliographicItem();
 		IOService.addNormalizedJournal(input1, p1, "T2");
 
 		for (String j : p1.getJournals()) {
@@ -44,7 +44,7 @@ class NormalizationServiceJournalTest {
 
 	@Test
 	void journalWithSquareBracketsAtEnd() {
-		Publication p1 = new Publication();
+		BibliographicItem p1 = new BibliographicItem();
 		IOService.addNormalizedJournal("Zhonghua wai ke za zhi [Chinese journal of surgery]", p1, "T2");
 
 		assertThat(p1.getJournals()).hasSize(3);
@@ -54,7 +54,7 @@ class NormalizationServiceJournalTest {
 
 	@Test
 	void journalWithSquareBracketsAtStart() {
-		Publication p1 = new Publication();
+		BibliographicItem p1 = new BibliographicItem();
 
 		IOService.addNormalizedJournal("[Rinsho ketsueki] The Japanese journal of clinical hematology", p1, "T2");
 

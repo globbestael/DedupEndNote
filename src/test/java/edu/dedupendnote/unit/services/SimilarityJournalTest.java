@@ -11,7 +11,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import edu.dedupendnote.services.DefaultJournalComparisonService;
 import edu.dedupendnote.services.IOService;
-import edu.dedupendnote.domain.Publication;
+import edu.dedupendnote.domain.BibliographicItem;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -23,8 +23,8 @@ class SimilarityJournalTest {
 	@ParameterizedTest(name = "{index}: compareJournals({0}, {1})")
 	@MethodSource("fullPositiveArgumentProvider")
 	void fullPositiveTest(String input1, String input2) {
-		Publication p1 = new Publication();
-		Publication p2 = new Publication();
+		BibliographicItem p1 = new BibliographicItem();
+		BibliographicItem p2 = new BibliographicItem();
 		log.debug("==================================================================");
 
 		IOService.addNormalizedJournal(input1, p1, "T2");
@@ -40,8 +40,8 @@ class SimilarityJournalTest {
 	@ParameterizedTest(name = "{index}: compareJournals({0}, {1})")
 	@MethodSource("fullNegativeArgumentProvider")
 	void fullNegativeTest(String input1, String input2) {
-		Publication p1 = new Publication();
-		Publication p2 = new Publication();
+		BibliographicItem p1 = new BibliographicItem();
+		BibliographicItem p2 = new BibliographicItem();
 		IOService.addNormalizedJournal(input1, p1, "T2");
 		IOService.addNormalizedJournal(input2, p2, "T2");
 
@@ -73,10 +73,10 @@ class SimilarityJournalTest {
 					"Behavioral & Brain Functions [Electronic Resource]: BBF"),
 			arguments("[Technical report] SAM-TR. USAF School of Aerospace Medicine", "[Technical report] SAM-TR"),
 			arguments(
-					"Prilozi (Makedonska akademija na naukite i umetnostite. Oddelenie za medicinski nauki). 36 (3) (pp 35-41), 2015. Date of Publication: 2015.",
+					"Prilozi (Makedonska akademija na naukite i umetnostite. Oddelenie za medicinski nauki). 36 (3) (pp 35-41), 2015. Date of BibliographicItem: 2015.",
 					"Prilozi Makedonska Akademija Na Naukite I Umetnostite Oddelenie Za Medicinski Nauki"),
 			arguments(
-					"Prilozi (Makedonska akademija na naukite i umetnostite. Oddelenie za medicinski nauki). 36 (3) (pp 35-41), 2015. Date of Publication: 2015.",
+					"Prilozi (Makedonska akademija na naukite i umetnostite. Oddelenie za medicinski nauki). 36 (3) (pp 35-41), 2015. Date of BibliographicItem: 2015.",
 					"Prilozi (Makedonska akademija na naukite i umetnostite"),
 			arguments("Annals of Oncology", "Annals of Hepatology"), // JWS 0.916 !!!
 			arguments("Rinsho Ketsueki", "Rinshō ketsueki"), // UTF-8
@@ -137,13 +137,13 @@ class SimilarityJournalTest {
 			arguments("Acta Chir Scand Suppl", "Acta Chirurgica Scandinavica"),
 			arguments("Pleura Peritioneum", "PLEURA AND PERITIONEUM"),
 			arguments("Clin.Neuropharmacol.",
-					"Clinical neuropharmacology.12 Suppl 2 ()(pp v-xii; S1-105) 1989.Date of Publication: 1989."),
+					"Clinical neuropharmacology.12 Suppl 2 ()(pp v-xii; S1-105) 1989.Date of BibliographicItem: 1989."),
 			arguments("J.Neurosci.",
-					"Journal of Neuroscience.29 (37) ()(pp 11451-11460) 2009.Date of Publication: 16 Sep 2009."),
-			arguments("Arzneimittel-Forschung/Drug Research.55 (3) ()(pp 153-159) 2005.Date of Publication: 2005.",
+					"Journal of Neuroscience.29 (37) ()(pp 11451-11460) 2009.Date of BibliographicItem: 16 Sep 2009."),
+			arguments("Arzneimittel-Forschung/Drug Research.55 (3) ()(pp 153-159) 2005.Date of BibliographicItem: 2005.",
 					"Arzneimittelforschung."),
 			arguments("Zhen.Ci.Yan.Jiu.",
-					"Zhen ci yan jiu = Acupuncture research / [Zhongguo yi xue ke xue yuan Yi xue qing bao yan jiu suo bian ji].39 (2) ()(pp 136-141) 2014.Date of Publication: Apr 2014."),
+					"Zhen ci yan jiu = Acupuncture research / [Zhongguo yi xue ke xue yuan Yi xue qing bao yan jiu suo bian ji].39 (2) ()(pp 136-141) 2014.Date of BibliographicItem: Apr 2014."),
 			arguments("RSC Adv", "RSC ADVANCES"),
 			arguments("Pleura Peritoneum", "PLEURA AND PERITONEUM"),
 			arguments("AJNR Am J Neuroradiol", "AMERICAN JOURNAL OF NEURORADIOLOGY"),
@@ -155,7 +155,7 @@ class SimilarityJournalTest {
 			arguments("Paediatr Drugs", "Pediatric Drugs"),
 			arguments("Birth Defects Res C Embryo Today", "Birth Defects Research Part C - Embryo Today: Reviews"),
 			arguments("Birth Defects Res C Embryo Today", "BIRTH DEFECTS RESEARCH PART C-EMBRYO TODAY-REVIEWS"),
-			arguments("Clinical neuropharmacology.12 Suppl 2 ()(pp v-xii; S1-105) 1989.Date of Publication: 1989.",
+			arguments("Clinical neuropharmacology.12 Suppl 2 ()(pp v-xii; S1-105) 1989.Date of BibliographicItem: 1989.",
 					"Clinical neuropharmacology"),
 			arguments("Ann Fr Anesth Reanim", "ANNALES FRANCAISES D ANESTHESIE ET DE REANIMATION"),
 			arguments("Klin Monbl Augenheilkd", "KLINISCHE MONATSBLATTER FUR AUGENHEILKUNDE"),
@@ -165,7 +165,7 @@ class SimilarityJournalTest {
 			arguments(
 					"12th World Congress of the International Hepato-Pancreato-Biliary Association. Sao Paulo Brazil.",
 					"12th World Congress of the International Hepato-Pancreato-Biliary Association. Sao Paulo Brazil."),
-			arguments( // this one matches because of Publication.journalExtraPattern
+			arguments( // this one matches because of BibliographicItem.journalExtraPattern
 					"International Liver Transplantation Society 15th Annual International Congress. New York, NY United States.",
 					"International Liver Transplantation Society"),
 			arguments( // this one matches because IOService.conferencePattern adds a second journal
@@ -193,7 +193,7 @@ class SimilarityJournalTest {
 					"BBA Clinical",
 					"Biochimica et biophysica peracta nonclinical"),
 				arguments( // see issue #1
-						"The Journal of the Kentucky Medical Association.95 (4) ()(pp 145-148) 1997.Date of Publication: Apr 1997.",
+						"The Journal of the Kentucky Medical Association.95 (4) ()(pp 145-148) 1997.Date of BibliographicItem: Apr 1997.",
 						"J.Ky.Med.Assoc."),
 				arguments( // "sports" in abbreviation, "sport" in full version
 						"Asia Pac J Sports Med Arthrosc Rehabil Technol",

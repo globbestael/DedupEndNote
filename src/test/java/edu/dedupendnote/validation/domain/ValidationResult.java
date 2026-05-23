@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import edu.dedupendnote.domain.Publication;
+import edu.dedupendnote.domain.BibliographicItem;
 import lombok.Data;
 
 @Data
@@ -16,7 +16,7 @@ public class ValidationResult {
 	int tn;
 	int fp;
 	long duration;
-	// The number of publications in the to_validate files which are tp and where id == dedupId
+	// The number of bibliographicItems in the to_validate files which are tp and where id == dedupId
 	int uniqueDuplicates;
 
 	int total; // = tp + fn + tn + fp;
@@ -28,8 +28,8 @@ public class ValidationResult {
 	double accuracy;
 	double f1Score;
 
-	Map<Integer, List<List<Publication>>> fnPairs = new TreeMap<>();
-	Map<Integer, List<List<Publication>>> fpPairs = new TreeMap<>();
+	Map<Integer, List<List<BibliographicItem>>> fnPairs = new TreeMap<>();
+	Map<Integer, List<List<BibliographicItem>>> fpPairs = new TreeMap<>();
 
 	public ValidationResult(String fileName, int tp, int fn, int tn, int fp, long duration, int uniqueDuplicates) {
 		this.fileName = fileName;
@@ -50,7 +50,7 @@ public class ValidationResult {
 		this.f1Score = 2 * precision * sensitivity / (precision + sensitivity);
 
 		/*
-		 * In ValidationTests there is also a function printValidationResultsASySD() to print the performance as in the ASySD publication
+		 * In ValidationTests there is also a function printValidationResultsASySD() to print the performance as in the ASySD bibliographicItem
 		 * See: https://github.com/camaradesuk/ASySD
 		 * See: https://link.springer.com/article/10.1186/s12915-023-01686-z
 		 * 

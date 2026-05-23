@@ -78,10 +78,10 @@ class JWSimilarityJournalTest {
 					"Behavioral & Brain Functions [Electronic Resource]: BBF"),
 			arguments("[Technical report] SAM-TR. USAF School of Aerospace Medicine", "[Technical report] SAM-TR"),
 			arguments(
-					"Prilozi (Makedonska akademija na naukite i umetnostite. Oddelenie za medicinski nauki). 36 (3) (pp 35-41), 2015. Date of Publication: 2015.",
+					"Prilozi (Makedonska akademija na naukite i umetnostite. Oddelenie za medicinski nauki). 36 (3) (pp 35-41), 2015. Date of BibliographicItem: 2015.",
 					"Prilozi Makedonska Akademija Na Naukite I Umetnostite Oddelenie Za Medicinski Nauki"),
 			arguments(
-					"Prilozi (Makedonska akademija na naukite i umetnostite. Oddelenie za medicinski nauki). 36 (3) (pp 35-41), 2015. Date of Publication: 2015.",
+					"Prilozi (Makedonska akademija na naukite i umetnostite. Oddelenie za medicinski nauki). 36 (3) (pp 35-41), 2015. Date of BibliographicItem: 2015.",
 					"Prilozi (Makedonska akademija na naukite i umetnostite"),
 			// TODO: This would work if journals are also split on " - ", possibly as an extra journal variant
 			// see https://github.com/globbestael/DedupEndNote/issues/50

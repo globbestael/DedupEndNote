@@ -21,13 +21,14 @@
                             <a href="#top" class="nav-link">Top</a>
                             <a href="#detailed_comparisons" class="nav-link">Details of the comparisons</a>
                             <a href="#examples" class="nav-link">Examples of comparisons</a>
-                            <a href="#enrichment" class="nav-link">Enrichment of deduplicated records</a>
+                            <a href="#enrichment" class="nav-link">Enrichment of deduplicated bibliographic items</a>
                             <a href="#justification_target" class="nav-link">Justification</a>
                             <a href="#performance" class="nav-link">Performance</a>
                             <a href="#markMode" class="nav-link">Mark Mode</a>
                             <a href="#special_cases" class="nav-link">Special cases</a>
                             <a href="#limitations" class="nav-link">Limitations</a>
                             <a href="#faq" class="nav-link">FAQ</a>
+                            <a href="#glossary" class="nav-link">Glossary</a>
                             <a href="#developers" class="nav-link">For developers</a>
                         </nav>
                     </div>
@@ -66,8 +67,11 @@
                             a lot slower (see <a href="#order_of_comparisons">Justification: Order of comparisons</a>).
                         </p>
                         <ul>
-                            <li>Preprocessing: Publications years before 1800 are removed.</li>
-                            <li>Insufficient data: Records without a publication year are compared to all records unless
+                            <li>Preprocessing: Publication years before <span
+                                    th:text="${T(edu.dedupendnote.services.NormalizationService).EARLIEST_PUBLICATION_YEAR}">1812</span>
+                                are removed.</li>
+                            <li>Insufficient data: Bibliographic items without a publication year are compared to all
+                                bibliographic items unless
                                 they already have been identified as a duplicate.</li>
                             <li>Special cases: Cochrane Reviews are compared for the same publication year only.</li>
                         </ul>
@@ -97,7 +101,8 @@
                             <li>Insufficient data: If one or both DOIs are missing AND one or both of the starting pages
                                 are missing, the answer is YES. This is important because of PubMed ahead of print
                                 publications.</li>
-                            <li>Special cases: Cochrane Reviews: if both records have a DOI, only the DOIs are compared,
+                            <li>Special cases: Cochrane Reviews: if both bibliographic items have a DOI, only the DOIs
+                                are compared,
                                 otherwise the starting pages are compared.</li>
                         </ul>
 
@@ -122,11 +127,12 @@
                                     </li>
                                     <li>Names with a space in the last name, are also compared in a transposed form
                                         ("Lofving Gupta, S." is compared as "Lofving Gupta S" and as "Gupta SL").</li>
-                                    <li>All authors from each record are joined by "; ". This is the string that is used
+                                    <li>All authors from each bibliographic item are joined by "; ". This is the string
+                                        that is used
                                         in the comparison.</li>
                                 </ul>
                             </li>
-                            <li>Insufficient data: If one or both records have no authors,
+                            <li>Insufficient data: If one or both bibliographic items have no authors,
                                 <ul>
                                     <li>if both have an ISBN AND (one or both have no DOI OR one or both have no
                                         starting page), the answer is YES<br />
@@ -137,7 +143,8 @@
                                         Reason: Too few fields to make a safe comparison.</li>
                                 </ul>
                             </li>
-                            <li>Special case: If one of the records is a reply, erratum or comment (see below), a higher
+                            <li>Special case: If one of the bibliographic items is a reply, erratum or comment (see
+                                below), a higher
                                 Jaro-Winkler Similarity threshold is used.</li>
                         </ul>
 
@@ -169,7 +176,8 @@
                                         "retracted article" (all case insensitive).</li>
                                 </ul>
                             </li>
-                            <li>Insufficient data: If one of the records is a reply, erratum or comment (see below), the
+                            <li>Insufficient data: If one of the bibliographic items is a reply, erratum or comment (see
+                                below), the
                                 titles are not compared / the answer is YES (but the Jaro-Winkler similarity of the
                                 authors should be &gt; <span
                                     th:text="${T(edu.dedupendnote.services.AuthorThresholds).DEFAULT.replySufficientStartPagesOrDois()}">-0.75</span>
@@ -178,12 +186,14 @@
 
                         <h3 id="isbn_issn_journal">5. ISBN, ISSN or Journal: Are they the same (ISBN, ISSN) or similar
                             (Journal)?</h3>
-                        <p>This rule is skipped if both records have the same DOI (that comparison was made in step
+                        <p>This rule is skipped if both bibliographic items have the same DOI (that comparison was made
+                            in step
                             2).<br />
                             The fields Journal / Book Title (T2), Alternate Journal (J2) and sometimes Book section (T3,
                             see below) are treated as journals. All ISBNs, ISSns and journal titles
-                            (including abbreviations) in the records are used.</p>
-                        <p>If both records have an ISBN, the ISBNs are compared (stop), if both have an ISSN, the ISSns
+                            (including abbreviations) in the bibliographic items are used.</p>
+                        <p>If both bibliographic items have an ISBN, the ISBNs are compared (stop), if both have an
+                            ISSN, the ISSns
                             are compared (stop), else the journal titles are compared.<br />
                             Abbreviated and full journal titles are compared in a sensible way (see <a
                                 href="#examples">Examples of comparisons</a>).</p>
@@ -625,14 +635,16 @@
                         <p>*: In these cases the comparison of DedupEndNote for this content for this field is not
                             accurate.
                             However, the comparison of the other fields
-                            for these records does not result in YES answers, so the records are ultimately not
+                            for these bibliographic items does not result in YES answers, so the bibliographic items are
+                            ultimately not
                             considered
                             duplicates.</p>
                     </div>
 
                     <div id="enrichment">
-                        <h2 class="bg-success-subtle">Enrichment of the deduplicated records</h2>
-                        <p>Only the first record of a set of duplicate records is copied to the output file.</p>
+                        <h2 class="bg-success-subtle">Enrichment of the deduplicated bibliographic items</h2>
+                        <p>Only the first bibliographic item of a set of duplicate bibliographic items is copied to the
+                            output file.</p>
                         <p>When writing the output file, the following fields will be changed:</p>
 
                         <table class="table table-bordered">
@@ -649,7 +661,8 @@
                                     <td>DOI (DO):</td>
                                     <td>
                                         <ul>
-                                            <li>the DOIs of the removed duplicate records are copied to the saved record
+                                            <li>the DOIs of the removed duplicate bibliographic items are copied to the
+                                                saved bibliographic item
                                                 and deduplicated. The DOI field is important for finding the full text
                                                 in EndNote.
                                             </li>
@@ -668,11 +681,14 @@
                                     <td>Journal name (T2)</td>
                                     <td>
                                         <ul>
-                                            <li>if the saved record has no value for the Journal name (T2) but has a
+                                            <li>if the saved bibliographic item has no value for the Journal name (T2)
+                                                but has a
                                                 value for the Alternate Journal (J2), this J2 value is copied to the T2
-                                                field. This is relevant for the ClinicalTrials.gov records in Embase.
+                                                field. This is relevant for the ClinicalTrials.gov bibliographic items
+                                                in Embase.
                                             </li>
-                                            <li>missing Journal name (T2) for "Social Science Research Network" records
+                                            <li>missing Journal name (T2) for "Social Science Research Network"
+                                                bibliographic items
                                                 from Embase.com are filled</li>
                                         </ul>
                                     </td>
@@ -682,9 +698,11 @@
 
                                     <td>
                                         <ul>
-                                            <li>if the saved record has no value for its Publication year but one of the
-                                                removed duplicate records has, the first not empty Publication year of
-                                                the duplicates is copied to the saved record.
+                                            <li>if the saved bibliographic item has no value for its Publication year
+                                                but one of the
+                                                removed duplicate bibliographic items has, the first not empty
+                                                Publication year of
+                                                the duplicates is copied to the saved bibliographic item.
                                             </li>
                                         </ul>
                                     </td>
@@ -697,9 +715,12 @@
                                                 empty or does not contain a "-", overwriting the Pages field content.
                                             </li>
                                             <li>the article number field (C7) is omitted</li>
-                                            <li>if the saved record has no value for its Pages field (e.g. PubMed ahead
-                                                of print publications) but one of the removed duplicate records has, the
-                                                first not empty pages of the duplicates are copied to the saved record.
+                                            <li>if the saved bibliographic item has no value for its Pages field (e.g.
+                                                PubMed ahead
+                                                of print publications) but one of the removed duplicate bibliographic
+                                                items has, the
+                                                first not empty pages of the duplicates are copied to the saved
+                                                bibliographic item.
                                             </li>
                                             <li>the Pages field gets an unabbreviated form: e.g. "482-91" is rewritten
                                                 as "482-491".</li>
@@ -738,7 +759,7 @@
                                     comparisons</a>
                             </li>
                             <li><a class="link-underline-light" href="#effect">2.5. Effect of insufficient data from one
-                                    of two records</a></li>
+                                    of two bibliographic items</a></li>
                             <li><a class="link-underline-light" href="#enriching">3. Enriching the duplicate chosen</a>
                             </li>
                         </ol>
@@ -761,19 +782,21 @@
                                             <td>YES</td>
                                             <td rowspan="2" class="align-middle">go to next comparison if
                                                 present,<br />else
-                                                mark the records as duplicates</td>
+                                                mark the bibliographic items as duplicates</td>
                                         </tr>
                                         <tr>
-                                            <td>(insufficient data for the comparison in one of the records)</td>
+                                            <td>(insufficient data for the comparison in one of the bibliographic items)
+                                            </td>
                                         </tr>
                                         <tr>
                                             <td>NO</td>
-                                            <td>stop comparisons for this pair of record</td>
+                                            <td>stop comparisons for this pair of bibliographic item</td>
                                         </tr>
                                     </tbody>
                                 </table>
                             </div>
-                            <div>The part "(insufficient data for the comparison in one of the records) &#x2192; goto
+                            <div>The part "(insufficient data for the comparison in one of the bibliographic items)
+                                &#x2192; goto
                                 next
                                 comparison ..." sets DedupEndNote apart from other deduplication programs.</div>
 
@@ -784,24 +807,29 @@
                                     has Pages information in PubMed, but not in EMBASE or Scopus</li>
                                 <li>If EndNote import filters (EndNote provided, provided by producers of bibliographic
                                     databases, home made) always put comparable data in the same EndNote fields</li>
-                                <li>If all bibliographic data of imported records were already available, e.g. not with
+                                <li>If all bibliographic data of imported bibliographic items were already available,
+                                    e.g. not with
                                     PubMed ahead of print publications</li>
                             </ul>
-                            <p>then the absence of Starting Page / DOI / Authors / ... in an EndNote record would mean
+                            <p>then the absence of Starting Page / DOI / Authors / ... in an EndNote bibliographic item
+                                would mean
                                 that the corresponding publication has no Starting Page / DOI / Authors / .... Alas, the
                                 world isn't perfect yet.</p>
                             <p>DedupEndNote therefore interprets a comparison with insufficient data from one of two
-                                records not as "NO" (i.e. these records are different), but as "UNKNOWN" (i.e. we can't
+                                bibliographic items not as "NO" (i.e. these bibliographic items are different), but as
+                                "UNKNOWN" (i.e. we can't
                                 tell
-                                (yet)), and continues with the other comparisons for these records.</p>
+                                (yet)), and continues with the other comparisons for these bibliographic items.</p>
                             <p>As a consequence, fields which are useful in comparisons but are not always available
                                 (e.g.
                                 DOI), can be used.</p>
-                            <p>NOTE: If <strong>both</strong> records have insufficient data for a comparison,
+                            <p>NOTE: If <strong>both</strong> bibliographic items have insufficient data for a
+                                comparison,
                                 DedupEndNote interprets the fields as different. If there is no alternative for the
-                                comparison (see below), then DedupEndNote stops the comparisons for this pair of records
+                                comparison (see below), then DedupEndNote stops the comparisons for this pair of
+                                bibliographic items
                                 and considers them different publications. See <a href="#effect">2.5. Effect of
-                                    insufficient data from one of two records</a>.</p>
+                                    insufficient data from one of two bibliographic items</a>.</p>
                         </div>
 
                         <div id="comparisons">
@@ -907,9 +935,11 @@
 
                                 <p><u><strong>Justification:</strong></u></p>
                                 <ul>
-                                    <li>These fields (or combinations of fields) are present for most records. DOIs may
+                                    <li>These fields (or combinations of fields) are present for most bibliographic
+                                        items. DOIs may
                                         be
-                                        absent, but in comparison 2 (Starting Page OR DOI) most records provide data
+                                        absent, but in comparison 2 (Starting Page OR DOI) most bibliographic items
+                                        provide data
                                     </li>
                                     <li>These fields proved to be sufficient to get good deduplication results.</li>
                                     <li>Author: Reducing first names to initials identifies more duplicates although
@@ -926,9 +956,11 @@
                                         Roentgenol".<br />
                                         DedupendNote treats the content of the journal fields as a set. Comparing the
                                         journal of
-                                        two records comes down to "Is there a journal from the set of journals of record
+                                        two bibliographic items comes down to "Is there a journal from the set of
+                                        journals of bibliographic item
                                         1
-                                        sufficiently similar to a journal from the set of journals of record 2?"</li>
+                                        sufficiently similar to a journal from the set of journals of bibliographic item
+                                        2?"</li>
                                     <li>Title: There is no standard (used) for non-English titles. Bibliographic
                                         databases
                                         put
@@ -949,7 +981,8 @@
                                                 haematological
                                                 malignancies. Part I: patients (Scopus, Web of Science)</li>
                                         </ul>
-                                        <p>In the test database of 52.000 records 11% of the records were of non-English
+                                        <p>In the test database of 52.000 bibliographic items 11% of the bibliographic
+                                            items were of non-English
                                             origin
                                         </p>
                                     </li>
@@ -1030,7 +1063,7 @@
                                         (Web of
                                         Science) making comparisons by equality hopeless when diacritical signs or Greek
                                         letters
-                                        are used in one but not both records</li>
+                                        are used in one but not both bibliographic items</li>
                                     <li>Bibliographic databases may add metadata (e.g. for Title: "[French]", "Authors
                                         reply",
                                         ...)
@@ -1175,30 +1208,37 @@
 
                             <div id="order_of_comparisons">
                                 <h5>2.4. The order of comparisons</h5>
-                                <p>Records are put in year sets based on the publication year. Records without
+                                <p>Bibliographic items are put in year sets based on the publication year. Bibliographic
+                                    items without
                                     publication
                                     year
                                     are
                                     put in a special year set YEAR_0.</p>
 
-                                <p>When deduplicating 1 file, records are compared in descending order of pairs of year
+                                <p>When deduplicating 1 file, bibliographic items are compared in descending order of
+                                    pairs of year
                                     sets.
-                                    The records in YEAR_0 are added to each of these pairs except for the ones which are
+                                    The bibliographic items in YEAR_0 are added to each of these pairs except for the
+                                    ones which are
                                     already
-                                    marked as duplicates. For an EndNote RIS file with records from 1889 to 2020:</p>
+                                    marked as duplicates. For an EndNote RIS file with bibliographic items from 1889 to
+                                    2020:</p>
                                 <ul>
-                                    <li>YEAR 2020 + YEAR 2019 + YEAR 0: all records of YEAR 2020 are compared to all
-                                        records
+                                    <li>YEAR 2020 + YEAR 2019 + YEAR 0: all bibliographic items of YEAR 2020 are
+                                        compared to all
+                                        bibliographic items
                                         of
                                         YEAR
                                         2020 and YEAR 2019 and YEAR 0</li>
-                                    <li>YEAR 2019 + YEAR 2018 + YEAR 0: all records of YEAR 2019 are compared to all
-                                        records
+                                    <li>YEAR 2019 + YEAR 2018 + YEAR 0: all bibliographic items of YEAR 2019 are
+                                        compared to all
+                                        bibliographic items
                                         of
                                         YEAR
                                         2019 and YEAR 2018 and YEAR 0</li>
                                     <li>...</li>
-                                    <li>YEAR 1889 + YEAR 0: all records of YEAR 1889 are compared to all records of YEAR
+                                    <li>YEAR 1889 + YEAR 0: all bibliographic items of YEAR 1889 are compared to all
+                                        bibliographic items of YEAR
                                         1889
                                         and
                                         YEAR 0
@@ -1228,53 +1268,64 @@
                                                 positives</li>
                                         </ul>
                                     </li>
-                                    <li>Descending order: Because the first record of a set of duplicate records is
+                                    <li>Descending order: Because the first bibliographic item of a set of duplicate
+                                        bibliographic items is
                                         saved to
                                         the
                                         output file,
                                         <ul>
                                             <li>when encountering an ahead of print publication of e.g. 2018 and a
                                                 corresponding
-                                                final record of 2019, the 2019 record will be saved</li>
-                                            <li>when encountering a record without a publication year and a
+                                                final bibliographic item of 2019, the 2019 bibliographic item will be
+                                                saved</li>
+                                            <li>when encountering a bibliographic item without a publication year and a
                                                 corresponding
-                                                record
-                                                with a publication year, the record with the publication year will be
+                                                bibliographic item
+                                                with a publication year, the bibliographic item with the publication
+                                                year will be
                                                 saved
                                             </li>
                                         </ul>
                                     </li>
                                 </ul>
 
-                                <p>When deduplicating 2 files, records of both files are compared in ascending order of
+                                <p>When deduplicating 2 files, bibliographic items of both files are compared in
+                                    ascending order of
                                     pairs of
-                                    year sets. The YEAR_0 is added to each of these pairs, but records which are marked
+                                    year sets. The YEAR_0 is added to each of these pairs, but bibliographic items which
+                                    are marked
                                     as
                                     duplicates are first removed.<br />
-                                    The records of the OLD file are read before the records of the NEW file; because the
+                                    The bibliographic items of the OLD file are read before the bibliographic items of
+                                    the NEW file; because the
                                     duplicate
-                                    chosen in a set of duplicate records is the first one encountered, duplicate records
+                                    chosen in a set of duplicate bibliographic items is the first one encountered,
+                                    duplicate bibliographic items
                                     from
                                     the
                                     OLD file will be chosen when present.<br>
-                                    For an EndNote RIS file with records from 1889 to 2020:</p>
+                                    For an EndNote RIS file with bibliographic items from 1889 to 2020:</p>
                                 <ul>
-                                    <li>YEAR 0 + YEAR 1889 + YEAR 1890: all records of YEAR 0 + YEAR 1889 are compared
+                                    <li>YEAR 0 + YEAR 1889 + YEAR 1890: all bibliographic items of YEAR 0 + YEAR 1889
+                                        are compared
                                         to
                                         all
-                                        records of YEAR 0 and YEAR 1889 and YEAR 1890</li>
-                                    <li>YEAR 0 + YEAR 1890 + YEAR 1891: all records of YEAR 0 + YEAR 1890 are compared
+                                        bibliographic items of YEAR 0 and YEAR 1889 and YEAR 1890</li>
+                                    <li>YEAR 0 + YEAR 1890 + YEAR 1891: all bibliographic items of YEAR 0 + YEAR 1890
+                                        are compared
                                         to
                                         all
-                                        records of YEAR 0 and YEAR 1890 and YEAR 1891</li>
+                                        bibliographic items of YEAR 0 and YEAR 1890 and YEAR 1891</li>
                                     <li>...</li>
-                                    <li>YEAR 0 + YEAR 2020: all records of YEAR 0 + YEAR 2020 are compared to all
-                                        records of
+                                    <li>YEAR 0 + YEAR 2020: all bibliographic items of YEAR 0 + YEAR 2020 are compared
+                                        to all
+                                        bibliographic items of
                                         YEAR 0
                                         and YEAR 2020</li>
                                 </ul>
-                                <p>The output file only contains records from the NEW file which are not duplicates of
-                                    records
+                                <p>The output file only contains bibliographic items from the NEW file which are not
+                                    duplicates of
+                                    bibliographic items
                                     of
                                     the OLD file, and (if there are duplicates within the NEW file) are the first
                                     duplicate
@@ -1285,13 +1336,19 @@
                                     <li>Ascending order:
                                         <ul>
                                             <li>when encountering an ahead of print publication of e.g. 2018 in the OLD
-                                                file and a corresponding final record of 2018 or 2019 in the NEW file,
-                                                the NEW record will be seen as a duplicate of the OLD record and not be
-                                                saved. Saving that record would create a duplicate</li>
-                                            <li>when encountering a record without a publication year in the OLD file
-                                                and a corresponding record with a publication year in the NEW file, the
-                                                record with the publication year will be seen as a duplicate of the OLD
-                                                record and not be saved. Saving that record would create a duplicate
+                                                file and a corresponding final bibliographic item of 2018 or 2019 in the
+                                                NEW file,
+                                                the NEW bibliographic item will be seen as a duplicate of the OLD
+                                                bibliographic item and not be
+                                                saved. Saving that bibliographic item would create a duplicate</li>
+                                            <li>when encountering a bibliographic item without a publication year in the
+                                                OLD file
+                                                and a corresponding bibliographic item with a publication year in the
+                                                NEW file, the
+                                                bibliographic item with the publication year will be seen as a duplicate
+                                                of the OLD
+                                                bibliographic item and not be saved. Saving that bibliographic item
+                                                would create a duplicate
                                             </li>
                                         </ul>
                                     </li>
@@ -1299,7 +1356,7 @@
                             </div>
 
                             <div id="effect">
-                                <h5>2.5. Effect of 'insufficient data from one of two records'</h5>
+                                <h5>2.5. Effect of 'insufficient data from one of two bibliographic items'</h5>
 
                                 <p>The 5th comparison (ISSN or Journal: Are they the same (ISSN) or similar (Journal)?)
                                     looks at first sight to only compare journal articles (with the additional effect
@@ -1310,14 +1367,16 @@
                                     <li>The EndNote fields T2, J2, OP and T3 can also be used with other publications
                                         types</li>
                                 </ul>
-                                <p>However: the general rule treats 2 records / field sets as different if
+                                <p>However: the general rule treats 2 bibliographic items / field sets as different if
                                     <strong>both</strong>
-                                    records have insufficient data for that comparison. Two book records with the same
+                                    bibliographic items have insufficient data for that comparison. Two book
+                                    bibliographic items with the same
                                     authors, publication year and book title will be considered duplicates only if both
                                     have the same / a similar ISBN.
                                 </p>
                                 <p>Relaxing this general rule (so that comparisons with insufficient data in one or both
-                                    records are treated the same way: UNKNOWN, so go on to the next comparison) would
+                                    bibliographic items are treated the same way: UNKNOWN, so go on to the next
+                                    comparison) would
                                     result in a lot more False Positives.</p>
                             </div>
                         </div>
@@ -1327,13 +1386,16 @@
 
                             <p><u><strong>Justification:</strong></u></p>
                             <ul>
-                                <li>(all cases): the enriched data are copied from existing duplicate records or occur
-                                    in a lot of records (empty author, full pages form, omitted same ending page)</li>
+                                <li>(all cases): the enriched data are copied from existing duplicate bibliographic
+                                    items or occur
+                                    in a lot of bibliographic items (empty author, full pages form, omitted same ending
+                                    page)</li>
                                 <li>Author "Anonymous": There is no reason to use 2 forms (Author "Anonymous" and no
                                     Author) for this case</li>
                                 <li>DOI - adding from other duplicates: Considered a useful addition</li>
                                 <li>DOI - standardized form: Considered a useful addition (clickable in EndNote)</li>
-                                <li>Publication year - missing added from other duplicates: Records without publication
+                                <li>Publication year - missing added from other duplicates: Bibliographic items without
+                                    publication
                                     year are subpar</li>
                                 <li>Starting page and Article number:
                                     <ul>
@@ -1343,7 +1405,8 @@
                                         </li>
                                     </ul>
                                 </li>
-                                <li>Starting page - missing added from other duplicates: Records without starting page
+                                <li>Starting page - missing added from other duplicates: Bibliographic items without
+                                    starting page
                                     are subpar</li>
                                 <li>Starting page - standardized to full form:
                                     <ul>
@@ -1386,8 +1449,9 @@
                                 Syst Rev 10, 38 (2021). <a href="https://doi.org/10.1186/s13643-021-01583-y"
                                     target="_blank">https://doi.org/10.1186/s13643-021-01583-y</a>
                             </li>
-                            <li>[BIG_SET] Own test database for DedupEndNote on portal vein thrombosis (52,828 records,
-                                with 5078 records validated)</li>
+                            <li>[BIG_SET] Own test database for DedupEndNote on portal vein thrombosis (52,828
+                                bibliographic items,
+                                with 5078 bibliographic items validated)</li>
                         </ul>
                         <table border="1" class="table">
                             <colgroup>
@@ -1685,14 +1749,14 @@
                         <!--
                         <h5>Validation</h5>
 
-                        <p>A general subset of 4926 records was manually checked (150 records without an Author, 79 with
+                        <p>A general subset of 4926 bibliographic items was manually checked (150 bibliographic items without an Author, 79 with
                             Author
                             "Anonymous",
                             the 366 articles with "phase" in the title (because of "Phase I", Phase I/II", ...)
                             the rest: "Aagaard" ... "Abbitt", "Anoob" ... "Axelrod",
                             "Liu", "v Koppenfels" ... "von Woellwarth", and some others). Because replies are treated in
                             a
-                            special way, 130 records with "reply" in the title
+                            special way, 130 bibliographic items with "reply" in the title
                             which were identified as duplicates, were checked, but only for true and false positives.
                         </p>
                         <table class="table table-bordered">
@@ -1712,7 +1776,7 @@
                                     <td>correctly identified duplicates</td>
                                     <td>missed duplicates</td>
                                     <td></td>
-                                    <td>correctly identified unique records</td>
+                                    <td>correctly identified unique bibliographic items</td>
                                     <td>incorrectly identified as duplicates</td>
                                     <td></td>
                                 </tr>
@@ -1742,7 +1806,8 @@
                         <h5 style="color: red;">TODO: UPDATE examples</h5>
                         <p>The False Positives are all conference abstracts:</p>
                         <ul>
-                            <li>wrong DOI in second of 2 EMBASE (OVID) records: same authors, year, title, DOI,
+                            <li>wrong DOI in second of 2 EMBASE (OVID) bibliographic items: same authors, year, title,
+                                DOI,
                                 different starting page
                                 <ul>
                                     <li>Segovia, M. C., et al. (2019). "Combined multivisceral and renal transplant in a
@@ -1754,7 +1819,8 @@
                                         10.1097/01.tp.0000576288.84252.91</li>
                                 </ul>
                             </li>
-                            <li>wrong DOI in second of 2 EMBASE (OVID) records: same authors, year, title, DOI,
+                            <li>wrong DOI in second of 2 EMBASE (OVID) bibliographic items: same authors, year, title,
+                                DOI,
                                 different starting page <ul>
                                     <li>Galvao, F. H., et al. (2019). "Intestinal and multivisceral transplantation at
                                         hospital dasclinicas da faculdade De medicina da universidade De Sao Paulo
@@ -1790,13 +1856,17 @@
                     <div id="markMode">
                         <h2 class="bg-success-subtle">Mark mode</h2>
 
-                        <p>If you want to manually merge the records which are duplicates according to DedupEndNote, you
+                        <p>If you want to manually merge the bibliographic items which are duplicates according to
+                            DedupEndNote, you
                             can use Mark mode.</p>
-                        <p>Because Zotero does not work with / does not show record numbers, Mark Mode is not relevant
+                        <p>Because Zotero does not work with / does not show bibliographic item numbers, Mark Mode is
+                            not relevant
                             for Zotero users.</p>
 
-                        <p>In Mark mode the ID of the first record of a set of duplicate records is copied to the label
-                            field ("LB") of all duplicate records. The input file is copied to the output file with the
+                        <p>In Mark mode the ID of the first bibliographic item of a set of duplicate bibliographic items
+                            is copied to the label
+                            field ("LB") of all duplicate bibliographic items. The input file is copied to the output
+                            file with the
                             addition of the Label field if it is not empty. The original content of the Label field is
                             overwritten! All other fields are copied as is (so no enriching of the output: prescribed
                             form of DOI, ...).</p>
@@ -1815,14 +1885,17 @@
                         <ul>
                             <li>Import the result file into a new EndNote database</li>
                             <li>Deduplicate by EndNote itself</li>
-                            <li>Select all records in the "Duplicate References" set, and mark them as Read</li>
+                            <li>Select all bibliographic items in the "Duplicate References" set, and mark them as Read
+                            </li>
                             <li>Select the "All References" set, limit to the duplicates found by DedupEndNote (search
                                 for "Label" "is greater than" 0), and sort on the label field.</li>
-                            <li>The records marked as Unread were identified as duplicates by DedupEndNote, but not by
+                            <li>The bibliographic items marked as Unread were identified as duplicates by DedupEndNote,
+                                but not by
                                 EndNote itself.</li>
                             <li>Select the "All References" set, limit to the duplicates not found by DedupEndNote
                                 (search for "Label" "is less than" 0).</li>
-                            <li>The records marked as Read were identified as duplicates by EndNote itself, but not by
+                            <li>The bibliographic items marked as Read were identified as duplicates by EndNote itself,
+                                but not by
                                 DedupEndNote.</li>
                         </ul>
 
@@ -1831,10 +1904,12 @@
                     <div id="special_cases">
                         <h2 class="bg-success-subtle">Special cases</h2>
 
-                        <h4 id="clinical_trials_gov">1. ClinicalTrials.gov records</h4>
-                        <div>Records from <a href="https://clinicaltrials.gov" target="_blank">ClinicalTrials.gov</a>
+                        <h4 id="clinical_trials_gov">1. ClinicalTrials.gov bibliographic items</h4>
+                        <div>Bibliographic items from <a href="https://clinicaltrials.gov"
+                                target="_blank">ClinicalTrials.gov</a>
                             are also available within the Cochrane Library and EMBASE, but the format of the data is
-                            quite different. DedupEndNote changes the data of these records to a common format when it
+                            quite different. DedupEndNote changes the data of these bibliographic items to a common
+                            format when it
                             imports them so that deduplication can work. The deduplicated output is also standardized:
                         </div>
                         <ul>
@@ -1844,7 +1919,7 @@
                             <li>Pages: the ClinicalTrials.gov ID (e.g. NCT06923007)</li>
                             <li>URL: the first URL is for ClinicalTrials.gov (e.g.
                                 https://clinicaltrials.gov/study/NCT06923007)</li>
-                            <li>the other fields are from the first record in a deduplication set</li>
+                            <li>the other fields are from the first bibliographic item in a deduplication set</li>
                         </ul>
                     </div>
 
@@ -1855,33 +1930,41 @@
                             <li>Input file format: The program only handles files in RIS format, not in XML or CSV
                                 format.</li>
                             <li>Input file encoding: The program assumes that the input file is encoded as UTF-8.</li>
-                            <li>If authors AND (all) titles AND (all) journal names for a record use a non-Latin script,
-                                results for this record may be inaccurate.</li>
+                            <li>If authors AND (all) titles AND (all) journal names for a bibliographic item use a
+                                non-Latin script,
+                                results for this bibliographic item may be inaccurate.</li>
                             <li>(when deduplicating one file:) The input file must be an export from ONE EndNote
-                                database: the ID fields are used internally for identifying the records, so they have to
+                                database: the ID fields are used internally for identifying the bibliographic items, so
+                                they have to
                                 be unique. However, if the RIS file does not have an ID field in the first publication,
                                 DedupEndNote assumes the whole file has no ID fields and gives every publication an ID
                                 (starting with 1). This has only been tested on Zotero files!</li>
                             <li>The program has been developed and tested for biomedical databases (PubMed, EMBASE, ...)
                                 and some general databases (Web of Science, Scopus). The data sets used were the results
-                                of biomedical queries. Deduplicating records from other databases is not guaranteed to
+                                of biomedical queries. Deduplicating bibliographic items from other databases is not
+                                guaranteed to
                                 work, and performance is often very poor, esp. for non journal articles
                                 (see <a href="#effect">Justification. 2.5. Effect of
-                                    insufficient data from one of two records</a>).</li>
+                                    insufficient data from one of two bibliographic items</a>).</li>
                             <li>The program uses a bibliographic point of view:
                                 <ul>
                                     <li>an article or conference abstract that has been published in more than one
                                         (issue of a) journal is not considered a duplicate publication.</li>
-                                    <li>Records for each publication year are compared to records from the same and the
-                                        following year: a record from 2016 is compared to the records from 2015 (when
-                                        treating the records from 2015) and from 2016 and 2017 (when treating the
-                                        records from 2016). A PubMed ahead-of-print record from 2013 and a corresponding
-                                        record from 2017 (when it was 'officially' published) will not be compared (and
+                                    <li>Bibliographic items for each publication year are compared to bibliographic
+                                        items from the same and the
+                                        following year: a bibliographic item from 2016 is compared to the bibliographic
+                                        items from 2015 (when
+                                        treating the bibliographic items from 2015) and from 2016 and 2017 (when
+                                        treating the
+                                        bibliographic items from 2016). A PubMed ahead-of-print bibliographic item from
+                                        2013 and a corresponding
+                                        bibliographic item from 2017 (when it was 'officially' published) will not be
+                                        compared (and
                                         possibly deduplicated).</li>
                                     <li>Bibliographic databases are not always very accurate in the starting page of a
                                         publication. Because starting page is part of the comparisons, DedupEndNote
                                         misses the duplicates when bibliographic databases don't agree on the starting
-                                        page (and one or both records have no DOIs).</li>
+                                        page (and one or both bibliographic items have no DOIs).</li>
                                 </ul>
                             </li>
                         </ul>
@@ -1895,10 +1978,10 @@
                             <li><a href="#not_endnote">I don't use EndNote, but ...</a></li>
                             <li><a href="#groups">I use groups, comments, ... in EndNote and don't
                                     want to lose them</a></li>
-                            <li><a href="#deletions">I have deleted records in EndNote and don't want
+                            <li><a href="#deletions">I have deleted bibliographic items in EndNote and don't want
                                     them to reappear when updating</a></li>
-                            <li><a href="#preferredOrder">I prefer PubMed records above EMBASE
-                                    records</a></li>
+                            <li><a href="#preferredOrder">I prefer PubMed bibliographic items above EMBASE
+                                    bibliographic items</a></li>
                             <li><a href="#perfect">Is DedupEndNote perfect?</a></li>
                         </ol>
 
@@ -1906,7 +1989,8 @@
                         <div>EndNote (and Zotero?) is very good at importing export files from many bibliographic
                             databases. The
                             RIS export from an EndNote / Zotero database has a standard format,
-                            which makes reading and interpreting records for DedupEndNote a lot easier.</div>
+                            which makes reading and interpreting bibliographic items for DedupEndNote a lot easier.
+                        </div>
                         <div>(This version of) DedupEndNote does not read EndNote XML exports, because reading and
                             writing XML
                             files is more complex
@@ -1945,11 +2029,12 @@
                         </p>
                         <ol>
                             <li>create a MASTER database</li>
-                            <li>import your first set of records from one or more bibliographic databases into the
+                            <li>import your first set of bibliographic items from one or more bibliographic databases
+                                into the
                                 MASTER
                                 Database</li>
                             <li>(optionally: clean up the MASTER Database) if the MASTER Database can contain duplicate
-                                records,
+                                bibliographic items,
                                 export the MASTER Database as a RIS file, deduplicate the file with DedupEndNote,
                                 import the deduplicated results into a NEW_MASTER Database EndNote file, remove the old
                                 MASTER
@@ -1960,7 +2045,8 @@
                             <li>Make a copy of the MASTER Database as your WORKING Database EndNote file (File &gt; Save
                                 a Copy
                                 ...)</li>
-                            <li><strong>edit, comment, delete, group, ... records only in the WORKING Database!</strong>
+                            <li><strong>edit, comment, delete, group, ... bibliographic items only in the WORKING
+                                    Database!</strong>
                             </li>
                         </ol>
                         <p> </p>
@@ -1978,13 +2064,16 @@
                                 will be in NEW_RECORDS_deduplicated.txt)</li>
                             <li>import NEW_RECORDS_deduplicated.txt into the MASTER Database</li>
                             <li>import NEW_RECORDS_deduplicated.txt into the WORKING Database.<br>
-                                And again: <strong>edit, comment, delete, group, ... records only in the WORKING
+                                And again: <strong>edit, comment, delete, group, ... bibliographic items only in the
+                                    WORKING
                                     Database!</strong>
                                 <ul>
-                                    <li>because the deleted records from the WORKING Database are still present in the
+                                    <li>because the deleted bibliographic items from the WORKING Database are still
+                                        present in the
                                         MASTER
                                         Database (and as a consequence also in OLD_RECORDS.txt),
-                                        duplicates for these records in NEW_RECORDS.txt will be recognized by
+                                        duplicates for these bibliographic items in NEW_RECORDS.txt will be recognized
+                                        by
                                         DedupEndNote and
                                         not reappear in NEW_RECORDS_deduplicated.txt</li>
                                     <li>the existing groupings, edits, ... in the WORKING Database will not be
@@ -1996,24 +2085,30 @@
                             </li>
                         </ol>
 
-                        <h3 id="deletions">4. I have deleted records in EndNote and don't want them to reappear when
+                        <h3 id="deletions">4. I have deleted bibliographic items in EndNote and don't want them to
+                            reappear when
                             updating
                         </h3>
                         <p>See previous question</p>
 
-                        <h3 id="preferredOrder">5. I prefer PubMed records above EMBASE records</h3>
-                        <p>DedupEndNote compares records in the order of the input file, after they are grouped on
+                        <h3 id="preferredOrder">5. I prefer PubMed bibliographic items above EMBASE bibliographic items
+                        </h3>
+                        <p>DedupEndNote compares bibliographic items in the order of the input file, after they are
+                            grouped on
                             publication
                             year. This makes it possible
                             to influence the choice of duplicate within a duplicate set.</p>
-                        <p>Suppose all records have the field Database Provider filled in with either "PubMed" or
+                        <p>Suppose all bibliographic items have the field Database Provider filled in with either
+                            "PubMed" or
                             "EMBASE". If
                             you order the orginal EndNote database on
                             the field Database Provider in descending order before exporting to a RIS file, DedupEndNote
                             will
-                            use a PubMed record if a duplicate set contains one or more PubMed records
-                            and one or more EMBASE records (except if one or more EMBASE records of this duplicate
-                            set has a publication year one year later than all PubMed records). <span
+                            use a PubMed bibliographic item if a duplicate set contains one or more PubMed bibliographic
+                            items
+                            and one or more EMBASE bibliographic items (except if one or more EMBASE bibliographic items
+                            of this duplicate
+                            set has a publication year one year later than all PubMed bibliographic items). <span
                                 style="color: red;">TODO:
                             </span>Explain why "later"?</p>
 
@@ -2026,19 +2121,22 @@
                         <h3 id="perfect">6. Is DedupEndNote perfect?</h3>
                         <p>Of course not.</p>
 
-                        <p>However, DedupEndNote tries to avoid at all costs to wrongly identify records as duplicates.
+                        <p>However, DedupEndNote tries to avoid at all costs to wrongly identify bibliographic items as
+                            duplicates.
                             The MarkMode was specifically developed for this, making comparison between results of
                             deduplication by EndNote and by DedupEndNote feasible.
                         </p>
 
                         <h5>False positives</h5>
-                        <p>There was only 1 false positive found in the validation sets (11,474 validated records):</p>
+                        <p>There was only 1 false positive found in the validation sets (11,474 validated bibliographic
+                            items):</p>
                         <ul>
-                            <li>Cytology screening (from SRA-DM, 1856 records, all validated)</li>
-                            <li>Haematology (from SRA-DM, 1415 records, all validated)</li>
-                            <li>Respiratory (from SRA-DM, 1988 records, all validated)</li>
-                            <li>Stroke (from SRA-DM, 1292 records, all validated)</li>
-                            <li>BIG SET (our own test database of 52,828 records, with 4923 records validated)</li>
+                            <li>Cytology screening (from SRA-DM, 1856 bibliographic items, all validated)</li>
+                            <li>Haematology (from SRA-DM, 1415 bibliographic items, all validated)</li>
+                            <li>Respiratory (from SRA-DM, 1988 bibliographic items, all validated)</li>
+                            <li>Stroke (from SRA-DM, 1292 bibliographic items, all validated)</li>
+                            <li>BIG SET (our own test database of 52,828 bibliographic items, with 4923 bibliographic
+                                items validated)</li>
                         </ul>
 
                         <ul>
@@ -2059,11 +2157,13 @@
                         </ul>
 
                         <h5>False negatives</h5>
-                        <p>DedupEndNote will miss some duplicate records, e.g.:</p>
+                        <p>DedupEndNote will miss some duplicate bibliographic items, e.g.:</p>
                         <ol>
-                            <li>Records have different starting pages and not 2 DOIs which are the same</li>
-                            <li>The publication years of duplicate records can be more than 1 year apart. The validated
-                                subset of BIG_SET (4923 records) has 60 examples of duplicate records with different
+                            <li>Bibliographic items have different starting pages and not 2 DOIs which are the same</li>
+                            <li>The publication years of duplicate bibliographic items can be more than 1 year apart.
+                                The validated
+                                subset of BIG_SET (4923 bibliographic items) has 60 examples of duplicate bibliographic
+                                items with different
                                 publication years: differences are 1 year (48), 2 years (8) and 4 years (4).</li>
                             <li>Journals titles are not identified as similar (e.g. "Jbr-btr" and "Journal Belge de
                                 Radiology" with different or no ISSNs, or "Am J Dig Dis" and "Aaierj.Dio.Dis." (from
@@ -2085,9 +2185,11 @@
 
                         <p><u>The next results are for version 1.0.0 / these results should be updated for the latest
                                 version:</u><br />
-                            After deduplicating our test database of 52,828 records with DedupEndNote and importing the
+                            After deduplicating our test database of 52,828 bibliographic items with DedupEndNote and
+                            importing the
                             result file into a new EndNote database, deduplication with EndNote itself (default setting:
-                            Author, Year, Title) found 260 duplicates. After manual inspection, we found 118 records
+                            Author, Year, Title) found 260 duplicates. After manual inspection, we found 118
+                            bibliographic items
                             which were true duplicates. Some of the "reasons":</p>
                         <ul>
                             <li>different starting page: 25</li>
@@ -2118,7 +2220,8 @@
                                 </ul>
                                 <p>2025-08-01: the change in version 1.0.2 (comparison 5 (ISSN and Journal names) is
                                     skipped when the DOIs are the same) solves some (a lot?) of these problems.
-                                    But: the journal name used in the deduplicated file is the one from the first record
+                                    But: the journal name used in the deduplicated file is the one from the first
+                                    bibliographic item
                                     in the duplicate set.</p>
                             </li>
                             <li>DedupEndNote error in Journal name: 3, i.e. DedupEndNote would be expected to recognize
@@ -2135,7 +2238,8 @@
                                 DedupEndNote used "6" in the first case instead of "697")</li>
                         </ul>
 
-                        <p>Some cases of duplicate records are "unsolvable" for programs? Take e.g.the following
+                        <p>Some cases of duplicate bibliographic items are "unsolvable" for programs? Take e.g.the
+                            following
                             publication
                             (<a href="https://www.nejm.org/doi/full/10.1056/NEJM199105303242207)"
                                 target="blank">https://www.nejm.org/doi/full/10.1056/NEJM199105303242207</a>):</p>
@@ -2143,7 +2247,8 @@
                             <li>Cabot RC, Scully RE, Mark EJ, McNeely WF, McNeely BU, Podolsky DK, Lewandrowski KB. Case
                                 22-1991: A 15-Year-Old Boy with Fever of Unknown Origin, Severe Anemia, and Portal-Vein
                                 Thrombosis. New England Journal of Medicine. 1991;324(22):1575-84.</li>
-                            <li>Podolsky DK, Lewandrowski KB. Case records of the Massachusetts General Hospital. New
+                            <li>Podolsky DK, Lewandrowski KB. Case bibliographic items of the Massachusetts General
+                                Hospital. New
                                 England Journal of Medicine. 1991;324(22):1575-84.</li>
                             <li>Podolsky DK, Ferrucci JT, Ellis DS, Mark EJ, Pasternack MS, Huang PL, Lewandrowski KB,
                                 Dowling WJ, Goldfinger SE. A 15-YEAR-OLD BOY WITH FEVER OF UNKNOWN ORIGIN, SEVERE
@@ -2151,13 +2256,69 @@
                                 FOREIGN-BODY GIANT-CELL REACTION CONSISTENT WITH PRIOR RUPTURE - PYLEPHLEBITIS WITH
                                 THROMBOSIS, ACUTE AND CHRONIC TRIADITIS, AND CHOLANGITIS. New England Journal of
                                 Medicine. 1991;324(22):1575-84.</li>
-                            <li>Case records of the Massachusetts General Hospital. Weekly clinicopathological
+                            <li>Case bibliographic items of the Massachusetts General Hospital. Weekly
+                                clinicopathological
                                 exercises. Case 22-1991. A 15-year-old boy with fever of unknown origin, severe anemia,
                                 and portal-vein thrombosis. N Engl J Med. 1991;324(22):1575-84.</li>
                         </ol>
                         <p>"Cabot RC, Scully RE, Mark EJ, McNeely WF, McNeely BU" in (1) were the (associate) editors of
                             the NEJM in 1991, "Podolsky DK, Lewandrowski KB" in (2) described the case, all authors in
                             (3) discussed the case.</p>
+                    </div>
+
+                    <div id="glossary">
+                        <h2 class="bg-success-subtle">Glossary</h2>
+                        <dl>
+                            <dt><strong>Bibliographic Item</strong></dt>
+                            <dd>A database record describing a publication — the author names, title, journal, year,
+                                pages, and abstract that a bibliographic database (PubMed, EMBASE, Web of Science, ...)
+                                stores. One publication can have multiple bibliographic items, one per database that
+                                indexed it, and those items may differ in detail (abbreviated author names, different
+                                page formats, etc.). DedupEndNote operates on bibliographic items.
+                                <br /><em>Also called in other contexts:</em> record, reference, citation.
+                            </dd>
+
+                            <dt><strong>Duplicate Set</strong></dt>
+                            <dd>A group of two or more bibliographic items that all represent the same publication.
+                                DedupEndNote identifies these groups and either removes the extras (Remove Mode) or
+                                labels them (Mark Mode).
+                            </dd>
+
+                            <dt><strong>Kept Bibliographic Item</strong></dt>
+                            <dd>The bibliographic item within a Duplicate Set that is written to the output file. In
+                                Remove Mode it is also enriched with any useful data found in the other items of the
+                                set. The kept item is the first one DedupEndNote encounters when processing the input
+                                file in year order; you can influence which item is kept by the order of the records
+                                in your export file (see <a href="#preferredOrder">FAQ 5</a>).
+                            </dd>
+
+                            <dt><strong>Enrichment</strong></dt>
+                            <dd>After identifying a Duplicate Set, DedupEndNote supplements the Kept Bibliographic Item
+                                with data from the other items in the set: a missing DOI, a missing publication year,
+                                missing or abbreviated page numbers, or a longer title. Enrichment only happens in
+                                Remove Mode; in Mark Mode all items are written as-is.
+                            </dd>
+
+                            <dt><strong>Remove Mode</strong></dt>
+                            <dd>The default operating mode. All bibliographic items identified as duplicates are removed
+                                from the output; only the Kept Bibliographic Item is written, after Enrichment.
+                            </dd>
+
+                            <dt><strong>Mark Mode</strong></dt>
+                            <dd>An alternative mode where all bibliographic items are written to the output file.
+                                Duplicates are identified by a Label — the ID of the Kept Bibliographic Item is written
+                                into the Label (LB) field of every item in the Duplicate Set. Use this mode when you
+                                want to inspect or manually merge duplicates inside your reference manager, or when you
+                                want to compare DedupEndNote's results with those of another deduplication tool.
+                            </dd>
+
+                            <dt><strong>Label</strong></dt>
+                            <dd>The value that DedupEndNote writes into the RIS <code>LB</code> field in Mark Mode.
+                                It contains the ID of the Kept Bibliographic Item, so all items in a Duplicate Set
+                                share the same Label. In EndNote you can find all duplicates by searching for
+                                "Label is greater than 0" and sort on the Label field to group them.
+                            </dd>
+                        </dl>
                     </div>
 
                     <div id="developers">
@@ -2202,7 +2363,8 @@
                                         <td>dedupid</td>
                                         <td>INTEGER</td>
                                         <td>NULL</td>
-                                        <td>Content of the Label field in Mark mode, i.e. the ID of the first record in
+                                        <td>Content of the Label field in Mark mode, i.e. the ID of the first
+                                            bibliographic item in
                                             a
                                             duplicate
                                             set</td>
@@ -2225,23 +2387,26 @@
                                         <td>tp</td>
                                         <td>BOOLEAN</td>
                                         <td>FALSE</td>
-                                        <td>Manually set to TRUE if record is indeed a duplicate of the record with
+                                        <td>Manually set to TRUE if bibliographic item is indeed a duplicate of the
+                                            bibliographic item with
                                             DedupID</td>
                                     </tr>
                                     <tr>
                                         <td>tn</td>
                                         <td>BOOLEAN</td>
                                         <td>FALSE</td>
-                                        <td>Manually set to TRUE if record has no duplicates</td>
+                                        <td>Manually set to TRUE if bibliographic item has no duplicates</td>
                                     </tr>
                                     <tr>
                                         <td>fp</td>
                                         <td>BOOLEAN</td>
                                         <td>FALSE</td>
-                                        <td>Manually set to TRUE if DedupEndNote has wrongly identified the record as a
+                                        <td>Manually set to TRUE if DedupEndNote has wrongly identified the
+                                            bibliographic item as a
                                             duplicate of
-                                            record with DedupID.<br />
-                                            If the record has no duplicates, Correction contains the ID, otherwise the
+                                            bibliographic item with DedupID.<br />
+                                            If the bibliographic item has no duplicates, Correction contains the ID,
+                                            otherwise the
                                             ID of the
                                             true duplicate.</td>
                                     </tr>
@@ -2249,10 +2414,12 @@
                                         <td>fn</td>
                                         <td>BOOLEAN</td>
                                         <td>FALSE</td>
-                                        <td>Manually set to TRUE if DedupEndNote has not identified the record as a
+                                        <td>Manually set to TRUE if DedupEndNote has not identified the bibliographic
+                                            item as a
                                             duplicate.<br />
                                             The ID of the missed duplicate is stored in Correction.<br />
-                                            If the record is a False Positive but also has duplicates, it is only marked
+                                            If the bibliographic item is a False Positive but also has duplicates, it is
+                                            only marked
                                             as
                                             False
                                             Positive: otherwise TP + TN + FP + FN would be greater
@@ -2382,10 +2549,12 @@
                                         Advanced
                                         button is used?</div>
                                 </li>
-                                <li>validate a number of records</li>
-                                <li>select the validated records and export them as a tab delimited file. (In MS Access:
+                                <li>validate a number of bibliographic items</li>
+                                <li>select the validated bibliographic items and export them as a tab delimited file.
+                                    (In MS Access:
                                     select
-                                    the whole set of validated records, copy, paste in a text editor, save)</li>
+                                    the whole set of validated bibliographic items, copy, paste in a text editor, save)
+                                </li>
                             </ul>
                             <div>"ValidationTests.java" has tests for comparing the results of a new version of
                                 DedupEndNote
@@ -2394,24 +2563,25 @@
                         <div id="logging" style="margin-top: 15px;">
                             <h3>2. Logging and log levels</h3>
                             <ul>
-                                <li>Reading the records
+                                <li>Reading the bibliographic items
 
                                     <div>
                                         <pre>java -Dlogging.level.edu.dedupendnote.services.IOService=DEBUG -jar DedupEndNote-0.9.7b-SNAPSHOT.jar</pre>
                                         If everythings works, the log should end with "Publications read: ". If not, the
                                         log
-                                        will end with a message with the Record ID and title of the last publication
+                                        will end with a message with the Bibliographic item ID and title of the last
+                                        publication
                                         that was
                                         successfully read.
                                     </div>
                                 </li>
-                                <li>Converting the records
+                                <li>Converting the bibliographic items
 
                                     <div>
                                         <pre>java -Dlogging.level.edu.dedupendnote.services.IOService=DEBUG -Dlogging.level.edu.dedupendnote.domain.Publication=DEBUG -jar DedupEndNote-0.9.7b-SNAPSHOT.jar</pre>
                                     </div>
                                 </li>
-                                <li>Deduplicating the records
+                                <li>Deduplicating the bibliographic items
                                     <div>
                                         <pre>java -Dlogging.level.edu.dedupendnote.services=DEBUG -jar DedupEndNote-0.9.7b-SNAPSHOT.jar</pre>
                                     </div>

@@ -16,7 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 
 /*
  * Preliminary tests for producing ALL permutations of complex names.
- * The current implementation (Publication::addAuthors(...)) uses only the first permutation: "De Brouwer de Boer, A." --> "Brouwer de Boer, A. D."
+ * The current implementation (BibliographicItem::addAuthors(...)) uses only the first permutation: "De Brouwer de Boer, A." --> "Brouwer de Boer, A. D."
  *
  * Results: the number of permutations are staggering. See testPermutations3: 2187 permutations for 7 authors
  */

@@ -27,8 +27,8 @@ import tools.jackson.dataformat.csv.CsvSchema;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
-import edu.dedupendnote.domain.Publication;
-import edu.dedupendnote.domain.PublicationDB;
+import edu.dedupendnote.domain.BibliographicItem;
+import edu.dedupendnote.domain.BibliographicItemDB;
 import edu.dedupendnote.integration.utils.MemoryAppender;
 import edu.dedupendnote.services.DeduplicationService;
 import edu.dedupendnote.validation.domain.ValidationResult;
@@ -46,29 +46,29 @@ public class ValidationService {
 
 	public ValidationResult checkResults(
 			String setName, String inputFileName, String outputFileName, String truthFileName,
-			List<Publication> publications, long durationMs, boolean withTracing,
+			List<BibliographicItem> bibliographicItems, long durationMs, boolean withTracing,
 			DeduplicationService deduplicationService) throws IOException {
 
-		List<PublicationDB> truthRecords = readTruthFile(truthFileName);
+		List<BibliographicItemDB> truthRecords = readTruthFile(truthFileName);
 
-		Map<String, Publication> publicationMap = publications.stream()
-				.collect(Collectors.toMap(Publication::getId, Function.identity()));
-		List<PublicationDB> publicationDBs = recordDBService.convertToRecordDB(publications, inputFileName);
-		Map<Integer, PublicationDB> validationMap = publicationDBs.stream()
-				.collect(Collectors.toMap(PublicationDB::getId, Function.identity(), (o1, o2) -> o1, TreeMap::new));
+		Map<String, BibliographicItem> publicationMap = bibliographicItems.stream()
+				.collect(Collectors.toMap(BibliographicItem::getId, Function.identity()));
+		List<BibliographicItemDB> publicationDBs = recordDBService.convertToRecordDB(bibliographicItems, inputFileName);
+		Map<Integer, BibliographicItemDB> validationMap = publicationDBs.stream()
+				.collect(Collectors.toMap(BibliographicItemDB::getId, Function.identity(), (o1, o2) -> o1, TreeMap::new));
 		Map<Integer, Set<Integer>> trueDuplicateSets = truthRecords.stream()
 				.filter(r -> r.getDedupid() != null)
-				.collect(Collectors.groupingBy(PublicationDB::getDedupid,
-						Collectors.mapping(PublicationDB::getId, Collectors.toSet())));
+				.collect(Collectors.groupingBy(BibliographicItemDB::getDedupid,
+						Collectors.mapping(BibliographicItemDB::getId, Collectors.toSet())));
 		int tns = 0, tps = 0, fps = 0, fns = 0;
 		List<String> errors = new ArrayList<>();
 		Map<Integer, Integer> fpErrors = new HashMap<>();
-		// Because there can be more than 1 FN-pair or FP-pair with the same kept publication, a List<List> is needed
-		Map<Integer, List<List<Publication>>> fnPairs = new TreeMap<>();
-		Map<Integer, List<List<Publication>>> fpPairs = new TreeMap<>();
+		// Because there can be more than 1 FN-pair or FP-pair with the same kept bibliographicItem, a List<List> is needed
+		Map<Integer, List<List<BibliographicItem>>> fnPairs = new TreeMap<>();
+		Map<Integer, List<List<BibliographicItem>>> fpPairs = new TreeMap<>();
 
-		for (PublicationDB t : truthRecords) {
-			PublicationDB v = validationMap.get(t.getId());
+		for (BibliographicItemDB t : truthRecords) {
+			BibliographicItemDB v = validationMap.get(t.getId());
 			if (v == null) {
 				continue;
 			}
@@ -86,7 +86,7 @@ public class ValidationService {
 					fns++;
 					v.setCorrection(tDedupId);
 					if (t.getId() != null && !t.getId().equals(tDedupId)) {
-						List<Publication> pair = new ArrayList<>();
+						List<BibliographicItem> pair = new ArrayList<>();
 						pair.add(publicationMap.get(t.getId().toString()));
 						pair.add(publicationMap.get(tDedupId.toString()));
 						pair = pair.stream().sorted((p1, p2) -> Integer.valueOf(p1.getId()).compareTo(Integer.valueOf(p2.getId()))).toList();
@@ -94,8 +94,8 @@ public class ValidationService {
 						if (fnPairs.containsKey(keptId)) {
 							fnPairs.get(keptId).add(new ArrayList<>(pair));
 						} else {
-							List<List<Publication>> list = new ArrayList<>();
-							list.add(new ArrayList<Publication>(pair));
+							List<List<BibliographicItem>> list = new ArrayList<>();
+							list.add(new ArrayList<BibliographicItem>(pair));
 							fnPairs.put(keptId, list);
 						}
 					}
@@ -111,7 +111,7 @@ public class ValidationService {
 				errors.add("FALSE POSITIVES: \n- TRUTH " + t + "\n- CURRENT " + v + "\n");
 				fpErrors.put(v.getId(), vDedupId);
 				if (v.getId() != null && !v.getId().equals(vDedupId)) {
-					List<Publication> pair = new ArrayList<>();
+					List<BibliographicItem> pair = new ArrayList<>();
 					pair.add(publicationMap.get(v.getId().toString()));
 					pair.add(publicationMap.get(vDedupId.toString()));
 					pair = pair.stream().sorted((p1, p2) -> Integer.valueOf(p1.getId()).compareTo(Integer.valueOf(p2.getId()))).toList();
@@ -119,8 +119,8 @@ public class ValidationService {
 					if (fpPairs.containsKey(keptId)) {
 						fpPairs.get(keptId).add(new ArrayList<>(pair));
 					} else {
-						List<List<Publication>> list = new ArrayList<>();
-						list.add(new ArrayList<Publication>(pair));
+						List<List<BibliographicItem>> list = new ArrayList<>();
+						list.add(new ArrayList<BibliographicItem>(pair));
 						fpPairs.put(keptId, list);
 					}
 				}
@@ -136,9 +136,9 @@ public class ValidationService {
 
 		if (withTracing) {
 			/*
-			 * There may be records in the output file with "... - ... ARE DUPLICATES" but with publication years
+			 * There may be records in the output file with "... - ... ARE DUPLICATES" but with bibliographicItem years
 			 * which are more than 1 year apart,
-			 * because the test of the pair does not look at the publication years
+			 * because the test of the pair does not look at the bibliographicItem years
 			 */
 			new File(inputFileName + "_FP_Analysis.txt").delete();
 			new File(inputFileName + "_FN_Analysis.txt").delete();
@@ -164,31 +164,31 @@ public class ValidationService {
 		return validationResult;
 	}
 
-	public List<PublicationDB> readTruthFile(String fileName) throws IOException {
+	public List<BibliographicItemDB> readTruthFile(String fileName) throws IOException {
 		Path path = Path.of(fileName);
 
 		CsvMapper mapper = new CsvMapper();
 		CsvSchema schema = mapper
-				.schemaFor(PublicationDB.class)
+				.schemaFor(BibliographicItemDB.class)
 				.withHeader()
 				.withColumnSeparator('\t')
 				.withLineSeparator("\n");
-		MappingIterator<PublicationDB> it = mapper
-				.readerFor(PublicationDB.class)
+		MappingIterator<BibliographicItemDB> it = mapper
+				.readerFor(BibliographicItemDB.class)
 				.with(schema)
 				.with(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT)
 				.readValues(path.toFile());
 		return it.readAll();
 	}
 
-	private void writeFNandFPresults(Map<Integer, List<List<Publication>>> pairsList, String outputFileName,
+	private void writeFNandFPresults(Map<Integer, List<List<BibliographicItem>>> pairsList, String outputFileName,
 			DeduplicationService deduplicationService) {
 		List<Logger> loggers = new ArrayList<>();
 		List<String> loggerNames = List.of(
 			"edu.dedupendnote.services.DeduplicationService",
 			"edu.dedupendnote.services.ComparisonService",
 			"edu.dedupendnote.services.DefaultAuthorsComparisonService",
-			"edu.dedupendnote.services.ValidationTests" // add this file because of trace on publication year
+			"edu.dedupendnote.services.ValidationTests" // add this file because of trace on bibliographicItem year
 			);
 		Level oldLevel = null;
 
@@ -204,8 +204,8 @@ public class ValidationService {
 			memoryAppender.setContext((LoggerContext) LoggerFactory.getILoggerFactory());
 			memoryAppender.start();
 
-			for (List<List<Publication>> pairs : pairsList.values()) {
-				for (List<Publication> pair : pairs) {
+			for (List<List<BibliographicItem>> pairs : pairsList.values()) {
+				for (List<BibliographicItem> pair : pairs) {
 					bw.write(pair.get(0).toString());
 					bw.write("\n");
 					if (pair.size() < 2) {
@@ -215,11 +215,11 @@ public class ValidationService {
 					}
 
 					// deduplicate pair after writing because deduplication alters the pair
-					Publication p1 = pair.get(0);
-					Publication p2 = pair.get(1);
+					BibliographicItem p1 = pair.get(0);
+					BibliographicItem p2 = pair.get(1);
 					if (p1.getPublicationYear() > 0 && p2.getPublicationYear() > 0 && Math.abs(p1.getPublicationYear() - p2.getPublicationYear()) > 1) {
 						log.trace("\nStarting comparison {} - {}", p1.getId(), p2.getId());
-						log.trace("- 0. Publication years are too far apart: {} and {}", p1.getPublicationYear(), p2.getPublicationYear());
+						log.trace("- 0. BibliographicItem years are too far apart: {} and {}", p1.getPublicationYear(), p2.getPublicationYear());
 						log.trace("{} - {} ARE NOT DUPLICATES", p1.getId(), p2.getId());
 					} else {
 						deduplicationService.compareSet(pair, p1.getPublicationYear(), true, message -> {});

@@ -79,8 +79,9 @@ Each pair of records is compared in 5 different ways. The general rule is:
 The following comparisons are used (in this order, chosen for performance reasons):
 
 1. __Publication year:__ Are they at most 1 year apart?
-  * Prepocessing: publication years before 1800 are removed (see insufficient data)
-  * Insufficient data: Records without a publication year are compared to all records unless they have been identified as a duplicate.
+  * Prepocessing: publication years before <span
+     th:text="${T(edu.dedupendnote.services.NormalizationService).EARLIEST_PUBLICATION_YEAR}">1812</span> are removed (see insufficient data)
+  * Insufficient data: Records without a publication year are compared to all records unless they have been already identified as a duplicate.
   * Special cases: Cochrane Reviews are compared for the same publication year only.
 2. __Starting page or DOI:__ Are they the same?<br/>
 If the Starting and Ending page of at least one of the publications are more than 2 pages apart,

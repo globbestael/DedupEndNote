@@ -205,7 +205,7 @@
 			<div class="col-8 offset-2">
 				<h1 class="mb-1">Deduplicate 1 file</h1>
 				<p class="text-muted mb-4">Use <a class="link-underline-light" href="/twofiles">Deduplicate 2 files</a>
-					to compare a new set of records against an existing one</p>
+					to compare a new set of bibliographic items against an existing one</p>
 
 				<!-- Step 1: Upload -->
 				<div id="step1" class="step-card step-active">
@@ -234,7 +234,7 @@
 						<div class="form-check form-check-inline mb-2">
 							<input class="form-check-input" type="checkbox" id="markMode" name="markMode" />
 							<label class="form-check-label" for="markMode">Do NOT deduplicate but mark the duplicate
-								records (see Mark mode below)</label>
+								bibliographic items (see Mark mode below)</label>
 						</div>
 						<div>
 							<button type="submit" id="buttonStartDeduplication" disabled
@@ -274,7 +274,7 @@
 						</h2>
 						<div id="collapseIntro" class="accordion-collapse collapse" data-bs-parent="#docsAccordion">
 							<div class="accordion-body">
-								<p><b>DedupEndNote</b> is a tool for removing duplicate records from EndNote or Zotero
+								<p><b>DedupEndNote</b> is a tool for removing duplicate bibliographic items from EndNote or Zotero
 									databases exported in <b>RIS format</b>.
 									It is more flexible than the built-in deduplication features in EndNote or Zotero,
 									and identifies more duplicates.</p>
@@ -284,7 +284,7 @@
 									<li>Compare a new file against an existing file (see <a class="link-underline-light"
 											href="/twofiles">Deduplicate 2 files</a>)</li>
 								</ul>
-								<p>The program has been tested on EndNote and Zotero databases with records from:
+								<p>The program has been tested on EndNote and Zotero databases with bibliographic items from:
 									CINAHL (EBSCOHost), ClinicalTrials.gov, Cochrane Library, EMBASE (OVID and
 									Embase.com), Medline (OVID), PsycINFO (OVID), PubMed, Scopus, Web of Science.</p>
 							</div>
@@ -303,7 +303,7 @@
 									The page <a class="link-underline-light" href="/details" target="window2">Details,
 										lots of details ...</a> has more detailed information.
 								</div>
-								<p>DedupEndNote compares each pair of records in up to five stages, stopping early if a
+								<p>DedupEndNote compares each pair of bibliographic items in up to five stages, stopping early if a
 									mismatch is found:</p>
 								<ol>
 									<li><b>Publication Year</b>: Matches if the years are the same or differ by at most
@@ -330,9 +330,9 @@
 						</h2>
 						<div id="collapseOutput" class="accordion-collapse collapse" data-bs-parent="#docsAccordion">
 							<div class="accordion-body">
-								<p>By default, only the first record in each duplicate set is kept. The output file:</p>
+								<p>By default, only the first bibliographic item in each duplicate set is kept. The output file:</p>
 								<ul>
-									<li>Preserves all unique records</li>
+									<li>Preserves all unique bibliographic items</li>
 									<li>Enriches them with missing data from duplicates (e.g., DOI, journal name,
 										publication year, pages)</li>
 									<li>Normalizes certain fields (e.g., DOI format, page ranges)</li>
@@ -341,7 +341,7 @@
 								<ul>
 									<li>Export an EndNote / Zotero database into a file in RIS format</li>
 									<li>Upload this file in DedupEndNote</li>
-									<li>Save the results file with deduplicated records</li>
+									<li>Save the results file with deduplicated bibliographic items</li>
 									<li>Import this results file into a <b>new</b> EndNote / Zotero database</li>
 								</ul>
 							</div>
@@ -358,12 +358,12 @@
 							<div class="accordion-body">
 								<p>Instead of removing duplicates, Mark Mode labels them for manual review:</p>
 								<ul>
-									<li>The ID of the first record in each duplicate set is copied to the <b>Label
+									<li>The ID of the first bibliographic item in each duplicate set is copied to the <b>Label
 											(LB)</b> field of all duplicates.</li>
 									<li>The original Label content is overwritten.</li>
 									<li>No enrichment or normalization is performed.</li>
 								</ul>
-								<p>This mode is useful if you want to merge records manually in EndNote.</p>
+								<p>This mode is useful if you want to merge bibliographic items manually in EndNote.</p>
 							</div>
 						</div>
 					</div>
