@@ -25,6 +25,22 @@
             <div class="col-8" data-bs-spy="scroll" data-bs-target="#navmenu">
                 <h1>DedupEndNote: Changelog</h1>
 
+                <h2 class="bg-success-subtle">1.1.7 (2026-XX-XX)</h2>
+                <ul>
+                    <li>Bug fix: the Details page showed a hardcoded earliest publication year instead of
+                        the actual value used by the application.</li>
+                    <li>Internal:
+                        <ul>
+                            <li>Rename core class <code>Publication</code> → <code>BibliographicItem</code>
+                                to align code with the domain language</li>
+                            <li>Introduce <code>DeduplicationMode</code> enum (<code>REMOVE</code> /
+                                <code>MARK</code>) replacing a boolean flag</li>
+                            <li>Add <code>.gitattributes</code> to normalise line endings; fix stray
+                                UTF-8 BOM characters in Java source files</li>
+                        </ul>
+                    </li>
+                </ul>
+
                 <h2 class="bg-success-subtle">1.1.6 (2026-05-20)</h2>
                 <ul>
                     <li>Upgrade Spring Boot to 4.0.6, jquery-ui to 1.14.2, jquery-file-upload to 10.32.0</li>
