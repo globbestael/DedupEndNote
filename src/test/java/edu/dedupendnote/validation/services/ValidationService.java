@@ -6,6 +6,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -51,7 +52,7 @@ public class ValidationService {
 
 		List<BibliographicItemDB> truthRecords = readTruthFile(truthFileName);
 
-		Map<String, BibliographicItem> publicationMap = bibliographicItems.stream()
+		Map<Integer, BibliographicItem> publicationMap = bibliographicItems.stream()
 				.collect(Collectors.toMap(BibliographicItem::getId, Function.identity()));
 		List<BibliographicItemDB> publicationDBs = recordDBService.convertToRecordDB(bibliographicItems, inputFileName);
 		Map<Integer, BibliographicItemDB> validationMap = publicationDBs.stream()
@@ -87,10 +88,10 @@ public class ValidationService {
 					v.setCorrection(tDedupId);
 					if (t.getId() != null && !t.getId().equals(tDedupId)) {
 						List<BibliographicItem> pair = new ArrayList<>();
-						pair.add(publicationMap.get(t.getId().toString()));
-						pair.add(publicationMap.get(tDedupId.toString()));
-						pair = pair.stream().sorted((p1, p2) -> Integer.valueOf(p1.getId()).compareTo(Integer.valueOf(p2.getId()))).toList();
-						Integer keptId = Integer.valueOf(pair.get(0).getId());
+						pair.add(publicationMap.get(t.getId()));
+						pair.add(publicationMap.get(tDedupId));
+						pair = pair.stream().sorted(Comparator.comparing(BibliographicItem::getId)).toList();
+						Integer keptId = pair.get(0).getId();
 						if (fnPairs.containsKey(keptId)) {
 							fnPairs.get(keptId).add(new ArrayList<>(pair));
 						} else {
@@ -112,10 +113,10 @@ public class ValidationService {
 				fpErrors.put(v.getId(), vDedupId);
 				if (v.getId() != null && !v.getId().equals(vDedupId)) {
 					List<BibliographicItem> pair = new ArrayList<>();
-					pair.add(publicationMap.get(v.getId().toString()));
-					pair.add(publicationMap.get(vDedupId.toString()));
-					pair = pair.stream().sorted((p1, p2) -> Integer.valueOf(p1.getId()).compareTo(Integer.valueOf(p2.getId()))).toList();
-					Integer keptId = Integer.valueOf(pair.get(0).getId());
+					pair.add(publicationMap.get(v.getId()));
+					pair.add(publicationMap.get(vDedupId));
+					pair = pair.stream().sorted(Comparator.comparing(BibliographicItem::getId)).toList();
+					Integer keptId = pair.get(0).getId();
 					if (fpPairs.containsKey(keptId)) {
 						fpPairs.get(keptId).add(new ArrayList<>(pair));
 					} else {

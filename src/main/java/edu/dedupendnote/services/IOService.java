@@ -238,8 +238,8 @@ public class IOService {
 						pagesInputMap.put("SP", sp + "-" + fieldContent);
 						break;
 					case "ER":
-						if (bibliographicItem.getId() == null) {
-							bibliographicItem.setId(Integer.toString(missingId++));
+						if (bibliographicItem.getId() == 0) {
+							bibliographicItem.setId(missingId++);
 						}
 						if (bibliographicItem.isClinicalTrialGov()) {
 							bibliographicItem.getAuthors().clear();
@@ -279,7 +279,13 @@ public class IOService {
 										: bibliographicItem.getTitles().getFirst()));
 						break;
 					case "ID": // EndNote BibliographicItem number
-						bibliographicItem.setId(fieldContent);
+						try {
+							bibliographicItem.setId(Integer.parseInt(fieldContent));
+						} catch (NumberFormatException e) {
+							throw new InvalidRisFileException(
+								"The input file contains ID fields which are not numbers. " +
+								"The input file is not an Export as RIS-file from an EndNote library!");
+						}
 						// log.debug("Read ID {}", fieldContent);
 						break;
 					case "J2": // Alternate journal
@@ -535,7 +541,7 @@ public class IOService {
 			}
 		}
 
-		String bibliographicItemId = (bibliographicItem.getId() == null ? "0" : bibliographicItem.getId());
+		String bibliographicItemId = String.valueOf(bibliographicItem.getId());
 
 		PageRecord normalizedPages = NormalizationService.normalizeInputPages(pagesInputMap, bibliographicItemId);
 		bibliographicItem.setPageStart(normalizedPages.pageStart());
@@ -605,8 +611,8 @@ public class IOService {
 		List<BibliographicItem> bibliographicItemsToKeep = bibliographicItems.stream().filter(BibliographicItem::isKeptBibliographicItem).toList();
 		log.debug("Publications to be kept: {}", bibliographicItemsToKeep.size());
 
-		Map<String, BibliographicItem> recordIdMap = bibliographicItems.stream()
-			.filter(p -> p.getId() != null && !p.getId().startsWith("-"))
+		Map<Integer, BibliographicItem> recordIdMap = bibliographicItems.stream()
+			.filter(p -> p.getId() > 0)
 			.collect(Collectors.toMap(BibliographicItem::getId, Function.identity()));
 
 		int numberWritten = 0;
@@ -625,7 +631,7 @@ public class IOService {
 			}
 			String line;
 			BibliographicItem bibliographicItem = null;
-			Integer phantomId = 0;
+			int phantomId = 0;
 			String realId = null;
 
 			while ((line = br.readLine()) != null) {
@@ -641,10 +647,10 @@ public class IOService {
 						map.put(fieldName, fieldContent);
 						phantomId++;
 						if (realId == null) {
-							bibliographicItem = recordIdMap.get(phantomId.toString());
+							bibliographicItem = recordIdMap.get(phantomId);
 							if (bibliographicItem != null) {
-								bibliographicItem.setId(phantomId.toString());
-								map.put("ID", phantomId.toString());
+								bibliographicItem.setId(phantomId);
+								map.put("ID", Integer.toString(phantomId));
 							}
 						}
 						if (bibliographicItem != null && bibliographicItem.isKeptBibliographicItem()) {
@@ -656,8 +662,8 @@ public class IOService {
 						break;
 					case "ID": // EndNote BibliographicItem number
 						map.put(fieldName, fieldContent);
-						realId = line.substring(6);
-						bibliographicItem = recordIdMap.get(realId);
+						realId = fieldContent;
+						bibliographicItem = recordIdMap.get(Integer.parseInt(realId));
 						break;
 					default:
 						if (map.containsKey(fieldName)) {
@@ -692,8 +698,8 @@ public class IOService {
 		List<BibliographicItem> bibliographicItemsToKeep = bibliographicItems.stream().filter(BibliographicItem::isKeptBibliographicItem).toList();
 		log.debug("Publications to be kept: {}", bibliographicItemsToKeep.size());
 
-		Map<String, BibliographicItem> recordIdMap = bibliographicItems.stream()
-			.filter(p -> p.getId() != null && !p.getId().startsWith("-"))
+		Map<Integer, BibliographicItem> recordIdMap = bibliographicItems.stream()
+			.filter(p -> p.getId() > 0)
 			.collect(Collectors.toMap(BibliographicItem::getId, Function.identity()));
 
 		int numberWritten = 0;
@@ -711,7 +717,7 @@ public class IOService {
 			}
 			String line;
 			BibliographicItem bibliographicItem = null;
-			Integer phantomId = 0;
+			int phantomId = 0;
 			String realId = null;
 
 			while ((line = br.readLine()) != null) {
@@ -725,11 +731,11 @@ public class IOService {
 					case "ER":
 						phantomId++;
 						if (realId == null) {
-							bibliographicItem = recordIdMap.get(phantomId.toString());
+							bibliographicItem = recordIdMap.get(phantomId);
 							if (bibliographicItem != null) {
-								bibliographicItem.setId(phantomId.toString());
+								bibliographicItem.setId(phantomId);
 							}
-							map.put("ID", phantomId.toString());
+							map.put("ID", Integer.toString(phantomId));
 						}
 						if (bibliographicItem != null && bibliographicItem.isKeptBibliographicItem()) {
 							map.put(fieldName, fieldContent);
@@ -745,7 +751,7 @@ public class IOService {
 					case "ID": // EndNote BibliographicItem number
 						map.put(fieldName, fieldContent);
 						realId = fieldContent;
-						bibliographicItem = recordIdMap.get(realId);
+						bibliographicItem = recordIdMap.get(Integer.parseInt(realId));
 						break;
 					case "LB":
 						break; // to ensure that the present Label is not used.
@@ -816,7 +822,7 @@ public class IOService {
 				map.remove("AU");
 			}
 			if (!map.containsKey("PY") && bibliographicItem.getPublicationYear() != 0) {
-				map.put("PY", bibliographicItem.getPublicationYear().toString());
+				map.put("PY", Integer.toString(bibliographicItem.getPublicationYear()));
 			}
 			if (!map.containsKey("T2")) {
 				if (map.containsKey("J2")) {
