@@ -382,7 +382,7 @@ public class NormalizationService {
 	 * - choose which of these 3 field values will be used
 	 * - handle the chosen field value to get pageStart, pagesOutput and isSevtalPages
 	 */
-	public static PageRecord normalizeInputPages(Map<String, String> pagesInputMap, String bibliographicItemId) {
+	public static PageRecord normalizeInputPages(Map<String, String> pagesInputMap, int bibliographicItemId) {
 		String c7Pages = pagesInputMap.get("C7");
 		String sePages = pagesInputMap.get("SE");
 		String spPages = pagesInputMap.get("SP");
@@ -400,7 +400,7 @@ public class NormalizationService {
 		 */
 
 		if (c7Pages != null) {
-			c7Pages = initialPagesCleanup(c7Pages, bibliographicItemId);
+			c7Pages = initialPagesCleanup(c7Pages);
 			originalPages = c7Pages;
 			c7Pages = clearPagesIfMonth(c7Pages);
 			// Cases like "Pii s1386-6346(02)00029-3"
@@ -428,20 +428,20 @@ public class NormalizationService {
 
 		if (sePages != null) {
 			if (c7Pages != null) {
-				log.error("Found a case with both C7 %s and SE %s(bibliographicItem ID %s)"
+				log.error("Found a case with both C7 %s and SE %s(bibliographicItem ID %d)"
 						.formatted(pagesInputMap.get("C7"), pagesInputMap.get("SE"), bibliographicItemId));
 			}
 			if (sePages.length() > 30) {
 				sePages = null;
 			} else {
-				sePages = initialPagesCleanup(sePages, bibliographicItemId);
+				sePages = initialPagesCleanup(sePages);
 				originalPages = sePages;
 				sePages = clearPagesIfMonth(sePages);
 			}
 		}
 
 		if (spPages != null) {
-			spPages = initialPagesCleanup(spPages, bibliographicItemId);
+			spPages = initialPagesCleanup(spPages);
 			originalPages = spPages;
 			spPages = clearPagesIfMonth(spPages);
 			if (spPages != null) {
@@ -641,7 +641,7 @@ public class NormalizationService {
 		return pages;
 	}
 
-	private static @Nullable String initialPagesCleanup(String pages, String bibliographicItemId) {
+	private static @Nullable String initialPagesCleanup(String pages) {
 		// Cochrane uses hyphen characters instead of minus
 		pages = pages.replaceAll("[\\u2010\\u00ad]", "-");
 
@@ -649,11 +649,9 @@ public class NormalizationService {
 
 		// replace "S6-97-s6-99" by "S697-s699"
 		pages = NormPatterns.PAGES_HYPHEN_MERGE_1_PATTERN.matcher(pages).replaceAll("$1$2-$3$4");
-		// pages = pages.replaceAll("(?<!\\d+)([a-zA-Z0-9]+)-(\\d+)-([a-zA-Z0-9]+)-(\\d+)", "$1$2-$3$4");
 
 		// replace "ii-218-ii-228" by "ii218-ii228", and "S-12" by "S12"
 		pages = NormPatterns.PAGES_HYPHEN_MERGE_2_PATTERN.matcher(pages).replaceAll("$1$2");
-		// pages = pages.replaceAll("(?<!\\d+)([a-zA-Z]+)-(\\d+)", "$1$2");
 
 		if (pages != null && pages.isBlank()) {
 			pages = null;

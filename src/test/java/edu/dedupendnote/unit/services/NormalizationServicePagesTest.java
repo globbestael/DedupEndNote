@@ -25,7 +25,7 @@ class NormalizationServicePagesTest {
 	@ParameterizedTest(name = "{index}: parsePages({0})=({1},{2},{3})")
 	@MethodSource("parsePagesArgumentProvider")
 	void parsePagesTest(String pages, String pageStart, String pagesOutput, boolean severalPages) {
-		PageRecord normalizedPages = NormalizationService.normalizeInputPages(Map.of("SP", pages), "1");
+		PageRecord normalizedPages = NormalizationService.normalizeInputPages(Map.of("SP", pages), 1);
 
 		SoftAssertions.assertSoftly(softAssertions -> {
 			softAssertions.assertThat(normalizedPages.pageStart()).as("PageStart comparison for '%s'", pages)

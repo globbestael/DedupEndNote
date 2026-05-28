@@ -283,8 +283,8 @@ public class IOService {
 							bibliographicItem.setId(Integer.parseInt(fieldContent));
 						} catch (NumberFormatException e) {
 							throw new InvalidRisFileException(
-								"The input file contains ID fields which are not numbers. " +
-								"The input file is not an Export as RIS-file from an EndNote library!");
+									"The input file contains ID fields which are not numbers. "
+											+ "The input file is not an Export as RIS-file from an EndNote library!");
 						}
 						// log.debug("Read ID {}", fieldContent);
 						break;
@@ -541,9 +541,7 @@ public class IOService {
 			}
 		}
 
-		String bibliographicItemId = String.valueOf(bibliographicItem.getId());
-
-		PageRecord normalizedPages = NormalizationService.normalizeInputPages(pagesInputMap, bibliographicItemId);
+		PageRecord normalizedPages = NormalizationService.normalizeInputPages(pagesInputMap, bibliographicItem.getId());
 		bibliographicItem.setPageStart(normalizedPages.pageStart());
 		bibliographicItem.setPagesOutput(normalizedPages.pagesOutput());
 		bibliographicItem.setSeveralPages(normalizedPages.isSeveralPages());
