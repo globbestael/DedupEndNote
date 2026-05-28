@@ -334,10 +334,18 @@ l						 * 		V 		W 		X
 	}
 
 	public @Nullable String doSanityChecks(List<BibliographicItem> bibliographicItems, String fileName) {
+		/*
+			FIXME: IOService::readBibliographicItems adds a Id for records without an input-ID in the switch case for "ER".
+			This check containsBibliographicItemsWithoutId can never return the error-string?
+		 */
 		if (containsBibliographicItemsWithoutId(bibliographicItems)) {
 			return "ERROR: The input file " + fileName
 					+ " contains bibliographic items without IDs. The input file is not an Export as RIS-file from an EndNote library!";
 		}
+		/*
+			FIXME: With an empty bibliographicItems List as input, the result TRUE returns a string that is not accurate
+			See also issue #70
+		*/
 		if (containsOnlyBibliographicItemsWithoutPublicationYear(bibliographicItems)) {
 			return "ERROR: All bibliographic items of the input file " + fileName
 					+ " have no publication year. The input file is not an Export as RIS-file from an EndNote library!";

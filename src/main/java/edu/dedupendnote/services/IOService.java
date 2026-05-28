@@ -137,19 +137,15 @@ public class IOService {
 	 */
 	public static final Pattern RIS_LINE_PATTERN = Pattern.compile("(^[A-Z][A-Z0-9])( {2}-[ ,\\u00A0])(.*)$");
 
-	/*
-	 * readBibliographicItems: called in the first phase (before the comparison of bibliographicItems), includes normalization of data.
-	 * 
-	 * There are several public write... methods in this class which read the bibliographicItems:
-	 * - no / harldy any normalization
-	 * - result stored in a Map<String, String>
-	 */
 	private long countRecords(String fileName) throws IOException {
 		try (Stream<String> lines = Files.lines(Path.of(fileName))) {
 			return lines.filter(l -> l.startsWith("ER  - ")).count();
 		}
 	}
 
+	/*
+	 * readBibliographicItems: called in the first phase (before the comparison of bibliographicItems), includes normalization of data.
+	 */
 	public List<BibliographicItem> readBibliographicItems(String inputFileName, Consumer<String> progressReporter) {
 		return readBibliographicItems(inputFileName, progressReporter, false);
 	}
