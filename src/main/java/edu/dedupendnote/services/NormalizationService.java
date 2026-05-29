@@ -393,8 +393,6 @@ public class NormalizationService {
 		String originalPages = null;
 		boolean isSeveralPages = false;
 		String pagesOutput = null;
-		String pageStart = null;
-		String pageEnd = null;
 
 		/*
 		 * Step 1: normalize the 3 possible inputs (pagesInputMap).
@@ -454,9 +452,11 @@ public class NormalizationService {
 			return new PageRecord(originalPages, null, null, false);
 		}
 
-		/*
-		 * Step 3
-		 */
+		return parsePageRange(pages, originalPages, pagesOutput, isSeveralPages);
+	}
+
+	private static PageRecord parsePageRange(String pages, @Nullable String originalPages,
+			@Nullable String pagesOutput, boolean isSeveralPages) {
 		List<String> pagesParts = Arrays.asList(pages.split("[+,;]\\s*"));
 		// Split into (1) group with only Roman numbers, and (2) others (could be Arabic numbers, combined Roman+Arabic
 		// ("ii208-212"), combined Arabic+text ("S12-23", "CD123456". "67A-69A", text, ...)
@@ -466,7 +466,7 @@ public class NormalizationService {
 		 * Working with "resultMap.get(false).[function]()" and NullAway caused a lot of "derefenced expression ...is @Nullable" errors.
 		 * Splitting resultMap in 2 seperate Lists solved these errors.
 		 * Is this the problem mentioned in the NullAway wiki at https://github.com/uber/NullAway/wiki/Maps?
-		 * 
+		 *
 		 * BTW: using these List romanPages and arabicPages makes the code a lot cleaner.
 		 */
 		List<String> romanPages = (List<String>) resultMap.getOrDefault(Boolean.TRUE, List.of());
@@ -475,8 +475,10 @@ public class NormalizationService {
 		 * FIXME: The following example is a bad example: replace!
 		 * Only the first of the pagesParts in the resultMap values will be used!
 		 * In "A relational approach to rehabilitation: Thinking about relationships after brain injury. xvi, 376"
-		 * the second part ("376") will be disregarded. 
+		 * the second part ("376") will be disregarded.
 		 */
+		String pageStart = null;
+		String pageEnd = null;
 		if (arabicPages.isEmpty()) { // there are no Arabic numbers, possibly Roman numbers
 			if (!romanPages.isEmpty()) {
 				String[] parts = romanPages.removeFirst().split("-");
@@ -493,7 +495,7 @@ public class NormalizationService {
 					}
 				}
 			}
-		} else if (!arabicPages.isEmpty()) { // there are Arabic numbers
+		} else { // there are Arabic numbers
 			String first = arabicPages.removeFirst();
 			String[] parts = first.split("-");
 			if (parts.length > 0) {
@@ -533,8 +535,6 @@ public class NormalizationService {
 					}
 				}
 			}
-		} else {
-			return new PageRecord(originalPages, null, null, false);
 		}
 		pageStart = cleanUpPage(pageStart);
 		pageEnd = cleanUpPage(pageEnd);
@@ -585,7 +585,6 @@ public class NormalizationService {
 				pageEndInt = null;
 			}
 		}
-
 		if (isSeveralPages == false) {
 			// The first part of one of them was removed. If there were more pages of the same kind or at least one of the other kind
 			if (!arabicPages.isEmpty() || !romanPages.isEmpty()) {
@@ -597,7 +596,7 @@ public class NormalizationService {
 		}
 		// A last check
 		if (isSeveralPages && (pageStart == null || pageStart.isEmpty())) {
-			// log.error("isSeveralPages is set but pageStart is null or empty for bibliographicItemnId {}", bibliographicItemId);
+			// log.error("isSeveralPages is set but pageStart is null or empty for bibliographicItemId {}", bibliographicItemId);
 			isSeveralPages = false;
 		}
 		return new PageRecord(originalPages, pageStart, pagesOutput, isSeveralPages);
