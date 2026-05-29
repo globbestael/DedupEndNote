@@ -383,9 +383,12 @@ public class NormalizationService {
 	 * - handle the chosen field value to get pageStart, pagesOutput and isSevtalPages
 	 */
 	public static PageRecord normalizeInputPages(Map<String, String> pagesInputMap, int bibliographicItemId) {
-		String c7Pages = pagesInputMap.get("C7");
-		String sePages = pagesInputMap.get("SE");
-		String spPages = pagesInputMap.get("SP");
+		String rawC7 = pagesInputMap.get("C7");
+		String rawSe = pagesInputMap.get("SE");
+		String rawSp = pagesInputMap.get("SP");
+		String c7Pages = null;
+		String sePages = null;
+		String spPages = null;
 		String pages = null;
 		String originalPages = null;
 		boolean isSeveralPages = false;
@@ -394,30 +397,17 @@ public class NormalizationService {
 		String pageEnd = null;
 
 		/*
-		 * Step 1: normalize the 3 possible inputs (pagesInputMap)
-		 * 
-		 * There is already a return in the c7pages branch!
+		 * Step 1: normalize the 3 possible inputs (pagesInputMap).
+		 * Each field is cleaned by its own private method; semantic decisions
+		 * (early return, isSeveralPages, pagesOutput) are resolved here.
 		 */
 
-		if (c7Pages != null) {
-			c7Pages = initialPagesCleanup(c7Pages);
-			originalPages = c7Pages;
-			c7Pages = clearPagesIfMonth(c7Pages);
-			// Cases like "Pii s1386-6346(02)00029-3"
-			if (c7Pages != null) {
-				if (c7Pages.contains(" ")) {
-					c7Pages = null;
-				} else {
-					// a value like "10007431(2019)02-0126-07" (part of DOI) is changed to a number, which later sets
-					// isSeveralPages to true (which is most cases is true?).
-					c7Pages = c7Pages.replaceAll("\\D", "");
-				}
-			}
-			if (c7Pages != null && c7Pages.isBlank()) {
-				c7Pages = null;
-			}
+		if (rawC7 != null) {
+			NormalizedField c7Norm = normalizeC7Field(rawC7);
+			c7Pages = c7Norm.value();
+			originalPages = c7Norm.originalPages();
 			if (c7Pages == null) {
-				if (sePages == null && spPages == null) {
+				if (rawSe == null && rawSp == null) {
 					return new PageRecord(originalPages, null, null, false);
 				}
 			} else {
@@ -426,32 +416,21 @@ public class NormalizationService {
 			}
 		}
 
-		if (sePages != null) {
-			if (c7Pages != null) {
-				log.error("Found a case with both C7 %s and SE %s(bibliographicItem ID %d)"
-						.formatted(pagesInputMap.get("C7"), pagesInputMap.get("SE"), bibliographicItemId));
-			}
-			if (sePages.length() > 30) {
-				sePages = null;
-			} else {
-				sePages = initialPagesCleanup(sePages);
-				originalPages = sePages;
-				sePages = clearPagesIfMonth(sePages);
+		if (rawSe != null) {
+			NormalizedField seNorm = normalizeSeField(rawSe, c7Pages, bibliographicItemId);
+			if (seNorm != null) {
+				sePages = seNorm.value();
+				originalPages = seNorm.originalPages();
 			}
 		}
 
-		if (spPages != null) {
-			spPages = initialPagesCleanup(spPages);
-			originalPages = spPages;
-			spPages = clearPagesIfMonth(spPages);
-			if (spPages != null) {
-				if ((spPages.startsWith("e") || spPages.startsWith("E")) && !spPages.contains("-")) {
-					isSeveralPages = true;
-					pagesOutput = originalPages;
-				}
-				if (spPages.endsWith("+") || spPages.endsWith("-")) {
-					spPages = spPages.substring(0, spPages.length() - 1);
-				}
+		if (rawSp != null) {
+			NormalizedField spNorm = normalizeSpField(rawSp);
+			spPages = spNorm.value();
+			originalPages = spNorm.originalPages();
+			if (spNorm.isSeveralPages()) {
+				isSeveralPages = true;
+				pagesOutput = originalPages;
 			}
 		}
 
@@ -622,6 +601,58 @@ public class NormalizationService {
 			isSeveralPages = false;
 		}
 		return new PageRecord(originalPages, pageStart, pagesOutput, isSeveralPages);
+	}
+
+	private record NormalizedField(@Nullable String value, @Nullable String originalPages, boolean isSeveralPages) {}
+
+	private static NormalizedField normalizeC7Field(String rawC7) {
+		String cleaned = initialPagesCleanup(rawC7);
+		String original = cleaned;
+		cleaned = clearPagesIfMonth(cleaned);
+		// Cases like "Pii s1386-6346(02)00029-3"
+		if (cleaned != null) {
+			if (cleaned.contains(" ")) {
+				cleaned = null;
+			} else {
+				// a value like "10007431(2019)02-0126-07" (part of DOI) is changed to a number, which later sets
+				// isSeveralPages to true (which is most cases is true?).
+				cleaned = cleaned.replaceAll("\\D", "");
+			}
+		}
+		if (cleaned != null && cleaned.isBlank()) {
+			cleaned = null;
+		}
+		return new NormalizedField(cleaned, original, false);
+	}
+
+	// Returns null when rawSe is too long (> 30 chars) — originalPages is not updated in that case.
+	private static @Nullable NormalizedField normalizeSeField(String rawSe, @Nullable String c7Pages, int id) {
+		if (c7Pages != null) {
+			log.error("Found a case with both C7 and SE for bibliographicItem ID {}", id);
+		}
+		if (rawSe.length() > 30) {
+			return null;
+		}
+		String cleaned = initialPagesCleanup(rawSe);
+		String original = cleaned;
+		cleaned = clearPagesIfMonth(cleaned);
+		return new NormalizedField(cleaned, original, false);
+	}
+
+	private static NormalizedField normalizeSpField(String rawSp) {
+		String cleaned = initialPagesCleanup(rawSp);
+		String original = cleaned;
+		cleaned = clearPagesIfMonth(cleaned);
+		boolean isEPage = false;
+		if (cleaned != null) {
+			if ((cleaned.startsWith("e") || cleaned.startsWith("E")) && !cleaned.contains("-")) {
+				isEPage = true;
+			}
+			if (cleaned.endsWith("+") || cleaned.endsWith("-")) {
+				cleaned = cleaned.substring(0, cleaned.length() - 1);
+			}
+		}
+		return new NormalizedField(cleaned, original, isEPage);
 	}
 
 	private static @Nullable String getLongPageEnd(String pageStart, @Nullable String pageEnd) {
