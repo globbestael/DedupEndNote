@@ -75,6 +75,7 @@ class MissedDuplicatesTests extends AbstractIntegrationTest {
 		// "'/problems/AI_Query_2022_missed_duplicates_3.txt', 2, 1",
 		// "'/problems/BIG_SET_missed_1.txt', 4, 1", 
 		// "'/problems/BIG_SET_missed_2.txt', 3, 1",
+		// "'/problems/Rayyan/missed_251_252.txt', 2, 2", // SOLVED: Rayyan: both isSeveralPages = false
 		// "'/problems/TIL_missed_duplicates.txt', 3, 1",
 		// "'/problems/TIL_missed_duplicates_3.txt', 4, 1", // SOLVED: same pages and DOI, different journal
 		// "'/problems/TIL_missed_duplicates_3.txt', 4, 1", // SOLVED: same pages and DOI, different journal
@@ -107,7 +108,6 @@ class MissedDuplicatesTests extends AbstractIntegrationTest {
 		 * On 2025-12-18 copying the label from the bibliographicItem to the pivot has been disabled
 		 */
 		"'/problems/Rayyan/missed_10_11.txt', 2, 1", // Rayyan
-		"'/problems/Rayyan/missed_251_252.txt', 2, 1", // Rayyan
 		"'/ASySD/dedupendnote_files/missed_duplicates/SRSR_Human_missed_2_4.txt', 4, 2", // Cochrane
 		"'/ASySD/dedupendnote_files/missed_duplicates/SRSR_Human_missed_2_6.txt', 6, 3", // Cochrane
 		// "'/ASySD/dedupendnote_files/missed_duplicates/SRSR_Human_missed_3.txt', 2, 2", // book chapters
@@ -126,9 +126,8 @@ class MissedDuplicatesTests extends AbstractIntegrationTest {
 		String outputFileName = UtilitiesService.createOutputFileName(inputFileName, mode);
 		assertThat(new File(inputFileName)).exists();
 
-		String resultString = deduplicationService.deduplicateOneFile(inputFileName, outputFileName, mode,
-				message -> {
-				});
+		String resultString = deduplicationService.deduplicateOneFile(inputFileName, outputFileName, mode, message -> {
+		});
 
 		System.err.println("Messages: " + memoryAppender.filterByPatterns(tracePatterns, Level.TRACE));
 		assertThat(memoryAppender.filterByPatterns(tracePatterns, Level.TRACE).size()).isGreaterThan(0);

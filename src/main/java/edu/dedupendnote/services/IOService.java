@@ -127,7 +127,7 @@ public class IOService {
 			"(^(Correction|Corrigendum|Erratum)( to (?=[A-Z])| to '|( to)?: ).*)|(.*(Correction|Corrigendum|Erratum)$)");
 	public static final Pattern SOURCE_PATTERN = Pattern.compile(".+(\\(vol \\d+\\D+\\d+\\D+\\d+\\D*\\))");
 	public static final Pattern COMMENT_PATTERN = Pattern.compile(
-			"(e)?Comment(|s|ary)\\b.*|.+[cC]omment(|s|ary)( from| on| to)?:? [A-Z'\"].+|.+[Cc]omment(|s|ary)|.+COMMENT");
+			"(e)?(Comment|COMMENT)(|s|S|ary)\\b.*|.+[cC]omment(|s|ary)( from| on| to)?:? ([A-Z'\"]|the).+|.+[Cc]omment(|s|ary)|.+COMMENT|.*[Ii]nvited [Cc]ommen.+");
 
 	/*
 	 * If field content starts with a comma (",") EndNote exports "[Fieldname]  -,", NOT "[Fieldname]  - ," (EndNote X9.3.3).
@@ -188,6 +188,11 @@ public class IOService {
 		} catch (IOException e) {
 			totalRecords = 0;
 		}
+		if (totalRecords == 0) {
+			throw new InvalidRisFileException("No EndNote records found in the the input file. "
+					+ "The input file is not an Export as RIS-file from an EndNote library!");
+		}
+
 		int lastPct = -1;
 
 		// Line starting with "TY - " triggers creation of record, line starting with
