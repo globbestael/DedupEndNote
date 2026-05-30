@@ -20,6 +20,7 @@ import edu.dedupendnote.services.DefaultTitleComparisonService;
 import edu.dedupendnote.services.DeduplicationService;
 import edu.dedupendnote.services.BibliographicItemReader;
 import edu.dedupendnote.services.BibliographicItemWriter;
+import edu.dedupendnote.services.EnrichmentService;
 import edu.dedupendnote.validation.domain.ValidationResult;
 import edu.dedupendnote.validation.services.ValidationService;
 import lombok.extern.slf4j.Slf4j;
@@ -59,7 +60,7 @@ class AuthorExperimentsTests extends AbstractIntegrationTest {
 				new DefaultTitleComparisonService(),
 				new DefaultJournalComparisonService(),
 				new DefaultPagesComparisonService());
-		DeduplicationService expService = new DeduplicationService(cs, new BibliographicItemReader(), new BibliographicItemWriter());
+		DeduplicationService expService = new DeduplicationService(cs, new BibliographicItemReader(), new BibliographicItemWriter(), new EnrichmentService());
 
 		long start = System.currentTimeMillis();
 		expService.deduplicateOneFile(inputFile, markFile, DeduplicationMode.MARK, message -> {});

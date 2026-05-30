@@ -1,13 +1,11 @@
 package edu.dedupendnote.services;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.TreeMap;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -32,6 +30,8 @@ public class DeduplicationService {
 	private final BibliographicItemReader bibliographicItemReader;
 
 	private final BibliographicItemWriter bibliographicItemWriter;
+
+	private final EnrichmentService enrichmentService;
 
 	// the DOIs have been lowercased
 	public static Pattern COCHRANE_DOI_PATTERN = Pattern.compile("^.*10.1002/14651858.([a-z][a-z]\\d+).*",
@@ -90,10 +90,11 @@ public class DeduplicationService {
 	 */
 	// @formatter:on
 
-	public DeduplicationService(ComparisonService comparisonService, BibliographicItemReader bibliographicItemReader, BibliographicItemWriter bibliographicItemWriter) {
+	public DeduplicationService(ComparisonService comparisonService, BibliographicItemReader bibliographicItemReader, BibliographicItemWriter bibliographicItemWriter, EnrichmentService enrichmentService) {
 		this.bibliographicItemReader = bibliographicItemReader;
 		this.bibliographicItemWriter = bibliographicItemWriter;
 		this.comparisonService = comparisonService;
+		this.enrichmentService = enrichmentService;
 	}
 
 	public void compareSet(List<BibliographicItem> bibliographicItems, Integer year, boolean descending,
@@ -257,7 +258,7 @@ l						 * 		V 		W 		X
 		}
 
 		progressReporter.accept("Enriching the " + bibliographicItems.size() + " deduplicated results");
-		enrich(bibliographicItems);
+		enrichmentService.enrich(bibliographicItems);
 		progressReporter.accept("Saving the " + bibliographicItems.size() + " deduplicated results");
 		int numberWritten = bibliographicItemWriter.writeDeduplicatedBibliographicItems(bibliographicItems, inputFileName,
 				outputFileName);
@@ -328,7 +329,7 @@ l						 * 		V 		W 		X
 			return s;
 		}
 
-		enrich(bibliographicItems);
+		enrichmentService.enrich(bibliographicItems);
 		// Get the bibliographicItems from the new file that are not duplicates or not duplicates of bibliographicItems of the old
 		// file
 		List<BibliographicItem> filteredBibliographicItems = bibliographicItems.stream()
@@ -357,114 +358,6 @@ l						 * 		V 		W 		X
 					+ " are not unique. The input file is not an Export as RIS-file from 1 EndNote library!";
 		}
 		return null;
-	}
-
-	private void enrich(List<BibliographicItem> bibliographicItems) {
-		log.debug("Start enrich");
-		// First the bibliographicItems with duplicates
-		Map<String, List<BibliographicItem>> labelMap = bibliographicItems.stream()
-				// when comparing 2 files, duplicates from the old file start with "-"
-				.filter(r -> r.getLabel() != null && !r.getLabel().startsWith("-"))
-				.collect(Collectors.groupingBy(BibliographicItem::getLabel));
-		log.debug("Number of duplicate lists {}, and IDs of kept bibliographicItems: {}", labelMap.size(),
-				labelMap.keySet());
-		List<BibliographicItem> bibliographicItemList;
-		if (!labelMap.isEmpty()) {
-			for (Map.Entry<String, List<BibliographicItem>> entry : labelMap.entrySet()) {
-				bibliographicItemList = entry.getValue();
-				BibliographicItem bibliographicItemToKeep = bibliographicItemList.remove(0);
-				log.debug("Kept: {}: {}", bibliographicItemToKeep.getId(),
-						(bibliographicItemToKeep.getTitles().isEmpty() ? "(no titles found)"
-								: bibliographicItemToKeep.getTitles().getFirst()));
-				// Don't set keptPublication in compareSet(): trouble when multiple duplicates and no bibliographicItem year
-				bibliographicItemList.stream().forEach(r -> r.setKeptBibliographicItem(false));
-
-				// Reply and Retraction: replace the title with the longest title from the duplicates
-				if (bibliographicItemToKeep.isReply() || (!bibliographicItemToKeep.isClinicalTrialGov()
-						&& bibliographicItemToKeep.getTitle() != null)) {
-					log.debug("BibliographicItem {} is a reply: ", bibliographicItemToKeep.getId());
-					String longestTitle = bibliographicItemList.stream()
-							// .filter(BibliographicItem::isReply)
-							.map(r -> {
-								log.debug("Reply {} has title: {}.", r.getId(), r.getTitle());
-								return r.getTitle() != null ? r.getTitle() : r.getTitles().getFirst();
-							}).max(Comparator.comparingInt(String::length)).orElse("");
-					// There are cases where not all titles are recognized as replies -> bibliographicItem.title can be null
-					if (bibliographicItemToKeep.getTitle() == null
-							|| bibliographicItemToKeep.getTitle().length() < longestTitle.length()) {
-						log.debug("REPLY: changing title {}\nto {}", bibliographicItemToKeep.getTitle(), longestTitle);
-						bibliographicItemToKeep.setTitle(longestTitle);
-					}
-				}
-				// Clinical trials from ClinicalTrials.gov: replace the title with the shortest title from the
-				// duplicates
-				if (bibliographicItemToKeep.isClinicalTrialGov()) {
-					log.debug("BibliographicItem {} is a trial: ", bibliographicItemToKeep.getId());
-					String shortestTitle = bibliographicItemList.stream().map(r -> {
-						log.debug("Trial {} has title: {}.", r.getId(), r.getTitle());
-						return r.getTitle() != null ? r.getTitle() : r.getTitles().getFirst();
-					}).min(Comparator.comparingInt(String::length)).orElse("");
-					// There are cases where bibliographicItem.title can be null (??)
-					if (bibliographicItemToKeep.getTitle() == null
-							|| bibliographicItemToKeep.getTitle().length() > shortestTitle.length()) {
-						log.debug("Trial: changing title {}\nto {}", bibliographicItemToKeep.getTitle(), shortestTitle);
-						bibliographicItemToKeep.setTitle(shortestTitle);
-					}
-				}
-
-				// Gather all the DOIs
-				final Set<String> dois = bibliographicItemToKeep.getDois();
-				for (BibliographicItem p : bibliographicItemList) {
-					if (!p.getDois().isEmpty()) {
-						dois.addAll(p.getDois());
-					}
-				}
-				if (!dois.isEmpty()) {
-					bibliographicItemToKeep.setDois(dois);
-				}
-
-				// Add missing bibliographicItem year
-				if (bibliographicItemToKeep.getPublicationYear() == 0) {
-					log.debug("Reached bibliographicItem without publicationYear");
-					bibliographicItemList.stream().filter(r -> r.getPublicationYear() != 0).findFirst()
-							.ifPresent(r -> bibliographicItemToKeep.setPublicationYear(r.getPublicationYear()));
-				}
-
-				if (bibliographicItemToKeep.isCochrane() && bibliographicItemToKeep.getPagesOutput() != null) {
-					// replaceCochranePageStart(bibliographicItemToKeep, bibliographicItemList);
-					bibliographicItemToKeep.setPagesOutput(bibliographicItemToKeep.getPagesOutput().toUpperCase());
-				}
-
-				// Add missing pagesOutput
-				if (bibliographicItemToKeep.getPagesOutput() == null
-						|| bibliographicItemToKeep.getPagesOutput().isEmpty()) {
-					log.debug("Reached bibliographicItem without pagesOutput: {}", bibliographicItemToKeep.getId());
-					bibliographicItemList.stream().filter(r -> r.getPagesOutput() != null).findFirst().ifPresent(r -> {
-						// publicationToKeep.setPageStart(r.getPageStart());
-						// publicationToKeep.setPageEnd(r.getPageEnd());
-						bibliographicItemToKeep.setPagesOutput(r.getPagesOutput());
-					});
-				}
-
-				/*
-				 * FIXME: Should empty authors be filled in from the duplicate set? See DOI
-				 * 10.2298/sarh0902077c in test database, but the 2 duplicates have not the same
-				 * author forms: "Culafic, D." (WoS) and "Dorde, Ć" (Scopus, error)
-				 * Better example: 4605 in BIG_TEST without authors, 21391 with authors.
-				 * But bibliographicItems can have different authors: in BIG_SET 4226 (none), 21471 (Banks ...), 36519 (Cabot ...)
-				 */
-			}
-		}
-
-		// Then the Cochrane bibliographicItems without duplicates
-		for (BibliographicItem r : bibliographicItems) {
-			if (r.isCochrane() && r.getLabel() == null && r.getPagesOutput() != null) {
-				// replaceCochranePageStart(r, Collections.emptyList());
-				r.setPagesOutput(r.getPagesOutput().toUpperCase());
-			}
-		}
-
-		log.debug("Finished enrich");
 	}
 
 	public String formatResultString(int total, int totalWritten) {

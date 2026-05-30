@@ -55,10 +55,11 @@ DedupEndNote is a Spring Boot 4.0 / Java 21 web app that deduplicates bibliograp
 ### Services and their responsibilities
 | Service | Lines | Responsibility |
 |---|---|---|
-| `DeduplicationService` | ~547 | Orchestrates the full pipeline; accepts a `Consumer<String> progressReporter` for progress reporting |
+| `DeduplicationService` | ~440 | Orchestrates the full pipeline; accepts a `Consumer<String> progressReporter` for progress reporting |
 | `ComparisonService` | ~90 | Thin orchestrator: holds four injected per-field comparison services; retains `compareIssns` and `compareSameDois` as static helpers |
 | `BibliographicItemReader` | ~560 | Parses RIS files into `BibliographicItem` objects; coordinates field Normalization during read; hosts `addNormalized*` static helpers used by test fixtures |
 | `BibliographicItemWriter` | ~220 | Writes deduplicated (Remove Mode) and marked (Mark Mode) RIS output; re-reads original input to preserve field order |
+| `EnrichmentService` | ~110 | Post-dedup enrichment (Remove Mode only): merges DOIs, fills missing year/pages, replaces Reply/ClinicalTrials.gov titles, normalises Cochrane page IDs |
 | `NormalizationService` | ~991 | Normalizes authors, titles, DOIs, pages, journals |
 | `DefaultAuthorsComparisonService` | — | Jaro-Winkler author matching; thresholds injectable via `AuthorThresholds` record |
 | `DefaultTitleComparisonService` | — | JWS title matching; thresholds injectable via `TitleThresholds` record |
