@@ -142,6 +142,8 @@ class SimilarityJournalTest {
 					"Journal of Neuroscience.29 (37) ()(pp 11451-11460) 2009.Date of BibliographicItem: 16 Sep 2009."),
 			arguments("Arzneimittel-Forschung/Drug Research.55 (3) ()(pp 153-159) 2005.Date of BibliographicItem: 2005.",
 					"Arzneimittelforschung."),
+			arguments("Arzneimittel-Forschung/Drug Research.55 (3) ()(pp 153-159) 2005.Date of BibliographicItem: 2005.",
+					"Drug Research"),
 			arguments("Zhen.Ci.Yan.Jiu.",
 					"Zhen ci yan jiu = Acupuncture research / [Zhongguo yi xue ke xue yuan Yi xue qing bao yan jiu suo bian ji].39 (2) ()(pp 136-141) 2014.Date of BibliographicItem: Apr 2014."),
 			arguments("RSC Adv", "RSC ADVANCES"),

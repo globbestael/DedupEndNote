@@ -260,19 +260,19 @@ public class NormalizationService {
 		return result;
 	}
 
+	// @formatter:off
+	/*
+		* General:
+		* - mark Cochrane bibliographicItem
+		* - remove unwanted parts
+		* - split combined journal names into in separate journal names
+		* - create other variant journal names
+		* - for all journal names
+		* 		- capitalize
+		* 		- normalize
+		*/
+	// @formatter:on
 	public static Set<String> normalizeInputJournals(String journal, String fieldName) {
-		// @formatter:off
-		/*
-		 * General:
-		 * - mark Cochrane bibliographicItem
-		 * - remove unwanted parts
-		 * - split combined journal names into in separate journal names
-		 * - create other variant journal names
-		 * - for all journal names
-		 * 		- capitalize
-		 * 		- normalize
-		 */
-		// @formatter:on
 		if (journal.startsWith("http")) {
 			return Set.of(journal);
 		}
@@ -284,17 +284,6 @@ public class NormalizationService {
 		}
 
 		/*
-		 * replace "\S/\S" with space: "Hematology/Oncology" --> "Hematology Oncology"
-		 * BUT:
-		 * "Chung-Kuo Hsiu Fu Chung Chien Wai Ko Tsa Chih/Chinese Journal of Reparative & Reconstructive Surgery"
-		 * will NOT be split into 2 journals! Same for: Arzneimittel-Forschung/Drug Research
-		 */
-		// matcher = JOURNAL_SLASH_PATTERN.matcher(journal);
-		// while (matcher.find()) {
-		// journal = matcher.group(1) + " " + matcher.group(2);
-		// }
-
-		/*
 		 * Split the following cases in separate journals: 
 		 * - ... [...]: Zhonghua wai ke za zhi [Chinese journal of surgery] 
 		 * - ... / ...: The Canadian Journal of Neurological Sciences / Le Journal Canadien Des Sciences Neurologiques 
@@ -303,7 +292,7 @@ public class NormalizationService {
 		Set<String> journalSet = new HashSet<>();
 		String[] parts = null;
 		/*
-		 * Don't use "." as split character for J2 content because field oten has content as "Clin. Med.J. R. Coll. Phys. Lond."
+		 * Don't use "." as split character for J2 content because field often has content as "Clin. Med.J. R. Coll. Phys. Lond."
 		 */
 		if ("J2".equals(fieldName)) {
 			parts = journal.split("[\\[\\]]|[=|/]");
@@ -336,9 +325,6 @@ public class NormalizationService {
 			if (j.contains("ae")) {
 				additional.add(j.replace("ae", "e"));
 			}
-			// if (JOURNAL_SECTION_MARKERS.matcher(journal).matches()) {
-			// additional.add(JOURNAL_SECTION_MARKERS.matcher(journal).replaceAll("Matcher"));
-			// }
 			matcher = NormPatterns.JOURNAL_SUPPLEMENT_PATTERN.matcher(journal);
 			if (matcher.find()) {
 				log.debug("SupplementMatcher fired for: {}", journal);
@@ -350,7 +336,7 @@ public class NormalizationService {
 			journalSet.addAll(additional);
 		}
 		/*
-		 * The EXCLUDED_JOURNALS_PARTS are not a pattern. They are one of the journal(parts) and will be skipped
+		 * The EXCLUDED_JOURNALS_PARTS are one of the journal(parts) and will be skipped
 		 */
 		Set<String> journals = new HashSet<>();
 		for (String j : journalSet) {
@@ -455,8 +441,8 @@ public class NormalizationService {
 		return parsePageRange(pages, originalPages, pagesOutput, isSeveralPages);
 	}
 
-	private static PageRecord parsePageRange(String pages, @Nullable String originalPages,
-			@Nullable String pagesOutput, boolean isSeveralPages) {
+	private static PageRecord parsePageRange(String pages, @Nullable String originalPages, @Nullable String pagesOutput,
+			boolean isSeveralPages) {
 		List<String> pagesParts = Arrays.asList(pages.split("[+,;]\\s*"));
 		// Split into (1) group with only Roman numbers, and (2) others (could be Arabic numbers, combined Roman+Arabic
 		// ("ii208-212"), combined Arabic+text ("S12-23", "CD123456". "67A-69A", text, ...)
@@ -602,7 +588,8 @@ public class NormalizationService {
 		return new PageRecord(originalPages, pageStart, pagesOutput, isSeveralPages);
 	}
 
-	private record NormalizedField(@Nullable String value, @Nullable String originalPages, boolean isSeveralPages) {}
+	private record NormalizedField(@Nullable String value, @Nullable String originalPages, boolean isSeveralPages) {
+	}
 
 	private static NormalizedField normalizeC7Field(String rawC7) {
 		String cleaned = initialPagesCleanup(rawC7);
