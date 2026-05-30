@@ -533,7 +533,7 @@ public class IOService {
 		if (fieldContent.toLowerCase().contains("cochrane")) {
 			bibliographicItem.setCochrane(true);
 		}
-		bibliographicItem.getJournals().addAll(NormalizationService.normalizeInputJournals(fieldContent, fieldName));
+		bibliographicItem.getJournals().addAll(JournalsNormalizationService.normalizeInputJournals(fieldContent, fieldName));
 	}
 
 	public static void addNormalizedPages(Map<String, String> pagesInputMap, BibliographicItem bibliographicItem) {

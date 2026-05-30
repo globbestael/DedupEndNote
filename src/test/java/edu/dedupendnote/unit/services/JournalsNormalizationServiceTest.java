@@ -13,17 +13,17 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import edu.dedupendnote.services.IOService;
-import edu.dedupendnote.services.NormalizationService;
+import edu.dedupendnote.services.JournalsNormalizationService;
 import edu.dedupendnote.domain.BibliographicItem;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-class NormalizationServiceJournalTest {
+class JournalsNormalizationServiceTest {
 
 	@ParameterizedTest(name = "{index}: normalizeJournal({0})={1}")
 	@MethodSource("journalArgumentProvider")
 	void normalizeJournalTest(String input, String expected) {
-		String result = NormalizationService.normalizeJournal(input);
+		String result = JournalsNormalizationService.normalizeJournal(input);
 		assertThat(result).isEqualTo(expected);
 	}
 
