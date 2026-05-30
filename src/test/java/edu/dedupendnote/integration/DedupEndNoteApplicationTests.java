@@ -18,7 +18,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import edu.dedupendnote.services.DeduplicationService;
-import edu.dedupendnote.services.IOService;
+import edu.dedupendnote.services.BibliographicItemReader;
 import edu.dedupendnote.services.NormalizationService;
 import edu.dedupendnote.domain.DeduplicationMode;
 import edu.dedupendnote.services.UtilitiesService;
@@ -55,12 +55,12 @@ class DedupEndNoteApplicationTests extends AbstractIntegrationTest {
 		}
 
 		// LINE SEPARATOR messes with '.*$'
-		Matcher matcher = IOService.RIS_LINE_PATTERN.matcher(line);
+		Matcher matcher = BibliographicItemReader.RIS_LINE_PATTERN.matcher(line);
 		assertThat(matcher.matches()).as("LINE SEPARATOR messes with '.*$'").isFalse();
 
 		// Replacing the LINE SEPARATOR is necessary
 		line = line.replaceAll("\\u2028", " ");
-		matcher = IOService.RIS_LINE_PATTERN.matcher(line);
+		matcher = BibliographicItemReader.RIS_LINE_PATTERN.matcher(line);
 
 		assertThat(matcher.matches()).isTrue();
 		assertThat(matcher.group(1)).isEqualTo("ST");

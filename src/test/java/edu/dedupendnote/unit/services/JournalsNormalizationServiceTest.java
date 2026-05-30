@@ -12,7 +12,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import edu.dedupendnote.services.IOService;
+import edu.dedupendnote.services.BibliographicItemReader;
 import edu.dedupendnote.services.JournalsNormalizationService;
 import edu.dedupendnote.domain.BibliographicItem;
 import lombok.extern.slf4j.Slf4j;
@@ -34,7 +34,7 @@ class JournalsNormalizationServiceTest {
 	@MethodSource("slashArgumentProvider")
 	void slashTest(String input1, List<String> list) {
 		BibliographicItem p1 = new BibliographicItem();
-		IOService.addNormalizedJournal(input1, p1, "T2");
+		BibliographicItemReader.addNormalizedJournal(input1, p1, "T2");
 
 		for (String j : p1.getJournals()) {
 			log.error("For input '{}': {}", input1, j);
@@ -45,7 +45,7 @@ class JournalsNormalizationServiceTest {
 	@Test
 	void journalWithSquareBracketsAtEnd() {
 		BibliographicItem p1 = new BibliographicItem();
-		IOService.addNormalizedJournal("Zhonghua wai ke za zhi [Chinese journal of surgery]", p1, "T2");
+		BibliographicItemReader.addNormalizedJournal("Zhonghua wai ke za zhi [Chinese journal of surgery]", p1, "T2");
 
 		assertThat(p1.getJournals()).hasSize(3);
 		assertThat(p1.getJournals()).containsAll(Set.of("Zhonghua wai ke za zhi", "Chinese journal of surgery",
@@ -56,7 +56,7 @@ class JournalsNormalizationServiceTest {
 	void journalWithSquareBracketsAtStart() {
 		BibliographicItem p1 = new BibliographicItem();
 
-		IOService.addNormalizedJournal("[Rinsho ketsueki] The Japanese journal of clinical hematology", p1, "T2");
+		BibliographicItemReader.addNormalizedJournal("[Rinsho ketsueki] The Japanese journal of clinical hematology", p1, "T2");
 
 		assertThat(p1.getJournals()).hasSize(3);
 		// The variant with both parts has NOT removed the leading article of second part
@@ -79,7 +79,7 @@ class JournalsNormalizationServiceTest {
 				arguments("Rofo", "Rofo"),
 				arguments("Gastro-Enterology", "Gastroenterology"),
 				arguments("Anatomical Record. Part A, Discoveries in Molecular, Cellular, & Evolutionary Biology", "Anatomical Record Part A Discoveries in Molecular Cellular Evolutionary Biology"),
-				//	for these journals the titles are NOT normalized (IOService.skipNormalizationTitleFor)
+				//	for these journals the titles are NOT normalized (BibliographicItemReader.skipNormalizationTitleFor)
 				arguments("Molecular Imaging and Contrast Agent Database (MICAD)", "Molecular Imaging and Contrast Agent Database"),
 				arguments("Natl Cancer Inst Carcinog Tech Rep Ser", "National Cancer Inst Carcinog Tech Rep Ser"),
 				arguments("Natl Toxicol Program Tech Rep Ser", "National Toxicol Program Tech Rep Ser"),

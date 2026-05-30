@@ -15,8 +15,8 @@ import lombok.extern.slf4j.Slf4j;
 
 /*
  * NormalizationService holds shared utilities used by the per-domain normalization services.
- * - normalizeToBasicLatin and normalizeHyphensAndWhitespace are called from IOService and the per-domain services
- * - normalizeInputDois, normalizeInputIssns, normalizeInputPublicationYear are called from IOService
+ * - normalizeToBasicLatin and normalizeHyphensAndWhitespace are called from BibliographicItemReader and the per-domain services
+ * - normalizeInputDois, normalizeInputIssns, normalizeInputPublicationYear are called from BibliographicItemReader
  */
 @Slf4j
 public class NormalizationService {

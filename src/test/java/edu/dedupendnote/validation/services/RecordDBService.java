@@ -17,7 +17,7 @@ import org.springframework.stereotype.Service;
 
 import edu.dedupendnote.domain.BibliographicItem;
 import edu.dedupendnote.domain.BibliographicItemDB;
-import edu.dedupendnote.services.IOService;
+import edu.dedupendnote.services.BibliographicItemReader;
 import edu.dedupendnote.services.NormalizationService;
 import edu.dedupendnote.services.UtilitiesService;
 import lombok.extern.slf4j.Slf4j;
@@ -85,7 +85,7 @@ public class RecordDBService {
 			BibliographicItem bibliographicItem = null;
 			while ((line = br.readLine()) != null) {
 				line = NormalizationService.normalizeHyphensAndWhitespace(line);
-				Matcher matcher = IOService.RIS_LINE_PATTERN.matcher(line);
+				Matcher matcher = BibliographicItemReader.RIS_LINE_PATTERN.matcher(line);
 				if (matcher.matches()) {
 					fieldName = matcher.group(1);
 					fieldContent = matcher.group(3);

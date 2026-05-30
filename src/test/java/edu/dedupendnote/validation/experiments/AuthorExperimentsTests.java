@@ -18,7 +18,8 @@ import edu.dedupendnote.services.DefaultJournalComparisonService;
 import edu.dedupendnote.services.DefaultPagesComparisonService;
 import edu.dedupendnote.services.DefaultTitleComparisonService;
 import edu.dedupendnote.services.DeduplicationService;
-import edu.dedupendnote.services.IOService;
+import edu.dedupendnote.services.BibliographicItemReader;
+import edu.dedupendnote.services.BibliographicItemWriter;
 import edu.dedupendnote.validation.domain.ValidationResult;
 import edu.dedupendnote.validation.services.ValidationService;
 import lombok.extern.slf4j.Slf4j;
@@ -36,7 +37,7 @@ class AuthorExperimentsTests extends AbstractIntegrationTest {
 	ValidationService validationService;
 
 	@Autowired
-	IOService ioService;
+	BibliographicItemReader bibliographicItemReader;
 
 	@Test
 	void higherAuthorThresholdsReduceSensitivityAndIncreaseSpecificity() throws IOException {
@@ -58,11 +59,11 @@ class AuthorExperimentsTests extends AbstractIntegrationTest {
 				new DefaultTitleComparisonService(),
 				new DefaultJournalComparisonService(),
 				new DefaultPagesComparisonService());
-		DeduplicationService expService = new DeduplicationService(cs);
+		DeduplicationService expService = new DeduplicationService(cs, new BibliographicItemReader(), new BibliographicItemWriter());
 
 		long start = System.currentTimeMillis();
 		expService.deduplicateOneFile(inputFile, markFile, DeduplicationMode.MARK, message -> {});
-		List<BibliographicItem> bibliographicItems = ioService.readBibliographicItems(markFile, message -> {}, /* includeLabelField= */ true);
+		List<BibliographicItem> bibliographicItems = bibliographicItemReader.readBibliographicItems(markFile, message -> {}, /* includeLabelField= */ true);
 		long duration = System.currentTimeMillis() - start;
 
 		ValidationResult expResult = validationService.checkResults(

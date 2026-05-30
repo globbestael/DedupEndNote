@@ -11,7 +11,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import edu.dedupendnote.services.IOService;
+import edu.dedupendnote.services.BibliographicItemReader;
 import edu.dedupendnote.services.PagesNormalizationService;
 import edu.dedupendnote.domain.PageRecord;
 import edu.dedupendnote.domain.BibliographicItem;
@@ -20,7 +20,7 @@ class PagesNormalizationServiceTest {
 
 	/*
 	 * Tests PagesNormalizationService.normalizeInputPages for a single SP-field input.
-	 * Complements normalizePagesTest_new which covers field selection (C7/SE/SP) via IOService.addNormalizedPages.
+	 * Complements normalizePagesTest_new which covers field selection (C7/SE/SP) via BibliographicItemReader.addNormalizedPages.
 	 */
 	@ParameterizedTest(name = "{index}: parsePages({0})=({1},{2},{3})")
 	@MethodSource("parsePagesArgumentProvider")
@@ -38,7 +38,7 @@ class PagesNormalizationServiceTest {
 	}
 
 	/*
-	 * Tests IOService.addNormalizedPages: the field-selection logic that chooses which
+	 * Tests BibliographicItemReader.addNormalizedPages: the field-selection logic that chooses which
 	 * of C7, SE, SP to use before calling PagesNormalizationService.normalizeInputPages.
 	 *
 	 * See also issue #50: https://github.com/globbestael/DedupEndNote/issues/50
@@ -58,7 +58,7 @@ class PagesNormalizationServiceTest {
 		if (spInput != null) {
 			pagesMap.put("SP", spInput);
 		}
-		IOService.addNormalizedPages(pagesMap, bibliographicItem);
+		BibliographicItemReader.addNormalizedPages(pagesMap, bibliographicItem);
 
 		SoftAssertions.assertSoftly(softAssertions -> {
 			softAssertions.assertThat(bibliographicItem.getPageStart())

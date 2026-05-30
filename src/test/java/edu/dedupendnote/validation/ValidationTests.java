@@ -29,7 +29,8 @@ import ch.qos.logback.classic.LoggerContext;
 import edu.dedupendnote.integration.AbstractIntegrationTest;
 import edu.dedupendnote.domain.DeduplicationMode;
 import edu.dedupendnote.services.DeduplicationService;
-import edu.dedupendnote.services.IOService;
+import edu.dedupendnote.services.BibliographicItemReader;
+import edu.dedupendnote.validation.services.ValidationIOService;
 import edu.dedupendnote.domain.BibliographicItem;
 import edu.dedupendnote.domain.BibliographicItemDB;
 import edu.dedupendnote.validation.domain.ValidationResult;
@@ -54,7 +55,10 @@ class ValidationTests extends AbstractIntegrationTest {
 	DeduplicationService deduplicationService;
 
 	@Autowired
-	IOService ioService;
+	BibliographicItemReader bibliographicItemReader;
+
+	@Autowired
+	ValidationIOService validationIOService;
 
 	@Autowired
 	RecordDBService recordDBService;
@@ -550,7 +554,7 @@ class ValidationTests extends AbstractIntegrationTest {
 		String outputFileName = testDir + "/Dedupe-sweep/dedupendnote_files/BIG_SET_mark_DS_with_TRUTH.txt";
 
 		List<BibliographicItemDB> truthRecords = validationService.readTruthFile(truthFileName);
-		ioService.writeRisWithTRUTH_forDS(truthRecords, inputFileName, outputFileName);
+		validationIOService.writeRisWithTRUTH_forDS(truthRecords, inputFileName, outputFileName);
 
 		assertThat(1*1).isEqualTo(1);
 	}
@@ -590,7 +594,7 @@ class ValidationTests extends AbstractIntegrationTest {
 	@Test
 	void createRisWithTRUTH(String inputFileName, String truthFileName, String outputFileName) throws IOException {
 		List<BibliographicItemDB> truthRecords = validationService.readTruthFile(truthFileName);
-		ioService.writeRisWithTRUTH(truthRecords, inputFileName, outputFileName);
+		validationIOService.writeRisWithTRUTH(truthRecords, inputFileName, outputFileName);
 	}
 
 	/*
@@ -684,7 +688,7 @@ class ValidationTests extends AbstractIntegrationTest {
 		 */
 		String markFileName = inputFileName + "_mark.txt";
 		deduplicationService.deduplicateOneFile(inputFileName, markFileName, DeduplicationMode.MARK, message -> {});
-		return ioService.readBibliographicItems(markFileName, message -> {}, /* includeLabelField= */ true);
+		return bibliographicItemReader.readBibliographicItems(markFileName, message -> {}, /* includeLabelField= */ true);
 	}
 
 

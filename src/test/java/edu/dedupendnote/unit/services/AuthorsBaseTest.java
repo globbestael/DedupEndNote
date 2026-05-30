@@ -11,7 +11,7 @@ import java.util.stream.Stream;
 import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.Test;
 
-import edu.dedupendnote.services.IOService;
+import edu.dedupendnote.services.BibliographicItemReader;
 import edu.dedupendnote.unit.BaseTest;
 import edu.dedupendnote.domain.BibliographicItem;
 import lombok.extern.slf4j.Slf4j;
@@ -29,8 +29,8 @@ class AuthorsBaseTest extends BaseTest {
 	protected BibliographicItem fillBibliographicItem(String authors) {
 		BibliographicItem bibliographicItem = new BibliographicItem();
 		List<String> authorList1 = Arrays.asList(authors.split("; "));
-		authorList1.stream().forEach(author -> IOService.addNormalizedAuthor(author, bibliographicItem));
-		IOService.fillAllAuthors(bibliographicItem);
+		authorList1.stream().forEach(author -> BibliographicItemReader.addNormalizedAuthor(author, bibliographicItem));
+		BibliographicItemReader.fillAllAuthors(bibliographicItem);
 		return bibliographicItem;
 	}
 

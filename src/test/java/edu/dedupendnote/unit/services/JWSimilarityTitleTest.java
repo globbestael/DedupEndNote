@@ -19,7 +19,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import edu.dedupendnote.services.IOService;
+import edu.dedupendnote.services.BibliographicItemReader;
 import edu.dedupendnote.services.TitleThresholds;
 import edu.dedupendnote.unit.BaseTest;
 import edu.dedupendnote.domain.BibliographicItem;
@@ -32,8 +32,8 @@ class JWSimilarityTitleTest extends BaseTest {
 	void jwFullPositiveTest(String input1, String input2, double expected) {
 		BibliographicItem p1 = new BibliographicItem();
 		BibliographicItem p2 = new BibliographicItem();
-		IOService.addNormalizedTitle(input1, p1);
-		IOService.addNormalizedTitle(input2, p2);
+		BibliographicItemReader.addNormalizedTitle(input1, p1);
+		BibliographicItemReader.addNormalizedTitle(input2, p2);
 
 		Double highestSimilarity = 0.0;
 
@@ -77,8 +77,8 @@ class JWSimilarityTitleTest extends BaseTest {
 	void jwFullNegativeTest(String input1, String input2, double expected) {
 		BibliographicItem p1 = new BibliographicItem();
 		BibliographicItem p2 = new BibliographicItem();
-		IOService.addNormalizedTitle(input1, p1);
-		IOService.addNormalizedTitle(input2, p2);
+		BibliographicItemReader.addNormalizedTitle(input1, p1);
+		BibliographicItemReader.addNormalizedTitle(input2, p2);
 
 		Double highestSimilarity = 0.0;
 		String highestTitle1 = "";
@@ -432,7 +432,7 @@ class JWSimilarityTitleTest extends BaseTest {
 	// @formatter:on
 
 	/*
-	 * FIXME: This is far from complete. See comment in IOService (above erratumPattern) with the examples of errata
+	 * FIXME: This is far from complete. See comment in BibliographicItemReader (above erratumPattern) with the examples of errata
 	 * WITHOUT words as erratum / correction / corrigendum in the title.
 	 * See https://github.com/globbestael/DedupEndNote/issues/32
 	 */
@@ -460,7 +460,7 @@ class JWSimilarityTitleTest extends BaseTest {
 		List<String> results = new ArrayList<>();
 
 		for (String line : lines) {
-			Matcher matcher = IOService.SOURCE_PATTERN.matcher(line);
+			Matcher matcher = BibliographicItemReader.SOURCE_PATTERN.matcher(line);
 			if (matcher.matches()) {
 				System.err.println("\t- " + matcher.group(1));
 				results.add(matcher.group(1));
@@ -481,7 +481,7 @@ class JWSimilarityTitleTest extends BaseTest {
 		List<String> matchedCases = new ArrayList<>();
 
 		for (String line : lines) {
-			Matcher matcher = IOService.COMMENT_PATTERN.matcher(line);
+			Matcher matcher = BibliographicItemReader.COMMENT_PATTERN.matcher(line);
 			if (matcher.matches()) {
 				// System.err.println("- OK: Real comment matched by regex: " + line);
 				matchedCases.add(line);
@@ -509,7 +509,7 @@ class JWSimilarityTitleTest extends BaseTest {
 		int EXPECTED_NUMBER_OF_ERRORS = 8;
 
 		for (String line : lines) {
-			Matcher matcher = IOService.COMMENT_PATTERN.matcher(line);
+			Matcher matcher = BibliographicItemReader.COMMENT_PATTERN.matcher(line);
 			if (matcher.matches()) {
 				System.err.println("- ERROR: Non-comment matched by regex: " + line);
 				negativeResults.add(line);
@@ -535,7 +535,7 @@ class JWSimilarityTitleTest extends BaseTest {
 		int EXPECTED_NUMBER_OF_ERRORS = 1;
 
 		for (String line : lines) {
-			Matcher matcher = IOService.COMMENT_PATTERN.matcher(line);
+			Matcher matcher = BibliographicItemReader.COMMENT_PATTERN.matcher(line);
 			if (matcher.matches()) {
 				// System.err.println("- OK: Real comment and reply matched by regex: " + line);
 				matchedCases.add(line);

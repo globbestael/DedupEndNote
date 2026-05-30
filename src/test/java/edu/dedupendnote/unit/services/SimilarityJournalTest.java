@@ -10,7 +10,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import edu.dedupendnote.services.DefaultJournalComparisonService;
-import edu.dedupendnote.services.IOService;
+import edu.dedupendnote.services.BibliographicItemReader;
 import edu.dedupendnote.domain.BibliographicItem;
 import lombok.extern.slf4j.Slf4j;
 
@@ -27,8 +27,8 @@ class SimilarityJournalTest {
 		BibliographicItem p2 = new BibliographicItem();
 		log.debug("==================================================================");
 
-		IOService.addNormalizedJournal(input1, p1, "T2");
-		IOService.addNormalizedJournal(input2, p2, "T2");
+		BibliographicItemReader.addNormalizedJournal(input1, p1, "T2");
+		BibliographicItemReader.addNormalizedJournal(input2, p2, "T2");
 
 		assertThat(new DefaultJournalComparisonService().compare(p1, p2, false))
 				.as("Journals are NOT similar: " + p1.getJournals() + " versus " + p2.getJournals()).isTrue();
@@ -42,8 +42,8 @@ class SimilarityJournalTest {
 	void fullNegativeTest(String input1, String input2) {
 		BibliographicItem p1 = new BibliographicItem();
 		BibliographicItem p2 = new BibliographicItem();
-		IOService.addNormalizedJournal(input1, p1, "T2");
-		IOService.addNormalizedJournal(input2, p2, "T2");
+		BibliographicItemReader.addNormalizedJournal(input1, p1, "T2");
+		BibliographicItemReader.addNormalizedJournal(input2, p2, "T2");
 
 		assertThat(new DefaultJournalComparisonService().compare(p1, p2, false))
 				.as("Journals are similar: %s versus %s", p1.getJournals(), p2.getJournals()).isFalse();
@@ -170,7 +170,7 @@ class SimilarityJournalTest {
 			arguments( // this one matches because of BibliographicItem.journalExtraPattern
 					"International Liver Transplantation Society 15th Annual International Congress. New York, NY United States.",
 					"International Liver Transplantation Society"),
-			arguments( // this one matches because IOService.conferencePattern adds a second journal
+			arguments( // this one matches because BibliographicItemReader.conferencePattern adds a second journal
 					"International Liver Transplantation Society. Annual International Congress. New York, NY United States.",
 					"International Liver Transplantation Society"),
 			arguments("Neuroendocrinology Letters.35 (2) ()(pp 129-136)", "Neuroendocrinology Letters"),

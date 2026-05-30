@@ -15,7 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 /*
  * This class has been made a POJO. 
  * Methods related to normalization of data when reading in external data have been put in / extracted to NormalizationService.
- * There are a small set of functions in IOService (e.g. fillAllAuthors) which originally belonged here.
+ * There are a small set of functions in BibliographicItemReader (e.g. fillAllAuthors) which originally belonged here.
  */
 @Slf4j
 @Data
@@ -95,7 +95,7 @@ public class BibliographicItem {
 	private boolean isPresentInOldFile = false; // used when comparing 2 files
 
 	/*
-	 * Publications which are replies need special treatment. See the Pattern in the {@link IOService.replyPattern} 
+	 * Publications which are replies need special treatment. See the Pattern in the {@link BibliographicItemReader#REPLY_PATTERN}
 	 * - bibliographicItem pairs where one of them is isReply == true, aren't compared for title (always true)
 	 * - journals are compared stricter (JournalThresholds.DEFAULT.reply() > JournalThresholds.DEFAULT.noReply())
 	 * - in enrich() the longest title of a duplicate set is used

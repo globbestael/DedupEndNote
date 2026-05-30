@@ -14,7 +14,7 @@ import org.springframework.boot.test.context.TestConfiguration;
 import edu.dedupendnote.services.ComparisonService;
 import edu.dedupendnote.services.DefaultJournalComparisonService;
 import edu.dedupendnote.services.DefaultTitleComparisonService;
-import edu.dedupendnote.services.IOService;
+import edu.dedupendnote.services.BibliographicItemReader;
 import edu.dedupendnote.services.NormalizationService;
 import edu.dedupendnote.domain.BibliographicItem;
 
@@ -38,8 +38,8 @@ class ComparisonServiceTest {
 	void compareJournalsTest(String journal1, String journal2, boolean expected) {
 		BibliographicItem p1 = new BibliographicItem();
 		BibliographicItem p2 = new BibliographicItem();
-		IOService.addNormalizedJournal(journal1, p1, "T2");
-		IOService.addNormalizedJournal(journal2, p2, "T2");
+		BibliographicItemReader.addNormalizedJournal(journal1, p1, "T2");
+		BibliographicItemReader.addNormalizedJournal(journal2, p2, "T2");
 
 		boolean result = new DefaultJournalComparisonService().compare(p1, p2, false);
 		assertThat(result).isEqualTo(expected);
@@ -54,8 +54,8 @@ class ComparisonServiceTest {
 	void compareTitlesTest(String title1, String title2, boolean expected) {
 		BibliographicItem p1 = new BibliographicItem();
 		BibliographicItem p2 = new BibliographicItem();
-		IOService.addNormalizedTitle(title1, p1);
-		IOService.addNormalizedTitle(title2, p2);
+		BibliographicItemReader.addNormalizedTitle(title1, p1);
+		BibliographicItemReader.addNormalizedTitle(title2, p2);
 
 		boolean result = new DefaultTitleComparisonService().compare(p1, p2);
 		assertThat(result).as("Not equal: '%s' and '%s'", title1, title2).isEqualTo(expected);

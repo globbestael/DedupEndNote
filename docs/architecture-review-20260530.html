@@ -1,0 +1,552 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Architecture review — DedupEndNote</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+    mermaid.initialize({ startOnLoad: true, theme: "neutral", securityLevel: "loose" });
+  </script>
+  <style>
+    .seam { stroke-dasharray: 4 4; }
+    .leak { stroke: #dc2626; }
+    .deep { background: linear-gradient(135deg, #0f172a, #1e293b); }
+    .module-box { border: 2px solid #334155; border-radius: 6px; }
+    .deep-box { border: 3px solid #0f172a; border-radius: 6px; background: linear-gradient(135deg, #0f172a, #1e293b); color: white; }
+    .shallow-box { border: 1.5px solid #94a3b8; border-radius: 4px; }
+    .seam-line { border-left: 2px dashed #94a3b8; }
+    .seam-line-red { border-left: 2px dashed #dc2626; }
+  </style>
+</head>
+<body class="bg-stone-50 text-slate-900 font-sans">
+  <main class="max-w-5xl mx-auto px-6 py-12 space-y-12">
+
+    <!-- Header -->
+    <header class="border-b border-slate-200 pb-6">
+      <div class="flex items-baseline justify-between">
+        <h1 class="text-3xl font-serif font-bold text-slate-900">Architecture Review</h1>
+        <span class="text-sm text-slate-400 font-mono">DedupEndNote · 2026-05-30</span>
+      </div>
+      <p class="mt-2 text-sm text-slate-500">Five deepening opportunities. Each card has a before/after diagram and a recommendation strength.</p>
+      <div class="mt-4 flex gap-6 text-xs text-slate-500">
+        <span class="flex items-center gap-1.5"><span class="inline-block w-10 h-4 border-2 border-slate-700 rounded"></span> module</span>
+        <span class="flex items-center gap-1.5"><span class="inline-block w-10 border-t-2 border-dashed border-slate-400"></span> seam</span>
+        <span class="flex items-center gap-1.5"><span class="inline-block w-10 border-t-2 border-dashed border-red-500"></span> leakage across seam</span>
+        <span class="flex items-center gap-1.5"><span class="inline-block w-10 h-4 bg-gradient-to-r from-slate-900 to-slate-700 rounded"></span> deep module</span>
+      </div>
+    </header>
+
+    <!-- Candidates -->
+    <section id="candidates" class="space-y-12">
+
+      <!-- ══════════════════════════════════════════════════════════
+           CANDIDATE 1: IOService
+           ══════════════════════════════════════════════════════════ -->
+      <article id="candidate-1" class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="px-8 py-6 border-b border-slate-100">
+          <h2 class="text-xl font-serif font-semibold">1. Split the IOService fat module</h2>
+          <div class="mt-2 flex gap-2 flex-wrap">
+            <span class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 border border-emerald-200">Strong</span>
+            <span class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200">in-process</span>
+          </div>
+          <div class="mt-3 font-mono text-xs text-slate-500 space-y-0.5">
+            <div>services/IOService.java (~980 lines)</div>
+            <div>services/AuthorsNormalizationService.java</div>
+            <div>services/TitlesNormalizationService.java</div>
+            <div>services/JournalsNormalizationService.java</div>
+            <div>services/PagesNormalizationService.java</div>
+          </div>
+        </div>
+
+        <div class="px-8 py-6">
+          <!-- Before / After diagrams -->
+          <div class="grid grid-cols-2 gap-6 mb-6">
+            <!-- BEFORE: cross-section -->
+            <div>
+              <p class="text-xs uppercase tracking-wider text-slate-400 mb-3">Before</p>
+              <div class="relative border border-slate-200 rounded-lg bg-slate-50 p-4 space-y-1" style="min-height:280px">
+                <p class="text-xs text-slate-400 mb-2 font-mono">IOService.java (~980 lines)</p>
+                <!-- Each band is a thin layer inside IOService -->
+                <div class="bg-amber-50 border border-amber-200 rounded px-3 py-2">
+                  <span class="text-xs font-mono text-amber-700">readBibliographicItems() — 369 lines</span>
+                  <div class="mt-1 flex gap-1 flex-wrap">
+                    <span class="text-xs bg-amber-100 rounded px-1">parse RIS state machine</span>
+                    <span class="text-xs bg-red-100 rounded px-1 border border-red-200">+ normalize authors</span>
+                    <span class="text-xs bg-red-100 rounded px-1 border border-red-200">+ normalize journals</span>
+                    <span class="text-xs bg-red-100 rounded px-1 border border-red-200">+ normalize pages</span>
+                    <span class="text-xs bg-red-100 rounded px-1 border border-red-200">+ normalize titles</span>
+                  </div>
+                </div>
+                <div class="border-t-2 border-dashed border-slate-300 my-1"></div>
+                <div class="bg-amber-50 border border-amber-200 rounded px-3 py-1.5">
+                  <span class="text-xs font-mono text-amber-700">addNormalizedAuthor() — pass-through</span>
+                </div>
+                <div class="bg-amber-50 border border-amber-200 rounded px-3 py-1.5">
+                  <span class="text-xs font-mono text-amber-700">addNormalizedJournal() — pass-through</span>
+                </div>
+                <div class="border-t-2 border-dashed border-slate-300 my-1"></div>
+                <div class="bg-amber-50 border border-amber-200 rounded px-3 py-2">
+                  <span class="text-xs font-mono text-amber-700">writeDeduplicatedBibliographicItems() — 85 lines</span>
+                </div>
+                <div class="bg-amber-50 border border-amber-200 rounded px-3 py-2">
+                  <span class="text-xs font-mono text-amber-700">writeMarkedBibliographicItems() — 79 lines</span>
+                  <div class="text-xs text-red-600 mt-0.5">↑ 90% identical to above</div>
+                </div>
+                <div class="bg-amber-50 border border-amber-200 rounded px-3 py-1.5">
+                  <span class="text-xs font-mono text-amber-700">writeRisWithTRUTH() × 2 — nearly identical</span>
+                </div>
+                <!-- Width indicator -->
+                <div class="absolute right-2 top-4 bottom-4 flex items-center">
+                  <div class="w-1.5 bg-amber-300 rounded opacity-60" style="height:88%"></div>
+                  <span class="text-xs text-amber-500 ml-1 writing-mode-vertical" style="writing-mode:vertical-rl;transform:rotate(180deg)">interface ≈ implementation</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- AFTER: three deep modules -->
+            <div>
+              <p class="text-xs uppercase tracking-wider text-slate-400 mb-3">After</p>
+              <div class="space-y-3" style="min-height:280px">
+                <div class="deep-box rounded-lg px-4 py-3">
+                  <p class="text-xs uppercase tracking-wider text-slate-400 mb-1">RisParser</p>
+                  <p class="text-xs text-slate-200">parse(InputStream) → List&lt;BibliographicItem&gt;</p>
+                  <p class="text-xs text-slate-400 mt-1">State machine only. Calls NormalizationCoordinator per field. No knowledge of file paths or normalization rules.</p>
+                </div>
+                <div class="deep-box rounded-lg px-4 py-3">
+                  <p class="text-xs uppercase tracking-wider text-slate-400 mb-1">NormalizationCoordinator</p>
+                  <p class="text-xs text-slate-200">normalize(fieldName, value, item)</p>
+                  <p class="text-xs text-slate-400 mt-1">Dispatches to per-domain normalization modules. Adding a new field type means adding one entry here — not modifying the parser.</p>
+                </div>
+                <div class="deep-box rounded-lg px-4 py-3">
+                  <p class="text-xs uppercase tracking-wider text-slate-400 mb-1">RisWriter</p>
+                  <p class="text-xs text-slate-200">write(items, mode, outputPath)</p>
+                  <p class="text-xs text-slate-400 mt-1">Write-only. Absorbs both mark-mode and remove-mode paths. One place to test output format.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <dl class="grid grid-cols-3 gap-4 text-sm">
+            <div>
+              <dt class="font-medium text-slate-500 text-xs uppercase tracking-wide mb-1">Problem</dt>
+              <dd>IOService is shallow — its interface surface spans three unrelated concerns (parsing, Normalization coordination, writing), and its implementation pays no leverage dividend over calling the per-domain modules directly.</dd>
+            </div>
+            <div>
+              <dt class="font-medium text-slate-500 text-xs uppercase tracking-wide mb-1">Solution</dt>
+              <dd>Extract <code class="text-xs bg-slate-100 px-1 rounded">RisParser</code> (state machine), <code class="text-xs bg-slate-100 px-1 rounded">NormalizationCoordinator</code> (dispatch), and <code class="text-xs bg-slate-100 px-1 rounded">RisWriter</code> (output) as three deep modules each with a narrow interface.</dd>
+            </div>
+            <div>
+              <dt class="font-medium text-slate-500 text-xs uppercase tracking-wide mb-1">Wins</dt>
+              <dd>
+                <ul class="space-y-1 text-xs">
+                  <li>• locality: RIS parsing bugs concentrate in one module</li>
+                  <li>• leverage: test a single field type via parser interface</li>
+                  <li>• delete duplicated write methods</li>
+                  <li>• new field type = one-line change in coordinator</li>
+                  <li>• interface shrinks per module</li>
+                </ul>
+              </dd>
+            </div>
+          </dl>
+        </div>
+      </article>
+
+      <!-- ══════════════════════════════════════════════════════════
+           CANDIDATE 2: DeduplicationService.compareSet
+           ══════════════════════════════════════════════════════════ -->
+      <article id="candidate-2" class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="px-8 py-6 border-b border-slate-100">
+          <h2 class="text-xl font-serif font-semibold">2. Extract Enrichment out of the comparison loop</h2>
+          <div class="mt-2 flex gap-2 flex-wrap">
+            <span class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 border border-emerald-200">Strong</span>
+            <span class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200">in-process</span>
+          </div>
+          <div class="mt-3 font-mono text-xs text-slate-500 space-y-0.5">
+            <div>services/DeduplicationService.java (compareSet ~85 lines, enrich ~107 lines)</div>
+          </div>
+        </div>
+
+        <div class="px-8 py-6">
+          <div class="grid grid-cols-2 gap-6 mb-6">
+            <!-- BEFORE: sequence with interleaved phases -->
+            <div>
+              <p class="text-xs uppercase tracking-wider text-slate-400 mb-3">Before</p>
+              <div class="rounded-lg border border-slate-200 bg-white p-3">
+                <pre class="mermaid text-xs">
+sequenceDiagram
+  participant C as compareSet()
+  participant CS as ComparisonService
+  participant DS as DeduplicationService
+  Note over C: for each pivot × item pair
+  C->>CS: compareYear
+  C->>CS: comparePages/DOIs
+  C->>CS: compareAuthors
+  C->>CS: compareTitle
+  C->>CS: compareJournal
+  C->>C: setLabel (label-promotion logic)
+  C->>DS: enrich() called inline
+  Note over C,DS: Comparison + state + enrichment interleaved
+                </pre>
+              </div>
+            </div>
+            <!-- AFTER: clean phases -->
+            <div>
+              <p class="text-xs uppercase tracking-wider text-slate-400 mb-3">After</p>
+              <div class="rounded-lg border border-slate-200 bg-white p-3">
+                <pre class="mermaid text-xs">
+sequenceDiagram
+  participant DS as DeduplicationService
+  participant CP as ComparisonPhase
+  participant ES as EnrichmentService
+  DS->>CP: compare(items) → DuplicateSets
+  Note over CP: pure: no state mutation
+  DS->>ES: enrich(keptItem, duplicateSet)
+  Note over ES: one seam, strategy per type
+  Note over DS: label assignment separate
+                </pre>
+              </div>
+            </div>
+          </div>
+
+          <dl class="grid grid-cols-3 gap-4 text-sm">
+            <div>
+              <dt class="font-medium text-slate-500 text-xs uppercase tracking-wide mb-1">Problem</dt>
+              <dd><code class="text-xs bg-slate-100 px-1 rounded">compareSet()</code> simultaneously compares fields, manages Duplicate Set labels, and triggers Enrichment. Three separate concerns share one method with no seam between them — Enrichment logic for Reply and ClinicalTrials.gov Bibliographic Items is embedded mid-comparison.</dd>
+            </div>
+            <div>
+              <dt class="font-medium text-slate-500 text-xs uppercase tracking-wide mb-1">Solution</dt>
+              <dd>Extract <code class="text-xs bg-slate-100 px-1 rounded">EnrichmentService</code> with a narrow interface: <code class="text-xs bg-slate-100 px-1 rounded">enrich(kept, duplicates)</code>. The comparison phase returns Duplicate Sets; Enrichment runs in a separate pass over them.</dd>
+            </div>
+            <div>
+              <dt class="font-medium text-slate-500 text-xs uppercase tracking-wide mb-1">Wins</dt>
+              <dd>
+                <ul class="space-y-1 text-xs">
+                  <li>• locality: Enrichment bugs (Reply, ClinicalTrials.gov) concentrate in one module</li>
+                  <li>• leverage: test Enrichment independently of comparison</li>
+                  <li>• comparison phase becomes testable as a pure function</li>
+                  <li>• label assignment logic visible in one place</li>
+                  <li>• Two-file mode reuses same Enrichment seam</li>
+                </ul>
+              </dd>
+            </div>
+          </dl>
+        </div>
+      </article>
+
+      <!-- ══════════════════════════════════════════════════════════
+           CANDIDATE 3: BibliographicItem mixed concerns
+           ══════════════════════════════════════════════════════════ -->
+      <article id="candidate-3" class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="px-8 py-6 border-b border-slate-100">
+          <h2 class="text-xl font-serif font-semibold">3. Separate Bibliographic Item input state from deduplication state</h2>
+          <div class="mt-2 flex gap-2 flex-wrap">
+            <span class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 border border-amber-200">Worth exploring</span>
+            <span class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200">in-process</span>
+          </div>
+          <div class="mt-3 font-mono text-xs text-slate-500">
+            <div>domain/BibliographicItem.java (~106 lines, @Data)</div>
+          </div>
+        </div>
+
+        <div class="px-8 py-6">
+          <div class="grid grid-cols-2 gap-6 mb-6">
+
+            <!-- BEFORE: mass diagram showing wide interface -->
+            <div>
+              <p class="text-xs uppercase tracking-wider text-slate-400 mb-3">Before — one wide POJO</p>
+              <div class="border border-slate-200 rounded-lg bg-slate-50 p-4">
+                <div class="flex gap-4 items-start justify-center">
+                  <!-- Interface surface -->
+                  <div class="flex flex-col gap-1">
+                    <span class="text-xs text-slate-400 mb-1 text-center">interface</span>
+                    <div class="w-20 bg-amber-200 border border-amber-400 rounded text-center text-xs py-8 text-amber-800 font-medium">wide</div>
+                  </div>
+                  <!-- Implementation surface -->
+                  <div class="flex flex-col gap-1">
+                    <span class="text-xs text-slate-400 mb-1 text-center">impl</span>
+                    <div class="w-20 bg-amber-200 border border-amber-400 rounded text-center text-xs py-9 text-amber-800 font-medium">≈ interface</div>
+                  </div>
+                </div>
+                <div class="mt-4 space-y-1">
+                  <div class="bg-blue-50 border border-blue-200 rounded px-2 py-1 text-xs text-blue-700">📥 Input fields: authors, titles, journals, dois…</div>
+                  <div class="bg-orange-50 border border-orange-200 rounded px-2 py-1 text-xs text-orange-700">⚙️ Dedup state: label, isKeptBibliographicItem, isPresentInOldFile</div>
+                  <div class="bg-purple-50 border border-purple-200 rounded px-2 py-1 text-xs text-purple-700">📤 Output data: pagesOutput, enriched DOIs list</div>
+                  <div class="bg-red-50 border border-red-200 rounded px-2 py-1 text-xs text-red-700">🏷️ Type flags: isReply, isCochrane, isClinicalTrialGov, isPhase (×5 booleans)</div>
+                </div>
+                <p class="text-xs text-red-600 mt-2 text-center">Dedup state leaks into domain model</p>
+              </div>
+            </div>
+
+            <!-- AFTER: two modules -->
+            <div>
+              <p class="text-xs uppercase tracking-wider text-slate-400 mb-3">After — two focused modules</p>
+              <div class="space-y-3">
+                <div class="deep-box rounded-lg px-4 py-4">
+                  <p class="text-xs uppercase tracking-wider text-slate-400 mb-1">BibliographicItem (immutable)</p>
+                  <p class="text-xs text-slate-200">Input fields only. BibliographicItemType enum replaces 5 boolean flags.</p>
+                  <div class="mt-2 flex gap-1 flex-wrap">
+                    <span class="text-xs bg-slate-700 rounded px-1 text-slate-300">authors</span>
+                    <span class="text-xs bg-slate-700 rounded px-1 text-slate-300">titles</span>
+                    <span class="text-xs bg-slate-700 rounded px-1 text-slate-300">dois</span>
+                    <span class="text-xs bg-slate-700 rounded px-1 text-slate-300">type: REPLY | COCHRANE | …</span>
+                  </div>
+                  <div class="flex justify-between mt-3">
+                    <div class="text-center">
+                      <div class="w-8 bg-slate-400 rounded mx-auto" style="height:40px"></div>
+                      <span class="text-xs text-slate-400">interface</span>
+                    </div>
+                    <div class="text-center">
+                      <div class="w-8 bg-slate-200 rounded mx-auto" style="height:64px"></div>
+                      <span class="text-xs text-slate-400">impl</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="deep-box rounded-lg px-4 py-4">
+                  <p class="text-xs uppercase tracking-wider text-slate-400 mb-1">DeduplicationEntry</p>
+                  <p class="text-xs text-slate-200">Wraps one BibliographicItem. Carries mutable dedup state + enrichment output.</p>
+                  <div class="mt-2 flex gap-1 flex-wrap">
+                    <span class="text-xs bg-slate-700 rounded px-1 text-slate-300">label</span>
+                    <span class="text-xs bg-slate-700 rounded px-1 text-slate-300">isKept</span>
+                    <span class="text-xs bg-slate-700 rounded px-1 text-slate-300">pagesOutput</span>
+                    <span class="text-xs bg-slate-700 rounded px-1 text-slate-300">enrichedDois</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <dl class="grid grid-cols-3 gap-4 text-sm">
+            <div>
+              <dt class="font-medium text-slate-500 text-xs uppercase tracking-wide mb-1">Problem</dt>
+              <dd>Input data, transient deduplication state, and Enrichment output share one POJO. Deduplication state (<code class="text-xs bg-slate-100 px-1 rounded">label</code>, <code class="text-xs bg-slate-100 px-1 rounded">isKeptBibliographicItem</code>) leaks through the domain model's seam into modules that should not need it.</dd>
+            </div>
+            <div>
+              <dt class="font-medium text-slate-500 text-xs uppercase tracking-wide mb-1">Solution</dt>
+              <dd>Make <code class="text-xs bg-slate-100 px-1 rounded">BibliographicItem</code> immutable input-only. Introduce <code class="text-xs bg-slate-100 px-1 rounded">DeduplicationEntry</code> as a wrapper holding mutable state and Enrichment output. Replace five boolean flags with a <code class="text-xs bg-slate-100 px-1 rounded">BibliographicItemType</code> enum.</dd>
+            </div>
+            <div>
+              <dt class="font-medium text-slate-500 text-xs uppercase tracking-wide mb-1">Wins</dt>
+              <dd>
+                <ul class="space-y-1 text-xs">
+                  <li>• locality: dedup state in one wrapper, not scattered across 106-line POJO</li>
+                  <li>• leverage: comparison modules take immutable BibliographicItem — no mutation risk</li>
+                  <li>• boolean explosion → type-safe enum; illegal combinations become unrepresentable</li>
+                  <li>• interface of BibliographicItem shrinks; implementation absorbs nothing extra</li>
+                </ul>
+              </dd>
+            </div>
+          </dl>
+        </div>
+      </article>
+
+      <!-- ══════════════════════════════════════════════════════════
+           CANDIDATE 4: ComparisonService pass-through
+           ══════════════════════════════════════════════════════════ -->
+      <article id="candidate-4" class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="px-8 py-6 border-b border-slate-100">
+          <h2 class="text-xl font-serif font-semibold">4. Delete the ComparisonService pass-through</h2>
+          <div class="mt-2 flex gap-2 flex-wrap">
+            <span class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 border border-amber-200">Worth exploring</span>
+            <span class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200">in-process</span>
+          </div>
+          <div class="mt-3 font-mono text-xs text-slate-500">
+            <div>services/ComparisonService.java (~90 lines)</div>
+          </div>
+        </div>
+
+        <div class="px-8 py-6">
+          <div class="grid grid-cols-2 gap-6 mb-6">
+            <!-- BEFORE: call graph with pass-through -->
+            <div>
+              <p class="text-xs uppercase tracking-wider text-slate-400 mb-3">Before — 5 hops for one comparison</p>
+              <div class="rounded-lg border border-slate-200 bg-white p-3">
+                <pre class="mermaid text-xs">
+flowchart TD
+  DS[DeduplicationService]
+  CS[ComparisonService<br/>pass-through]
+  A[DefaultAuthorsComparisonService]
+  T[DefaultTitleComparisonService]
+  J[DefaultJournalComparisonService]
+  P[DefaultPagesComparisonService]
+  DS --> CS
+  CS --> A
+  CS --> T
+  CS --> J
+  CS --> P
+  classDef passthru fill:#fef3c7,stroke:#d97706,stroke-width:2px;
+  class CS passthru
+                </pre>
+              </div>
+              <p class="text-xs text-amber-700 mt-2 text-center">Deletion test: delete CS → complexity moves to DS, not away</p>
+            </div>
+            <!-- AFTER: collapsed -->
+            <div>
+              <p class="text-xs uppercase tracking-wider text-slate-400 mb-3">After — option A: inline into compare loop</p>
+              <div class="rounded-lg border border-slate-200 bg-white p-3">
+                <pre class="mermaid text-xs">
+flowchart TD
+  DS[DeduplicationService]
+  A[DefaultAuthorsComparisonService]
+  T[DefaultTitleComparisonService]
+  J[DefaultJournalComparisonService]
+  P[DefaultPagesComparisonService]
+  DS --> A
+  DS --> T
+  DS --> J
+  DS --> P
+  classDef deep fill:#0f172a,stroke:#334155,color:#e2e8f0;
+  class DS deep
+                </pre>
+              </div>
+              <p class="text-xs text-slate-500 mt-2 text-center">Or option B: merge into one <code class="bg-slate-100 rounded px-1">FieldComparators</code> record injected into DS</p>
+            </div>
+          </div>
+
+          <dl class="grid grid-cols-3 gap-4 text-sm">
+            <div>
+              <dt class="font-medium text-slate-500 text-xs uppercase tracking-wide mb-1">Problem</dt>
+              <dd>ComparisonService is a shallow wrapper — its interface nearly matches its implementation (delegate to four injected modules). The deletion test: remove it, complexity reappears in <code class="text-xs bg-slate-100 px-1 rounded">DeduplicationService</code>, not away. It has two static helpers (<code class="text-xs bg-slate-100 px-1 rounded">compareIssns</code>, <code class="text-xs bg-slate-100 px-1 rounded">compareSameDois</code>) that don't use the injected modules at all — mixed cohesion.</dd>
+            </div>
+            <div>
+              <dt class="font-medium text-slate-500 text-xs uppercase tracking-wide mb-1">Solution</dt>
+              <dd>Either delete ComparisonService and have DeduplicationService hold the four per-field comparison modules directly, or wrap them in a <code class="text-xs bg-slate-100 px-1 rounded">record FieldComparators(…)</code> with no extra logic — making the grouping explicit without adding a module.</dd>
+            </div>
+            <div>
+              <dt class="font-medium text-slate-500 text-xs uppercase tracking-wide mb-1">Wins</dt>
+              <dd>
+                <ul class="space-y-1 text-xs">
+                  <li>• delete one shallow module</li>
+                  <li>• leverage: each comparison module now has one caller, not a relay</li>
+                  <li>• mixed cohesion (instance delegates + static helpers) eliminated</li>
+                  <li>• interface of the seam reduces to the four comparison modules directly</li>
+                </ul>
+              </dd>
+            </div>
+          </dl>
+        </div>
+      </article>
+
+      <!-- ══════════════════════════════════════════════════════════
+           CANDIDATE 5: NormPatterns monolith
+           ══════════════════════════════════════════════════════════ -->
+      <article id="candidate-5" class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="px-8 py-6 border-b border-slate-100">
+          <h2 class="text-xl font-serif font-semibold">5. Internalize NormPatterns into per-domain normalization modules</h2>
+          <div class="mt-2 flex gap-2 flex-wrap">
+            <span class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-200 text-slate-700 border border-slate-300">Speculative</span>
+            <span class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200">in-process</span>
+          </div>
+          <div class="mt-3 font-mono text-xs text-slate-500">
+            <div>domain/NormPatterns.java (~374 lines, 50+ static final patterns)</div>
+          </div>
+        </div>
+
+        <div class="px-8 py-6">
+          <div class="grid grid-cols-2 gap-6 mb-6">
+            <!-- BEFORE: global registry -->
+            <div>
+              <p class="text-xs uppercase tracking-wider text-slate-400 mb-3">Before — one monolithic registry</p>
+              <div class="border border-slate-200 rounded-lg bg-slate-50 p-4">
+                <div class="text-center mb-3">
+                  <div class="inline-block bg-amber-100 border-2 border-amber-400 rounded-lg px-6 py-4">
+                    <p class="text-sm font-mono text-amber-800 font-bold">NormPatterns</p>
+                    <p class="text-xs text-amber-600 mt-1">50+ public static final Pattern</p>
+                  </div>
+                </div>
+                <div class="flex justify-around text-xs text-slate-500">
+                  <div class="text-center">
+                    <div class="w-0.5 h-6 bg-slate-300 mx-auto mb-1"></div>
+                    <span class="bg-slate-200 rounded px-2">IOService</span>
+                  </div>
+                  <div class="text-center">
+                    <div class="w-0.5 h-6 bg-slate-300 mx-auto mb-1"></div>
+                    <span class="bg-slate-200 rounded px-2">AuthorsNorm</span>
+                  </div>
+                  <div class="text-center">
+                    <div class="w-0.5 h-6 bg-slate-300 mx-auto mb-1"></div>
+                    <span class="bg-slate-200 rounded px-2">TitlesNorm</span>
+                  </div>
+                  <div class="text-center">
+                    <div class="w-0.5 h-6 bg-slate-300 mx-auto mb-1"></div>
+                    <span class="bg-slate-200 rounded px-2">JournalsNorm</span>
+                  </div>
+                </div>
+                <p class="text-xs text-red-600 mt-3 text-center">All consumers share the same global namespace. No grouping by domain.</p>
+              </div>
+            </div>
+            <!-- AFTER: patterns private to each domain module -->
+            <div>
+              <p class="text-xs uppercase tracking-wider text-slate-400 mb-3">After — patterns private to each module</p>
+              <div class="space-y-2">
+                <div class="deep-box rounded px-3 py-2 flex justify-between items-center">
+                  <span class="text-xs text-slate-200 font-mono">AuthorsNormalizationService</span>
+                  <span class="text-xs text-slate-400">private static final … (author patterns)</span>
+                </div>
+                <div class="deep-box rounded px-3 py-2 flex justify-between items-center">
+                  <span class="text-xs text-slate-200 font-mono">TitlesNormalizationService</span>
+                  <span class="text-xs text-slate-400">private static final … (title patterns)</span>
+                </div>
+                <div class="deep-box rounded px-3 py-2 flex justify-between items-center">
+                  <span class="text-xs text-slate-200 font-mono">JournalsNormalizationService</span>
+                  <span class="text-xs text-slate-400">private static final … (journal patterns)</span>
+                </div>
+                <div class="deep-box rounded px-3 py-2 flex justify-between items-center">
+                  <span class="text-xs text-slate-200 font-mono">NormalizationService</span>
+                  <span class="text-xs text-slate-400">private static final … (shared: accents, whitespace)</span>
+                </div>
+                <p class="text-xs text-emerald-600 text-center mt-2">Each module owns its patterns. NormPatterns deleted.</p>
+              </div>
+            </div>
+          </div>
+
+          <dl class="grid grid-cols-3 gap-4 text-sm">
+            <div>
+              <dt class="font-medium text-slate-500 text-xs uppercase tracking-wide mb-1">Problem</dt>
+              <dd>NormPatterns is a grab-bag global registry — patterns for authors, journals, titles, pages, and DOIs share one class with no grouping. A maintainer changing an author pattern must grep to verify no other consumer uses it. The class has no interface: it's a namespace, not a module.</dd>
+            </div>
+            <div>
+              <dt class="font-medium text-slate-500 text-xs uppercase tracking-wide mb-1">Solution</dt>
+              <dd>Move each pattern to <code class="text-xs bg-slate-100 px-1 rounded">private static final</code> inside the normalization module that owns it. The small number of shared utility patterns (accent normalization, whitespace) stay in <code class="text-xs bg-slate-100 px-1 rounded">NormalizationService</code> as private fields.</dd>
+            </div>
+            <div>
+              <dt class="font-medium text-slate-500 text-xs uppercase tracking-wide mb-1">Wins</dt>
+              <dd>
+                <ul class="space-y-1 text-xs">
+                  <li>• locality: changing an author pattern touches one module</li>
+                  <li>• unused patterns become visible as dead code at compile time</li>
+                  <li>• NormPatterns class deleted</li>
+                  <li>• <em>caveat:</em> patterns used by test code may need adjustment</li>
+                </ul>
+              </dd>
+            </div>
+          </dl>
+        </div>
+      </article>
+
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════
+         TOP RECOMMENDATION
+         ══════════════════════════════════════════════════════════ -->
+    <section id="top-recommendation" class="bg-gradient-to-br from-slate-900 to-slate-800 rounded-xl p-8 text-white">
+      <h2 class="text-2xl font-serif font-bold mb-3">Top recommendation</h2>
+      <p class="text-slate-300 text-lg mb-4">
+        Start with <a href="#candidate-1" class="text-emerald-400 underline underline-offset-2">#1 — Split the IOService fat module</a>.
+      </p>
+      <p class="text-slate-400 text-sm leading-relaxed max-w-2xl">
+        IOService is the deepest source of friction: three unrelated concerns share one shallow seam,
+        its 369-line state machine can only be tested end-to-end, and two nearly-identical write methods
+        drift independently. Splitting it into <code class="bg-slate-700 px-1 rounded text-slate-200">RisParser</code>,
+        <code class="bg-slate-700 px-1 rounded text-slate-200">NormalizationCoordinator</code>, and
+        <code class="bg-slate-700 px-1 rounded text-slate-200">RisWriter</code> creates the leverage missing today:
+        a single field's parsing is testable directly, the coordinator's dispatch table makes adding a new field
+        type a one-line change, and the writer absorbs the duplicated mark/remove paths.
+        Candidates #2 and #4 build naturally on top of it — once IOService is split, the Enrichment extraction
+        and ComparisonService deletion become smaller, lower-risk changes.
+      </p>
+    </section>
+
+  </main>
+</body>
+</html>

@@ -29,7 +29,9 @@ public class DeduplicationService {
 
 	private final ComparisonService comparisonService;
 
-	private final IOService ioService;
+	private final BibliographicItemReader bibliographicItemReader;
+
+	private final BibliographicItemWriter bibliographicItemWriter;
 
 	// the DOIs have been lowercased
 	public static Pattern COCHRANE_DOI_PATTERN = Pattern.compile("^.*10.1002/14651858.([a-z][a-z]\\d+).*",
@@ -88,8 +90,9 @@ public class DeduplicationService {
 	 */
 	// @formatter:on
 
-	public DeduplicationService(ComparisonService comparisonService) {
-		this.ioService = new IOService();
+	public DeduplicationService(ComparisonService comparisonService, BibliographicItemReader bibliographicItemReader, BibliographicItemWriter bibliographicItemWriter) {
+		this.bibliographicItemReader = bibliographicItemReader;
+		this.bibliographicItemWriter = bibliographicItemWriter;
 		this.comparisonService = comparisonService;
 	}
 
@@ -229,7 +232,7 @@ l						 * 		V 		W 		X
 		progressReporter.accept("Reading file " + inputFileName);
 		List<BibliographicItem> bibliographicItems;
 		try {
-			bibliographicItems = ioService.readBibliographicItems(inputFileName, progressReporter);
+			bibliographicItems = bibliographicItemReader.readBibliographicItems(inputFileName, progressReporter);
 		} catch (InvalidRisFileException e) {
 			progressReporter.accept(e.getErrorMessage());
 			return e.getErrorMessage();
@@ -244,7 +247,7 @@ l						 * 		V 		W 		X
 		searchYearOneFile(bibliographicItems, progressReporter);
 
 		if (mode == DeduplicationMode.MARK) {
-			int numberWritten = ioService.writeMarkedBibliographicItems(bibliographicItems, inputFileName,
+			int numberWritten = bibliographicItemWriter.writeMarkedBibliographicItems(bibliographicItems, inputFileName,
 					outputFileName);
 			long labeledBibliographicItems = bibliographicItems.stream().filter(r -> r.getLabel() != null).count();
 			s = "DONE: DedupEndNote has written " + numberWritten + " bibliographic items with "
@@ -256,7 +259,7 @@ l						 * 		V 		W 		X
 		progressReporter.accept("Enriching the " + bibliographicItems.size() + " deduplicated results");
 		enrich(bibliographicItems);
 		progressReporter.accept("Saving the " + bibliographicItems.size() + " deduplicated results");
-		int numberWritten = ioService.writeDeduplicatedBibliographicItems(bibliographicItems, inputFileName,
+		int numberWritten = bibliographicItemWriter.writeDeduplicatedBibliographicItems(bibliographicItems, inputFileName,
 				outputFileName);
 		s = formatResultString(bibliographicItems.size(), numberWritten);
 		progressReporter.accept(s);
@@ -271,7 +274,7 @@ l						 * 		V 		W 		X
 		log.info("newInputFileName: {}", newInputFileName);
 		List<BibliographicItem> bibliographicItems;
 		try {
-			bibliographicItems = ioService.readBibliographicItems(oldInputFileName, progressReporter);
+			bibliographicItems = bibliographicItemReader.readBibliographicItems(oldInputFileName, progressReporter);
 		} catch (InvalidRisFileException e) {
 			progressReporter.accept(e.getErrorMessage());
 			return e.getErrorMessage();
@@ -299,7 +302,7 @@ l						 * 		V 		W 		X
 
 		List<BibliographicItem> newBibliographicItems;
 		try {
-			newBibliographicItems = ioService.readBibliographicItems(newInputFileName, progressReporter);
+			newBibliographicItems = bibliographicItemReader.readBibliographicItems(newInputFileName, progressReporter);
 		} catch (InvalidRisFileException e) {
 			progressReporter.accept(e.getErrorMessage());
 			return e.getErrorMessage();
@@ -315,7 +318,7 @@ l						 * 		V 		W 		X
 		searchYearTwoFiles(bibliographicItems, progressReporter);
 
 		if (mode == DeduplicationMode.MARK) {
-			int numberWritten = ioService.writeMarkedBibliographicItems(bibliographicItems, newInputFileName,
+			int numberWritten = bibliographicItemWriter.writeMarkedBibliographicItems(bibliographicItems, newInputFileName,
 					outputFileName);
 			long numberLabeledBibliographicItems = bibliographicItems.stream()
 					.filter(r -> r.getLabel() != null && !r.isPresentInOldFile()).count();
@@ -332,7 +335,7 @@ l						 * 		V 		W 		X
 				.filter(r -> !r.isPresentInOldFile() && (r.getLabel() == null || !r.getLabel().startsWith("-")))
 				.toList();
 		log.error("Publications to write: {}", filteredBibliographicItems.size());
-		int numberWritten = ioService.writeDeduplicatedBibliographicItems(filteredBibliographicItems, newInputFileName,
+		int numberWritten = bibliographicItemWriter.writeDeduplicatedBibliographicItems(filteredBibliographicItems, newInputFileName,
 				outputFileName);
 		s = "DONE: DedupEndNote removed %d bibliographic items from the new set, and has written %d bibliographic items."
 				.formatted((newBibliographicItems.size() - numberWritten), numberWritten);
@@ -343,7 +346,7 @@ l						 * 		V 		W 		X
 	public @Nullable String doSanityChecks(List<BibliographicItem> bibliographicItems, String fileName) {
 		/*
 		 * "containsBibliographicItemsWithoutId" check removed: id is now a primitive int.
-		 * IOService always assigns an id >= 1; InvalidRisFileException is thrown for non-numeric ID fields.
+		 * BibliographicItemReader always assigns an id >= 1; InvalidRisFileException is thrown for non-numeric ID fields.
 		 *
 		 * "containsOnlyBibliographicItemsWithoutPublicationYear" check removed: a dataset where
 		 * every record has publicationYear == 0 (no PY field, or year < 1850) is acceptable —
