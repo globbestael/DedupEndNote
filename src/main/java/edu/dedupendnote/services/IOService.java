@@ -546,7 +546,7 @@ public class IOService {
 			}
 		}
 
-		PageRecord normalizedPages = NormalizationService.normalizeInputPages(pagesInputMap, bibliographicItem.getId());
+		PageRecord normalizedPages = PagesNormalizationService.normalizeInputPages(pagesInputMap, bibliographicItem.getId());
 		bibliographicItem.setPageStart(normalizedPages.pageStart());
 		bibliographicItem.setPagesOutput(normalizedPages.pagesOutput());
 		bibliographicItem.setSeveralPages(normalizedPages.isSeveralPages());
