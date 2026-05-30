@@ -518,7 +518,7 @@ public class IOService {
 	}
 
 	public static void addNormalizedAuthor(String fieldContent, BibliographicItem bibliographicItem) {
-		AuthorRecord normalizedAuthor = NormalizationService.normalizeInputAuthors(fieldContent);
+		AuthorRecord normalizedAuthor = AuthorsNormalizationService.normalizeInputAuthors(fieldContent);
 		if (normalizedAuthor.author() != null) {
 			bibliographicItem.getAuthors().add(normalizedAuthor.author());
 			bibliographicItem.getAuthorsTransposed().add(normalizedAuthor.authorTransposed());

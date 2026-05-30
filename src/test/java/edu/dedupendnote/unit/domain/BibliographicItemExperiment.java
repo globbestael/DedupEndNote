@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
 
 import edu.dedupendnote.domain.AuthorRecord;
 import edu.dedupendnote.domain.BibliographicItem;
-import edu.dedupendnote.services.NormalizationService;
+import edu.dedupendnote.services.AuthorsNormalizationService;
 
 /*
  * Used in tests for evaluating alternatives.
@@ -44,7 +44,7 @@ public class BibliographicItemExperiment extends BibliographicItem {
 	}
 
 	public void addAuthorsLimitedToFirstLetters_2(String author) {
-		AuthorRecord normalizedAuthor = NormalizationService.normalizeInputAuthors(author);
+		AuthorRecord normalizedAuthor = AuthorsNormalizationService.normalizeInputAuthors(author);
 		String a = normalizedAuthor.author();
 		if (a != null) {
 			Matcher m = toFirstLettersPattern.matcher(a);

@@ -9,15 +9,15 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import edu.dedupendnote.services.NormalizationService;
+import edu.dedupendnote.services.AuthorsNormalizationService;
 import edu.dedupendnote.domain.AuthorRecord;
 
-class NormalizationServiceAuthorTest {
+class AuthorsNormalizationServiceTest {
 
 	@ParameterizedTest(name = "{index}: normalizeAuthor({0})={1}, {2}")
 	@MethodSource("authorArgumentProvider")
 	void normalizeAuthorTest(String input, AuthorRecord expected) {
-		AuthorRecord result = NormalizationService.normalizeInputAuthors(input);
+		AuthorRecord result = AuthorsNormalizationService.normalizeInputAuthors(input);
 		assertThat(result).isEqualTo(expected);
 	}
 
