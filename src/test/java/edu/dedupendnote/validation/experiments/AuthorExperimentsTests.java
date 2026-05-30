@@ -12,7 +12,6 @@ import edu.dedupendnote.domain.DeduplicationMode;
 import edu.dedupendnote.domain.BibliographicItem;
 import edu.dedupendnote.integration.AbstractIntegrationTest;
 import edu.dedupendnote.services.AuthorThresholds;
-import edu.dedupendnote.services.ComparisonService;
 import edu.dedupendnote.services.DefaultAuthorsComparisonService;
 import edu.dedupendnote.services.DefaultJournalComparisonService;
 import edu.dedupendnote.services.DefaultPagesComparisonService;
@@ -21,6 +20,7 @@ import edu.dedupendnote.services.DeduplicationService;
 import edu.dedupendnote.services.BibliographicItemReader;
 import edu.dedupendnote.services.BibliographicItemWriter;
 import edu.dedupendnote.services.EnrichmentService;
+import edu.dedupendnote.services.FieldComparators;
 import edu.dedupendnote.validation.domain.ValidationResult;
 import edu.dedupendnote.validation.services.ValidationService;
 import lombok.extern.slf4j.Slf4j;
@@ -55,7 +55,7 @@ class AuthorExperimentsTests extends AbstractIntegrationTest {
 		// Threshold == 1.0 (the max JWS score) — similarity > 1.0 is never true, so no author
 		// match ever succeeds; sensitivity drops to 0%, specificity reaches 100%.
 		AuthorThresholds noMatchThresholds = new AuthorThresholds(1.0, 1.0, 1.0);
-		ComparisonService cs = new ComparisonService(
+		FieldComparators cs = new FieldComparators(
 				new DefaultAuthorsComparisonService(noMatchThresholds),
 				new DefaultTitleComparisonService(),
 				new DefaultJournalComparisonService(),

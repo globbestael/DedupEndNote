@@ -14,6 +14,17 @@ import edu.dedupendnote.services.BibliographicItemReader;
 import edu.dedupendnote.domain.BibliographicItem;
 import lombok.extern.slf4j.Slf4j;
 
+/*
+ * TODO: Consider renaming all Similarity*Test and JWSimilarity*Test files to a Default*ComparisonService naming scheme:
+ *   SimilarityIssnTest        → DefaultJournalComparisonServiceIssnTest  (compareIssns lives on DefaultJournalComparisonService)
+ *   SimilarityJournalTest     → DefaultJournalComparisonServiceTest
+ *   SimilarityTitleTest       → DefaultTitleComparisonServiceTest
+ *   JWSimilarityAbstractTest  → AbstractComparisonServiceJwsTest         (abstract base; rename together with subclasses)
+ *   JWSimilarityAuthorTest    → DefaultAuthorsComparisonServiceJwsTest
+ *   JWSimilarityJournalTest   → DefaultJournalComparisonServiceJwsTest
+ *   JWSimilarityTitleTest     → DefaultTitleComparisonServiceJwsTest
+ * This would also require updating the three-category taxonomy in CLAUDE.md.
+ */
 @Slf4j
 class SimilarityJournalTest {
 
@@ -181,7 +192,12 @@ class SimilarityJournalTest {
 			arguments("European Child and Adolescent Psychiatry", "European Child & Adolescent Psychiatry"),
 			arguments("Bull Acad Natl Med", "Bulletin de l'Académie nationale de médecine"),
 			arguments("Amer.J.Dig.Dis.", "American Journal of Digestive Diseases"),
-			arguments("International journal of cancer.Journal international du cancer", "International journal of cancer. Journal international du cancer")
+			arguments("International journal of cancer.Journal international du cancer", "International journal of cancer. Journal international du cancer"),
+			// from ComparisonServiceTest
+			arguments("Journal of Medicine", "Journal of Medicine"),
+			arguments("J. Med.", "Journal of Medicine"),
+			arguments("Ann Intern Med", "ANNALS OF INTERNAL MEDICINE"),
+			arguments("ARTHROSCOPY-THE JOURNAL OF ARTHROSCOPIC AND RELATED SURGERY", "Arthroscopy : the journal of arthroscopic & related surgery : official bibliographicItem of the Arthroscopy Association of North America and the International Arthroscopy Association")
 		// @formatter:on
 		);
 	}
@@ -229,7 +245,10 @@ class SimilarityJournalTest {
 						"Philosophical Transactions of the Royal Society B: Biological Sciences"),
 				arguments(
 					"No other examples yet",
-					"The same")
+					"The same"),
+				// from ComparisonServiceTest
+				arguments("Different Journal", "Another Journal"),
+				arguments("Un med canada", "Union Med Can")
 			);
 		// @formatter:on
 	}

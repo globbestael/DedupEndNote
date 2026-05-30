@@ -25,7 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class DeduplicationService {
 
-	private final ComparisonService comparisonService;
+	private final FieldComparators fieldComparators;
 
 	private final BibliographicItemReader bibliographicItemReader;
 
@@ -90,10 +90,10 @@ public class DeduplicationService {
 	 */
 	// @formatter:on
 
-	public DeduplicationService(ComparisonService comparisonService, BibliographicItemReader bibliographicItemReader, BibliographicItemWriter bibliographicItemWriter, EnrichmentService enrichmentService) {
+	public DeduplicationService(FieldComparators fieldComparators, BibliographicItemReader bibliographicItemReader, BibliographicItemWriter bibliographicItemWriter, EnrichmentService enrichmentService) {
 		this.bibliographicItemReader = bibliographicItemReader;
 		this.bibliographicItemWriter = bibliographicItemWriter;
-		this.comparisonService = comparisonService;
+		this.fieldComparators = fieldComparators;
 		this.enrichmentService = enrichmentService;
 	}
 
@@ -134,11 +134,11 @@ public class DeduplicationService {
 				if (log.isTraceEnabled()) {
 					log.trace("\nStarting comparison {} - {}", pivot.getId(), p.getId());
 				}
-				if (comparisonService.compareStartPagesOrDois(p, pivot, map)
-						&& comparisonService.compareAuthors(p, pivot) && comparisonService.compareTitles(p, pivot)
-						&& (ComparisonService.compareSameDois(p, pivot, map.get("isSameDois"))
-								|| ComparisonService.compareIssns(p, pivot, map.get("isSameDois"))
-								|| comparisonService.compareJournals(p, pivot, map.get("isSameDois")))) {
+				if (fieldComparators.pages().compare(p, pivot, map)
+						&& fieldComparators.authors().compare(p, pivot) && fieldComparators.titles().compare(p, pivot)
+						&& (DefaultPagesComparisonService.compareSameDois(p, pivot, map.get("isSameDois"))
+								|| DefaultJournalComparisonService.compareIssns(p, pivot, map.get("isSameDois"))
+								|| fieldComparators.journals().compare(p, pivot, map.get("isSameDois")))) {
 
 					noOfDuplicates++;
 					// set the label

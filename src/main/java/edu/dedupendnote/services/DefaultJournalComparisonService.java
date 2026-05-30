@@ -123,6 +123,29 @@ public class DefaultJournalComparisonService implements JournalComparisonService
         return matcher.find();
     }
 
+    public static boolean compareIssns(BibliographicItem r1, BibliographicItem r2, @Nullable Boolean isSameDois) {
+        if (!r1.getIsbns().isEmpty() && !r2.getIsbns().isEmpty()) {
+            if (UtilitiesService.setsContainSameString(r1.getIsbns(), r2.getIsbns())) {
+                log.trace("- 4. ISBNs are the same");
+                return true;
+            } else {
+                if (log.isTraceEnabled()) {
+                    log.trace("- 4. ISBNs are NOT the same: {} and {}", r1.getIsbns(), r2.getIsbns());
+                }
+                return false;
+            }
+        }
+        if (UtilitiesService.setsContainSameString(r1.getIssns(), r2.getIssns())) {
+            log.trace("- 4. ISSNs are the same");
+            return true;
+        } else {
+            if (log.isTraceEnabled()) {
+                log.trace("- 4. ISSNs are NOT the same: {} and {}", r1.getIssns(), r2.getIssns());
+            }
+            return false;
+        }
+    }
+
     private static boolean compareJournals_FirstWithStartingInitialism(String s1, String s2) {
         String[] words = s1.split("\\s");
         if ("Samj".equals(words[0])) {

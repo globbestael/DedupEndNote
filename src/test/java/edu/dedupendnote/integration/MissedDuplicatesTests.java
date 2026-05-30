@@ -45,7 +45,6 @@ class MissedDuplicatesTests extends AbstractIntegrationTest {
 	void addMemoryAppender() {
 		List<Logger> loggers = new ArrayList<>();
 		List<String> loggerNames = List.of("edu.dedupendnote.services.DeduplicationService",
-				"edu.dedupendnote.services.ComparisonService",
 				"edu.dedupendnote.services.DefaultAuthorsComparisonService");
 		// Level oldLevel = null;
 

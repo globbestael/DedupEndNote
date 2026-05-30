@@ -55,16 +55,16 @@ DedupEndNote is a Spring Boot 4.0 / Java 21 web app that deduplicates bibliograp
 ### Services and their responsibilities
 | Service | Lines | Responsibility |
 |---|---|---|
-| `DeduplicationService` | ~440 | Orchestrates the full pipeline; accepts a `Consumer<String> progressReporter` for progress reporting |
-| `ComparisonService` | ~90 | Thin orchestrator: holds four injected per-field comparison services; retains `compareIssns` and `compareSameDois` as static helpers |
+| `DeduplicationService` | ~400 | Orchestrates the full pipeline; accepts a `Consumer<String> progressReporter` for progress reporting |
+| `FieldComparators` | — | Plain `record` bundling the four per-field comparison services; wired in `DedupEndNoteApplication`; passed as one argument to `DeduplicationService` for test substitution |
 | `BibliographicItemReader` | ~560 | Parses RIS files into `BibliographicItem` objects; coordinates field Normalization during read; hosts `addNormalized*` static helpers used by test fixtures |
 | `BibliographicItemWriter` | ~220 | Writes deduplicated (Remove Mode) and marked (Mark Mode) RIS output; re-reads original input to preserve field order |
 | `EnrichmentService` | ~110 | Post-dedup enrichment (Remove Mode only): merges DOIs, fills missing year/pages, replaces Reply/ClinicalTrials.gov titles, normalises Cochrane page IDs |
 | `NormalizationService` | ~991 | Normalizes authors, titles, DOIs, pages, journals |
 | `DefaultAuthorsComparisonService` | — | Jaro-Winkler author matching; thresholds injectable via `AuthorThresholds` record |
 | `DefaultTitleComparisonService` | — | JWS title matching; thresholds injectable via `TitleThresholds` record |
-| `DefaultJournalComparisonService` | — | Journal matching with abbreviation/initialism heuristics; thresholds injectable via `JournalThresholds` record |
-| `DefaultPagesComparisonService` | — | Exact-equality pages-or-DOI step (no thresholds) |
+| `DefaultJournalComparisonService` | — | Journal matching with abbreviation/initialism heuristics; thresholds injectable via `JournalThresholds` record; hosts static `compareIssns` |
+| `DefaultPagesComparisonService` | — | Exact-equality pages-or-DOI step (no thresholds); hosts static `compareSameDois` |
 
 ### 5-step comparison algorithm (all steps must pass)
 1. Publication year (±1 year, exact for Cochrane)
@@ -116,7 +116,7 @@ Tests live under three roots, each with a corresponding Maven profile:
 - **`unit/services/JournalsBaseTest extends BaseTest`** — shared logic for journal-comparison tests
 - **`unit/services/JWSimilarityTitleTest extends BaseTest`** — title JWS-similarity tests; also holds the out-of-scope `IOService` pattern tests
 - **`unit/services/JWSimilarityAuthorTest extends AuthorsBaseTest`** — plain JUnit 5, no Spring; tests raw `jws.apply` score
-- Standalone unit test classes (no Spring context): `ComparisonServiceTest`, `NormalizationService*Test` (6 files), `SimilarityJournalTest`, `JWSimilarityJournalTest`, `JWSimilarityAbstractTest`, `AuthorsComparisonThresholdTest`, `AuthorVariantsExperimentsTest`, etc.
+- Standalone unit test classes (no Spring context): `NormalizationService*Test` (6 files), `SimilarityIssnTest`, `SimilarityJournalTest`, `SimilarityTitleTest`, `JWSimilarityJournalTest`, `JWSimilarityAbstractTest`, `AuthorsComparisonThresholdTest`, `AuthorVariantsExperimentsTest`, etc.
 
 **Integration (`edu.dedupendnote.integration.*`)**
 - **`integration/AbstractIntegrationTest`** — base for all `@SpringBootTest` tests; provides `@ActiveProfiles("test")`, `@MockitoBean SimpMessagingTemplate`, `baseDir`, `testDir`, `@BeforeAll` (log level → INFO), `@BeforeEach initTestDir()`. Subclasses override `initTestDir()` when they need a subdirectory.

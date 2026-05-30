@@ -187,7 +187,6 @@ public class ValidationService {
 		List<Logger> loggers = new ArrayList<>();
 		List<String> loggerNames = List.of(
 			"edu.dedupendnote.services.DeduplicationService",
-			"edu.dedupendnote.services.ComparisonService",
 			"edu.dedupendnote.services.DefaultAuthorsComparisonService",
 			"edu.dedupendnote.services.ValidationTests" // add this file because of trace on bibliographicItem year
 			);

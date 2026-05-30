@@ -80,4 +80,17 @@ public class DefaultPagesComparisonService implements PagesComparisonService {
         log.trace("- 1. DOIs and starting pages are NOT the same");
         return false;
     }
+
+    public static boolean compareSameDois(BibliographicItem r1, BibliographicItem r2, @Nullable Boolean isSameDois) {
+        if (Boolean.TRUE.equals(isSameDois)) {
+            if (log.isTraceEnabled()) {
+                log.trace("- 4. DOIs are the same (ISSNs and Journals are NOT compared)");
+            }
+            return true;
+        }
+        if (log.isTraceEnabled()) {
+            log.trace("- 4. DOIs are NOT the same: {} and {}", r1.getDois(), r2.getDois());
+        }
+        return false;
+    }
 }

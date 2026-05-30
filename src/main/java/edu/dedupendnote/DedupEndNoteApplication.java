@@ -12,6 +12,12 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.FileSystemUtils;
 
+import edu.dedupendnote.services.DefaultAuthorsComparisonService;
+import edu.dedupendnote.services.DefaultJournalComparisonService;
+import edu.dedupendnote.services.DefaultPagesComparisonService;
+import edu.dedupendnote.services.DefaultTitleComparisonService;
+import edu.dedupendnote.services.FieldComparators;
+
 import lombok.extern.slf4j.Slf4j;
 
 @Controller
@@ -32,6 +38,15 @@ public class DedupEndNoteApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(DedupEndNoteApplication.class, args);
 		log.info("DedupEndNote: the web server is reachable at http://localhost:9777");
+	}
+
+	@Bean
+	public FieldComparators fieldComparators() {
+		return new FieldComparators(
+				new DefaultAuthorsComparisonService(),
+				new DefaultTitleComparisonService(),
+				new DefaultJournalComparisonService(),
+				new DefaultPagesComparisonService());
 	}
 
 	@Bean
