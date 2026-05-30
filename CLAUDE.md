@@ -131,6 +131,8 @@ Test files follow a three-category taxonomy per field: **Normalization** (`Norma
 
 The split is enforced by folder. The Maven profiles in `pom.xml` use path-based filters: `unit-tests` (excludes `**/integration/**` and `**/validation/**`), `integration-tests` (includes only `**/integration/**/*Tests.java`), `validation-tests` (includes only `**/validation/**/*Tests.java`). Selecting the folder in VS Code's Test Explorer automatically runs only that category.
 
+There are a number of tests with expected errors. These tests are NOT disabled, but use an int EXPECTED_NUMBER_OF_ERRORS which is used in an assertion.
+
 ### Test profile
 
 `@ActiveProfiles("test")` on `AbstractIntegrationTest` activates the `test` profile for all integration and validation tests, loading `src/main/resources/application-test.properties`. Unit tests don't start Spring and get `baseDir` directly from `BaseTest` via `System.getProperty("user.home")`.

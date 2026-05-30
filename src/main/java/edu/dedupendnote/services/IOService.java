@@ -127,7 +127,7 @@ public class IOService {
 			"(^(Correction|Corrigendum|Erratum)( to (?=[A-Z])| to '|( to)?: ).*)|(.*(Correction|Corrigendum|Erratum)$)");
 	public static final Pattern SOURCE_PATTERN = Pattern.compile(".+(\\(vol \\d+\\D+\\d+\\D+\\d+\\D*\\))");
 	public static final Pattern COMMENT_PATTERN = Pattern.compile(
-			"(e)?Comment(|s|ary)\\b.*|.+[cC]omment(|s|ary)( from| on| to)?:? [A-Z'\"].+|.+[Cc]omment(|s|ary)|.+COMMENT");
+			"(e)?(Comment|COMMENT)(|s|S|ary)\\b.*|.+[cC]omment(|s|ary)( from| on| to)?:? ([A-Z'\"]|the).+|.+[Cc]omment(|s|ary)|.+COMMENT|.*[Ii]nvited [Cc]ommen.+");
 
 	/*
 	 * If field content starts with a comma (",") EndNote exports "[Fieldname]  -,", NOT "[Fieldname]  - ," (EndNote X9.3.3).
@@ -137,19 +137,15 @@ public class IOService {
 	 */
 	public static final Pattern RIS_LINE_PATTERN = Pattern.compile("(^[A-Z][A-Z0-9])( {2}-[ ,\\u00A0])(.*)$");
 
-	/*
-	 * readBibliographicItems: called in the first phase (before the comparison of bibliographicItems), includes normalization of data.
-	 * 
-	 * There are several public write... methods in this class which read the bibliographicItems:
-	 * - no / harldy any normalization
-	 * - result stored in a Map<String, String>
-	 */
 	private long countRecords(String fileName) throws IOException {
 		try (Stream<String> lines = Files.lines(Path.of(fileName))) {
 			return lines.filter(l -> l.startsWith("ER  - ")).count();
 		}
 	}
 
+	/*
+	 * readBibliographicItems: called in the first phase (before the comparison of bibliographicItems), includes normalization of data.
+	 */
 	public List<BibliographicItem> readBibliographicItems(String inputFileName, Consumer<String> progressReporter) {
 		return readBibliographicItems(inputFileName, progressReporter, false);
 	}
@@ -192,6 +188,11 @@ public class IOService {
 		} catch (IOException e) {
 			totalRecords = 0;
 		}
+		if (totalRecords == 0) {
+			throw new InvalidRisFileException("No EndNote records found in the the input file. "
+					+ "The input file is not an Export as RIS-file from an EndNote library!");
+		}
+
 		int lastPct = -1;
 
 		// Line starting with "TY - " triggers creation of record, line starting with
@@ -242,8 +243,8 @@ public class IOService {
 						pagesInputMap.put("SP", sp + "-" + fieldContent);
 						break;
 					case "ER":
-						if (bibliographicItem.getId() == null) {
-							bibliographicItem.setId(Integer.toString(missingId++));
+						if (bibliographicItem.getId() == 0) {
+							bibliographicItem.setId(missingId++);
 						}
 						if (bibliographicItem.isClinicalTrialGov()) {
 							bibliographicItem.getAuthors().clear();
@@ -283,7 +284,13 @@ public class IOService {
 										: bibliographicItem.getTitles().getFirst()));
 						break;
 					case "ID": // EndNote BibliographicItem number
-						bibliographicItem.setId(fieldContent);
+						try {
+							bibliographicItem.setId(Integer.parseInt(fieldContent));
+						} catch (NumberFormatException e) {
+							throw new InvalidRisFileException(
+									"The input file contains ID fields which are not numbers. "
+											+ "The input file is not an Export as RIS-file from an EndNote library!");
+						}
 						// log.debug("Read ID {}", fieldContent);
 						break;
 					case "J2": // Alternate journal
@@ -511,7 +518,7 @@ public class IOService {
 	}
 
 	public static void addNormalizedAuthor(String fieldContent, BibliographicItem bibliographicItem) {
-		AuthorRecord normalizedAuthor = NormalizationService.normalizeInputAuthors(fieldContent);
+		AuthorRecord normalizedAuthor = AuthorsNormalizationService.normalizeInputAuthors(fieldContent);
 		if (normalizedAuthor.author() != null) {
 			bibliographicItem.getAuthors().add(normalizedAuthor.author());
 			bibliographicItem.getAuthorsTransposed().add(normalizedAuthor.authorTransposed());
@@ -526,7 +533,7 @@ public class IOService {
 		if (fieldContent.toLowerCase().contains("cochrane")) {
 			bibliographicItem.setCochrane(true);
 		}
-		bibliographicItem.getJournals().addAll(NormalizationService.normalizeInputJournals(fieldContent, fieldName));
+		bibliographicItem.getJournals().addAll(JournalsNormalizationService.normalizeInputJournals(fieldContent, fieldName));
 	}
 
 	public static void addNormalizedPages(Map<String, String> pagesInputMap, BibliographicItem bibliographicItem) {
@@ -539,9 +546,7 @@ public class IOService {
 			}
 		}
 
-		String bibliographicItemId = (bibliographicItem.getId() == null ? "0" : bibliographicItem.getId());
-
-		PageRecord normalizedPages = NormalizationService.normalizeInputPages(pagesInputMap, bibliographicItemId);
+		PageRecord normalizedPages = PagesNormalizationService.normalizeInputPages(pagesInputMap, bibliographicItem.getId());
 		bibliographicItem.setPageStart(normalizedPages.pageStart());
 		bibliographicItem.setPagesOutput(normalizedPages.pagesOutput());
 		bibliographicItem.setSeveralPages(normalizedPages.isSeveralPages());
@@ -552,7 +557,7 @@ public class IOService {
 			bibliographicItem.getTitles().clear();
 			bibliographicItem.getTitles().add(fieldContent);
 		} else {
-			TitleRecord normalizedTitle = NormalizationService.normalizeInputTitles(fieldContent);
+			TitleRecord normalizedTitle = TitlesNormalizationService.normalizeInputTitles(fieldContent);
 			bibliographicItem.getTitles().addAll(normalizedTitle.titles());
 			if (normalizedTitle.originalTitle() != null) {
 				bibliographicItem.setTitle(normalizedTitle.originalTitle());
@@ -609,8 +614,8 @@ public class IOService {
 		List<BibliographicItem> bibliographicItemsToKeep = bibliographicItems.stream().filter(BibliographicItem::isKeptBibliographicItem).toList();
 		log.debug("Publications to be kept: {}", bibliographicItemsToKeep.size());
 
-		Map<String, BibliographicItem> recordIdMap = bibliographicItems.stream()
-			.filter(p -> p.getId() != null && !p.getId().startsWith("-"))
+		Map<Integer, BibliographicItem> recordIdMap = bibliographicItems.stream()
+			.filter(p -> p.getId() > 0)
 			.collect(Collectors.toMap(BibliographicItem::getId, Function.identity()));
 
 		int numberWritten = 0;
@@ -629,7 +634,7 @@ public class IOService {
 			}
 			String line;
 			BibliographicItem bibliographicItem = null;
-			Integer phantomId = 0;
+			int phantomId = 0;
 			String realId = null;
 
 			while ((line = br.readLine()) != null) {
@@ -645,10 +650,10 @@ public class IOService {
 						map.put(fieldName, fieldContent);
 						phantomId++;
 						if (realId == null) {
-							bibliographicItem = recordIdMap.get(phantomId.toString());
+							bibliographicItem = recordIdMap.get(phantomId);
 							if (bibliographicItem != null) {
-								bibliographicItem.setId(phantomId.toString());
-								map.put("ID", phantomId.toString());
+								bibliographicItem.setId(phantomId);
+								map.put("ID", Integer.toString(phantomId));
 							}
 						}
 						if (bibliographicItem != null && bibliographicItem.isKeptBibliographicItem()) {
@@ -660,8 +665,8 @@ public class IOService {
 						break;
 					case "ID": // EndNote BibliographicItem number
 						map.put(fieldName, fieldContent);
-						realId = line.substring(6);
-						bibliographicItem = recordIdMap.get(realId);
+						realId = fieldContent;
+						bibliographicItem = recordIdMap.get(Integer.parseInt(realId));
 						break;
 					default:
 						if (map.containsKey(fieldName)) {
@@ -696,8 +701,8 @@ public class IOService {
 		List<BibliographicItem> bibliographicItemsToKeep = bibliographicItems.stream().filter(BibliographicItem::isKeptBibliographicItem).toList();
 		log.debug("Publications to be kept: {}", bibliographicItemsToKeep.size());
 
-		Map<String, BibliographicItem> recordIdMap = bibliographicItems.stream()
-			.filter(p -> p.getId() != null && !p.getId().startsWith("-"))
+		Map<Integer, BibliographicItem> recordIdMap = bibliographicItems.stream()
+			.filter(p -> p.getId() > 0)
 			.collect(Collectors.toMap(BibliographicItem::getId, Function.identity()));
 
 		int numberWritten = 0;
@@ -715,7 +720,7 @@ public class IOService {
 			}
 			String line;
 			BibliographicItem bibliographicItem = null;
-			Integer phantomId = 0;
+			int phantomId = 0;
 			String realId = null;
 
 			while ((line = br.readLine()) != null) {
@@ -729,11 +734,11 @@ public class IOService {
 					case "ER":
 						phantomId++;
 						if (realId == null) {
-							bibliographicItem = recordIdMap.get(phantomId.toString());
+							bibliographicItem = recordIdMap.get(phantomId);
 							if (bibliographicItem != null) {
-								bibliographicItem.setId(phantomId.toString());
+								bibliographicItem.setId(phantomId);
 							}
-							map.put("ID", phantomId.toString());
+							map.put("ID", Integer.toString(phantomId));
 						}
 						if (bibliographicItem != null && bibliographicItem.isKeptBibliographicItem()) {
 							map.put(fieldName, fieldContent);
@@ -749,7 +754,7 @@ public class IOService {
 					case "ID": // EndNote BibliographicItem number
 						map.put(fieldName, fieldContent);
 						realId = fieldContent;
-						bibliographicItem = recordIdMap.get(realId);
+						bibliographicItem = recordIdMap.get(Integer.parseInt(realId));
 						break;
 					case "LB":
 						break; // to ensure that the present Label is not used.
@@ -820,7 +825,7 @@ public class IOService {
 				map.remove("AU");
 			}
 			if (!map.containsKey("PY") && bibliographicItem.getPublicationYear() != 0) {
-				map.put("PY", bibliographicItem.getPublicationYear().toString());
+				map.put("PY", Integer.toString(bibliographicItem.getPublicationYear()));
 			}
 			if (!map.containsKey("T2")) {
 				if (map.containsKey("J2")) {

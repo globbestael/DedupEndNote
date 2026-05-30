@@ -11,7 +11,8 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import edu.dedupendnote.services.JournalThresholds;
-import edu.dedupendnote.services.NormalizationService;
+import edu.dedupendnote.services.JournalsNormalizationService;
+import edu.dedupendnote.services.TitlesNormalizationService;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -25,8 +26,8 @@ class JWSimilarityJournalTest {
 	@ParameterizedTest(name = "{index}: jaroWinkler({0}, {1})")
 	@MethodSource("positiveArgumentProvider")
 	void jwPositiveTest(String input1, String input2) {
-		Double similarity = jws.apply(NormalizationService.normalizeJournal(input1),
-				NormalizationService.normalizeJournal(input2));
+		Double similarity = jws.apply(JournalsNormalizationService.normalizeJournal(input1),
+				JournalsNormalizationService.normalizeJournal(input2));
 		assertThat(similarity).isGreaterThan(JournalThresholds.DEFAULT.noReply());
 	}
 
@@ -37,10 +38,10 @@ class JWSimilarityJournalTest {
 	@ParameterizedTest(name = "{index}: jaroWinkler({0}, {1})")
 	@MethodSource("negativeArgumentProvider")
 	void jwNegativeTest(String input1, String input2) {
-		Double similarity = jws.apply(NormalizationService.normalizeJournal(input1),
-				NormalizationService.normalizeJournal(input2));
+		Double similarity = jws.apply(JournalsNormalizationService.normalizeJournal(input1),
+				JournalsNormalizationService.normalizeJournal(input2));
 		System.err.println("- 1: %s\n- 2: %s\n- 3: %s\n- 4: %s\n".formatted(input1,
-				NormalizationService.normalizeTitle(input1), input2, NormalizationService.normalizeTitle(input2)));
+				TitlesNormalizationService.normalizeTitle(input1), input2, TitlesNormalizationService.normalizeTitle(input2)));
 		assertThat(similarity).isLessThanOrEqualTo(JournalThresholds.DEFAULT.noReply());
 	}
 

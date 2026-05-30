@@ -193,8 +193,8 @@ l						 * 		V 		W 		X
 					} else {
 						// log.debug("=== Both pivot {} and pub {} get label {} from the publicationId of the pivot {}",
 						// pivot.getId(), p.getId(), pivot.getId(), pivot.getId());
-						pivot.setLabel(pivot.getId());
-						p.setLabel(pivot.getId());
+						pivot.setLabel(String.valueOf(pivot.getId()));
+						p.setLabel(String.valueOf(pivot.getId()));
 					}
 
 					if (p.isReply()) {
@@ -224,19 +224,16 @@ l						 * 		V 		W 		X
 		return !bibliographicItems.stream().map(BibliographicItem::getId).allMatch(new HashSet<>()::add);
 	}
 
-	private boolean containsOnlyBibliographicItemsWithoutPublicationYear(List<BibliographicItem> bibliographicItems) {
-		return bibliographicItems.stream().filter(r -> r.getPublicationYear() == 0).count() == bibliographicItems
-				.size();
-	}
-
-	private boolean containsBibliographicItemsWithoutId(List<BibliographicItem> bibliographicItems) {
-		return bibliographicItems.stream().filter(r -> r.getId() == null).count() > 0L;
-	}
-
 	public String deduplicateOneFile(String inputFileName, String outputFileName, DeduplicationMode mode,
 			Consumer<String> progressReporter) {
 		progressReporter.accept("Reading file " + inputFileName);
-		List<BibliographicItem> bibliographicItems = ioService.readBibliographicItems(inputFileName, progressReporter);
+		List<BibliographicItem> bibliographicItems;
+		try {
+			bibliographicItems = ioService.readBibliographicItems(inputFileName, progressReporter);
+		} catch (InvalidRisFileException e) {
+			progressReporter.accept(e.getErrorMessage());
+			return e.getErrorMessage();
+		}
 
 		String s = doSanityChecks(bibliographicItems, inputFileName);
 		if (s != null) {
@@ -272,8 +269,13 @@ l						 * 		V 		W 		X
 		// read the old bibliographicItems and mark them as present, then add the new bibliographicItems
 		log.info("oldInputFileName: {}", oldInputFileName);
 		log.info("newInputFileName: {}", newInputFileName);
-		List<BibliographicItem> bibliographicItems = ioService.readBibliographicItems(oldInputFileName,
-				progressReporter);
+		List<BibliographicItem> bibliographicItems;
+		try {
+			bibliographicItems = ioService.readBibliographicItems(oldInputFileName, progressReporter);
+		} catch (InvalidRisFileException e) {
+			progressReporter.accept(e.getErrorMessage());
+			return e.getErrorMessage();
+		}
 
 		String s = doSanityChecks(bibliographicItems, oldInputFileName);
 		if (s != null) {
@@ -291,12 +293,17 @@ l						 * 		V 		W 		X
 		 * can be distinguished from bibliographicItems which have duplicates in the second file.
 		 */
 		bibliographicItems.forEach(r -> {
-			r.setId("-" + r.getId());
+			r.setId(-r.getId());
 			r.setPresentInOldFile(true);
 		});
 
-		List<BibliographicItem> newBibliographicItems = ioService.readBibliographicItems(newInputFileName,
-				progressReporter);
+		List<BibliographicItem> newBibliographicItems;
+		try {
+			newBibliographicItems = ioService.readBibliographicItems(newInputFileName, progressReporter);
+		} catch (InvalidRisFileException e) {
+			progressReporter.accept(e.getErrorMessage());
+			return e.getErrorMessage();
+		}
 		s = doSanityChecks(newBibliographicItems, newInputFileName);
 		if (s != null) {
 			progressReporter.accept(s);
@@ -334,14 +341,14 @@ l						 * 		V 		W 		X
 	}
 
 	public @Nullable String doSanityChecks(List<BibliographicItem> bibliographicItems, String fileName) {
-		if (containsBibliographicItemsWithoutId(bibliographicItems)) {
-			return "ERROR: The input file " + fileName
-					+ " contains bibliographic items without IDs. The input file is not an Export as RIS-file from an EndNote library!";
-		}
-		if (containsOnlyBibliographicItemsWithoutPublicationYear(bibliographicItems)) {
-			return "ERROR: All bibliographic items of the input file " + fileName
-					+ " have no publication year. The input file is not an Export as RIS-file from an EndNote library!";
-		}
+		/*
+		 * "containsBibliographicItemsWithoutId" check removed: id is now a primitive int.
+		 * IOService always assigns an id >= 1; InvalidRisFileException is thrown for non-numeric ID fields.
+		 *
+		 * "containsOnlyBibliographicItemsWithoutPublicationYear" check removed: a dataset where
+		 * every record has publicationYear == 0 (no PY field, or year < 1850) is acceptable —
+		 * year-bucketing simply groups everything in the year-0 bucket and comparisons still run.
+		 */
 		if (containsDuplicateIds(bibliographicItems)) {
 			return "ERROR: The IDs of the bibliographic items of input file " + fileName
 					+ " are not unique. The input file is not an Export as RIS-file from 1 EndNote library!";

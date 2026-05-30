@@ -66,8 +66,8 @@ public class RecordDBService {
 	public List<BibliographicItemDB> convertToRecordDB(List<BibliographicItem> bibliographicItems, String inputFileName) {
 		boolean hasBom = UtilitiesService.detectBom(inputFileName);
 
-		Map<String, BibliographicItem> recordIdMap = bibliographicItems.stream()
-				.filter(r -> r.getId() != null && !r.getId().startsWith("-"))
+		Map<Integer, BibliographicItem> recordIdMap = bibliographicItems.stream()
+				.filter(r -> r.getId() > 0)
 				.collect(Collectors.toMap(BibliographicItem::getId, Function.identity()));
 
 		List<BibliographicItemDB> publicationDBs = new ArrayList<>();
@@ -107,7 +107,7 @@ public class RecordDBService {
 						if (realId == null) {
 							publicationDB.setId(phantomId);
 						}
-						bibliographicItem = recordIdMap.get(String.valueOf(publicationDB.getId()));
+						bibliographicItem = recordIdMap.get(publicationDB.getId());
 						if (bibliographicItem != null) {
 							if (bibliographicItem.getLabel() != null) {
 								publicationDB.setDedupid(Integer.valueOf(bibliographicItem.getLabel()));

@@ -31,8 +31,12 @@ public class BibliographicItem {
 
 	private Set<String> dois = new HashSet<>();
 
-	@Nullable
-	private String id;
+	/**
+		EndNote has a numeric ID field (sequential integer).
+		Zotero has no ID field, but an internel Item key field (-character string): see https://forums.zotero.org/discussion/106183/zotero-item-id-numbers
+		There is also a Zotero Internal Item ID (sequential integer), but this is strictly for local databases
+	 */
+	private int id;
 
 	private Set<String> isbns = new HashSet<>();
 	private Set<String> issns = new HashSet<>();
@@ -61,7 +65,7 @@ public class BibliographicItem {
 	@Nullable
 	private String pagesInput = null;
 
-	private Integer publicationYear = 0;
+	private int publicationYear;
 
 	@Nullable
 	private String referenceType;

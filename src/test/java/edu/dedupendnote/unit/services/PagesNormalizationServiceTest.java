@@ -12,20 +12,20 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import edu.dedupendnote.services.IOService;
-import edu.dedupendnote.services.NormalizationService;
+import edu.dedupendnote.services.PagesNormalizationService;
 import edu.dedupendnote.domain.PageRecord;
 import edu.dedupendnote.domain.BibliographicItem;
 
-class NormalizationServicePagesTest {
+class PagesNormalizationServiceTest {
 
 	/*
-	 * Tests NormalizationService.normalizeInputPages for a single SP-field input.
+	 * Tests PagesNormalizationService.normalizeInputPages for a single SP-field input.
 	 * Complements normalizePagesTest_new which covers field selection (C7/SE/SP) via IOService.addNormalizedPages.
 	 */
 	@ParameterizedTest(name = "{index}: parsePages({0})=({1},{2},{3})")
 	@MethodSource("parsePagesArgumentProvider")
 	void parsePagesTest(String pages, String pageStart, String pagesOutput, boolean severalPages) {
-		PageRecord normalizedPages = NormalizationService.normalizeInputPages(Map.of("SP", pages), "1");
+		PageRecord normalizedPages = PagesNormalizationService.normalizeInputPages(Map.of("SP", pages), 1);
 
 		SoftAssertions.assertSoftly(softAssertions -> {
 			softAssertions.assertThat(normalizedPages.pageStart()).as("PageStart comparison for '%s'", pages)
@@ -39,7 +39,7 @@ class NormalizationServicePagesTest {
 
 	/*
 	 * Tests IOService.addNormalizedPages: the field-selection logic that chooses which
-	 * of C7, SE, SP to use before calling NormalizationService.normalizeInputPages.
+	 * of C7, SE, SP to use before calling PagesNormalizationService.normalizeInputPages.
 	 *
 	 * See also issue #50: https://github.com/globbestael/DedupEndNote/issues/50
 	 */

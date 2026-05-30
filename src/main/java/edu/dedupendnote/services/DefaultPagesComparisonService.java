@@ -25,7 +25,7 @@ public class DefaultPagesComparisonService implements PagesComparisonService {
         }
 
         if (bothCochrane) {
-            if (r1.getPublicationYear().equals(r2.getPublicationYear())) {
+            if (r1.getPublicationYear() == r2.getPublicationYear()) {
                 if (sufficientDois) {
                     if (UtilitiesService.setsContainSameString(dois1, dois2)) {
                         log.trace("- 1. DOIs are the same for Cochrane");

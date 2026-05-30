@@ -15,16 +15,16 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import edu.dedupendnote.services.IOService;
-import edu.dedupendnote.services.NormalizationService;
+import edu.dedupendnote.services.TitlesNormalizationService;
 import edu.dedupendnote.domain.BibliographicItem;
 import edu.dedupendnote.domain.TitleRecord;
 
-class NormalizationServiceTitleTest {
+class TitlesNormalizationServiceTest {
 
 	@ParameterizedTest(name = "[{index}] Input: \"{0}\" -> No Title")
 	@ValueSource(strings = { "not available", "[not available]", "untitled" })
 	void normalizeInputTitles_whenNoTitle_shouldReturnEmpty(String input) {
-		TitleRecord result = NormalizationService.normalizeInputTitles(input);
+		TitleRecord result = TitlesNormalizationService.normalizeInputTitles(input);
 
 		assertThat(result.originalTitle()).isNull();
 		assertThat(result.titles()).isEmpty();
@@ -33,7 +33,7 @@ class NormalizationServiceTitleTest {
 	@ParameterizedTest(name = "[{index}] Input: \"{0}\"")
 	@MethodSource("titlesProviderRetraction")
 	void normalizeInputTitles_withRetraction_shouldExtractOriginalTitle(String input, String expectedNormalized) {
-		TitleRecord result = NormalizationService.normalizeInputTitles(input);
+		TitleRecord result = TitlesNormalizationService.normalizeInputTitles(input);
 
 		assertThat(result.originalTitle()).isEqualTo(input);
 		assertThat(result.titles()).containsExactly(expectedNormalized);
@@ -42,7 +42,7 @@ class NormalizationServiceTitleTest {
 	@ParameterizedTest(name = "[{index}] Input: \"{0}\"")
 	@MethodSource("titlesProviderMultiple")
 	void normalizeInputTitles_withMultipleResults_shouldCreateVariants(String input, List<String> expectedTitles) {
-		TitleRecord result = NormalizationService.normalizeInputTitles(input);
+		TitleRecord result = TitlesNormalizationService.normalizeInputTitles(input);
 
 		SoftAssertions softAssertions = new SoftAssertions();
 		softAssertions.assertThat(result.originalTitle()).isNull();
@@ -53,18 +53,18 @@ class NormalizationServiceTitleTest {
 	static Stream<Arguments> titlesProviderMultiple() {
 		// @formatter:off
 		return Stream.of(
-			// First with 1 result title 
+			// First with 1 result title
 			arguments(
-				"This is the main title (Reprinted from somewhere)", 
+				"This is the main title (Reprinted from somewhere)",
 				List.of("this is the main title")),
 			arguments(
-				"Reprint of: The original article title", 
+				"Reprint of: The original article title",
 				List.of("original article title")),
 			arguments(
-				"A study on Product(R) and its effects", 
+				"A study on Product(R) and its effects",
 				List.of("study on product and its effects")),
 			arguments(
-				"Editorial: A discussion on recent events", 
+				"Editorial: A discussion on recent events",
 				List.of("discussion on recent events")),
 			arguments(
 				"A \"fancy\" title with <HTML> tags and (parentheses) and some Japanese text (Japanese).",
@@ -73,7 +73,7 @@ class NormalizationServiceTitleTest {
 			arguments(
 				"10 things you should know about testing",
 				List.of(
-					"10 things you should know about testing", 
+					"10 things you should know about testing",
 					"things you should know about testing")),
 			arguments(
 				"This is a very long title that is definitely more than fifty characters long: and this is a very long subtitle that is also more than fifty characters long.",
@@ -87,11 +87,11 @@ class NormalizationServiceTitleTest {
 					"comparing a vs b is a very long title that is definitely more than fifty characters long and this is a very long subtitle that is also more than fifty characters long",
 					"comparing a vs b is a very long title that is definitely more than fifty characters long",
 					"and this is a very long subtitle that is also more than fifty characters long")),
-			arguments( 
+			arguments(
 				"Restructuring consciousness: The psychedelic state in light of integrated information theory",
 				List.of(
 					"restructuring consciousness the psychedelic state in light of integrated information theory",
-					"restructuring consciousness", 
+					"restructuring consciousness",
 					"psychedelic state in light of integrated information theory")),
 			arguments( // hyphen between letters dioes NOT split the title
 				"Restructuring consciousness-The psychedelic state in light of integrated information theory",
@@ -131,7 +131,7 @@ class NormalizationServiceTitleTest {
 	@ParameterizedTest(name = "{index}: normalizeTitle({0})={1}")
 	@MethodSource("normalizeTitleArgumentProvider")
 	void normalizeTitleTest(String input, String expected) {
-		String result = NormalizationService.normalizeTitle(input);
+		String result = TitlesNormalizationService.normalizeTitle(input);
 		assertThat(result).isEqualTo(expected);
 	}
 

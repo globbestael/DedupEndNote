@@ -588,7 +588,7 @@ class ValidationTests extends AbstractIntegrationTest {
 
 	@Disabled("Only needed for initialisation of TRUTH file")
 	@Test
-	private void createRisWithTRUTH(String inputFileName, String truthFileName, String outputFileName) throws IOException {
+	void createRisWithTRUTH(String inputFileName, String truthFileName, String outputFileName) throws IOException {
 		List<BibliographicItemDB> truthRecords = validationService.readTruthFile(truthFileName);
 		ioService.writeRisWithTRUTH(truthRecords, inputFileName, outputFileName);
 	}
