@@ -557,7 +557,7 @@ public class IOService {
 			bibliographicItem.getTitles().clear();
 			bibliographicItem.getTitles().add(fieldContent);
 		} else {
-			TitleRecord normalizedTitle = NormalizationService.normalizeInputTitles(fieldContent);
+			TitleRecord normalizedTitle = TitlesNormalizationService.normalizeInputTitles(fieldContent);
 			bibliographicItem.getTitles().addAll(normalizedTitle.titles());
 			if (normalizedTitle.originalTitle() != null) {
 				bibliographicItem.setTitle(normalizedTitle.originalTitle());
