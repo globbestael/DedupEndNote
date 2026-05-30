@@ -39,6 +39,13 @@
                             </li>
                             <li>Add <code>.gitattributes</code> to normalise line endings; fix stray
                                 UTF-8 BOM characters in Java source files</li>
+                            <li>Change <code>BibliographicItem.id</code> and <code>publicationYear</code>
+                                from boxed <code>Integer</code> to primitive <code>int</code></li>
+                            <li>Extract per-domain normalization out of <code>NormalizationService</code>
+                                into <code>PagesNormalizationService</code>,
+                                <code>JournalsNormalizationService</code>,
+                                <code>TitlesNormalizationService</code>, and
+                                <code>AuthorsNormalizationService</code></li>
                         </ul>
                     </li>
                 </ul>
