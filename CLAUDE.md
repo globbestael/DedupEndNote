@@ -81,10 +81,11 @@ DedupEndNote is a Spring Boot 4.0 / Java 21 web app that deduplicates bibliograp
 ```
 Upload RIS file(s)
   → DeduplicationService (virtual thread)
-    → IOService.readBibliographicItems()   — parse + normalize all fields
-    → ComparisonService              — O(n²) pair comparison, year-bucketed
-    → DeduplicationService           — mark/remove duplicates, enrich kept records
-    → IOService.writeOutput()        — write result RIS file
+    → BibliographicItemReader.readBibliographicItems()  — parse + normalize all fields
+    → DeduplicationService.compareSet()                 — O(n²) pair comparison, year-bucketed
+        → FieldComparators → Default{Authors/Title/Journal/Pages}ComparisonService
+    → EnrichmentService.enrich()                        — Remove Mode only
+    → BibliographicItemWriter.writeOutput()             — write result RIS file
   → WebSocket progress messages → client
   → User downloads result
 ```
