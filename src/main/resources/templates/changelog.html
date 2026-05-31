@@ -46,6 +46,16 @@
                                 <code>JournalsNormalizationService</code>,
                                 <code>TitlesNormalizationService</code>, and
                                 <code>AuthorsNormalizationService</code></li>
+                            <li>Split <code>IOService</code> into <code>BibliographicItemReader</code>
+                                and <code>BibliographicItemWriter</code></li>
+                            <li>Extract <code>EnrichmentService</code> from
+                                <code>DeduplicationService</code></li>
+                            <li>Delete <code>ComparisonService</code> pass-through; introduce
+                                <code>FieldComparators</code> record bundling the four per-field
+                                comparison services</li>
+                            <li>Move regex patterns from <code>NormPatterns</code> into the
+                                normalization services that own them; delete
+                                <code>NormPatterns</code></li>
                         </ul>
                     </li>
                 </ul>
