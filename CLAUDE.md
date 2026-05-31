@@ -49,7 +49,7 @@ DedupEndNote is a Spring Boot 4.0 / Java 21 web app that deduplicates bibliograp
 
 ### Key packages
 - `controllers/` — HTTP endpoints; file upload and dedup triggers; uses virtual threads (Java 21) for concurrent dedup runs; creates the `Consumer<String>` that routes progress messages to WebSocket
-- `domain/` — `BibliographicItem` (core model; domain term: Bibliographic Item), `BibliographicItemDB` (in-memory store), `DeduplicationMode` (enum: `REMOVE` / `MARK`), `NormPatterns` (50+ compiled regex patterns)
+- `domain/` — `BibliographicItem` (core model; domain term: Bibliographic Item), `BibliographicItemDB` (in-memory store), `DeduplicationMode` (enum: `REMOVE` / `MARK`)
 - `services/` — business logic (see below)
 
 ### Services and their responsibilities
@@ -60,7 +60,11 @@ DedupEndNote is a Spring Boot 4.0 / Java 21 web app that deduplicates bibliograp
 | `BibliographicItemReader` | ~560 | Parses RIS files into `BibliographicItem` objects; coordinates field Normalization during read; hosts `addNormalized*` static helpers used by test fixtures |
 | `BibliographicItemWriter` | ~220 | Writes deduplicated (Remove Mode) and marked (Mark Mode) RIS output; re-reads original input to preserve field order |
 | `EnrichmentService` | ~110 | Post-dedup enrichment (Remove Mode only): merges DOIs, fills missing year/pages, replaces Reply/ClinicalTrials.gov titles, normalises Cochrane page IDs |
-| `NormalizationService` | ~991 | Normalizes authors, titles, DOIs, pages, journals |
+| `NormalizationService` | ~180 | Shared normalization utilities: `normalizeToBasicLatin`, `normalizeHyphensAndWhitespace`, DOI/ISSN/year parsing; each method called from `BibliographicItemReader` and the per-domain normalization services |
+| `AuthorsNormalizationService` | — | Normalizes author strings into last-name + initials; handles transposed names and group-author detection |
+| `TitlesNormalizationService` | — | Normalizes title strings; handles retractions, reprints, subtitles, HTML tags, punctuation |
+| `JournalsNormalizationService` | — | Normalizes journal names; handles abbreviations, language variants, supplement strings |
+| `PagesNormalizationService` | — | Normalizes page fields (SP/SE/C7); handles Roman numerals, page-range merging, e-pages |
 | `DefaultAuthorsComparisonService` | — | Jaro-Winkler author matching; thresholds injectable via `AuthorThresholds` record |
 | `DefaultTitleComparisonService` | — | JWS title matching; thresholds injectable via `TitleThresholds` record |
 | `DefaultJournalComparisonService` | — | Journal matching with abbreviation/initialism heuristics; thresholds injectable via `JournalThresholds` record; hosts static `compareIssns` |

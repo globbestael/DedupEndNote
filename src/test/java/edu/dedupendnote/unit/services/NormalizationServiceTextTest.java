@@ -14,7 +14,6 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import edu.dedupendnote.services.NormalizationService;
-import edu.dedupendnote.domain.NormPatterns;
 
 class NormalizationServiceTextTest {
 
@@ -144,7 +143,7 @@ class NormalizationServiceTextTest {
 	@Test
 	void whiteSpaceReplacement() {
 		String input = " a\u000Ca\u00A0a\u2000a";
-		String output = NormPatterns.UNUSUAL_WHITESPACE_PATTERN.matcher(input).replaceAll("A");
+		String output = NormalizationService.UNUSUAL_WHITESPACE_PATTERN.matcher(input).replaceAll("A");
 
 		assertThat(output).isEqualTo(" aAaAaAa");
 	}

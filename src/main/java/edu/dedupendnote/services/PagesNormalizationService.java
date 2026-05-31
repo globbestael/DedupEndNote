@@ -5,16 +5,46 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.jspecify.annotations.Nullable;
 
-import edu.dedupendnote.domain.NormPatterns;
 import edu.dedupendnote.domain.PageRecord;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class PagesNormalizationService {
+
+	/**
+	 * - "UNSP ..." (and variants) should be cleaned from the C7 field (WoS). Import may have changed UNSP" Into "Unsp".
+	 *   This replacement is now applied to ALL pages fields
+	 *
+	 * A previous version had as pattern: "(^(UNSP|Article)\\s*|; author.+$)" and comment
+	 * - "author..." (reply etc): delete rest of string
+	 * Is this not necessary any more because the nromailzation of pages uses all ranges, and picks the first Arabic/Roman one?
+	 */
+	private static final Pattern PAGES_ADDITIONS_PATTERN = Pattern.compile("^(UNSP|Article|ARTN)\\s*",
+			Pattern.CASE_INSENSITIVE);
+
+	/**
+	 * Pattern to replace pages "S6-97-s6-99" by "S697-s699"
+	 */
+	private static final Pattern PAGES_HYPHEN_MERGE_1_PATTERN = Pattern
+			.compile("(?<!\\d+)([a-zA-Z0-9]+)-(\\d+)-([a-zA-Z0-9]+)-(\\d+)");
+
+	/**
+	 * Pattern to replace pages "ii-218-ii-228" by "ii218-ii228", and "S-12" by "S12"
+	 */
+	private static final Pattern PAGES_HYPHEN_MERGE_2_PATTERN = Pattern.compile("(?<!\\d+)([a-zA-Z]+)-(\\d+)");
+
+	/**
+	 * English month names.
+	 *
+	 * If Pages contains a month name string (e.g. "01 June"), omit the whole pages
+	 */
+	private static final Pattern PAGES_MONTH_PATTERN = Pattern
+			.compile("\\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)");
 
 	public static PageRecord normalizeInputPages(Map<String, String> pagesInputMap, int bibliographicItemId) {
 		String rawC7 = pagesInputMap.get("C7");
@@ -298,7 +328,7 @@ public class PagesNormalizationService {
 
 	private static @Nullable String clearPagesIfMonth(@Nullable String pages) {
 		if (pages != null) {
-			Matcher matcher = NormPatterns.PAGES_MONTH_PATTERN.matcher(pages);
+			Matcher matcher = PAGES_MONTH_PATTERN.matcher(pages);
 			while (matcher.find()) {
 				pages = null;
 			}
@@ -310,13 +340,13 @@ public class PagesNormalizationService {
 		// Cochrane uses hyphen characters instead of minus
 		pages = pages.replaceAll("[\\u2010\\u00ad]", "-");
 
-		pages = NormPatterns.PAGES_ADDITIONS_PATTERN.matcher(pages).replaceAll("").strip();
+		pages = PAGES_ADDITIONS_PATTERN.matcher(pages).replaceAll("").strip();
 
 		// replace "S6-97-s6-99" by "S697-s699"
-		pages = NormPatterns.PAGES_HYPHEN_MERGE_1_PATTERN.matcher(pages).replaceAll("$1$2-$3$4");
+		pages = PAGES_HYPHEN_MERGE_1_PATTERN.matcher(pages).replaceAll("$1$2-$3$4");
 
 		// replace "ii-218-ii-228" by "ii218-ii228", and "S-12" by "S12"
-		pages = NormPatterns.PAGES_HYPHEN_MERGE_2_PATTERN.matcher(pages).replaceAll("$1$2");
+		pages = PAGES_HYPHEN_MERGE_2_PATTERN.matcher(pages).replaceAll("$1$2");
 
 		if (pages != null && pages.isBlank()) {
 			pages = null;

@@ -4,16 +4,28 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.springframework.util.StringUtils;
 
 import edu.dedupendnote.domain.AuthorRecord;
-import edu.dedupendnote.domain.NormPatterns;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class AuthorsNormalizationService {
+
+	/**
+	 * Several forms of "author" values which are removed for comparisons (anonymous, et al, group names, ...)
+	 */
+	private static final Pattern ANONYMOUS_OR_GROUPNAME_PATTERN = Pattern.compile(
+			"\\b(anonymous|No authorship, indicated|consortium|et al|grp|group|nct|study)\\b",
+			Pattern.CASE_INSENSITIVE);
+
+	private static final Pattern EXCEPT_CAPITALS_PATTERN = Pattern.compile("[^A-Z]");
+
+	private static final Pattern LAST_NAME_ADDITIONS_PATTERN = Pattern
+			.compile("^(.+)\\b(jr|sr|1st|2nd|3rd|ii|iii)\\b(.*)$", Pattern.CASE_INSENSITIVE);
 
 	// @formatter:off
 	/*
@@ -71,7 +83,7 @@ public class AuthorsNormalizationService {
 		String authorResult = null;
 
 		// skip "Anonymous", "et al" and group authors
-		Matcher matcher = NormPatterns.ANONYMOUS_OR_GROUPNAME_PATTERN.matcher(authorInput);
+		Matcher matcher = ANONYMOUS_OR_GROUPNAME_PATTERN.matcher(authorInput);
 		if (matcher.find()) {
 			return new AuthorRecord(null, null, false);
 		}
@@ -98,7 +110,7 @@ public class AuthorsNormalizationService {
 			List<String> lastNameParts = new ArrayList<>(Arrays.asList(lastNameParts2));
 			lastName = lastNameParts.stream().map(StringUtils::capitalize).collect(Collectors.joining(" "));
 		}
-		matcher = NormPatterns.LAST_NAME_ADDITIONS_PATTERN.matcher(lastName);
+		matcher = LAST_NAME_ADDITIONS_PATTERN.matcher(lastName);
 		if (matcher.find()) {
 			lastName = (matcher.group(1).strip() + " " + matcher.group(3).strip()).strip();
 			log.debug("new lastName: {}", lastName);
@@ -121,7 +133,7 @@ public class AuthorsNormalizationService {
 
 		// Reducing the first names to their initials, stripping everything but the initials, and leaving out the comma
 		// makes JWS higher for similar names and lower for different names.
-		String initials = NormPatterns.EXCEPT_CAPITALS_PATTERN.matcher(firstNames).replaceAll("");
+		String initials = EXCEPT_CAPITALS_PATTERN.matcher(firstNames).replaceAll("");
 		authorResult = lastName + " " + initials;
 
 		// @formatter:off

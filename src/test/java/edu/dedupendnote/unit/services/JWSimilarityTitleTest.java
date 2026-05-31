@@ -23,7 +23,7 @@ import edu.dedupendnote.services.BibliographicItemReader;
 import edu.dedupendnote.services.TitleThresholds;
 import edu.dedupendnote.unit.BaseTest;
 import edu.dedupendnote.domain.BibliographicItem;
-import edu.dedupendnote.domain.NormPatterns;
+import edu.dedupendnote.services.TitlesNormalizationService;
 
 class JWSimilarityTitleTest extends BaseTest {
 
@@ -440,7 +440,7 @@ class JWSimilarityTitleTest extends BaseTest {
 	void testBalanceBracesPattern() {
 		// https://stackoverflow.com/questions/47162098/is-it-possible-to-match-nested-brackets-with-a-regex-without-using-recursion-or/47162099#47162099
 		String s = "Severe deficiency of the specific von Willebrand factor-cleaving protease (ADAMTS 13) activity in a subgroup of children with atypical hemolytic uremic syndrome (vol 142, pg 310, 2003)";
-		Matcher matcher = NormPatterns.BALANCED_BRACES_PATTERN.matcher(s);
+		Matcher matcher = TitlesNormalizationService.BALANCED_BRACES_PATTERN.matcher(s);
 		List<String> expectedMatches = List.of("(ADAMTS 13)", "(vol 142, pg 310, 2003)");
 		List<String> foundMatches = new ArrayList<>();
 		while (matcher.find()) {
