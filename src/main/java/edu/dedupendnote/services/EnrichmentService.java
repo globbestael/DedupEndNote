@@ -1,5 +1,6 @@
 package edu.dedupendnote.services;
 
+import edu.dedupendnote.controllers.AppVersionAdvice;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -14,6 +15,12 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @Slf4j
 public class EnrichmentService {
+
+	private final AppVersionAdvice appVersionAdvice;
+
+	EnrichmentService(AppVersionAdvice appVersionAdvice) {
+		this.appVersionAdvice = appVersionAdvice;
+	}
 
 	public void enrich(List<BibliographicItem> bibliographicItems) {
 		log.debug("Start enrich");
@@ -32,8 +39,18 @@ public class EnrichmentService {
 				log.debug("Kept: {}: {}", bibliographicItemToKeep.getId(),
 						(bibliographicItemToKeep.getTitles().isEmpty() ? "(no titles found)"
 								: bibliographicItemToKeep.getTitles().getFirst()));
-				// TODO: test whether this could move to compareSet() — enrich() is only called in REMOVE mode, so setting it here is a no-op in MARK mode
-				// Don't set keptPublication in compareSet(): trouble when multiple duplicates and no bibliographicItem year
+				/*
+					It may look a bit strange to call setKeptBibliographicItem on the BibliographicItems in this
+					enrich function, but calling it in the compareSet function is wrong: it is a no-op in MARK mode,
+					and enrich is only called in REMOVE mode.
+				
+					This could be called before the call to enrich(), but the creation of the 
+						Map<String, List<BibliographicItem>> labelMaplabelMap
+					would then be duplicated.
+				
+					An older comment also said:
+					Don't set keptPublication in compareSet(): trouble when multiple duplicates and no bibliographicItem year
+				*/
 				bibliographicItemList.stream().forEach(r -> r.setKeptBibliographicItem(false));
 
 				// Reply and Retraction: replace the title with the longest title from the duplicates

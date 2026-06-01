@@ -45,17 +45,19 @@
                                 into <code>PagesNormalizationService</code>,
                                 <code>JournalsNormalizationService</code>,
                                 <code>TitlesNormalizationService</code>, and
-                                <code>AuthorsNormalizationService</code></li>
+                                <code>AuthorsNormalizationService</code>
+                            </li>
                             <li>Split <code>IOService</code> into <code>BibliographicItemReader</code>
                                 and <code>BibliographicItemWriter</code></li>
                             <li>Extract <code>EnrichmentService</code> from
-                                <code>DeduplicationService</code></li>
+                                <code>DeduplicationService</code>
+                            </li>
                             <li>Delete <code>ComparisonService</code> pass-through; introduce
                                 <code>FieldComparators</code> record bundling the four per-field
-                                comparison services</li>
+                                comparison services
+                            </li>
                             <li>Move regex patterns from <code>NormPatterns</code> into the
-                                normalization services that own them; delete
-                                <code>NormPatterns</code></li>
+                                normalization services that own them; delete <code>NormPatterns</code></li>
                             <li>Replace <code>docs/architecture.md</code> with a self-contained
                                 HTML document (<code>docs/architecture.html</code>) with interactive
                                 Mermaid diagrams and a visual service map</li>
