@@ -13,8 +13,8 @@ import edu.dedupendnote.domain.BibliographicItem;
 import edu.dedupendnote.services.DefaultJournalComparisonService;
 import edu.dedupendnote.services.NormalizationService;
 
-// See SimilarityJournalTest for a TODO on renaming Similarity*Test files.
-class SimilarityIssnTest {
+// TODO: compareIssns() is a static helper on DefaultJournalComparisonService; see DefaultJournalComparisonServiceTest for the companion compare() tests.
+class DefaultJournalComparisonServiceIssnTest {
 
 	/*
 	 * full comparison for normalised ISSNs/ISBNs: positive

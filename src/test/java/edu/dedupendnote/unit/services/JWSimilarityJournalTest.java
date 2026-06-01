@@ -15,6 +15,7 @@ import edu.dedupendnote.services.JournalsNormalizationService;
 import edu.dedupendnote.services.TitlesNormalizationService;
 import lombok.extern.slf4j.Slf4j;
 
+// TODO: For boolean compare() tests on DefaultJournalComparisonService, see DefaultJournalComparisonServiceTest.
 @Slf4j
 
 class JWSimilarityJournalTest {

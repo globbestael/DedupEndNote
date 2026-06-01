@@ -61,6 +61,15 @@
                             <li>Replace <code>docs/architecture.md</code> with a self-contained
                                 HTML document (<code>docs/architecture.html</code>) with interactive
                                 Mermaid diagrams and a visual service map</li>
+                            <li>Fix: remove accidentally injected <code>AppVersionAdvice</code>
+                                from <code>EnrichmentService</code> constructor (unused dependency)</li>
+                            <li>Rename unit test classes: <code>Similarity*Test</code> and matching
+                                <code>JWSimilarity*Test</code> classes renamed to
+                                <code>Default*ComparisonServiceTest</code> for boolean
+                                <code>compare()</code> tests; raw JWS-score tests retain the
+                                <code>JWSimilarity*Test</code> name; <code>JournalsBaseTest</code>
+                                absorbed into <code>DefaultJournalComparisonServiceTest</code> and
+                                deleted</li>
                         </ul>
                     </li>
                 </ul>

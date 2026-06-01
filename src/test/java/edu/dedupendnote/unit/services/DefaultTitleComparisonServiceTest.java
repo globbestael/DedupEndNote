@@ -13,8 +13,7 @@ import edu.dedupendnote.domain.BibliographicItem;
 import edu.dedupendnote.services.BibliographicItemReader;
 import edu.dedupendnote.services.DefaultTitleComparisonService;
 
-// See SimilarityJournalTest for a TODO on renaming Similarity*Test files.
-class SimilarityTitleTest {
+class DefaultTitleComparisonServiceTest {
 
 	/*
 	 * full comparison for normalized titles: positive

@@ -1,6 +1,5 @@
 package edu.dedupendnote.services;
 
-import edu.dedupendnote.controllers.AppVersionAdvice;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -15,12 +14,6 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @Slf4j
 public class EnrichmentService {
-
-	private final AppVersionAdvice appVersionAdvice;
-
-	EnrichmentService(AppVersionAdvice appVersionAdvice) {
-		this.appVersionAdvice = appVersionAdvice;
-	}
 
 	public void enrich(List<BibliographicItem> bibliographicItems) {
 		log.debug("Start enrich");

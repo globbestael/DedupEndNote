@@ -25,6 +25,7 @@ import edu.dedupendnote.unit.BaseTest;
 import edu.dedupendnote.domain.BibliographicItem;
 import edu.dedupendnote.services.TitlesNormalizationService;
 
+// TODO: For boolean compare() tests on DefaultTitleComparisonService, see DefaultTitleComparisonServiceTest.
 class JWSimilarityTitleTest extends BaseTest {
 
 	@ParameterizedTest(name = "{index}: jaroWinkler({0}, {1})={2}")
