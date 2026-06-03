@@ -47,9 +47,6 @@ class PathTraversalTests {
 			public boolean hasError(ClientHttpResponse response) {
 				return false;
 			}
-
-			// public void handleError(ClientHttpResponse response) {
-			// }
 		});
 	}
 

@@ -1,5 +1,6 @@
 package edu.dedupendnote.services;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -90,7 +91,8 @@ public class DeduplicationService {
 	 */
 	// @formatter:on
 
-	public DeduplicationService(FieldComparators fieldComparators, BibliographicItemReader bibliographicItemReader, BibliographicItemWriter bibliographicItemWriter, EnrichmentService enrichmentService) {
+	public DeduplicationService(FieldComparators fieldComparators, BibliographicItemReader bibliographicItemReader,
+			BibliographicItemWriter bibliographicItemWriter, EnrichmentService enrichmentService) {
 		this.bibliographicItemReader = bibliographicItemReader;
 		this.bibliographicItemWriter = bibliographicItemWriter;
 		this.fieldComparators = fieldComparators;
@@ -134,8 +136,8 @@ public class DeduplicationService {
 				if (log.isTraceEnabled()) {
 					log.trace("\nStarting comparison {} - {}", pivot.getId(), p.getId());
 				}
-				if (fieldComparators.pages().compare(p, pivot, map)
-						&& fieldComparators.authors().compare(p, pivot) && fieldComparators.titles().compare(p, pivot)
+				if (fieldComparators.pages().compare(p, pivot, map) && fieldComparators.authors().compare(p, pivot)
+						&& fieldComparators.titles().compare(p, pivot)
 						&& (DefaultPagesComparisonService.compareSameDois(p, pivot, map.get("isSameDois"))
 								|| DefaultJournalComparisonService.compareIssns(p, pivot, map.get("isSameDois"))
 								|| fieldComparators.journals().compare(p, pivot, map.get("isSameDois")))) {
@@ -260,8 +262,8 @@ l						 * 		V 		W 		X
 		progressReporter.accept("Enriching the " + bibliographicItems.size() + " deduplicated results");
 		enrichmentService.enrich(bibliographicItems);
 		progressReporter.accept("Saving the " + bibliographicItems.size() + " deduplicated results");
-		int numberWritten = bibliographicItemWriter.writeDeduplicatedBibliographicItems(bibliographicItems, inputFileName,
-				outputFileName);
+		int numberWritten = bibliographicItemWriter.writeDeduplicatedBibliographicItems(bibliographicItems,
+				inputFileName, outputFileName);
 		s = formatResultString(bibliographicItems.size(), numberWritten);
 		progressReporter.accept(s);
 
@@ -319,8 +321,8 @@ l						 * 		V 		W 		X
 		searchYearTwoFiles(bibliographicItems, progressReporter);
 
 		if (mode == DeduplicationMode.MARK) {
-			int numberWritten = bibliographicItemWriter.writeMarkedBibliographicItems(bibliographicItems, newInputFileName,
-					outputFileName);
+			int numberWritten = bibliographicItemWriter.writeMarkedBibliographicItems(bibliographicItems,
+					newInputFileName, outputFileName);
 			long numberLabeledBibliographicItems = bibliographicItems.stream()
 					.filter(r -> r.getLabel() != null && !r.isPresentInOldFile()).count();
 			s = "DONE: DedupEndNote has written %s bibliographic items with %d duplicates marked in the Label field."
@@ -336,8 +338,8 @@ l						 * 		V 		W 		X
 				.filter(r -> !r.isPresentInOldFile() && (r.getLabel() == null || !r.getLabel().startsWith("-")))
 				.toList();
 		log.error("Publications to write: {}", filteredBibliographicItems.size());
-		int numberWritten = bibliographicItemWriter.writeDeduplicatedBibliographicItems(filteredBibliographicItems, newInputFileName,
-				outputFileName);
+		int numberWritten = bibliographicItemWriter.writeDeduplicatedBibliographicItems(filteredBibliographicItems,
+				newInputFileName, outputFileName);
 		s = "DONE: DedupEndNote removed %d bibliographic items from the new set, and has written %d bibliographic items."
 				.formatted((newBibliographicItems.size() - numberWritten), numberWritten);
 		progressReporter.accept(s);
@@ -354,7 +356,7 @@ l						 * 		V 		W 		X
 		 * year-bucketing simply groups everything in the year-0 bucket and comparisons still run.
 		 */
 		if (containsDuplicateIds(bibliographicItems)) {
-			return "ERROR: The IDs of the bibliographic items of input file " + fileName
+			return "ERROR: The IDs of the bibliographic items of input file " + Path.of(fileName).getFileName()
 					+ " are not unique. The input file is not an Export as RIS-file from 1 EndNote library!";
 		}
 		return null;
