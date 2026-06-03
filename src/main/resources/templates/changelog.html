@@ -25,11 +25,30 @@
             <div class="col-8" data-bs-spy="scroll" data-bs-target="#navmenu">
                 <h1>DedupEndNote: Changelog</h1>
 
-                <h2 class="bg-success-subtle">1.1.7 (2026-XX-XX)</h2>
+                <h2 class="bg-success-subtle">1.1.7 (2026-06-03)</h2>
                 <ul>
                     <li>Bug fix: the Details page showed a hardcoded earliest publication year instead of
                         the actual value used by the application</li>
                     <li>Added a Glossary to the Details page</li>
+                    <li>Security:
+                        <ul>
+                            <li>Path traversal: uploaded and downloaded filenames are now validated to
+                                contain no path separators or parent-directory references; a crafted
+                                filename can no longer read or write files outside the upload directory
+                            </li>
+                            <li>DOM-based XSS: filenames and server messages are now inserted into the
+                                page as plain text instead of raw HTML, preventing a file named
+                                <code>&lt;script&gt;…&lt;/script&gt;.ris</code> from executing in the
+                                browser
+                            </li>
+                            <li>Error responses no longer echo the filename or Java exception class back
+                                to the client
+                            </li>
+                            <li>Dev profile: Actuator exposure restricted from <code>*</code> to
+                                <code>health,info</code>
+                            </li>
+                        </ul>
+                    </li>
                     <li>Internal:
                         <ul>
                             <li>Rename core class <code>Publication</code> → <code>BibliographicItem</code>

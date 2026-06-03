@@ -499,13 +499,11 @@ public class BibliographicItemReader {
 				}
 			}
 		} catch (IOException e) {
-			e.printStackTrace();
+			log.error("IO error reading file", e);
 		} catch (NumberFormatException e) {
-			log.error("In field {} with content {}: Number could not be parsed", fieldName, fieldContent);
-			e.printStackTrace();
+			log.error("In field {} with content {}: Number could not be parsed", fieldName, fieldContent, e);
 		} catch (Exception e) {
-			log.error("In field {} with content {}: other exception: {}", fieldName, fieldContent, e.getMessage());
-			e.printStackTrace();
+			log.error("In field {} with content {}: other exception", fieldName, fieldContent, e);
 		}
 		log.debug("Publications read: {}", bibliographicItems.size());
 		return bibliographicItems;

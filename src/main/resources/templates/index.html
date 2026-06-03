@@ -89,21 +89,21 @@
 						let message = JSON.parse(stompMessage.body).name
 						if (message.match("^DONE")) {
 							showProgress(0);
-							$('#results').html(message);
+							$('#results').text(message);
 							enableButton('#buttonResultFile');
 							markAsDone('#step2');
 							markAsActive('#step3');
 						} else if (message.match("^ERROR")) {
 							$('#results').removeClass('alert-warning');
 							$('#results').addClass('alert-danger');
-							$('#results').html(message);
+							$('#results').text(message);
 						} else if (message.match("^PROGRESS:")) {
 							var found = message.match(/^PROGRESS: (.+)$/);
 							var percentage = found[1];
 							showProgress(percentage);
 						} else {
 							console.log("DATA: " + message);
-							$('#results').html("<span>" + message + "</span>");
+							$('#results').html($('<span>').text(message));
 						}
 					});
 				});
@@ -133,7 +133,7 @@
 					$("#markModeResultFile").val($("input[name='markMode']").prop("checked"));
 					if (data.textStatus == "success") {
 						showProgress(0);
-						$('#results').html("<span>File " + data.files[0].name + " has been uploaded</span>");
+						$('#results').html($('<span>').text('File ' + data.files[0].name + ' has been uploaded'));
 						$('#fileName_display').text(data.files[0].name);
 						disableButton('#fileUpload1');
 						enableButton('#buttonStartDeduplication');
@@ -144,7 +144,7 @@
 				},
 				error: function (jqXHR, data, thrownError) {
 					var response = jQuery.parseJSON(jqXHR.responseText);
-					$('#results').html("<span>" + response.result + "</span>");
+					$('#results').html($('<span>').text(response.result));
 					$('#results').addClass('alert-danger');
 					$('#results').removeClass('alert-warning');
 				},
@@ -170,13 +170,13 @@
 					success: function (response) {
 						console.log("RESPONSE: " + response.result);
 						if (response.result.match("^DONE")) {
-							$('#results').html(response.result);
+							$('#results').text(response.result);
 						} else if (response.result.match("^ERROR")) {
 							$('#results').removeClass('alert-warning');
 							$('#results').addClass('alert-danger');
-							$('#results').html(response.result);
+							$('#results').text(response.result);
 						} else {
-							$('#results').html(response.result);
+							$('#results').text(response.result);
 						}
 					}
 				});

@@ -17,6 +17,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
 	@Override
 	public void registerStompEndpoints(StompEndpointRegistry registry) {
-		registry.addEndpoint("/gs-guide-websocket").withSockJS();
+		// App has no login; wildcard is intentional for a public no-auth tool
+		registry.addEndpoint("/gs-guide-websocket").setAllowedOriginPatterns("*").withSockJS();
 	}
 }

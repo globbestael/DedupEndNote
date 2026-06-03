@@ -1,6 +1,5 @@
 package edu.dedupendnote.controllers;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -78,15 +77,19 @@ public class DedupEndNoteController {
 			@RequestParam("markModeResultFile") boolean markMode, HttpServletResponse response) {
 		DeduplicationMode mode = DeduplicationMode.from(markMode);
 		String outputFileName = UtilitiesService.createOutputFileName(fileName, mode);
-
-		Path path = Path.of(uploadDir, outputFileName);
-		response.setContentType("text/plain");
-		response.addHeader("Content-Disposition", "attachment; filename=\"" + outputFileName + "\"");
 		try {
+			Path path = UtilitiesService.resolveInUploadDir(uploadDir, outputFileName);
+			String safeFileName = path.getFileName().toString().replaceAll("[\"\\r\\n]", "_");
+			response.setContentType("text/plain");
+			response.addHeader("Content-Disposition", "attachment; filename=\"" + safeFileName + "\"");
 			Files.copy(path, response.getOutputStream());
 			response.getOutputStream().flush();
+		} catch (IllegalArgumentException e) {
+			log.warn("Path traversal attempt in getResultFile: {}", e.getMessage());
+			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
 		} catch (IOException ex) {
-			ex.printStackTrace();
+			log.error("Error sending result file", ex);
+			response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 		}
 	}
 
@@ -115,10 +118,20 @@ public class DedupEndNoteController {
 	@PostMapping(value = "/startOneFile", produces = "application/json")
 	public ResponseEntity<String> startOneFile(@RequestParam("fileName_1") String inputFileName,
 			@RequestParam(required = false, defaultValue = "false") boolean markMode, @RequestParam String wssessionId)
-			throws Exception {
+			throws InterruptedException, ExecutionException {
 		DeduplicationMode mode = DeduplicationMode.from(markMode);
 		String outputFileName = UtilitiesService.createOutputFileName(inputFileName, mode);
 		String logPrefix = "1F" + (mode == DeduplicationMode.MARK ? "M" : "D");
+
+		Path inputPath;
+		Path outputPath;
+		try {
+			inputPath = UtilitiesService.resolveInUploadDir(uploadDir, inputFileName);
+			outputPath = UtilitiesService.resolveInUploadDir(uploadDir, outputFileName);
+		} catch (IllegalArgumentException e) {
+			log.warn("Path traversal attempt in startOneFile: {}", e.getMessage());
+			return ResponseEntity.badRequest().body("{\"result\": \"Invalid filename\"}");
+		}
 
 		Consumer<String> progressReporter = message -> simpMessagingTemplate
 				.convertAndSend("/topic/messages-" + wssessionId, new StompMessage(message));
@@ -126,11 +139,12 @@ public class DedupEndNoteController {
 			RequestAttributes requestAttributes = RequestContextHolder.currentRequestAttributes();
 			Future<String> future = executor.submit(() -> {
 				RequestContextHolder.setRequestAttributes(requestAttributes);
-				return deduplicationService.deduplicateOneFile(uploadDir + File.separator + inputFileName,
-						uploadDir + File.separator + outputFileName, mode, progressReporter);
+				return deduplicationService.deduplicateOneFile(inputPath.toString(), outputPath.toString(), mode,
+						progressReporter);
 			});
-			log.info("Writing to result: {}: {}", logPrefix, future.get());
-			return ResponseEntity.ok("{ \"result\": " + future.get());
+			String result = future.get();
+			log.info("Writing to result: {}: {}", logPrefix, result);
+			return ResponseEntity.ok("{ \"result\": " + result);
 		}
 	}
 
@@ -141,19 +155,31 @@ public class DedupEndNoteController {
 		DeduplicationMode mode = DeduplicationMode.from(markMode);
 		String logPrefix = "2F" + (mode == DeduplicationMode.MARK ? "M" : "D");
 
+		Path newFilePath;
+		Path oldFilePath;
+		Path outputPath;
+		try {
+			newFilePath = UtilitiesService.resolveInUploadDir(uploadDir, newFile);
+			oldFilePath = UtilitiesService.resolveInUploadDir(uploadDir, oldFile);
+			outputPath = UtilitiesService.resolveInUploadDir(uploadDir,
+					UtilitiesService.createOutputFileName(newFile, mode));
+		} catch (IllegalArgumentException e) {
+			log.warn("Path traversal attempt in startTwoFiles: {}", e.getMessage());
+			return ResponseEntity.badRequest().body("{\"result\": \"Invalid filename\"}");
+		}
+
 		Consumer<String> progressReporter = message -> simpMessagingTemplate
 				.convertAndSend("/topic/messages-" + wssessionId, new StompMessage(message));
 		try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
 			RequestAttributes requestAttributes = RequestContextHolder.currentRequestAttributes();
 			Future<String> future = executor.submit(() -> {
 				RequestContextHolder.setRequestAttributes(requestAttributes);
-				return deduplicationService.deduplicateTwoFiles(uploadDir + File.separator + newFile,
-						uploadDir + File.separator + oldFile,
-						uploadDir + File.separator + UtilitiesService.createOutputFileName(newFile, mode), mode,
-						progressReporter);
+				return deduplicationService.deduplicateTwoFiles(newFilePath.toString(), oldFilePath.toString(),
+						outputPath.toString(), mode, progressReporter);
 			});
-			log.info("Writing to result: {}: {}", logPrefix, future.get());
-			return ResponseEntity.ok("{ \"result\": " + future.get());
+			String result = future.get();
+			log.info("Writing to result: {}: {}", logPrefix, result);
+			return ResponseEntity.ok("{ \"result\": " + result);
 		}
 	}
 
@@ -170,27 +196,26 @@ public class DedupEndNoteController {
 	@PostMapping(value = "/uploadFile", produces = "application/json")
 	public ResponseEntity<String> uploadFile(@RequestParam MultipartFile file) {
 		if (file.isEmpty()) {
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
-					"{ \"result\": \"Failed to upload " + file.getOriginalFilename() + " because it was empty" + "\"}");
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"result\": \"Upload failed: file is empty\"}");
 		}
 		try {
-			Path path = Path.of(uploadDir, file.getOriginalFilename());
+			Path path = UtilitiesService.resolveInUploadDir(uploadDir, file.getOriginalFilename());
 			if (Files.exists(path, LinkOption.NOFOLLOW_LINKS)) {
 				Files.delete(path);
 			}
 			try (InputStream inputStream = file.getInputStream()) {
 				Files.copy(inputStream, path);
-				return ResponseEntity
-						.ok("{ \"result\": \"You successfully uploaded " + file.getOriginalFilename() + "\"}");
+				return ResponseEntity.ok("{\"result\": \"File uploaded successfully\"}");
 			}
+		} catch (IllegalArgumentException e) {
+			log.warn("Path traversal attempt in uploadFile: {}", e.getMessage());
+			return ResponseEntity.badRequest().body("{\"result\": \"Invalid filename\"}");
 		} catch (IOException e) {
-			e.printStackTrace();
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
-					"{ \"result\": \"Failed to upload " + file.getOriginalFilename() + " => " + e.getClass() + "\"}");
+			log.error("Error uploading file", e);
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"result\": \"Upload failed\"}");
 		} catch (RuntimeException e) {
-			log.error("RuntimeException met cause: {}", e.getCause());
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-					.body("{ \"result\": \"RuntimeException with cause " + e.getCause() + "\"}");
+			log.error("Unexpected error uploading file", e);
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"result\": \"Upload failed\"}");
 		}
 	}
 }

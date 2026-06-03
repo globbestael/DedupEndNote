@@ -3,18 +3,23 @@ package edu.dedupendnote.services;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Pattern;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import edu.dedupendnote.domain.DeduplicationMode;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
+@Slf4j
 public class UtilitiesService {
 
 	/*
@@ -34,15 +39,46 @@ public class UtilitiesService {
 			String line = br.readLine();
 			hasBom = line != null && line.startsWith("\uFEFF");
 		} catch (IOException e) {
-			e.printStackTrace();
+			log.error("Error detecting BOM in file {}", inputFileName, e);
 		}
 		return hasBom;
 	}
 
 	public static String createOutputFileName(String fileName, DeduplicationMode mode) {
 		String extension = StringUtils.getFilenameExtension(fileName);
-		return fileName.replaceAll("." + extension + "$",
+		if (extension == null || extension.isEmpty()) {
+			return fileName + (mode == DeduplicationMode.MARK ? "_mark" : "_deduplicated");
+		}
+		return fileName.replaceAll("\\." + Pattern.quote(extension) + "$",
 				(mode == DeduplicationMode.MARK ? "_mark." : "_deduplicated.") + extension);
+	}
+
+	/**
+	 * Resolves {@code userFileName} within {@code uploadDir}, rejecting any input that
+	 * contains path separators, parent-directory references, or is absolute.
+	 *
+	 * @throws IllegalArgumentException if the filename is null, empty, absolute, contains
+	 *     path separators, or is a directory reference ({@code ..} / {@code .})
+	 */
+	public static Path resolveInUploadDir(String uploadDir, @Nullable String userFileName) {
+		if (userFileName == null || userFileName.isEmpty()) {
+			throw new IllegalArgumentException("Filename must not be null or empty");
+		}
+		Path parsed = Path.of(userFileName);
+		if (parsed.isAbsolute() || parsed.getNameCount() != 1) {
+			throw new IllegalArgumentException(
+					"Filename must be a simple name with no path separators: " + userFileName);
+		}
+		String name = parsed.toString();
+		if (name.equals("..") || name.equals(".")) {
+			throw new IllegalArgumentException("Filename must not be a directory reference: " + userFileName);
+		}
+		Path base = Path.of(uploadDir).toAbsolutePath().normalize();
+		Path resolved = base.resolve(parsed).normalize();
+		if (!resolved.startsWith(base)) {
+			throw new IllegalArgumentException("Path traversal attempt rejected: " + userFileName);
+		}
+		return resolved;
 	}
 
 	/*

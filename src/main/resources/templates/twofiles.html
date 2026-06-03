@@ -91,20 +91,20 @@
 						message = JSON.parse(stompMessage.body).name
 						if (message.match("^DONE")) {
 							showProgress(0);
-							$('#results').html(message);
+							$('#results').text(message);
 							enableButton('#buttonResultFile');
 							markAsDone('#step2');
 							markAsActive('#step3');
 						} else if (message.match("^ERROR")) {
 							$('#results').removeClass('alert-warning');
 							$('#results').addClass('alert-danger');
-							$('#results').html(message);
+							$('#results').text(message);
 						} else if (message.match("^PROGRESS:")) {
 							var found = message.match(/^PROGRESS: (.+)$/);
 							var percentage = found[1];
 							showProgress(percentage);
 						} else {
-							$('#results').html("<span>" + message + "</span>");
+							$('#results').html($('<span>').text(message));
 						}
 					});
 				});
@@ -125,14 +125,14 @@
 				done: function (e, data) {
 					if (data.textStatus == "success") {
 						if (data.fileInput[0].id == 'fileUpload1') {
-							$('#results').html("<span>File " + data.files[0].name + " has been uploaded. Waiting for file with NEW bibliographic items</span>");
+							$('#results').html($('<span>').text('File ' + data.files[0].name + ' has been uploaded. Waiting for file with NEW bibliographic items'));
 							$('#fileName_old_display').text(data.files[0].name);
 							disableButton('#fileUpload1');
 							enableButton('#fileUpload2');
 							markAsDone('#step1a');
 							markAsActive('#step1b');
 						} else {
-							$('#results').html("<span>File " + data.files[0].name + " has been uploaded. Both files received</span>");
+							$('#results').html($('<span>').text('File ' + data.files[0].name + ' has been uploaded. Both files received'));
 							$('#fileName_new_display').text(data.files[0].name);
 							disableButton('#fileUpload2');
 							enableButton('#buttonStartDeduplication');
@@ -145,7 +145,7 @@
 				},
 				error: function (jqXHR, data, thrownError) {
 					var response = jQuery.parseJSON(jqXHR.responseText);
-					$('#results').html("<span>" + response.result + "</span>");
+					$('#results').html($('<span>').text(response.result));
 					$('#results').addClass('alert-danger');
 					$('#results').removeClass('alert-warning');
 				},
@@ -171,13 +171,13 @@
 					success: function (response) {
 						console.log("RESPONSE: " + response);
 						if (response.result.match("^DONE")) {
-							$('#results').html(response.result);
+							$('#results').text(response.result);
 						} else if (response.result.match("^ERROR")) {
 							$('#results').removeClass('alert-warning');
 							$('#results').addClass('alert-danger');
-							$('#results').html(response.result);
+							$('#results').text(response.result);
 						} else {
-							$('#results').html(response.result);
+							$('#results').text(response.result);
 						}
 					}
 				});
