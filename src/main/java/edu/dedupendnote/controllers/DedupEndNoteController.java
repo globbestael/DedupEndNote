@@ -120,31 +120,29 @@ public class DedupEndNoteController {
 			@RequestParam(required = false, defaultValue = "false") boolean markMode, @RequestParam String wssessionId)
 			throws InterruptedException, ExecutionException {
 		DeduplicationMode mode = DeduplicationMode.from(markMode);
-		String outputFileName = UtilitiesService.createOutputFileName(inputFileName, mode);
 		String logPrefix = "1F" + (mode == DeduplicationMode.MARK ? "M" : "D");
 
-		Path inputPath;
-		Path outputPath;
 		try {
-			inputPath = UtilitiesService.resolveInUploadDir(uploadDir, inputFileName);
-			outputPath = UtilitiesService.resolveInUploadDir(uploadDir, outputFileName);
+			Path inputPath = UtilitiesService.resolveInUploadDir(uploadDir, inputFileName);
+			Path outputPath = UtilitiesService.resolveInUploadDir(uploadDir,
+					UtilitiesService.createOutputFileName(inputFileName, mode));
+
+			Consumer<String> progressReporter = message -> simpMessagingTemplate
+					.convertAndSend("/topic/messages-" + wssessionId, new StompMessage(message));
+			try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
+				RequestAttributes requestAttributes = RequestContextHolder.currentRequestAttributes();
+				Future<String> future = executor.submit(() -> {
+					RequestContextHolder.setRequestAttributes(requestAttributes);
+					return deduplicationService.deduplicateOneFile(inputPath.toString(), outputPath.toString(), mode,
+							progressReporter);
+				});
+				String result = future.get();
+				log.info("Writing to result: {}: {}", logPrefix, result);
+				return ResponseEntity.ok("{ \"result\": " + result);
+			}
 		} catch (IllegalArgumentException e) {
 			log.warn("Path traversal attempt in startOneFile: {}", e.getMessage());
 			return ResponseEntity.badRequest().body("{\"result\": \"Invalid filename\"}");
-		}
-
-		Consumer<String> progressReporter = message -> simpMessagingTemplate
-				.convertAndSend("/topic/messages-" + wssessionId, new StompMessage(message));
-		try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
-			RequestAttributes requestAttributes = RequestContextHolder.currentRequestAttributes();
-			Future<String> future = executor.submit(() -> {
-				RequestContextHolder.setRequestAttributes(requestAttributes);
-				return deduplicationService.deduplicateOneFile(inputPath.toString(), outputPath.toString(), mode,
-						progressReporter);
-			});
-			String result = future.get();
-			log.info("Writing to result: {}: {}", logPrefix, result);
-			return ResponseEntity.ok("{ \"result\": " + result);
 		}
 	}
 
@@ -155,31 +153,28 @@ public class DedupEndNoteController {
 		DeduplicationMode mode = DeduplicationMode.from(markMode);
 		String logPrefix = "2F" + (mode == DeduplicationMode.MARK ? "M" : "D");
 
-		Path newFilePath;
-		Path oldFilePath;
-		Path outputPath;
 		try {
-			newFilePath = UtilitiesService.resolveInUploadDir(uploadDir, newFile);
-			oldFilePath = UtilitiesService.resolveInUploadDir(uploadDir, oldFile);
-			outputPath = UtilitiesService.resolveInUploadDir(uploadDir,
+			Path newFilePath = UtilitiesService.resolveInUploadDir(uploadDir, newFile);
+			Path oldFilePath = UtilitiesService.resolveInUploadDir(uploadDir, oldFile);
+			Path outputPath = UtilitiesService.resolveInUploadDir(uploadDir,
 					UtilitiesService.createOutputFileName(newFile, mode));
+
+			Consumer<String> progressReporter = message -> simpMessagingTemplate
+					.convertAndSend("/topic/messages-" + wssessionId, new StompMessage(message));
+			try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
+				RequestAttributes requestAttributes = RequestContextHolder.currentRequestAttributes();
+				Future<String> future = executor.submit(() -> {
+					RequestContextHolder.setRequestAttributes(requestAttributes);
+					return deduplicationService.deduplicateTwoFiles(newFilePath.toString(), oldFilePath.toString(),
+							outputPath.toString(), mode, progressReporter);
+				});
+				String result = future.get();
+				log.info("Writing to result: {}: {}", logPrefix, result);
+				return ResponseEntity.ok("{ \"result\": " + result);
+			}
 		} catch (IllegalArgumentException e) {
 			log.warn("Path traversal attempt in startTwoFiles: {}", e.getMessage());
 			return ResponseEntity.badRequest().body("{\"result\": \"Invalid filename\"}");
-		}
-
-		Consumer<String> progressReporter = message -> simpMessagingTemplate
-				.convertAndSend("/topic/messages-" + wssessionId, new StompMessage(message));
-		try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
-			RequestAttributes requestAttributes = RequestContextHolder.currentRequestAttributes();
-			Future<String> future = executor.submit(() -> {
-				RequestContextHolder.setRequestAttributes(requestAttributes);
-				return deduplicationService.deduplicateTwoFiles(newFilePath.toString(), oldFilePath.toString(),
-						outputPath.toString(), mode, progressReporter);
-			});
-			String result = future.get();
-			log.info("Writing to result: {}: {}", logPrefix, result);
-			return ResponseEntity.ok("{ \"result\": " + result);
 		}
 	}
 
