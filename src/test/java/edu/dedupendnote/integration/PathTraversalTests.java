@@ -48,9 +48,8 @@ class PathTraversalTests {
 				return false;
 			}
 
-			@Override
-			public void handleError(ClientHttpResponse response) {
-			}
+			// public void handleError(ClientHttpResponse response) {
+			// }
 		});
 	}
 
@@ -83,8 +82,8 @@ class PathTraversalTests {
 		};
 		body.add("file", fileResource);
 
-		ResponseEntity<String> response = restTemplate.postForEntity(
-				url("/uploadFile"), new HttpEntity<>(body, headers), String.class);
+		ResponseEntity<String> response = restTemplate.postForEntity(url("/uploadFile"),
+				new HttpEntity<>(body, headers), String.class);
 
 		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
 	}

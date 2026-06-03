@@ -200,19 +200,19 @@ public class DedupEndNoteController {
 		}
 		try {
 			Path path = UtilitiesService.resolveInUploadDir(uploadDir, file.getOriginalFilename());
-			if (Files.exists(path, LinkOption.NOFOLLOW_LINKS)) {
-				Files.delete(path);
-			}
 			try (InputStream inputStream = file.getInputStream()) {
+				if (Files.exists(path, LinkOption.NOFOLLOW_LINKS)) {
+					Files.delete(path);
+				}
 				Files.copy(inputStream, path);
 				return ResponseEntity.ok("{\"result\": \"File uploaded successfully\"}");
+			} catch (IOException e) {
+				log.error("Error uploading file", e);
+				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"result\": \"Upload failed\"}");
 			}
 		} catch (IllegalArgumentException e) {
 			log.warn("Path traversal attempt in uploadFile: {}", e.getMessage());
 			return ResponseEntity.badRequest().body("{\"result\": \"Invalid filename\"}");
-		} catch (IOException e) {
-			log.error("Error uploading file", e);
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"result\": \"Upload failed\"}");
 		} catch (RuntimeException e) {
 			log.error("Unexpected error uploading file", e);
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"result\": \"Upload failed\"}");
