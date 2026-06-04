@@ -5,6 +5,7 @@ import java.io.BufferedWriter;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -39,14 +40,15 @@ public class BibliographicItemWriter {
 	 * writebibliographicItems(...) does the replacements, and writes to the output file.
 	 */
 	// @formatter:on
-	public int writeDeduplicatedBibliographicItems(List<BibliographicItem> bibliographicItems, String inputFileName, String outputFileName) {
-		log.debug("Start writing to file {}", outputFileName);
-		List<BibliographicItem> bibliographicItemsToKeep = bibliographicItems.stream().filter(BibliographicItem::isKeptBibliographicItem).toList();
+	public int writeDeduplicatedBibliographicItems(List<BibliographicItem> bibliographicItems, Path inputPath,
+			Path outputPath) {
+		log.debug("Start writing to file {}", outputPath);
+		List<BibliographicItem> bibliographicItemsToKeep = bibliographicItems.stream()
+				.filter(BibliographicItem::isKeptBibliographicItem).toList();
 		log.debug("Publications to be kept: {}", bibliographicItemsToKeep.size());
 
-		Map<Integer, BibliographicItem> recordIdMap = bibliographicItems.stream()
-			.filter(p -> p.getId() > 0)
-			.collect(Collectors.toMap(BibliographicItem::getId, Function.identity()));
+		Map<Integer, BibliographicItem> recordIdMap = bibliographicItems.stream().filter(p -> p.getId() > 0)
+				.collect(Collectors.toMap(BibliographicItem::getId, Function.identity()));
 
 		int numberWritten = 0;
 		int lineNumber = 0;
@@ -55,10 +57,10 @@ public class BibliographicItemWriter {
 		String previousFieldName = "XYZ";
 		Map<String, String> map = new TreeMap<>();
 
-		boolean hasBom = UtilitiesService.detectBom(inputFileName);
+		boolean hasBom = UtilitiesService.detectBom(inputPath);
 
-		try (BufferedWriter bw = new BufferedWriter(new FileWriter(outputFileName));
-				BufferedReader br = new BufferedReader(new FileReader(inputFileName))) {
+		try (BufferedWriter bw = new BufferedWriter(new FileWriter(outputPath.toFile()));
+				BufferedReader br = new BufferedReader(new FileReader(inputPath.toFile()))) {
 			if (hasBom) {
 				br.skip(1);
 			}
@@ -101,7 +103,7 @@ public class BibliographicItemWriter {
 					default:
 						if (map.containsKey(fieldName)) {
 							if (line.startsWith(fieldName)) {
-//								map.put(fieldName, map.get(fieldName) + "\n" + fieldContent);
+								//								map.put(fieldName, map.get(fieldName) + "\n" + fieldContent);
 								map.put(fieldName, map.get(fieldName) + "\n" + line);
 							} else {
 								map.put(fieldName, map.get(fieldName) + "\n" + line);
@@ -117,22 +119,24 @@ public class BibliographicItemWriter {
 				}
 			}
 		} catch (IOException e) {
-            String message = "IOException while writing deduplicated records to %s at line %d: %s".formatted(outputFileName, lineNumber, e.getMessage());
-            log.error(message, e);
-            throw new RuntimeException(message, e);
+			String message = "IOException while writing deduplicated records to %s at line %d: %s"
+					.formatted(outputPath.getFileName(), lineNumber, e.getMessage());
+			log.error(message, e);
+			throw new RuntimeException(message, e);
 		}
 		log.debug("Finished writing to file. # records: {}", numberWritten);
 		return numberWritten;
 	}
 
-	public int writeMarkedBibliographicItems(List<BibliographicItem> bibliographicItems, String inputFileName, String outputFileName) {
-		log.debug("Start writing to file {}", outputFileName);
-		List<BibliographicItem> bibliographicItemsToKeep = bibliographicItems.stream().filter(BibliographicItem::isKeptBibliographicItem).toList();
+	public int writeMarkedBibliographicItems(List<BibliographicItem> bibliographicItems, Path inputPath,
+			Path outputPath) {
+		log.debug("Start writing to file {}", outputPath);
+		List<BibliographicItem> bibliographicItemsToKeep = bibliographicItems.stream()
+				.filter(BibliographicItem::isKeptBibliographicItem).toList();
 		log.debug("Publications to be kept: {}", bibliographicItemsToKeep.size());
 
-		Map<Integer, BibliographicItem> recordIdMap = bibliographicItems.stream()
-			.filter(p -> p.getId() > 0)
-			.collect(Collectors.toMap(BibliographicItem::getId, Function.identity()));
+		Map<Integer, BibliographicItem> recordIdMap = bibliographicItems.stream().filter(p -> p.getId() > 0)
+				.collect(Collectors.toMap(BibliographicItem::getId, Function.identity()));
 
 		int numberWritten = 0;
 		String fieldContent = null;
@@ -140,10 +144,10 @@ public class BibliographicItemWriter {
 		String previousFieldName = "XYZ";
 		Map<String, String> map = new TreeMap<>();
 
-		boolean hasBom = UtilitiesService.detectBom(inputFileName);
+		boolean hasBom = UtilitiesService.detectBom(inputPath);
 
-		try (BufferedWriter bw = new BufferedWriter(new FileWriter(outputFileName));
-				BufferedReader br = new BufferedReader(new FileReader(inputFileName))) {
+		try (BufferedWriter bw = new BufferedWriter(new FileWriter(outputPath.toFile()));
+				BufferedReader br = new BufferedReader(new FileReader(inputPath.toFile()))) {
 			if (hasBom) {
 				br.skip(1);
 			}
@@ -211,8 +215,8 @@ public class BibliographicItemWriter {
 	 * Ordering of an EndNote export RIS file: the fields are ordered
 	 * alphabetically, except for TY (first), and ID and ER (last fields)
 	 */
-	private void writeBibliographicItem(Map<String, String> map, @Nullable BibliographicItem bibliographicItem, BufferedWriter bw, boolean enhance)
-			throws IOException {
+	private void writeBibliographicItem(Map<String, String> map, @Nullable BibliographicItem bibliographicItem,
+			BufferedWriter bw, boolean enhance) throws IOException {
 		if (enhance && bibliographicItem != null) {
 			if (!bibliographicItem.getDois().isEmpty()) {
 				map.put("DO", "https://doi.org/"
@@ -239,9 +243,7 @@ public class BibliographicItemWriter {
 					if (urlList.isEmpty()) {
 						map.put("UR", url);
 					} else {
-						map.put("UR", url + "\nUR  - " +
-							urlList.stream()
-								.map(u -> u.replace("UR  - ", ""))
+						map.put("UR", url + "\nUR  - " + urlList.stream().map(u -> u.replace("UR  - ", ""))
 								.collect(Collectors.joining("\nUR  - ")));
 					}
 				} else {
@@ -250,7 +252,8 @@ public class BibliographicItemWriter {
 			}
 
 			// Some unusual authors should be kept, e.g. Group authors
-			if (bibliographicItem.getAuthors().isEmpty() && ("Anonymous".equals(map.get("AU")) || "Nct".equals(map.get("AU")))) {
+			if (bibliographicItem.getAuthors().isEmpty()
+					&& ("Anonymous".equals(map.get("AU")) || "Nct".equals(map.get("AU")))) {
 				map.remove("AU");
 			}
 			if (!map.containsKey("PY") && bibliographicItem.getPublicationYear() != 0) {

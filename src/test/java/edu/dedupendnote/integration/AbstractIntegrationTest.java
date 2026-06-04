@@ -1,5 +1,7 @@
 package edu.dedupendnote.integration;
 
+import java.nio.file.Path;
+
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.slf4j.LoggerFactory;
@@ -21,9 +23,9 @@ public abstract class AbstractIntegrationTest {
 	@MockitoBean
 	protected SimpMessagingTemplate simpMessagingTemplate;
 
-	protected String baseDir = System.getProperty("user.home", "") + "/dedupendnote_files";
+	protected Path baseDir = Path.of(System.getProperty("user.home", "")).resolve("dedupendnote_files");
 
-	protected String testDir = "";
+	protected Path testDir = baseDir;
 
 	@BeforeAll
 	static void setLogLevelToInfo() {

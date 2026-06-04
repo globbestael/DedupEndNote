@@ -5,6 +5,7 @@ import java.io.BufferedWriter;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -41,17 +42,18 @@ public class RecordDBService {
 			"title_truncated", "title", "title2", "volume", "issue", "pages", "article_number", "dois", "publ_type",
 			"database", "number_authors");
 
-	public int writeMarkedRecordsForDB(List<BibliographicItem> bibliographicItems, String inputFileName, String outputFileName) {
-		List<BibliographicItemDB> publicationDBs = convertToRecordDB(bibliographicItems, inputFileName);
-		int numberWritten = saveRecordDBs(publicationDBs, outputFileName);
+	public int writeMarkedRecordsForDB(List<BibliographicItem> bibliographicItems, Path inputPath, Path outputPath) {
+		List<BibliographicItemDB> publicationDBs = convertToRecordDB(bibliographicItems, inputPath);
+		int numberWritten = saveRecordDBs(publicationDBs, outputPath);
 		return numberWritten;
 	}
 
-	public int saveRecordDBs(List<BibliographicItemDB> publicationDBs, String outputFileName) {
+	public int saveRecordDBs(List<BibliographicItemDB> publicationDBs, Path outputPath) {
 		// FIXME: alter to validation_results? Plus date?
-		outputFileName = outputFileName.replace("mark.", "markDB.");
-		log.debug("Start writing {} records to file {}", publicationDBs.size(), outputFileName);
-		try (BufferedWriter bw = new BufferedWriter(new FileWriter(outputFileName))) {
+		String outputFileName = outputPath.getFileName().toString().replace("mark.", "markDB.");
+		Path resolvedOutputPath = outputPath.getParent().resolve(outputFileName);
+		log.debug("Start writing {} records to file {}", publicationDBs.size(), resolvedOutputPath);
+		try (BufferedWriter bw = new BufferedWriter(new FileWriter(resolvedOutputPath.toFile()))) {
 			bw.write(DB_FIELDS.stream().collect(Collectors.joining("\t")) + "\n");
 			for (BibliographicItemDB r : publicationDBs) {
 				writeRecordForDB(r, bw);
@@ -59,12 +61,12 @@ public class RecordDBService {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		log.debug("Finished writing {} records to file {}", publicationDBs.size(), outputFileName);
+		log.debug("Finished writing {} records to file {}", publicationDBs.size(), resolvedOutputPath);
 		return publicationDBs.size();
 	}
 
-	public List<BibliographicItemDB> convertToRecordDB(List<BibliographicItem> bibliographicItems, String inputFileName) {
-		boolean hasBom = UtilitiesService.detectBom(inputFileName);
+	public List<BibliographicItemDB> convertToRecordDB(List<BibliographicItem> bibliographicItems, Path inputPath) {
+		boolean hasBom = UtilitiesService.detectBom(inputPath);
 
 		Map<Integer, BibliographicItem> recordIdMap = bibliographicItems.stream()
 				.filter(r -> r.getId() > 0)
@@ -77,7 +79,7 @@ public class RecordDBService {
 		Integer phantomId = 0;
 		String realId = null;
 
-		try (BufferedReader br = new BufferedReader(new FileReader(inputFileName))) {
+		try (BufferedReader br = new BufferedReader(new FileReader(inputPath.toFile()))) {
 			if (hasBom) {
 				br.skip(1);
 			}

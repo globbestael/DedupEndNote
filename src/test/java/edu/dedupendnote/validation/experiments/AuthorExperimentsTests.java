@@ -3,6 +3,7 @@ package edu.dedupendnote.validation.experiments;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
@@ -46,11 +47,10 @@ class AuthorExperimentsTests extends AbstractIntegrationTest {
 		// specificity meaningful and demonstrating the experimental engine's trade-off.
 		ValidationResult baseline = new ValidationResult("SRA2_Haematology", 222, 6, 1186, 1, 300L, 106);
 
-		String subdir = testDir + "/SRA2/";
-		String inputFile = subdir + "Haematology.txt";
-		String markFile  = inputFile + "_mark.txt";
-		String outputFile = subdir + "Haematology_experimental_to_validate.txt";
-		String truthFile  = subdir + "Haematology_TRUTH.txt";
+		Path inputPath = testDir.resolve("SRA2/Haematology.txt");
+		Path markPath  = inputPath.resolveSibling(inputPath.getFileName() + "_mark.txt");
+		Path outputPath = testDir.resolve("SRA2/Haematology_experimental_to_validate.txt");
+		Path truthPath  = testDir.resolve("SRA2/Haematology_TRUTH.txt");
 
 		// Threshold == 1.0 (the max JWS score) — similarity > 1.0 is never true, so no author
 		// match ever succeeds; sensitivity drops to 0%, specificity reaches 100%.
@@ -63,12 +63,12 @@ class AuthorExperimentsTests extends AbstractIntegrationTest {
 		DeduplicationService expService = new DeduplicationService(cs, new BibliographicItemReader(), new BibliographicItemWriter(), new EnrichmentService());
 
 		long start = System.currentTimeMillis();
-		expService.deduplicateOneFile(inputFile, markFile, DeduplicationMode.MARK, message -> {});
-		List<BibliographicItem> bibliographicItems = bibliographicItemReader.readBibliographicItems(markFile, message -> {}, /* includeLabelField= */ true);
+		expService.deduplicateOneFile(inputPath, markPath, DeduplicationMode.MARK, message -> {});
+		List<BibliographicItem> bibliographicItems = bibliographicItemReader.readBibliographicItems(markPath, message -> {}, /* includeLabelField= */ true);
 		long duration = System.currentTimeMillis() - start;
 
 		ValidationResult expResult = validationService.checkResults(
-				"SRA2_Haematology_experimental", inputFile, outputFile, truthFile,
+				"SRA2_Haematology_experimental", inputPath, outputPath, truthPath,
 				bibliographicItems, duration, /* withTracing= */ false, expService);
 
 		// Higher author thresholds miss more duplicates (lower sensitivity) …

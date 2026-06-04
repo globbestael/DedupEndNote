@@ -1,5 +1,38 @@
 # TODO
 
+## Refactoring fileName and path
+- Are there really no changes in the calls for reading and writing?
+  See https://docs.oracle.com/javase/tutorial/essential/io/file.html#textfiles
+  Should there still be BufferedReader's (java.io) calls in the program?
+- There are some full paths in the user-facing messages, e.g. in the catch of BibliographicItemWiter l.121
+  This is a OWASP risk
+- Are there any "Path.of()" cases or use of the fileseparator left?
+- ValidationTests::686ff: comments says there is no difference between validation and production, but isn't this
+  copied code, so: shouldn't this be extracted to a function?
+- BibliographicItemWriter has e.printStackTrace(). Maybe more cases
+- There are some cases with path.resolve(filename).normalize()
+  Why is this normalize() not called after every resolve(...)?
+
+
+## OWASP
+
+### Configure Claude's /security-review skill?
+- How can we get DoS risks reported in
+- which other risks are not reported
+
+### /security-review skill remembers last run in session?
+Do you have to clear the context to have Claude to a full analysis? It looks as if Claude on a second run of the skill within the same sessions, only looks at /reports on the changes?
+
+### Is it possibl to ask Cluade not to use it's builtin skill?
+
+### User input
+- users can overwrite each other files if the use the same filename. should the file of each user be put in a subfolder based on the UUID of
+  the websocket session?
+- Flooding of the server: each file can be 150MB
+- ...
+
+
+
 ## Performance
 - if both are isSeveralPages = false, then use a higher threshold for authors and/or title?
 - FP in BIG_SET for 8111 - 36423: 1. SP same, 2 Same because one AU is empty, NO 3 (TI comparison) because reply, 4 same Journal. One of PY = 0

@@ -2,7 +2,7 @@ package edu.dedupendnote.integration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.io.File;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -120,12 +120,12 @@ class MissedDuplicatesTests extends AbstractIntegrationTest {
 	// @formatter:on
 	void deduplicateMissedDuplicates(String fileName, int total, int totalWritten) {
 		log.debug("Log level should be debug");
-		String inputFileName = testDir + fileName;
+		Path inputPath = testDir.resolve(fileName.startsWith("/") ? fileName.substring(1) : fileName);
 		DeduplicationMode mode = DeduplicationMode.REMOVE;
-		String outputFileName = UtilitiesService.createOutputFileName(inputFileName, mode);
-		assertThat(new File(inputFileName)).exists();
+		Path outputPath = UtilitiesService.createOutputPath(inputPath, mode);
+		assertThat(inputPath.toFile()).exists();
 
-		String resultString = deduplicationService.deduplicateOneFile(inputFileName, outputFileName, mode, message -> {
+		String resultString = deduplicationService.deduplicateOneFile(inputPath, outputPath, mode, message -> {
 		});
 
 		System.err.println("Messages: " + memoryAppender.filterByPatterns(tracePatterns, Level.TRACE));

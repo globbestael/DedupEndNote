@@ -33,13 +33,13 @@ public class UtilitiesService {
 	 * See also:
 	 * https://mkyong.com/java/java-how-to-add-and-remove-bom-from-utf-8-file/
 	 */
-	public static boolean detectBom(String inputFileName) {
+	public static boolean detectBom(Path inputPath) {
 		boolean hasBom = false;
-		try (BufferedReader br = new BufferedReader(new FileReader(inputFileName))) {
+		try (BufferedReader br = new BufferedReader(new FileReader(inputPath.toFile()))) {
 			String line = br.readLine();
 			hasBom = line != null && line.startsWith("\uFEFF");
 		} catch (IOException e) {
-			log.error("Error detecting BOM in file {}", inputFileName, e);
+			log.error("Error detecting BOM in file {}", inputPath, e);
 		}
 		return hasBom;
 	}
@@ -51,6 +51,15 @@ public class UtilitiesService {
 		}
 		return fileName.replaceAll("\\." + Pattern.quote(extension) + "$",
 				(mode == DeduplicationMode.MARK ? "_mark." : "_deduplicated.") + extension);
+	}
+
+	public static Path createOutputPath(Path inputPath, DeduplicationMode mode) {
+		String outputFileName = createOutputFileName(inputPath.getFileName().toString(), mode);
+		Path parent = inputPath.getParent();
+		if (parent == null) {
+			throw new IllegalArgumentException("inputPath must have a parent directory: " + inputPath);
+		}
+		return parent.resolve(outputFileName);
 	}
 
 	/**

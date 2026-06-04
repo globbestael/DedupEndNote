@@ -230,18 +230,18 @@ l						 * 		V 		W 		X
 		return !bibliographicItems.stream().map(BibliographicItem::getId).allMatch(new HashSet<>()::add);
 	}
 
-	public String deduplicateOneFile(String inputFileName, String outputFileName, DeduplicationMode mode,
+	public String deduplicateOneFile(Path inputPath, Path outputPath, DeduplicationMode mode,
 			Consumer<String> progressReporter) {
-		progressReporter.accept("Reading file " + inputFileName);
+		progressReporter.accept("Reading file " + inputPath.getFileName());
 		List<BibliographicItem> bibliographicItems;
 		try {
-			bibliographicItems = bibliographicItemReader.readBibliographicItems(inputFileName, progressReporter);
+			bibliographicItems = bibliographicItemReader.readBibliographicItems(inputPath, progressReporter);
 		} catch (InvalidRisFileException e) {
 			progressReporter.accept(e.getErrorMessage());
 			return e.getErrorMessage();
 		}
 
-		String s = doSanityChecks(bibliographicItems, inputFileName);
+		String s = doSanityChecks(bibliographicItems, inputPath);
 		if (s != null) {
 			progressReporter.accept(s);
 			return s;
@@ -250,8 +250,8 @@ l						 * 		V 		W 		X
 		searchYearOneFile(bibliographicItems, progressReporter);
 
 		if (mode == DeduplicationMode.MARK) {
-			int numberWritten = bibliographicItemWriter.writeMarkedBibliographicItems(bibliographicItems, inputFileName,
-					outputFileName);
+			int numberWritten = bibliographicItemWriter.writeMarkedBibliographicItems(bibliographicItems, inputPath,
+					outputPath);
 			long labeledBibliographicItems = bibliographicItems.stream().filter(r -> r.getLabel() != null).count();
 			s = "DONE: DedupEndNote has written " + numberWritten + " bibliographic items with "
 					+ labeledBibliographicItems + " duplicates marked in the Label field.";
@@ -263,27 +263,27 @@ l						 * 		V 		W 		X
 		enrichmentService.enrich(bibliographicItems);
 		progressReporter.accept("Saving the " + bibliographicItems.size() + " deduplicated results");
 		int numberWritten = bibliographicItemWriter.writeDeduplicatedBibliographicItems(bibliographicItems,
-				inputFileName, outputFileName);
+				inputPath, outputPath);
 		s = formatResultString(bibliographicItems.size(), numberWritten);
 		progressReporter.accept(s);
 
 		return s;
 	}
 
-	public String deduplicateTwoFiles(String newInputFileName, String oldInputFileName, String outputFileName,
+	public String deduplicateTwoFiles(Path newInputPath, Path oldInputPath, Path outputPath,
 			DeduplicationMode mode, Consumer<String> progressReporter) {
 		// read the old bibliographicItems and mark them as present, then add the new bibliographicItems
-		log.info("oldInputFileName: {}", oldInputFileName);
-		log.info("newInputFileName: {}", newInputFileName);
+		log.info("oldInputPath: {}", oldInputPath);
+		log.info("newInputPath: {}", newInputPath);
 		List<BibliographicItem> bibliographicItems;
 		try {
-			bibliographicItems = bibliographicItemReader.readBibliographicItems(oldInputFileName, progressReporter);
+			bibliographicItems = bibliographicItemReader.readBibliographicItems(oldInputPath, progressReporter);
 		} catch (InvalidRisFileException e) {
 			progressReporter.accept(e.getErrorMessage());
 			return e.getErrorMessage();
 		}
 
-		String s = doSanityChecks(bibliographicItems, oldInputFileName);
+		String s = doSanityChecks(bibliographicItems, oldInputPath);
 		if (s != null) {
 			progressReporter.accept(s);
 			return s;
@@ -305,12 +305,12 @@ l						 * 		V 		W 		X
 
 		List<BibliographicItem> newBibliographicItems;
 		try {
-			newBibliographicItems = bibliographicItemReader.readBibliographicItems(newInputFileName, progressReporter);
+			newBibliographicItems = bibliographicItemReader.readBibliographicItems(newInputPath, progressReporter);
 		} catch (InvalidRisFileException e) {
 			progressReporter.accept(e.getErrorMessage());
 			return e.getErrorMessage();
 		}
-		s = doSanityChecks(newBibliographicItems, newInputFileName);
+		s = doSanityChecks(newBibliographicItems, newInputPath);
 		if (s != null) {
 			progressReporter.accept(s);
 			return s;
@@ -322,7 +322,7 @@ l						 * 		V 		W 		X
 
 		if (mode == DeduplicationMode.MARK) {
 			int numberWritten = bibliographicItemWriter.writeMarkedBibliographicItems(bibliographicItems,
-					newInputFileName, outputFileName);
+					newInputPath, outputPath);
 			long numberLabeledBibliographicItems = bibliographicItems.stream()
 					.filter(r -> r.getLabel() != null && !r.isPresentInOldFile()).count();
 			s = "DONE: DedupEndNote has written %s bibliographic items with %d duplicates marked in the Label field."
@@ -339,14 +339,14 @@ l						 * 		V 		W 		X
 				.toList();
 		log.error("Publications to write: {}", filteredBibliographicItems.size());
 		int numberWritten = bibliographicItemWriter.writeDeduplicatedBibliographicItems(filteredBibliographicItems,
-				newInputFileName, outputFileName);
+				newInputPath, outputPath);
 		s = "DONE: DedupEndNote removed %d bibliographic items from the new set, and has written %d bibliographic items."
 				.formatted((newBibliographicItems.size() - numberWritten), numberWritten);
 		progressReporter.accept(s);
 		return s;
 	}
 
-	public @Nullable String doSanityChecks(List<BibliographicItem> bibliographicItems, String fileName) {
+	public @Nullable String doSanityChecks(List<BibliographicItem> bibliographicItems, Path inputPath) {
 		/*
 		 * "containsBibliographicItemsWithoutId" check removed: id is now a primitive int.
 		 * BibliographicItemReader always assigns an id >= 1; InvalidRisFileException is thrown for non-numeric ID fields.
@@ -356,7 +356,7 @@ l						 * 		V 		W 		X
 		 * year-bucketing simply groups everything in the year-0 bucket and comparisons still run.
 		 */
 		if (containsDuplicateIds(bibliographicItems)) {
-			return "ERROR: The IDs of the bibliographic items of input file " + Path.of(fileName).getFileName()
+			return "ERROR: The IDs of the bibliographic items of input file " + inputPath.getFileName()
 					+ " are not unique. The input file is not an Export as RIS-file from 1 EndNote library!";
 		}
 		return null;

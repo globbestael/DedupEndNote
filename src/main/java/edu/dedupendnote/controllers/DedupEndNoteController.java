@@ -133,7 +133,7 @@ public class DedupEndNoteController {
 				RequestAttributes requestAttributes = RequestContextHolder.currentRequestAttributes();
 				Future<String> future = executor.submit(() -> {
 					RequestContextHolder.setRequestAttributes(requestAttributes);
-					return deduplicationService.deduplicateOneFile(inputPath.toString(), outputPath.toString(), mode,
+					return deduplicationService.deduplicateOneFile(inputPath, outputPath, mode,
 							progressReporter);
 				});
 				String result = future.get();
@@ -154,8 +154,8 @@ public class DedupEndNoteController {
 		String logPrefix = "2F" + (mode == DeduplicationMode.MARK ? "M" : "D");
 
 		try {
-			Path newFilePath = UtilitiesService.resolveInUploadDir(uploadDir, newFile);
-			Path oldFilePath = UtilitiesService.resolveInUploadDir(uploadDir, oldFile);
+			Path newInputPath = UtilitiesService.resolveInUploadDir(uploadDir, newFile);
+			Path oldInputPath = UtilitiesService.resolveInUploadDir(uploadDir, oldFile);
 			Path outputPath = UtilitiesService.resolveInUploadDir(uploadDir,
 					UtilitiesService.createOutputFileName(newFile, mode));
 
@@ -165,8 +165,8 @@ public class DedupEndNoteController {
 				RequestAttributes requestAttributes = RequestContextHolder.currentRequestAttributes();
 				Future<String> future = executor.submit(() -> {
 					RequestContextHolder.setRequestAttributes(requestAttributes);
-					return deduplicationService.deduplicateTwoFiles(newFilePath.toString(), oldFilePath.toString(),
-							outputPath.toString(), mode, progressReporter);
+					return deduplicationService.deduplicateTwoFiles(newInputPath, oldInputPath,
+							outputPath, mode, progressReporter);
 				});
 				String result = future.get();
 				log.info("Writing to result: {}: {}", logPrefix, result);

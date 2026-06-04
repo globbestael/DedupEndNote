@@ -199,10 +199,10 @@ sequenceDiagram
     Browser->>Ctrl: POST /startOneFile (sessionId · fileName · mode)
     Note over Ctrl: creates Consumer&lt;String&gt; progressReporter<br/>that forwards messages to the WebSocket topic
 
-    Ctrl->>DS: deduplicateOneFile(fileName, mode, progressReporter)
+    Ctrl->>DS: deduplicateOneFile(inputPath, outputPath, mode, progressReporter)
     activate DS
 
-    DS->>Reader: readBibliographicItems(fileName, progressReporter)
+    DS->>Reader: readBibliographicItems(inputPath, progressReporter)
     activate Reader
     Note over Reader: fast first pass counts records<br/>second pass parses + normalises
     loop one message per percentage point
@@ -222,7 +222,7 @@ sequenceDiagram
     DS->>ES: enrich(bibliographicItems)
     ES-->>DS: Kept Bibliographic Items enriched
 
-    DS->>Writer: writeOutput(bibliographicItems, outputFileName, mode)
+    DS->>Writer: writeOutput(bibliographicItems, inputPath, outputPath)
     DS-->>WS: progressReporter.accept("DONE: N duplicates found …")
     deactivate DS
     WS-->>Browser: DONE: N duplicates found …

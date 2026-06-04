@@ -3,9 +3,9 @@ package edu.dedupendnote.integration;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
+import java.nio.file.Path;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -32,7 +32,7 @@ class DedupEndNoteApplicationTests extends AbstractIntegrationTest {
 	@Override
 	@BeforeEach
 	void initTestDir() {
-		testDir = baseDir + "/experiments/";
+		testDir = baseDir.resolve("experiments");
 	}
 
 	@Test
@@ -69,11 +69,11 @@ class DedupEndNoteApplicationTests extends AbstractIntegrationTest {
 
 	@Test
 	void deduplicate_OK() {
-		String inputFileName = testDir + "t1.txt";
+		Path inputPath = testDir.resolve("t1.txt");
 		DeduplicationMode mode = DeduplicationMode.REMOVE;
-		String outputFileName = UtilitiesService.createOutputFileName(inputFileName, mode);
+		Path outputPath = UtilitiesService.createOutputPath(inputPath, mode);
 
-		String resultString = deduplicationService.deduplicateOneFile(inputFileName, outputFileName, mode,
+		String resultString = deduplicationService.deduplicateOneFile(inputPath, outputPath, mode,
 				message -> {
 				});
 
@@ -87,12 +87,12 @@ class DedupEndNoteApplicationTests extends AbstractIntegrationTest {
 			// "'DedupEndNote_portal_vein_thrombosis_37741.txt', 37741, 24382", // Very slow test
 			"'Non_Latin_input.txt', 2, 2", "'Dedup_PATIJ2_Possibly_missed.txt', 18, 11" })
 	void deduplicateSmallFiles(String fileName, int total, int totalWritten) {
-		String inputFileName = testDir + fileName;
+		Path inputPath = testDir.resolve(fileName);
 		DeduplicationMode mode = DeduplicationMode.REMOVE;
-		String outputFileName = UtilitiesService.createOutputFileName(inputFileName, mode);
-		assertThat(new File(inputFileName)).exists();
+		Path outputPath = UtilitiesService.createOutputPath(inputPath, mode);
+		assertThat(inputPath.toFile()).exists();
 
-		String resultString = deduplicationService.deduplicateOneFile(inputFileName, outputFileName, mode,
+		String resultString = deduplicationService.deduplicateOneFile(inputPath, outputPath, mode,
 				message -> {
 				});
 
@@ -101,16 +101,16 @@ class DedupEndNoteApplicationTests extends AbstractIntegrationTest {
 
 	@Test
 	void deduplicate_withDuplicateIDs() {
-		String inputFileName = testDir + "Bestand_met_duplicate_IDs.txt";
+		Path inputPath = testDir.resolve("Bestand_met_duplicate_IDs.txt");
 		DeduplicationMode mode = DeduplicationMode.REMOVE;
-		String outputFileName = UtilitiesService.createOutputFileName(inputFileName, mode);
+		Path outputPath = UtilitiesService.createOutputPath(inputPath, mode);
 
-		String resultString = deduplicationService.deduplicateOneFile(inputFileName, outputFileName, mode,
+		String resultString = deduplicationService.deduplicateOneFile(inputPath, outputPath, mode,
 				message -> {
 				});
 
 		assertThat(resultString)
-				.startsWith("ERROR: The IDs of the bibliographic items of input file " + inputFileName + " are not unique");
+				.startsWith("ERROR: The IDs of the bibliographic items of input file " + inputPath.getFileName() + " are not unique");
 	}
 
 	@Test

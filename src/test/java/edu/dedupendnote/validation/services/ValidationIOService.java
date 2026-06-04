@@ -5,6 +5,7 @@ import java.io.BufferedWriter;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -47,7 +48,7 @@ public class ValidationIOService {
 	 * @param truthRecords   List<BibliographicItemDB> of validated records (TAB delimited export file from validation DB)
 	 * @param outputFileName filename of a RIS file
 	 */
-	public void writeRisWithTRUTH(List<BibliographicItemDB> truthRecords, String inputFileName, String outputFileName) {
+	public void writeRisWithTRUTH(List<BibliographicItemDB> truthRecords, Path inputPath, Path outputPath) {
 		int numberWritten = 0;
 		String fieldContent = null;
 		String fieldName = null;
@@ -57,10 +58,10 @@ public class ValidationIOService {
 		Map<Integer, BibliographicItemDB> truthMap = truthRecords.stream()
 				.collect(Collectors.toMap(BibliographicItemDB::getId, Function.identity()));
 
-		boolean hasBom = UtilitiesService.detectBom(inputFileName);
+		boolean hasBom = UtilitiesService.detectBom(inputPath);
 
-		try (BufferedWriter bw = new BufferedWriter(new FileWriter(outputFileName));
-				BufferedReader br = new BufferedReader(new FileReader(inputFileName))) {
+		try (BufferedWriter bw = new BufferedWriter(new FileWriter(outputPath.toFile()));
+				BufferedReader br = new BufferedReader(new FileReader(inputPath.toFile()))) {
 			if (hasBom) {
 				br.skip(1);
 			}
@@ -122,7 +123,7 @@ public class ValidationIOService {
 		log.debug("Finished writing to file. # records: {}", numberWritten);
 	}
 
-	public void writeRisWithTRUTH_forDS(List<BibliographicItemDB> truthRecords, String inputFileName, String outputFileName) {
+	public void writeRisWithTRUTH_forDS(List<BibliographicItemDB> truthRecords, Path inputPath, Path outputPath) {
 		int numberWritten = 0;
 		String fieldContent = null;
 		String fieldName = null;
@@ -132,10 +133,10 @@ public class ValidationIOService {
 		Map<Integer, BibliographicItemDB> truthMap = truthRecords.stream()
 				.collect(Collectors.toMap(BibliographicItemDB::getId, Function.identity()));
 
-		boolean hasBom = UtilitiesService.detectBom(inputFileName);
+		boolean hasBom = UtilitiesService.detectBom(inputPath);
 
-		try (BufferedWriter bw = new BufferedWriter(new FileWriter(outputFileName));
-				BufferedReader br = new BufferedReader(new FileReader(inputFileName))) {
+		try (BufferedWriter bw = new BufferedWriter(new FileWriter(outputPath.toFile()));
+				BufferedReader br = new BufferedReader(new FileReader(inputPath.toFile()))) {
 			if (hasBom) {
 				br.skip(1);
 			}

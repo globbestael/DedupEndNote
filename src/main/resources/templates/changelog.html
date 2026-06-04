@@ -88,6 +88,13 @@
                                 absorbed into <code>DefaultJournalComparisonServiceTest</code> and
                                 deleted
                             </li>
+                            <li>Consistent file-path naming: service methods now accept
+                                <code>java.nio.file.Path</code> instead of <code>String</code> file
+                                paths; <code>String</code> is reserved for bare filenames at the
+                                browser/upload boundary; added <code>UtilitiesService.createOutputPath</code>
+                                for path-level callers alongside the existing
+                                <code>createOutputFileName</code> for the controller
+                            </li>
                         </ul>
                     </li>
                 </ul>

@@ -454,8 +454,7 @@ class JWSimilarityTitleTest extends BaseTest {
 
 	@Test
 	void testErrataFromFile() throws IOException {
-		String fileName = testDir + "/all/all__ST_TI_ending_with_round_bracket.txt";
-		Path path = Path.of(fileName);
+		Path path = testDir.resolve("all/all__ST_TI_ending_with_round_bracket.txt");
 		List<String> lines = Files.readAllLines(path);
 
 		List<String> results = new ArrayList<>();
@@ -474,8 +473,7 @@ class JWSimilarityTitleTest extends BaseTest {
 
 	@Test
 	void testPositiveCommentsFromFile() throws IOException {
-		String fileName = testDir + "/all/All__comment__positive_examples.txt";
-		Path path = Path.of(fileName);
+		Path path = testDir.resolve("all/All__comment__positive_examples.txt");
 		List<String> lines = Files.readAllLines(path);
 
 		List<String> nonMatchedCases = new ArrayList<>();
@@ -502,8 +500,7 @@ class JWSimilarityTitleTest extends BaseTest {
 
 	@Test
 	void testNegativeCommentsFromFile() throws IOException {
-		String fileName = testDir + "/all/All__comment__negative_examples.txt";
-		Path path = Path.of(fileName);
+		Path path = testDir.resolve("all/All__comment__negative_examples.txt");
 		List<String> lines = Files.readAllLines(path);
 
 		List<String> negativeResults = new ArrayList<>();
@@ -527,8 +524,7 @@ class JWSimilarityTitleTest extends BaseTest {
 
 	@Test
 	void testPositiveCommentsAndRepliesFromFile() throws IOException {
-		String fileName = testDir + "/all/All__comment_AND_reply__positive_examples.txt";
-		Path path = Path.of(fileName);
+		Path path = testDir.resolve("all/All__comment_AND_reply__positive_examples.txt");
 		List<String> lines = Files.readAllLines(path);
 
 		List<String> nonMatchedCases = new ArrayList<>();
