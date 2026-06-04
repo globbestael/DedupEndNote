@@ -14,7 +14,7 @@ Update CLAUDE.md whenever a change affects something documented here. Triggers i
 - Test class renamed, added, deleted, or reclassified (hierarchy section), or moved between unit / integration / validation categories
 - New service introduced or existing service's responsibility changed (services table)
 - Build command, Maven profile, or port changed (commands / configuration sections)
-- Architectural pattern added or removed (data flow, enrichment, modes)
+- Architectural pattern added or removed (data flow, enrichment, modes, naming conventions)
 - Code quality plugin version bumped or new plugin added
 - Plan-file naming convention changed (plans section)
 - Release workflow or version-management mechanism changed (configuration section)
@@ -90,6 +90,35 @@ Upload RIS file(s)
   → User downloads result
 ```
 
+### File-path naming convention
+
+Two distinct types carry file locations; never mix them:
+
+| Type | Name pattern | Where used |
+|---|---|---|
+| `String` | `...FileName` | Bare filenames only (e.g. `t1.txt`) — exclusively at the browser/upload boundary: `@RequestParam` fields and `UtilitiesService` helpers called by the controller |
+| `java.nio.file.Path` | `...Path` | Full absolute paths — everywhere in the service layer and tests |
+
+```
+Browser ──→ Controller (@RequestParam String fileName)
+               │  resolveInUploadDir() / createOutputPath()
+               ▼
+         Service layer (Path inputPath, Path outputPath, …)
+```
+
+`UtilitiesService` provides two parallel helpers:
+- `createOutputFileName(String fileName, mode)` — for the controller (bare name in, bare name out)
+- `createOutputPath(Path inputPath, mode)` — for services and tests (Path in, Path out)
+
+When constructing a sibling path from an existing `Path` (e.g. adding a `_mark.txt` suffix),
+use `resolveSibling` — never string-concatenate a `Path` and re-parse:
+```java
+// correct
+inputPath.resolveSibling(inputPath.getFileName() + "_mark.txt")
+// wrong — implicit toString() + concat
+Path.of(inputPath + "_mark.txt")
+```
+
 ### Record enrichment (non-mark mode)
 When a duplicate is found the kept record is enriched with data from the duplicate: missing DOI, missing year, missing/abbreviated pages, short titles replaced with full titles.
 
@@ -116,7 +145,7 @@ Tests live under three roots, each with a corresponding Maven profile:
 ### Test class hierarchy
 
 **Unit (`edu.dedupendnote.unit.*`)**
-- **`unit/BaseTest`** — provides `baseDir` (from `System.getProperty("user.home") + "/dedupendnote_files"`), `testDir`, `@BeforeEach initTestDir()`, plus utilities (`jws`, `getHighestSimilarityForAuthors`, `setLoggerToDebug`)
+- **`unit/BaseTest`** — provides `Path baseDir` (`~/dedupendnote_files`) and `Path testDir` (both initialized directly as fields), `@BeforeEach initTestDir()`, plus utilities (`jws`, `getHighestSimilarityForAuthors`, `setLoggerToDebug`)
 - **`unit/services/AuthorsBaseTest extends BaseTest`** — shared logic for author-comparison tests
 - **`unit/services/DefaultJournalComparisonServiceTest extends BaseTest`** — boolean `compare()` tests for journals (inline parameterized) and a file-based test against validated journal pairs; absorbed `JournalsBaseTest`
 - **`unit/services/JWSimilarityTitleTest extends BaseTest`** — title JWS-similarity tests; also holds the out-of-scope `BibliographicItemReader` pattern tests
@@ -124,7 +153,7 @@ Tests live under three roots, each with a corresponding Maven profile:
 - Standalone unit test classes (no Spring context): `NormalizationService*Test` (6 files), `DefaultJournalComparisonServiceIssnTest`, `DefaultJournalComparisonServiceTest`, `DefaultTitleComparisonServiceTest`, `JWSimilarityJournalTest`, `JWSimilarityAbstractTest`, `AuthorsComparisonThresholdTest`, `AuthorVariantsExperimentsTest`, etc.
 
 **Integration (`edu.dedupendnote.integration.*`)**
-- **`integration/AbstractIntegrationTest`** — base for all `@SpringBootTest` tests; provides `@ActiveProfiles("test")`, `@MockitoBean SimpMessagingTemplate`, `baseDir`, `testDir`, `@BeforeAll` (log level → INFO), `@BeforeEach initTestDir()`. Subclasses override `initTestDir()` when they need a subdirectory.
+- **`integration/AbstractIntegrationTest`** — base for all `@SpringBootTest` tests; provides `@ActiveProfiles("test")`, `@MockitoBean SimpMessagingTemplate`, `Path baseDir`, `Path testDir`, `@BeforeAll` (log level → INFO), `@BeforeEach initTestDir()`. Subclasses override `initTestDir()` when they need a subdirectory.
 - Integration test classes extending `AbstractIntegrationTest`: `DedupEndNoteApplicationTests`, `MissedDuplicatesTests`, `TwoFilesTests`
 
 **Validation (`edu.dedupendnote.validation.*`)**

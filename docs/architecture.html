@@ -182,6 +182,16 @@ flowchart TD
       (Old file, then New file) before <code class="bg-slate-100 rounded px-1 text-xs">compareSet()</code>.
     </p>
 
+    <p class="text-xs text-slate-500 mb-3">
+      <strong>File-path naming convention:</strong>
+      <code class="bg-slate-100 rounded px-1">String …FileName</code> (bare name, e.g. <code class="bg-slate-100 rounded px-1">t1.txt</code>) is used
+      only at the browser/upload boundary — <code class="bg-slate-100 rounded px-1">@RequestParam</code> fields and the
+      <code class="bg-slate-100 rounded px-1">UtilitiesService</code> helpers called by the controller.
+      <code class="bg-slate-100 rounded px-1">Path …Path</code> (<code class="bg-slate-100 rounded px-1">java.nio.file.Path</code>) is used everywhere in the service layer.
+      The controller converts at the boundary via
+      <code class="bg-slate-100 rounded px-1">resolveInUploadDir()</code> and <code class="bg-slate-100 rounded px-1">createOutputPath()</code>.
+    </p>
+
     <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
       <pre class="mermaid">
 sequenceDiagram
