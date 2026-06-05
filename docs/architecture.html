@@ -209,7 +209,7 @@ sequenceDiagram
     Browser->>Ctrl: POST /startOneFile (sessionId · fileName · mode)
     Note over Ctrl: creates Consumer&lt;String&gt; progressReporter<br/>that forwards messages to the WebSocket topic
 
-    Ctrl->>DS: deduplicateOneFile(inputPath, outputPath, mode, progressReporter)
+    Ctrl->>DS: deduplicateOneFile(inputPath, mode, progressReporter)
     activate DS
 
     DS->>Reader: readBibliographicItems(inputPath, progressReporter)

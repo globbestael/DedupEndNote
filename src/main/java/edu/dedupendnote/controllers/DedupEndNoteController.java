@@ -124,7 +124,6 @@ public class DedupEndNoteController {
 
 		try {
 			Path inputPath = UtilitiesService.resolveInUploadDir(uploadDir, inputFileName);
-			Path outputPath = UtilitiesService.createPath(inputPath, mode.filenameSuffix(), "txt");
 
 			Consumer<String> progressReporter = message -> simpMessagingTemplate
 					.convertAndSend("/topic/messages-" + wssessionId, new StompMessage(message));
@@ -132,7 +131,7 @@ public class DedupEndNoteController {
 				RequestAttributes requestAttributes = RequestContextHolder.currentRequestAttributes();
 				Future<String> future = executor.submit(() -> {
 					RequestContextHolder.setRequestAttributes(requestAttributes);
-					return deduplicationService.deduplicateOneFile(inputPath, outputPath, mode,
+					return deduplicationService.deduplicateOneFile(inputPath, mode,
 							progressReporter);
 				});
 				String result = future.get();
@@ -155,7 +154,6 @@ public class DedupEndNoteController {
 		try {
 			Path newInputPath = UtilitiesService.resolveInUploadDir(uploadDir, newFile);
 			Path oldInputPath = UtilitiesService.resolveInUploadDir(uploadDir, oldFile);
-			Path outputPath = UtilitiesService.createPath(newInputPath, mode.filenameSuffix(), "txt");
 
 			Consumer<String> progressReporter = message -> simpMessagingTemplate
 					.convertAndSend("/topic/messages-" + wssessionId, new StompMessage(message));
@@ -164,7 +162,7 @@ public class DedupEndNoteController {
 				Future<String> future = executor.submit(() -> {
 					RequestContextHolder.setRequestAttributes(requestAttributes);
 					return deduplicationService.deduplicateTwoFiles(newInputPath, oldInputPath,
-							outputPath, mode, progressReporter);
+							mode, progressReporter);
 				});
 				String result = future.get();
 				log.info("Writing to result: {}: {}", logPrefix, result);

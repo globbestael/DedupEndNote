@@ -11,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import edu.dedupendnote.services.DeduplicationService;
 import edu.dedupendnote.domain.DeduplicationMode;
-import edu.dedupendnote.services.UtilitiesService;
 
 class TwoFilesTests extends AbstractIntegrationTest {
 	@Autowired
@@ -28,9 +27,8 @@ class TwoFilesTests extends AbstractIntegrationTest {
 		Path oldInputPath = testDir.resolve("TwoFiles_1.txt");
 		Path newInputPath = testDir.resolve("TwoFiles_2.txt");
 		DeduplicationMode mode = DeduplicationMode.REMOVE;
-		Path outputPath = UtilitiesService.createPath(newInputPath, mode.filenameSuffix(), "txt");
 
-		String resultString = deduplicationService.deduplicateTwoFiles(newInputPath, oldInputPath, outputPath,
+		String resultString = deduplicationService.deduplicateTwoFiles(newInputPath, oldInputPath,
 				mode, message -> {});
 		System.err.println(resultString);
 		assertThat(resultString).startsWith(
@@ -43,9 +41,8 @@ class TwoFilesTests extends AbstractIntegrationTest {
 		Path oldInputPath = testDir.resolve("Recurrance_rate_EndNote_Library_original_deduplicated.txt");
 		Path newInputPath = testDir.resolve("Recurrence_rate_search_updated_sept_18_deduplicated.txt");
 		DeduplicationMode mode = DeduplicationMode.REMOVE;
-		Path outputPath = UtilitiesService.createPath(newInputPath, mode.filenameSuffix(), "txt");
 
-		String resultString = deduplicationService.deduplicateTwoFiles(newInputPath, oldInputPath, outputPath,
+		String resultString = deduplicationService.deduplicateTwoFiles(newInputPath, oldInputPath,
 				mode, message -> {});
 		System.err.println(resultString);
 		assertThat(resultString).startsWith("ERROR: The second input file contains records without IDs");

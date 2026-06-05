@@ -21,7 +21,6 @@ import edu.dedupendnote.services.DeduplicationService;
 import edu.dedupendnote.services.BibliographicItemReader;
 import edu.dedupendnote.services.NormalizationService;
 import edu.dedupendnote.domain.DeduplicationMode;
-import edu.dedupendnote.services.UtilitiesService;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -71,9 +70,8 @@ class DedupEndNoteApplicationTests extends AbstractIntegrationTest {
 	void deduplicate_OK() {
 		Path inputPath = testDir.resolve("t1.txt");
 		DeduplicationMode mode = DeduplicationMode.REMOVE;
-		Path outputPath = UtilitiesService.createPath(inputPath, mode.filenameSuffix(), "txt");
 
-		String resultString = deduplicationService.deduplicateOneFile(inputPath, outputPath, mode,
+		String resultString = deduplicationService.deduplicateOneFile(inputPath, mode,
 				message -> {
 				});
 
@@ -89,10 +87,9 @@ class DedupEndNoteApplicationTests extends AbstractIntegrationTest {
 	void deduplicateSmallFiles(String fileName, int total, int totalWritten) {
 		Path inputPath = testDir.resolve(fileName);
 		DeduplicationMode mode = DeduplicationMode.REMOVE;
-		Path outputPath = UtilitiesService.createPath(inputPath, mode.filenameSuffix(), "txt");
 		assertThat(inputPath.toFile()).exists();
 
-		String resultString = deduplicationService.deduplicateOneFile(inputPath, outputPath, mode,
+		String resultString = deduplicationService.deduplicateOneFile(inputPath, mode,
 				message -> {
 				});
 
@@ -103,9 +100,8 @@ class DedupEndNoteApplicationTests extends AbstractIntegrationTest {
 	void deduplicate_withDuplicateIDs() {
 		Path inputPath = testDir.resolve("Bestand_met_duplicate_IDs.txt");
 		DeduplicationMode mode = DeduplicationMode.REMOVE;
-		Path outputPath = UtilitiesService.createPath(inputPath, mode.filenameSuffix(), "txt");
 
-		String resultString = deduplicationService.deduplicateOneFile(inputPath, outputPath, mode,
+		String resultString = deduplicationService.deduplicateOneFile(inputPath, mode,
 				message -> {
 				});
 

@@ -230,8 +230,9 @@ l						 * 		V 		W 		X
 		return !bibliographicItems.stream().map(BibliographicItem::getId).allMatch(new HashSet<>()::add);
 	}
 
-	public String deduplicateOneFile(Path inputPath, Path outputPath, DeduplicationMode mode,
+	public String deduplicateOneFile(Path inputPath, DeduplicationMode mode,
 			Consumer<String> progressReporter) {
+		Path outputPath = UtilitiesService.createPath(inputPath, mode.filenameSuffix(), "txt");
 		progressReporter.accept("Reading file " + inputPath.getFileName());
 		List<BibliographicItem> bibliographicItems;
 		try {
@@ -270,8 +271,9 @@ l						 * 		V 		W 		X
 		return s;
 	}
 
-	public String deduplicateTwoFiles(Path newInputPath, Path oldInputPath, Path outputPath,
+	public String deduplicateTwoFiles(Path newInputPath, Path oldInputPath,
 			DeduplicationMode mode, Consumer<String> progressReporter) {
+		Path outputPath = UtilitiesService.createPath(newInputPath, mode.filenameSuffix(), "txt");
 		// read the old bibliographicItems and mark them as present, then add the new bibliographicItems
 		log.info("oldInputPath: {}", oldInputPath);
 		log.info("newInputPath: {}", newInputPath);

@@ -49,7 +49,6 @@ class AuthorExperimentsTests extends AbstractIntegrationTest {
 		ValidationResult baseline = new ValidationResult("SRA2_Haematology", 222, 6, 1186, 1, 300L, 106);
 
 		Path inputPath = testDir.resolve("SRA2/Haematology.txt");
-		Path markPath = UtilitiesService.createPath(inputPath, DeduplicationMode.MARK.filenameSuffix(), "txt");
 		Path outputPath = testDir.resolve("SRA2/Haematology_experimental_to_validate.txt");
 		Path truthPath = testDir.resolve("SRA2/Haematology_TRUTH.txt");
 
@@ -63,8 +62,9 @@ class AuthorExperimentsTests extends AbstractIntegrationTest {
 				new BibliographicItemWriter(), new EnrichmentService());
 
 		long start = System.currentTimeMillis();
-		expService.deduplicateOneFile(inputPath, markPath, DeduplicationMode.MARK, message -> {
+		expService.deduplicateOneFile(inputPath, DeduplicationMode.MARK, message -> {
 		});
+		Path markPath = UtilitiesService.createPath(inputPath, DeduplicationMode.MARK.filenameSuffix(), "txt");
 		List<BibliographicItem> bibliographicItems = bibliographicItemReader.readBibliographicItems(markPath,
 				message -> {
 				}, /* includeLabelField= */ true);

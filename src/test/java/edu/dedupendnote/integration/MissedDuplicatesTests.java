@@ -18,7 +18,6 @@ import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 import edu.dedupendnote.services.DeduplicationService;
 import edu.dedupendnote.domain.DeduplicationMode;
-import edu.dedupendnote.services.UtilitiesService;
 import edu.dedupendnote.integration.utils.MemoryAppender;
 import lombok.extern.slf4j.Slf4j;
 
@@ -120,12 +119,16 @@ class MissedDuplicatesTests extends AbstractIntegrationTest {
 	// @formatter:on
 	void deduplicateMissedDuplicates(String fileName, int total, int totalWritten) {
 		log.debug("Log level should be debug");
-		Path inputPath = testDir.resolve(fileName.startsWith("/") ? fileName.substring(1) : fileName);
+		/*
+			FIXME: Why is this conditional necessary. The @CsvSource should use relative paths. 
+			There probably should be a testUtility function that creates the inputPath and checks if the file exists.
+			The function UtilitiesService.resolveInUploadDir() cannot be used for this because it doesn't allow
+			path separators in the second parameter.
+		 */ Path inputPath = testDir.resolve(fileName.startsWith("/") ? fileName.substring(1) : fileName);
 		DeduplicationMode mode = DeduplicationMode.REMOVE;
-		Path outputPath = UtilitiesService.createPath(inputPath, mode.filenameSuffix(), "txt");
 		assertThat(inputPath.toFile()).exists();
 
-		String resultString = deduplicationService.deduplicateOneFile(inputPath, outputPath, mode, message -> {
+		String resultString = deduplicationService.deduplicateOneFile(inputPath, mode, message -> {
 		});
 
 		System.err.println("Messages: " + memoryAppender.filterByPatterns(tracePatterns, Level.TRACE));
