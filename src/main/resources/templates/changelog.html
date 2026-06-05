@@ -121,7 +121,12 @@
                                 <code>Files.newBufferedReader</code> /
                                 <code>Files.newBufferedWriter</code> throughout; eliminates
                                 <code>.toFile()</code> bridge calls and fixes implicit
-                                platform-default encoding (was not guaranteed UTF-8 on Windows)
+                                platform-default encoding (was not guaranteed UTF-8 on Windows);
+                                controller result-file download switched to NIO2
+                                <code>FileChannel</code>; <code>PathUtils.deleteDirectory</code>
+                                (Apache commons-io) replaces Spring's
+                                <code>FileSystemUtils.deleteRecursively</code>, removing the
+                                last <code>java.io.File</code> usage from production code
                             </li>
                         </ul>
                     </li>
