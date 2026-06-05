@@ -2,7 +2,7 @@
 
 ## Context
 
-Two related problems:
+Three related problems:
 
 **1. Duplicate extension-stripping logic.**
 `createOutputFileName` uses a regex to strip the last extension before inserting a suffix.
@@ -10,75 +10,99 @@ Two related problems:
 in the previous session use `UtilitiesService.removeFileExtension(inputPath.getFileName().toString()) + suffix`.
 All three patterns do the same thing in different ways; one well-named helper can unify them.
 
-**2. Structural duplication in `ValidationTests`.**
+**2. Unnecessary intermediate helpers.**
+`createOutputFileName(String, mode)` is a String→String transform that exists only to bridge
+the browser-boundary `String` to the service-layer `Path`. Once the controller resolves the
+input to a `Path` first (via `resolveInUploadDir`), `createOutputFileName` is no longer needed —
+the output path can be derived directly from the input `Path`. Similarly, `createOutputPath` is
+just a thin wrapper that translates a `DeduplicationMode` to a suffix string and calls
+`createOutputFileName`. Both can be eliminated.
+
+**3. Structural duplication in `ValidationTests`.**
 The 14 `checkResults_*` methods and ~10 `createInitialTruthFile_*` / `createRisWithTRUTH_*`
-methods each construct 2–4 related paths (input, output, truth, asysd-gold) that follow a
-consistent naming convention: strip the extension from the input filename, append a suffix, add
-`.txt`. They are identical in shape but differ only in the input path and set name. This causes
-significant copy-paste and makes adding a new dataset tedious.
+methods each construct 2–4 related paths that follow a consistent naming convention: strip the
+extension from the input filename, append a suffix, add `.txt`. They differ only in the input
+path and set name — pure copy-paste.
+
+---
+
+## Design decisions made
+
+- **No 2-argument overload of `createPath`** — always pass the new extension explicitly.
+- **Extension is always `"txt"`** for derived output files. This is safer than preserving the
+  original extension: a `.ris` output file double-clicked on a Windows machine would be
+  auto-imported into any open EndNote database. Using `.txt` avoids that risk.
+- **`DeduplicationMode.toString()` is NOT changed** — it is used in log messages where `MARK`
+  and `REMOVE` are the correct representations. A dedicated `filenameSuffix()` method carries
+  the filename contribution instead.
 
 ---
 
 ## Proposed solution
 
-### 1. New `UtilitiesService.createPath(Path, @Nullable String, String)`
+### 1. `DeduplicationMode.filenameSuffix()`
 
+Add a method to the enum that returns the filename suffix for each mode:
+
+```java
+public String filenameSuffix() {
+    return this == MARK ? "_mark" : "_deduplicated";
+}
 ```
+
+### 2. `UtilitiesService.createPath(Path inputPath, @Nullable String addition, String newExtension)`
+
+```java
 Path createPath(Path inputPath, @Nullable String addition, String newExtension)
 ```
 
-- Takes the filename of `inputPath`, strips the last extension (via `removeFileExtension`),
-  appends `addition` if it is non-null and non-blank, appends `.` + `newExtension`.
+- Strips the last extension from `inputPath.getFileName()` via `removeFileExtension`.
+- Appends `addition` if it is non-null and non-blank.
+- Appends `.` + `newExtension`.
 - Returns a sibling `Path` in the same parent directory.
-- `newExtension` must not be null (throws `IllegalArgumentException`); the user stated it
-  cannot be empty or blank either, so validate that.
-- NullAway: `inputPath.getParent()` is `@Nullable` — guard with the same null-check pattern
-  used in `createOutputPath`.
+- `newExtension` must not be null, empty, or blank — validate and throw
+  `IllegalArgumentException`.
+- NullAway: guard `inputPath.getParent()` with the same null-check pattern as the existing
+  `createOutputPath`.
 
 Examples:
 ```
-createPath(Path("/data/SRA2/Stroke.txt"),   "_TRUTH",       "txt") → /data/SRA2/Stroke_TRUTH.txt
-createPath(Path("/data/SRA2/Stroke.txt"),   "_to_validate", "txt") → /data/SRA2/Stroke_to_validate.txt
-createPath(Path("/data/TIL/TIL.txt"),       "_mark",        "txt") → /data/TIL/TIL_mark.txt
-createPath(Path("/data/TIL/TIL_Zotero.ris"),"_mark",        "txt") → /data/TIL/TIL_Zotero_mark.txt
-createPath(Path("/data/Stroke.txt"),         null,           "txt") → /data/Stroke.txt
+createPath(Path(".../SRA2/Stroke.txt"),    "_TRUTH",        "txt") → .../SRA2/Stroke_TRUTH.txt
+createPath(Path(".../SRA2/Stroke.txt"),    "_to_validate",  "txt") → .../SRA2/Stroke_to_validate.txt
+createPath(Path(".../TIL/TIL.txt"),        "_mark",         "txt") → .../TIL/TIL_mark.txt
+createPath(Path(".../TIL/TIL_Zotero.ris"), "_mark",         "txt") → .../TIL/TIL_Zotero_mark.txt
+createPath(Path(".../Stroke.txt"),          null,            "txt") → .../Stroke.txt
 ```
 
-### 2. Simplify `createOutputFileName` using `removeFileExtension`
+### 3. Delete `createOutputFileName` and `createOutputPath`
 
-The current regex approach can be replaced with the simpler `removeFileExtension` + string concat:
+Both helpers are eliminated:
 
+- **`createOutputFileName(String, mode)`** — its only call sites are in the controller and
+  internally in `createOutputPath`. Controller call sites are restructured (see below).
+- **`createOutputPath(Path, mode)`** — replaced at all call sites by
+  `createPath(inputPath, mode.filenameSuffix(), "txt")`.
+
+### 4. Controller restructured to use `createPath` directly
+
+**Before** (String→String→Path detour):
 ```java
-String addition = mode == DeduplicationMode.MARK ? "_mark" : "_deduplicated";
-if (extension == null || extension.isEmpty()) {
-    return fileName + addition;   // removeFileExtension is a no-op; just append
-}
-return removeFileExtension(fileName) + addition + "." + extension;
+Path inputPath  = UtilitiesService.resolveInUploadDir(uploadDir, inputFileName);
+Path outputPath = UtilitiesService.resolveInUploadDir(uploadDir,
+        UtilitiesService.createOutputFileName(inputFileName, mode));
 ```
 
-This makes the implementation consistent with the `removeFileExtension` family. No behaviour
-change; existing tests cover this.
-
-### 3. Simplify `createOutputPath` using `createPath`
-
+**After** (Path-first, single resolution):
 ```java
-public static Path createOutputPath(Path inputPath, DeduplicationMode mode) {
-    String addition = mode == DeduplicationMode.MARK ? "_mark" : "_deduplicated";
-    String extension = StringUtils.getFilenameExtension(inputPath.getFileName().toString());
-    if (extension == null || extension.isEmpty()) {
-        // createPath requires a non-blank extension; handle edge case directly
-        Path parent = inputPath.getParent();
-        if (parent == null) throw new IllegalArgumentException(...);
-        return parent.resolve(removeFileExtension(inputPath.getFileName().toString()) + addition);
-    }
-    return createPath(inputPath, addition, extension);
-}
+Path inputPath  = UtilitiesService.resolveInUploadDir(uploadDir, inputFileName);
+Path outputPath = UtilitiesService.createPath(inputPath, mode.filenameSuffix(), "txt");
 ```
 
-### 4. Replace the four `resolveSibling` call sites with `createPath`
+This applies to `startOneFile`, `startTwoFiles`, and `getResultFile`. The second
+`resolveInUploadDir` call on the output is removed — the output is guaranteed to be a sibling
+of the already-validated input, so no separate traversal check is needed.
 
-The `UtilitiesService.removeFileExtension(inputPath.getFileName().toString()) + "_mark.txt"` pattern
-introduced in the previous session is replaced by the cleaner `createPath` call:
+### 5. Replace the four `resolveSibling` call sites
 
 | File | Before | After |
 |---|---|---|
@@ -87,46 +111,43 @@ introduced in the previous session is replaced by the cleaner `createPath` call:
 | `ValidationService` (FN) | `resolveSibling(removeFileExtension(...) + "_FN_Analysis.txt")` | `createPath(inputPath, "_FN_Analysis", "txt")` |
 | `AuthorExperimentsTests` | `resolveSibling(removeFileExtension(...) + "_mark.txt")` | `createPath(inputPath, "_mark", "txt")` |
 
-After this change the explicit `removeFileExtension` import in `ValidationTests`,
-`ValidationService`, and `AuthorExperimentsTests` is no longer needed (they import
-`UtilitiesService` for `createPath`).
+After this change the explicit `UtilitiesService` import in `ValidationService` and
+`AuthorExperimentsTests` is already present; `removeFileExtension` is no longer called directly
+but `createPath` is.
 
 ---
 
 ## ValidationTests: generic helpers
 
 The per-dataset methods follow one of four shapes. A generic helper for each shape eliminates
-the per-dataset path repetition.
+the per-dataset path repetition. All derived paths use `"txt"` as extension.
 
 ### Shape A — `checkResults_*` (13 of 14 datasets)
 
-Naming convention: `truthPath` = input with `_TRUTH.txt` suffix; `outputPath` = input with
-`_to_validate.txt` suffix. Set name must be passed because it is not mechanically derivable from
-the path (e.g. `"Clinical_trials"` comes from the directory, `"McKeown_2021"` comes from the
-filename, `"ASySD_SRSR_Human"` omits the intermediate `dedupendnote_files` directory).
+`truthPath` = input with `_TRUTH.txt` suffix; `outputPath` = input with `_to_validate.txt`
+suffix. Set name must be passed — it is not mechanically derivable from the path.
 
 ```java
 ValidationResult checkResultsFor(String setName, Path inputPath) throws IOException {
     return checkResults(setName, inputPath,
         UtilitiesService.createPath(inputPath, "_to_validate", "txt"),
-        UtilitiesService.createPath(inputPath, "_TRUTH", "txt"));
+        UtilitiesService.createPath(inputPath, "_TRUTH",       "txt"));
 }
 ```
 
-Each per-dataset method becomes a one-liner:
+Per-dataset becomes a one-liner:
 ```java
 ValidationResult checkResults_SRA2_Stroke() throws IOException {
     return checkResultsFor("SRA2_Stroke", testDir.resolve("SRA2/Stroke.txt"));
 }
 ```
 
-**Exception — `checkResults_TIL_Zotero`**: its truth file is `TIL_TRUTH.txt`, shared with the
-`TIL` dataset — not `TIL_Zotero_TRUTH.txt`. Keep this method with its explicit paths; add a
-comment explaining the exception.
+**Exception — `checkResults_TIL_Zotero`**: truth file is `TIL_TRUTH.txt`, shared with the `TIL`
+dataset — not `TIL_Zotero_TRUTH.txt`. Keep explicit paths; add a comment.
 
 ### Shape B — `createInitialTruthFile_*` without ASySD gold file (6 methods)
 
-Naming convention: `outputPath` = input with `_for_truth.txt` suffix.
+`outputPath` = input with `_for_truth.txt` suffix.
 
 ```java
 void createInitialTruthFileFor(Path inputPath) {
@@ -135,17 +156,9 @@ void createInitialTruthFileFor(Path inputPath) {
 }
 ```
 
-Each per-dataset method becomes:
-```java
-void createInitialTruthFile_SRA2_Haematology() {
-    createInitialTruthFileFor(testDir.resolve("SRA2/Haematology.txt"));
-}
-```
-
 ### Shape C — `createInitialTruthFile_*` with ASySD gold file (4 methods)
 
-Naming convention: `asysdInputPath` = input with `_asysd_gold.txt` suffix;
-`outputPath` = input with `_for_truth.txt` suffix.
+`asysdInputPath` = input with `_asysd_gold.txt` suffix; `outputPath` = `_for_truth.txt`.
 
 ```java
 void createInitialTruthFileWithASySDFor(Path inputPath) {
@@ -155,18 +168,9 @@ void createInitialTruthFileWithASySDFor(Path inputPath) {
 }
 ```
 
-Each per-dataset method becomes:
-```java
-void createInitialTruthFile_ASySD_Diabetes() {
-    createInitialTruthFileWithASySDFor(
-        testDir.resolve("ASySD/dedupendnote_files/Diabetes.txt"));
-}
-```
-
 ### Shape D — `createRisWithTRUTH_*` (2 of 3 methods)
 
-Naming convention: `truthPath` = input with `_TRUTH.txt` suffix;
-`outputPath` = input with `_with_TRUTH.txt` suffix.
+`truthPath` = input with `_TRUTH.txt`; `outputPath` = input with `_with_TRUTH.txt`.
 
 ```java
 void createRisWithTRUTHFor(Path inputPath) throws IOException {
@@ -176,9 +180,8 @@ void createRisWithTRUTHFor(Path inputPath) throws IOException {
 }
 ```
 
-**Exception — `createRisWithTRUTH_BIG_SET_DS`**: its truth file is in a different directory
-(`own/BIG_SET_TRUTH.txt`) from the input (`Dedupe-sweep/.../BIG_SET_mark_DS.txt`). Keep this
-method with explicit paths.
+**Exception — `createRisWithTRUTH_BIG_SET_DS`**: truth file is in a different directory from
+the input. Keep explicit paths.
 
 ---
 
@@ -186,27 +189,34 @@ method with explicit paths.
 
 | File | Change |
 |---|---|
-| `UtilitiesService` | Add `createPath(Path, @Nullable String, String)`; simplify `createOutputFileName` to use `removeFileExtension`; simplify `createOutputPath` to use `createPath` |
+| `DeduplicationMode` | Add `filenameSuffix()` method |
+| `UtilitiesService` | Add `createPath(Path, @Nullable String, String)`; delete `createOutputFileName` and `createOutputPath` |
+| `DedupEndNoteController` | Remove `createOutputFileName` calls; use `createPath(inputPath, mode.filenameSuffix(), "txt")` |
 | `ValidationTests` | Add 4 generic helpers; replace 13 `checkResults_*`, ~6 simple `createInitialTruthFile_*`, 4 ASySD `createInitialTruthFile_*`, 2 `createRisWithTRUTH_*` with one-liner calls; keep 2 explicit exceptions |
 | `ValidationService` | Replace `resolveSibling(removeFileExtension(...) + "...")` with `createPath(...)` |
 | `AuthorExperimentsTests` | Same |
-| `UtilitiesServiceTest` | Add tests for `createPath` |
+| Integration tests (`DedupEndNoteApplicationTests`, `TwoFilesTests`, `MissedDuplicatesTests`) | Replace `createOutputPath(inputPath, mode)` with `createPath(inputPath, mode.filenameSuffix(), "txt")` |
+| `UtilitiesServiceTest` | Replace `createOutputFileName` tests; add `createPath` and `DeduplicationMode.filenameSuffix` tests |
 | `changelog.html` | Add Internal bullet for 1.1.7 |
-| `CLAUDE.md` | Update file-path naming convention section to mention `createPath` |
+| `CLAUDE.md` | Update file-path naming convention section |
 
 ---
 
 ## What is NOT changed
 
-- `RecordDBService.saveRecordDBs` — its `replace("mark.", "markDB.")` pattern manipulates a
-  known substring within an already-correctly-named file; it is not a suffix-append pattern and
-  `createPath` does not apply.
+- `RecordDBService.saveRecordDBs` — `replace("mark.", "markDB.")` manipulates a known substring
+  within an already-correctly-named file; `createPath` does not apply.
 - `checkResults_TIL_Zotero` and `createRisWithTRUTH_BIG_SET_DS` — exceptions documented above.
+- `DeduplicationMode.toString()` — unchanged; `"MARK"` / `"REMOVE"` are the right log
+  representations.
 
 ---
 
 ## Verification
 
-- `./mvnw test -Punit-tests` — all unit tests including new `createPath` tests pass
+- `./mvnw test -Punit-tests` — all unit tests including new `createPath` and
+  `filenameSuffix` tests pass
 - `./mvnw test -Pintegration-tests` — all integration tests pass
-- No behaviour change: the same file paths are produced, just via the new helper
+- Behaviour note: output files that previously had a `.ris` extension (when the input was
+  `.ris`) will now be `.txt`. This is intentional — `.ris` output files risk auto-import
+  into open EndNote databases on double-click.
