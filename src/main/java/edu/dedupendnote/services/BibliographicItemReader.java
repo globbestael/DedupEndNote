@@ -1,7 +1,6 @@
 package edu.dedupendnote.services;
 
 import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -191,7 +190,7 @@ public class BibliographicItemReader {
 
 		// Line starting with "TY - " triggers creation of record, line starting with
 		// "ER - " signals end of record
-		try (BufferedReader br = new BufferedReader(new FileReader(inputPath.toFile()))) {
+		try (BufferedReader br = Files.newBufferedReader(inputPath)) {
 			if (hasBom) {
 				br.skip(1);
 			}

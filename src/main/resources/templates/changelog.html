@@ -116,6 +116,13 @@
                                 internally from <code>inputPath</code> and <code>mode</code>,
                                 which are already available as parameters
                             </li>
+                            <li>Replace <code>java.io.FileReader</code> /
+                                <code>FileWriter</code> with NIO2
+                                <code>Files.newBufferedReader</code> /
+                                <code>Files.newBufferedWriter</code> throughout; eliminates
+                                <code>.toFile()</code> bridge calls and fixes implicit
+                                platform-default encoding (was not guaranteed UTF-8 on Windows)
+                            </li>
                         </ul>
                     </li>
                 </ul>

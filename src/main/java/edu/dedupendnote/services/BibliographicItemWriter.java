@@ -2,9 +2,8 @@ package edu.dedupendnote.services;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -59,8 +58,8 @@ public class BibliographicItemWriter {
 
 		boolean hasBom = UtilitiesService.detectBom(inputPath);
 
-		try (BufferedWriter bw = new BufferedWriter(new FileWriter(outputPath.toFile()));
-				BufferedReader br = new BufferedReader(new FileReader(inputPath.toFile()))) {
+		try (BufferedWriter bw = Files.newBufferedWriter(outputPath);
+				BufferedReader br = Files.newBufferedReader(inputPath)) {
 			if (hasBom) {
 				br.skip(1);
 			}
@@ -146,8 +145,8 @@ public class BibliographicItemWriter {
 
 		boolean hasBom = UtilitiesService.detectBom(inputPath);
 
-		try (BufferedWriter bw = new BufferedWriter(new FileWriter(outputPath.toFile()));
-				BufferedReader br = new BufferedReader(new FileReader(inputPath.toFile()))) {
+		try (BufferedWriter bw = Files.newBufferedWriter(outputPath);
+				BufferedReader br = Files.newBufferedReader(inputPath)) {
 			if (hasBom) {
 				br.skip(1);
 			}

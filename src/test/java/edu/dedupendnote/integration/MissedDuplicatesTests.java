@@ -126,7 +126,7 @@ class MissedDuplicatesTests extends AbstractIntegrationTest {
 			path separators in the second parameter.
 		 */ Path inputPath = testDir.resolve(fileName.startsWith("/") ? fileName.substring(1) : fileName);
 		DeduplicationMode mode = DeduplicationMode.REMOVE;
-		assertThat(inputPath.toFile()).exists();
+		assertThat(inputPath).exists();
 
 		String resultString = deduplicationService.deduplicateOneFile(inputPath, mode, message -> {
 		});

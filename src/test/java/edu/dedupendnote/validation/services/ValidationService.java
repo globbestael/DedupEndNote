@@ -1,8 +1,8 @@
 package edu.dedupendnote.validation.services;
 
 import java.io.BufferedWriter;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -143,8 +143,8 @@ public class ValidationService {
 			 */
 			Path fpAnalysisPath = UtilitiesService.createPath(inputPath, "_FP_Analysis", "txt");
 			Path fnAnalysisPath = UtilitiesService.createPath(inputPath, "_FN_Analysis", "txt");
-			fpAnalysisPath.toFile().delete();
-			fnAnalysisPath.toFile().delete();
+			Files.deleteIfExists(fpAnalysisPath);
+			Files.deleteIfExists(fnAnalysisPath);
 			if (!fnPairs.isEmpty()) {
 				validationResult.setFnPairs(fnPairs);
 				writeFNandFPresults(fnPairs, fnAnalysisPath, deduplicationService);
@@ -174,12 +174,14 @@ public class ValidationService {
 				.withHeader()
 				.withColumnSeparator('\t')
 				.withLineSeparator("\n");
-		MappingIterator<BibliographicItemDB> it = mapper
-				.readerFor(BibliographicItemDB.class)
-				.with(schema)
-				.with(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT)
-				.readValues(truthPath.toFile());
-		return it.readAll();
+		try (var reader = Files.newBufferedReader(truthPath)) {
+			MappingIterator<BibliographicItemDB> it = mapper
+					.readerFor(BibliographicItemDB.class)
+					.with(schema)
+					.with(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT)
+					.readValues(reader);
+			return it.readAll();
+		}
 	}
 
 	private void writeFNandFPresults(Map<Integer, List<List<BibliographicItem>>> pairsList, Path outputPath,
@@ -192,7 +194,7 @@ public class ValidationService {
 			);
 		Level oldLevel = null;
 
-		try (BufferedWriter bw = new BufferedWriter(new FileWriter(outputPath.toFile()))) {
+		try (BufferedWriter bw = Files.newBufferedWriter(outputPath)) {
 			MemoryAppender memoryAppender = new MemoryAppender();
 			for (String loggerName : loggerNames) {
 				Logger logger = (Logger) LoggerFactory.getLogger(loggerName);

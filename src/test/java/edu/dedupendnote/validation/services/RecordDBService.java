@@ -2,9 +2,8 @@ package edu.dedupendnote.validation.services;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -53,7 +52,7 @@ public class RecordDBService {
 		String outputFileName = outputPath.getFileName().toString().replace("mark.", "markDB.");
 		Path resolvedOutputPath = outputPath.getParent().resolve(outputFileName);
 		log.debug("Start writing {} records to file {}", publicationDBs.size(), resolvedOutputPath);
-		try (BufferedWriter bw = new BufferedWriter(new FileWriter(resolvedOutputPath.toFile()))) {
+		try (BufferedWriter bw = Files.newBufferedWriter(resolvedOutputPath)) {
 			bw.write(DB_FIELDS.stream().collect(Collectors.joining("\t")) + "\n");
 			for (BibliographicItemDB r : publicationDBs) {
 				writeRecordForDB(r, bw);
@@ -79,7 +78,7 @@ public class RecordDBService {
 		Integer phantomId = 0;
 		String realId = null;
 
-		try (BufferedReader br = new BufferedReader(new FileReader(inputPath.toFile()))) {
+		try (BufferedReader br = Files.newBufferedReader(inputPath)) {
 			if (hasBom) {
 				br.skip(1);
 			}

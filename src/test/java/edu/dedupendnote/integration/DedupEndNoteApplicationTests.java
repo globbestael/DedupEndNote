@@ -87,7 +87,7 @@ class DedupEndNoteApplicationTests extends AbstractIntegrationTest {
 	void deduplicateSmallFiles(String fileName, int total, int totalWritten) {
 		Path inputPath = testDir.resolve(fileName);
 		DeduplicationMode mode = DeduplicationMode.REMOVE;
-		assertThat(inputPath.toFile()).exists();
+		assertThat(inputPath).exists();
 
 		String resultString = deduplicationService.deduplicateOneFile(inputPath, mode,
 				message -> {
