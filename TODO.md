@@ -6,13 +6,9 @@
   Should there still be BufferedReader's (java.io) calls in the program?
 - There are some full paths in the user-facing messages, e.g. in the catch of BibliographicItemWiter l.121
   This is a OWASP risk
-- Are there any "Path.of()" cases or use of the fileseparator left?
-- ValidationTests::686ff: comments says there is no difference between validation and production, but isn't this
-  copied code, so: shouldn't this be extracted to a function?
 - BibliographicItemWriter has e.printStackTrace(). Maybe more cases
 - There are some cases with path.resolve(filename).normalize()
   Why is this normalize() not called after every resolve(...)?
-
 
 ## OWASP
 

@@ -612,8 +612,8 @@ class ValidationTests extends AbstractIntegrationTest {
 		 * This closes the gap between validation and production: validation now exercises
 		 * the exact code path the production deployment runs, instead of mimicking it.
 		 */
-		Path markPath = UtilitiesService.createPath(inputPath, "_mark", "txt");
+		Path markPath = UtilitiesService.createPath(inputPath, DeduplicationMode.MARK.filenameSuffix(), "txt");
 		deduplicationService.deduplicateOneFile(inputPath, markPath, DeduplicationMode.MARK, message -> {});
-		return bibliographicItemReader.readBibliographicItems(markPath, message -> {}, /* includeLabelField= */ true);
+		return bibliographicItemReader.readBibliographicItems(markPath, message -> {}, true);
 	}
 }

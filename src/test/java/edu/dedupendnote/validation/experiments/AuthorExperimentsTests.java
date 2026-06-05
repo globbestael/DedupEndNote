@@ -49,28 +49,29 @@ class AuthorExperimentsTests extends AbstractIntegrationTest {
 		ValidationResult baseline = new ValidationResult("SRA2_Haematology", 222, 6, 1186, 1, 300L, 106);
 
 		Path inputPath = testDir.resolve("SRA2/Haematology.txt");
-		Path markPath  = UtilitiesService.createPath(inputPath, "_mark", "txt");
+		Path markPath = UtilitiesService.createPath(inputPath, DeduplicationMode.MARK.filenameSuffix(), "txt");
 		Path outputPath = testDir.resolve("SRA2/Haematology_experimental_to_validate.txt");
-		Path truthPath  = testDir.resolve("SRA2/Haematology_TRUTH.txt");
+		Path truthPath = testDir.resolve("SRA2/Haematology_TRUTH.txt");
 
 		// Threshold == 1.0 (the max JWS score) — similarity > 1.0 is never true, so no author
 		// match ever succeeds; sensitivity drops to 0%, specificity reaches 100%.
 		AuthorThresholds noMatchThresholds = new AuthorThresholds(1.0, 1.0, 1.0);
-		FieldComparators cs = new FieldComparators(
-				new DefaultAuthorsComparisonService(noMatchThresholds),
-				new DefaultTitleComparisonService(),
-				new DefaultJournalComparisonService(),
+		FieldComparators cs = new FieldComparators(new DefaultAuthorsComparisonService(noMatchThresholds),
+				new DefaultTitleComparisonService(), new DefaultJournalComparisonService(),
 				new DefaultPagesComparisonService());
-		DeduplicationService expService = new DeduplicationService(cs, new BibliographicItemReader(), new BibliographicItemWriter(), new EnrichmentService());
+		DeduplicationService expService = new DeduplicationService(cs, new BibliographicItemReader(),
+				new BibliographicItemWriter(), new EnrichmentService());
 
 		long start = System.currentTimeMillis();
-		expService.deduplicateOneFile(inputPath, markPath, DeduplicationMode.MARK, message -> {});
-		List<BibliographicItem> bibliographicItems = bibliographicItemReader.readBibliographicItems(markPath, message -> {}, /* includeLabelField= */ true);
+		expService.deduplicateOneFile(inputPath, markPath, DeduplicationMode.MARK, message -> {
+		});
+		List<BibliographicItem> bibliographicItems = bibliographicItemReader.readBibliographicItems(markPath,
+				message -> {
+				}, /* includeLabelField= */ true);
 		long duration = System.currentTimeMillis() - start;
 
-		ValidationResult expResult = validationService.checkResults(
-				"SRA2_Haematology_experimental", inputPath, outputPath, truthPath,
-				bibliographicItems, duration, /* withTracing= */ false, expService);
+		ValidationResult expResult = validationService.checkResults("SRA2_Haematology_experimental", inputPath,
+				outputPath, truthPath, bibliographicItems, duration, /* withTracing= */ false, expService);
 
 		// Higher author thresholds miss more duplicates (lower sensitivity) …
 		assertThat(expResult.getSensitivity()).isLessThan(baseline.getSensitivity());

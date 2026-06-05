@@ -61,7 +61,8 @@ class UtilitiesServiceTest {
 
 	@Test
 	void createPath_risInputAlwaysProducesTxtOutput() {
-		Path result = UtilitiesService.createPath(Path.of("data/TIL_Zotero.ris"), "_mark", "txt");
+		Path result = UtilitiesService.createPath(Path.of("data/TIL_Zotero.ris"),
+				DeduplicationMode.MARK.filenameSuffix(), "txt");
 		assertThat(result.getFileName().toString()).isEqualTo("TIL_Zotero_mark.txt");
 	}
 
@@ -73,14 +74,14 @@ class UtilitiesServiceTest {
 
 	@Test
 	void createPath_blankExtension_throws() {
-		assertThatThrownBy(() -> UtilitiesService.createPath(Path.of("data/Stroke.txt"), "_mark", "  "))
-				.isInstanceOf(IllegalArgumentException.class);
+		assertThatThrownBy(() -> UtilitiesService.createPath(Path.of("data/Stroke.txt"),
+				DeduplicationMode.MARK.filenameSuffix(), "  ")).isInstanceOf(IllegalArgumentException.class);
 	}
 
 	@Test
 	void createPath_nullExtension_throws() {
-		assertThatThrownBy(() -> UtilitiesService.createPath(Path.of("data/Stroke.txt"), "_mark", null))
-				.isInstanceOf(IllegalArgumentException.class);
+		assertThatThrownBy(() -> UtilitiesService.createPath(Path.of("data/Stroke.txt"),
+				DeduplicationMode.MARK.filenameSuffix(), null)).isInstanceOf(IllegalArgumentException.class);
 	}
 
 	@Test
