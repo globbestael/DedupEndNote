@@ -96,13 +96,34 @@ remain — `Files.newBufferedReader/Writer` return those types.
 
 ---
 
-## What is NOT changed
+## What is NOT changed (original plan)
 
 - `import java.io.IOException` — stays everywhere; NIO2 throws the same exception type.
 - `import java.io.BufferedReader` / `BufferedWriter` — still needed for variable types.
 - The BOM skip logic (`br.skip(1)`) — works identically with `Files.newBufferedReader`.
 - Any `Files.*` already-NIO2 calls (`Files.lines`, `Files.readAllLines`, `Files.copy`,
   `Files.deleteIfExists`) — already correct.
+- `java.io.InputStream` in `DedupEndNoteController` (used for `Files.copy` to servlet
+  output stream) and `java.io.StringReader` in `DedupEndNoteApplicationTests` (in-memory
+  string wrapping) — no NIO2 equivalent.
+
+## Follow-on changes (commit `01f5138`)
+
+Two further eliminations were made after the initial migration:
+
+### `DedupEndNoteController` — `InputStream` replaced by NIO channels ✓
+`Files.copy(path, response.getOutputStream())` used `java.io.InputStream` implicitly via
+the servlet output stream. Replaced with explicit `FileChannel` / `ReadableByteChannel`
+(NIO2), removing the `java.io.InputStream` import entirely.
+
+### `DedupEndNoteApplicationTests` — `StringReader` / `BufferedReader` removed ✓
+The `lineSeparator` test previously wrapped a `String` in `new StringReader(...)` then
+`new BufferedReader(...)` to call `.lines()`. Replaced with `String.lines()` (Java 11+),
+removing both `java.io.StringReader` and `java.io.BufferedReader` from the test class.
+
+### `pom.xml` — commons-io activated ✓
+The `commons-io 2.22.0` dependency (previously commented out) was activated to support
+`PathUtils.deleteDirectory(Path)` used in `DedupEndNoteApplication`.
 
 ---
 
@@ -138,3 +159,4 @@ Replaced with AssertJ `PathAssert`: `assertThat(path).exists()` in
 - `./mvnw test -Punit-tests` — 561 tests, 0 failures ✓
 - `./mvnw test -Pintegration-tests` — 20 tests, 0 failures ✓
 - Commit: `7fbd105` — 9 files, +37 / −35 lines
+- Follow-on commit: `01f5138` — controller NIO channels, String.lines(), commons-io activated
