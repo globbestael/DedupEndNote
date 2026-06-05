@@ -95,6 +95,13 @@
                                 for path-level callers alongside the existing
                                 <code>createOutputFileName</code> for the controller
                             </li>
+                            <li>Add <code>UtilitiesService.removeFileExtension</code>; fix
+                                double-extension filenames produced by appending a suffix (e.g.
+                                <code>_mark.txt</code>) directly to a filename that already had an
+                                extension, yielding names like
+                                <code>Haematology.txt_mark.txt</code> instead of
+                                <code>Haematology_mark.txt</code>
+                            </li>
                         </ul>
                     </li>
                 </ul>
