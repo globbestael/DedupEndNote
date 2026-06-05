@@ -1,10 +1,12 @@
 package edu.dedupendnote.controllers;
 
 import java.io.IOException;
-import java.io.InputStream;
+import java.nio.channels.Channels;
+import java.nio.channels.FileChannel;
+import java.nio.channels.ReadableByteChannel;
 import java.nio.file.Files;
-import java.nio.file.LinkOption;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -131,8 +133,7 @@ public class DedupEndNoteController {
 				RequestAttributes requestAttributes = RequestContextHolder.currentRequestAttributes();
 				Future<String> future = executor.submit(() -> {
 					RequestContextHolder.setRequestAttributes(requestAttributes);
-					return deduplicationService.deduplicateOneFile(inputPath, mode,
-							progressReporter);
+					return deduplicationService.deduplicateOneFile(inputPath, mode, progressReporter);
 				});
 				String result = future.get();
 				log.info("Writing to result: {}: {}", logPrefix, result);
@@ -161,8 +162,7 @@ public class DedupEndNoteController {
 				RequestAttributes requestAttributes = RequestContextHolder.currentRequestAttributes();
 				Future<String> future = executor.submit(() -> {
 					RequestContextHolder.setRequestAttributes(requestAttributes);
-					return deduplicationService.deduplicateTwoFiles(newInputPath, oldInputPath,
-							mode, progressReporter);
+					return deduplicationService.deduplicateTwoFiles(newInputPath, oldInputPath, mode, progressReporter);
 				});
 				String result = future.get();
 				log.info("Writing to result: {}: {}", logPrefix, result);
@@ -190,12 +190,27 @@ public class DedupEndNoteController {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"result\": \"Upload failed: file is empty\"}");
 		}
 		try {
-			Path path = UtilitiesService.resolveInUploadDir(uploadDir, file.getOriginalFilename());
-			try (InputStream inputStream = file.getInputStream()) {
-				if (Files.exists(path, LinkOption.NOFOLLOW_LINKS)) {
-					Files.delete(path);
+			Path targetPath = UtilitiesService.resolveInUploadDir(uploadDir, file.getOriginalFilename());
+			// Open a NIO2 FileChannel to write to the file system.
+			try (ReadableByteChannel inputChannel = Channels.newChannel(file.getInputStream());
+					FileChannel outputChannel = FileChannel.open(targetPath, StandardOpenOption.CREATE,
+							StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING)) {
+
+				// NIO2 zero-copy transfer via the operating system
+				long chunkSize = 8 * 1024 * 1024;
+				long bytesTransferred = 0;
+				long fileSize = file.getSize();
+
+				while (bytesTransferred < fileSize) {
+					long bytesRemaining = fileSize - bytesTransferred;
+					long bytesToTransfer = Math.min(chunkSize, bytesRemaining);
+					long transferred = outputChannel.transferFrom(inputChannel, bytesTransferred, bytesToTransfer);
+					if (transferred <= 0) {
+						break; // Prevent endless loop at EOF
+					}
+					bytesTransferred += transferred;
 				}
-				Files.copy(inputStream, path);
+
 				return ResponseEntity.ok("{\"result\": \"File uploaded successfully\"}");
 			} catch (IOException e) {
 				log.error("Error uploading file", e);

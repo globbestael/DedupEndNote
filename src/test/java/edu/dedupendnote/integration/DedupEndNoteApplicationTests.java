@@ -2,10 +2,8 @@ package edu.dedupendnote.integration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.StringReader;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -43,15 +41,12 @@ class DedupEndNoteApplicationTests extends AbstractIntegrationTest {
 	@Test
 	void lineSeparator() {
 		String line = "ST  - Total Pancreatectomy With Islet Cell Transplantation\u2028for the Treatment of Pancreatic Cancer";
+		Stream<String> lines = line.lines();
+		List<String> linesList = lines.toList();
 
-		// LINE SEPARATOR is not an end of line character for a Reader
-		try (StringReader stringReader = new StringReader(line);
-				BufferedReader bufferedReader = new BufferedReader(stringReader)) {
-			Stream<String> lines = bufferedReader.lines();
-			assertThat(lines.count()).as("LINE SEPARATOR is not an end of line character").isEqualTo(1);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		// log.info("Lines: {}", linesList);
+		// System.err.println("Lines: " + linesList);
+		assertThat(linesList.size()).as("LINE SEPARATOR is not an end of line character").isEqualTo(1);
 
 		// LINE SEPARATOR messes with '.*$'
 		Matcher matcher = BibliographicItemReader.RIS_LINE_PATTERN.matcher(line);
@@ -71,9 +66,8 @@ class DedupEndNoteApplicationTests extends AbstractIntegrationTest {
 		Path inputPath = testDir.resolve("t1.txt");
 		DeduplicationMode mode = DeduplicationMode.REMOVE;
 
-		String resultString = deduplicationService.deduplicateOneFile(inputPath, mode,
-				message -> {
-				});
+		String resultString = deduplicationService.deduplicateOneFile(inputPath, mode, message -> {
+		});
 
 		assertThat(resultString).isEqualTo(deduplicationService.formatResultString(4, 1));
 		// assertThat(resultString).startsWith("DONE: DedupEndNote removed 3 records, and
@@ -89,9 +83,8 @@ class DedupEndNoteApplicationTests extends AbstractIntegrationTest {
 		DeduplicationMode mode = DeduplicationMode.REMOVE;
 		assertThat(inputPath).exists();
 
-		String resultString = deduplicationService.deduplicateOneFile(inputPath, mode,
-				message -> {
-				});
+		String resultString = deduplicationService.deduplicateOneFile(inputPath, mode, message -> {
+		});
 
 		assertThat(resultString).isEqualTo(deduplicationService.formatResultString(total, totalWritten));
 	}
@@ -101,12 +94,11 @@ class DedupEndNoteApplicationTests extends AbstractIntegrationTest {
 		Path inputPath = testDir.resolve("Bestand_met_duplicate_IDs.txt");
 		DeduplicationMode mode = DeduplicationMode.REMOVE;
 
-		String resultString = deduplicationService.deduplicateOneFile(inputPath, mode,
-				message -> {
-				});
+		String resultString = deduplicationService.deduplicateOneFile(inputPath, mode, message -> {
+		});
 
-		assertThat(resultString)
-				.startsWith("ERROR: The IDs of the bibliographic items of input file " + inputPath.getFileName() + " are not unique");
+		assertThat(resultString).startsWith("ERROR: The IDs of the bibliographic items of input file "
+				+ inputPath.getFileName() + " are not unique");
 	}
 
 	@Test
