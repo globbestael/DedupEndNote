@@ -106,9 +106,35 @@ remain — `Files.newBufferedReader/Writer` return those types.
 
 ---
 
+## Implementation status (executed 2026-06-05 17:14)
+
+All items implemented as planned. No `.toFile()`, `FileReader`, or `FileWriter` calls remain
+anywhere in the source tree.
+
+### Uniform replacements ✓
+All `new BufferedReader(new FileReader(path.toFile()))` → `Files.newBufferedReader(path)` and
+`new BufferedWriter(new FileWriter(path.toFile()))` → `Files.newBufferedWriter(path)` applied.
+`FileReader`/`FileWriter` imports removed from all 6 affected files; `Files` import added where
+missing (`BibliographicItemWriter`, `RecordDBService`, `ValidationIOService`, `ValidationService`).
+
+### `.toFile().delete()` ✓
+`ValidationService`: `fpAnalysisPath.toFile().delete()` / `fnAnalysisPath.toFile().delete()`
+→ `Files.deleteIfExists(fpAnalysisPath)` / `Files.deleteIfExists(fnAnalysisPath)`.
+Method already declared `throws IOException`.
+
+### Jackson `readValues(File)` ✓
+Wrapped in try-with-resources using `var reader = Files.newBufferedReader(truthPath)`.
+No additional `BufferedReader` import needed (type inferred by `var`).
+
+### `assertThat(path.toFile()).exists()` ✓
+Replaced with AssertJ `PathAssert`: `assertThat(path).exists()` in
+`DedupEndNoteApplicationTests` and `MissedDuplicatesTests`.
+
+### Comment updated ✓
+`UtilitiesService.detectBom` comment removed the `FileReader` reference.
+
 ## Verification
 
-- `./mvnw test -Punit-tests` — all unit tests pass (encoding behaviour verified via
-  existing `Non_Latin_input.txt` test)
-- `./mvnw test -Pintegration-tests` — all integration tests pass
-- Update `changelog.html` Internal section for 1.1.7
+- `./mvnw test -Punit-tests` — 561 tests, 0 failures ✓
+- `./mvnw test -Pintegration-tests` — 20 tests, 0 failures ✓
+- Commit: `7fbd105` — 9 files, +37 / −35 lines
