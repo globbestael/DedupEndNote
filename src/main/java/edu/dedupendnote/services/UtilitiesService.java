@@ -9,13 +9,10 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.regex.Pattern;
 
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
-import edu.dedupendnote.domain.DeduplicationMode;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
@@ -44,22 +41,17 @@ public class UtilitiesService {
 		return hasBom;
 	}
 
-	public static String createOutputFileName(String fileName, DeduplicationMode mode) {
-		String extension = StringUtils.getFilenameExtension(fileName);
-		if (extension == null || extension.isEmpty()) {
-			return fileName + (mode == DeduplicationMode.MARK ? "_mark" : "_deduplicated");
+	public static Path createPath(Path inputPath, @Nullable String addition, String newExtension) {
+		if (newExtension == null || newExtension.isBlank()) {
+			throw new IllegalArgumentException("newExtension must not be null or blank");
 		}
-		return fileName.replaceAll("\\." + Pattern.quote(extension) + "$",
-				(mode == DeduplicationMode.MARK ? "_mark." : "_deduplicated.") + extension);
-	}
-
-	public static Path createOutputPath(Path inputPath, DeduplicationMode mode) {
-		String outputFileName = createOutputFileName(inputPath.getFileName().toString(), mode);
 		Path parent = inputPath.getParent();
 		if (parent == null) {
 			throw new IllegalArgumentException("inputPath must have a parent directory: " + inputPath);
 		}
-		return parent.resolve(outputFileName);
+		String baseName = removeFileExtension(inputPath.getFileName().toString());
+		String suffix = (addition == null || addition.isBlank()) ? "" : addition;
+		return parent.resolve(baseName + suffix + "." + newExtension);
 	}
 
 	/**

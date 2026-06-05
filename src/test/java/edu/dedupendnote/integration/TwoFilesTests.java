@@ -28,7 +28,7 @@ class TwoFilesTests extends AbstractIntegrationTest {
 		Path oldInputPath = testDir.resolve("TwoFiles_1.txt");
 		Path newInputPath = testDir.resolve("TwoFiles_2.txt");
 		DeduplicationMode mode = DeduplicationMode.REMOVE;
-		Path outputPath = UtilitiesService.createOutputPath(newInputPath, mode);
+		Path outputPath = UtilitiesService.createPath(newInputPath, mode.filenameSuffix(), "txt");
 
 		String resultString = deduplicationService.deduplicateTwoFiles(newInputPath, oldInputPath, outputPath,
 				mode, message -> {});
@@ -43,7 +43,7 @@ class TwoFilesTests extends AbstractIntegrationTest {
 		Path oldInputPath = testDir.resolve("Recurrance_rate_EndNote_Library_original_deduplicated.txt");
 		Path newInputPath = testDir.resolve("Recurrence_rate_search_updated_sept_18_deduplicated.txt");
 		DeduplicationMode mode = DeduplicationMode.REMOVE;
-		Path outputPath = UtilitiesService.createOutputPath(newInputPath, mode);
+		Path outputPath = UtilitiesService.createPath(newInputPath, mode.filenameSuffix(), "txt");
 
 		String resultString = deduplicationService.deduplicateTwoFiles(newInputPath, oldInputPath, outputPath,
 				mode, message -> {});

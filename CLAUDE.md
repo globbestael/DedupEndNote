@@ -14,7 +14,7 @@ Update CLAUDE.md whenever a change affects something documented here. Triggers i
 - Test class renamed, added, deleted, or reclassified (hierarchy section), or moved between unit / integration / validation categories
 - New service introduced or existing service's responsibility changed (services table)
 - Build command, Maven profile, or port changed (commands / configuration sections)
-- Architectural pattern added or removed (data flow, enrichment, modes, naming conventions)
+- Architectural pattern added or removed (data flow, enrichment, modes, naming conventions, path helpers)
 - Code quality plugin version bumped or new plugin added
 - Plan-file naming convention changed (plans section)
 - Release workflow or version-management mechanism changed (configuration section)
@@ -106,9 +106,9 @@ Browser ──→ Controller (@RequestParam String fileName)
          Service layer (Path inputPath, Path outputPath, …)
 ```
 
-`UtilitiesService` provides two parallel helpers:
-- `createOutputFileName(String fileName, mode)` — for the controller (bare name in, bare name out)
-- `createOutputPath(Path inputPath, mode)` — for services and tests (Path in, Path out)
+`UtilitiesService` provides these path helpers:
+- `createPath(Path inputPath, @Nullable String addition, String newExtension)` — strips the last extension, appends `addition` (if non-blank), appends `.newExtension`; always use `"txt"` as the extension for derived output files (avoids auto-import of `.ris` files into EndNote)
+- `DeduplicationMode.filenameSuffix()` — returns `"_mark"` or `"_deduplicated"` for use as the `addition` argument
 
 When constructing a sibling path from an existing `Path` (e.g. adding a `_mark.txt` suffix),
 use `resolveSibling` — never string-concatenate a `Path` and re-parse:

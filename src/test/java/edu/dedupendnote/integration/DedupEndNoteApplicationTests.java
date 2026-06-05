@@ -71,7 +71,7 @@ class DedupEndNoteApplicationTests extends AbstractIntegrationTest {
 	void deduplicate_OK() {
 		Path inputPath = testDir.resolve("t1.txt");
 		DeduplicationMode mode = DeduplicationMode.REMOVE;
-		Path outputPath = UtilitiesService.createOutputPath(inputPath, mode);
+		Path outputPath = UtilitiesService.createPath(inputPath, mode.filenameSuffix(), "txt");
 
 		String resultString = deduplicationService.deduplicateOneFile(inputPath, outputPath, mode,
 				message -> {
@@ -89,7 +89,7 @@ class DedupEndNoteApplicationTests extends AbstractIntegrationTest {
 	void deduplicateSmallFiles(String fileName, int total, int totalWritten) {
 		Path inputPath = testDir.resolve(fileName);
 		DeduplicationMode mode = DeduplicationMode.REMOVE;
-		Path outputPath = UtilitiesService.createOutputPath(inputPath, mode);
+		Path outputPath = UtilitiesService.createPath(inputPath, mode.filenameSuffix(), "txt");
 		assertThat(inputPath.toFile()).exists();
 
 		String resultString = deduplicationService.deduplicateOneFile(inputPath, outputPath, mode,
@@ -103,7 +103,7 @@ class DedupEndNoteApplicationTests extends AbstractIntegrationTest {
 	void deduplicate_withDuplicateIDs() {
 		Path inputPath = testDir.resolve("Bestand_met_duplicate_IDs.txt");
 		DeduplicationMode mode = DeduplicationMode.REMOVE;
-		Path outputPath = UtilitiesService.createOutputPath(inputPath, mode);
+		Path outputPath = UtilitiesService.createPath(inputPath, mode.filenameSuffix(), "txt");
 
 		String resultString = deduplicationService.deduplicateOneFile(inputPath, outputPath, mode,
 				message -> {

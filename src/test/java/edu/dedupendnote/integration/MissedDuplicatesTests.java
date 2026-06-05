@@ -122,7 +122,7 @@ class MissedDuplicatesTests extends AbstractIntegrationTest {
 		log.debug("Log level should be debug");
 		Path inputPath = testDir.resolve(fileName.startsWith("/") ? fileName.substring(1) : fileName);
 		DeduplicationMode mode = DeduplicationMode.REMOVE;
-		Path outputPath = UtilitiesService.createOutputPath(inputPath, mode);
+		Path outputPath = UtilitiesService.createPath(inputPath, mode.filenameSuffix(), "txt");
 		assertThat(inputPath.toFile()).exists();
 
 		String resultString = deduplicationService.deduplicateOneFile(inputPath, outputPath, mode, message -> {

@@ -102,6 +102,14 @@
                                 <code>Haematology.txt_mark.txt</code> instead of
                                 <code>Haematology_mark.txt</code>
                             </li>
+                            <li>Add <code>UtilitiesService.createPath</code> and
+                                <code>DeduplicationMode.filenameSuffix</code>; remove
+                                <code>createOutputFileName</code> and <code>createOutputPath</code>;
+                                all derived output files now use <code>.txt</code> extension
+                                regardless of input extension (avoids auto-import of
+                                <code>.ris</code> output files into open EndNote databases on
+                                double-click)
+                            </li>
                         </ul>
                     </li>
                 </ul>

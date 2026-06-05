@@ -286,127 +286,94 @@ class ValidationTests extends AbstractIntegrationTest {
 	}
 
 
-	ValidationResult checkResults_AI_subset() throws IOException {
-		Path truthPath = testDir.resolve("AI_subset/AI_subset_TRUTH.txt");
-		Path inputPath = testDir.resolve("AI_subset/AI_subset.txt");
-		Path outputPath = testDir.resolve("AI_subset/AI_subset_to_validate.txt");
+	ValidationResult checkResultsFor(String setName, Path inputPath) throws IOException {
+		return checkResults(setName, inputPath,
+			UtilitiesService.createPath(inputPath, "_to_validate", "txt"),
+			UtilitiesService.createPath(inputPath, "_TRUTH", "txt"));
+	}
 
-		return checkResults("AI_subset", inputPath, outputPath, truthPath);
+	void createInitialTruthFileFor(Path inputPath) {
+		createInitialTruthFile(inputPath,
+			UtilitiesService.createPath(inputPath, "_for_truth", "txt"));
+	}
+
+	void createInitialTruthFileWithASySDFor(Path inputPath) {
+		createInitialTruthFile(inputPath,
+			UtilitiesService.createPath(inputPath, "_asysd_gold", "txt"),
+			UtilitiesService.createPath(inputPath, "_for_truth",  "txt"));
+	}
+
+	void createRisWithTRUTHFor(Path inputPath) throws IOException {
+		createRisWithTRUTH(inputPath,
+			UtilitiesService.createPath(inputPath, "_TRUTH",      "txt"),
+			UtilitiesService.createPath(inputPath, "_with_TRUTH", "txt"));
+	}
+
+	ValidationResult checkResults_AI_subset() throws IOException {
+		return checkResultsFor("AI_subset", testDir.resolve("AI_subset/AI_subset.txt"));
 	}
 
 	ValidationResult checkResults_ASySD_Cardiac_human() throws IOException {
-		Path truthPath = testDir.resolve("ASySD/dedupendnote_files/Cardiac_human_TRUTH.txt");
-		Path inputPath = testDir.resolve("ASySD/dedupendnote_files/Cardiac_human.txt");
-		Path outputPath = testDir.resolve("ASySD/dedupendnote_files/Cardiac_human_to_validate.txt");
-
-		return checkResults("ASySD_Cardiac_human", inputPath, outputPath, truthPath);
+		return checkResultsFor("ASySD_Cardiac_human", testDir.resolve("ASySD/dedupendnote_files/Cardiac_human.txt"));
 	}
 
 	// ValidationResult checkResults_ASySD_Depression() throws IOException {
-	// 	Path truthPath = testDir.resolve("/ASySD/dedupendnote_files/Depression_TRUTH.txt");
-	// 	Path inputPath = testDir.resolve("/ASySD/dedupendnote_files/Depression.txt");
-	// 	Path outputPath = testDir.resolve("/ASySD/dedupendnote_files/Depression_to_validate.txt");
-
-	// 	return checkResults("ASySD_Depression", inputPath, outputPath, truthPath);
+	// 	return checkResultsFor("ASySD_Depression", testDir.resolve("ASySD/dedupendnote_files/Depression.txt"));
 	// }
 
 	ValidationResult checkResults_ASySD_Diabetes() throws IOException {
-		Path truthPath = testDir.resolve("ASySD/dedupendnote_files/Diabetes_TRUTH.txt");
-		Path inputPath = testDir.resolve("ASySD/dedupendnote_files/Diabetes.txt");
-		Path outputPath = testDir.resolve("ASySD/dedupendnote_files/Diabetes_to_validate.txt");
-
-		return checkResults("ASySD_Diabetes", inputPath, outputPath, truthPath);
+		return checkResultsFor("ASySD_Diabetes", testDir.resolve("ASySD/dedupendnote_files/Diabetes.txt"));
 	}
 
 	ValidationResult checkResults_ASySD_Neuroimaging() throws IOException {
-		Path truthPath = testDir.resolve("ASySD/dedupendnote_files/Neuroimaging_sorted_TRUTH.txt");
-		Path inputPath = testDir.resolve("ASySD/dedupendnote_files/Neuroimaging_sorted.txt");
-		Path outputPath = testDir.resolve("ASySD/dedupendnote_files/Neuroimaging_sorted_to_validate.txt");
-
-		return checkResults("ASySD_Neuroimaging", inputPath, outputPath, truthPath);
+		return checkResultsFor("ASySD_Neuroimaging", testDir.resolve("ASySD/dedupendnote_files/Neuroimaging_sorted.txt"));
 	}
 
 	ValidationResult checkResults_ASySD_SRSR_Human() throws IOException {
-		Path truthPath = testDir.resolve("ASySD/dedupendnote_files/SRSR_Human_TRUTH.txt");
-		Path inputPath = testDir.resolve("ASySD/dedupendnote_files/SRSR_Human.txt");
-		Path outputPath = testDir.resolve("ASySD/dedupendnote_files/SRSR_Human_to_validate.txt");
-
-		return checkResults("ASySD_SRSR_Human", inputPath, outputPath, truthPath);
+		return checkResultsFor("ASySD_SRSR_Human", testDir.resolve("ASySD/dedupendnote_files/SRSR_Human.txt"));
 	}
 
 	/*
 	 * Deduplicates the whole file, but checks only the results of the validated subset
 	 */
 	ValidationResult checkResults_BIG_SET() throws IOException {
-		Path truthPath = testDir.resolve("own/BIG_SET_TRUTH.txt");
-		Path inputPath = testDir.resolve("own/BIG_SET.txt");
-		Path outputPath = testDir.resolve("own/BIG_SET_to_validate.txt");
-
-		return checkResults("BIG_SET", inputPath, outputPath, truthPath);
+		return checkResultsFor("BIG_SET", testDir.resolve("own/BIG_SET.txt"));
 	}
 
 	ValidationResult checkResults_Clinical_trials() throws IOException {
-		Path truthPath = testDir.resolve("Clinical_trials/clinicaltrialsdotgov_TRUTH.txt");
-		Path inputPath = testDir.resolve("Clinical_trials/clinicaltrialsdotgov.txt");
-		Path outputPath = testDir.resolve("Clinical_trials/clinicaltrialsdotgov_to_validate.txt");
-
-		return checkResults("Clinical_trials", inputPath, outputPath, truthPath);
+		return checkResultsFor("Clinical_trials", testDir.resolve("Clinical_trials/clinicaltrialsdotgov.txt"));
 	}
 
 	ValidationResult checkResults_McKeown_2021() throws IOException {
-		Path truthPath = testDir.resolve("McKeown_S_2021/dedupendnote_files/McKeown_2021_TRUTH.txt");
-		Path inputPath = testDir.resolve("McKeown_S_2021/dedupendnote_files/McKeown_2021.txt");
-		Path outputPath = testDir.resolve("McKeown_S_2021/dedupendnote_files/McKeown_2021_to_validate.txt");
-
-		return checkResults("McKeown_2021", inputPath, outputPath, truthPath);
+		return checkResultsFor("McKeown_2021", testDir.resolve("McKeown_S_2021/dedupendnote_files/McKeown_2021.txt"));
 	}
 
 	ValidationResult checkResults_SRA2_Cytology_screening() throws IOException {
-		Path truthPath = testDir.resolve("SRA2/Cytology_screening_TRUTH.txt");
-		Path inputPath = testDir.resolve("SRA2/Cytology_screening.txt");
-		Path outputPath = testDir.resolve("SRA2/Cytology_screening_to_validate.txt");
-
-		return checkResults("SRA2_Cytology_screening", inputPath, outputPath, truthPath);
+		return checkResultsFor("SRA2_Cytology_screening", testDir.resolve("SRA2/Cytology_screening.txt"));
 	}
 
 	ValidationResult checkResults_SRA2_Haematology() throws IOException {
-		Path truthPath = testDir.resolve("SRA2/Haematology_TRUTH.txt");
-		Path inputPath = testDir.resolve("SRA2/Haematology.txt");
-		Path outputPath = testDir.resolve("SRA2/Haematology_to_validate.txt");
-
-		return checkResults("SRA2_Haematology", inputPath, outputPath, truthPath);
+		return checkResultsFor("SRA2_Haematology", testDir.resolve("SRA2/Haematology.txt"));
 	}
 
 	ValidationResult checkResults_SRA2_Respiratory() throws IOException {
-		Path truthPath = testDir.resolve("SRA2/Respiratory_TRUTH.txt");
-		Path inputPath = testDir.resolve("SRA2/Respiratory.txt");
-		Path outputPath = testDir.resolve("SRA2/Respiratory_to_validate.txt");
-
-		return checkResults("SRA2_Respiratory", inputPath, outputPath, truthPath);
+		return checkResultsFor("SRA2_Respiratory", testDir.resolve("SRA2/Respiratory.txt"));
 	}
 
 	ValidationResult checkResults_SRA2_Stroke() throws IOException {
-		Path truthPath = testDir.resolve("SRA2/Stroke_TRUTH.txt");
-		Path inputPath = testDir.resolve("SRA2/Stroke.txt");
-		Path outputPath = testDir.resolve("SRA2/Stroke_to_validate.txt");
-
-		return checkResults("SRA2_Stroke", inputPath, outputPath, truthPath);
+		return checkResultsFor("SRA2_Stroke", testDir.resolve("SRA2/Stroke.txt"));
 	}
 
 	ValidationResult checkResults_TIL() throws IOException {
-		Path truthPath = testDir.resolve("TIL/TIL_TRUTH.txt");
-		Path inputPath = testDir.resolve("TIL/TIL.txt");
-		Path outputPath = testDir.resolve("TIL/TIL_to_validate.txt");
-
-		return checkResults("TIL", inputPath, outputPath, truthPath);
+		return checkResultsFor("TIL", testDir.resolve("TIL/TIL.txt"));
 	}
 
+	// Exception: TIL_Zotero shares TIL's truth file rather than having its own TIL_Zotero_TRUTH.txt
 	ValidationResult checkResults_TIL_Zotero() throws IOException {
-		Path truthPath = testDir.resolve("TIL/TIL_TRUTH.txt");
-		Path inputPath = testDir.resolve("TIL/TIL_Zotero.ris");
-		Path outputPath = testDir.resolve("TIL/TIL_Zotero_to_validate.txt");
-
-		return checkResults("TIL_Zotero", inputPath, outputPath, truthPath);
+		return checkResults("TIL_Zotero",
+			testDir.resolve("TIL/TIL_Zotero.ris"),
+			UtilitiesService.createPath(testDir.resolve("TIL/TIL_Zotero.ris"), "_to_validate", "txt"),
+			testDir.resolve("TIL/TIL_TRUTH.txt"));
 	}
 
 	/*
@@ -417,19 +384,13 @@ class ValidationTests extends AbstractIntegrationTest {
 	@Disabled("Only needed for initialisation of TRUTH file")
 	@Test
 	void createInitialTruthFile_AI_subset() {
-		Path inputPath = testDir.resolve("AI_subset/AI_subset.txt");
-		Path outputPath = testDir.resolve("AI_subset/AI_subset_for_truth.txt");
-		createInitialTruthFile(inputPath, outputPath);
+		createInitialTruthFileFor(testDir.resolve("AI_subset/AI_subset.txt"));
 	}
 
 	@Disabled("Only needed for initialisation of TRUTH file")
 	@Test
 	void createInitialTruthFile_ASySD_Cardiac_human() {
-		Path dir = testDir.resolve("ASySD/dedupendnote_files");
-		Path inputPath = dir.resolve("Cardiac_human.txt");
-		Path asysdInputPath = dir.resolve("Cardiac_human_asysd_gold.txt");
-		Path outputPath = dir.resolve("Cardiac_human_for_truth.txt");
-		createInitialTruthFile(inputPath, asysdInputPath, outputPath);
+		createInitialTruthFileWithASySDFor(testDir.resolve("ASySD/dedupendnote_files/Cardiac_human.txt"));
 	}
 
 	// @Disabled("Only needed for initialisation of TRUTH file")
@@ -445,22 +406,14 @@ class ValidationTests extends AbstractIntegrationTest {
 	@Disabled("Only needed for initialisation of TRUTH file")
 	@Test
 	void createInitialTruthFile_ASySD_Diabetes() {
-		Path dir = testDir.resolve("ASySD/dedupendnote_files");
-		Path inputPath = dir.resolve("Diabetes.txt");
-		Path asysdInputPath = dir.resolve("Diabetes_asysd_gold.txt");
-		Path outputPath = dir.resolve("Diabetes_for_truth.txt");
-		createInitialTruthFile(inputPath, asysdInputPath, outputPath);
+		createInitialTruthFileWithASySDFor(testDir.resolve("ASySD/dedupendnote_files/Diabetes.txt"));
 	}
 
 	@Disabled("Only needed for initialisation of TRUTH file")
 	@Test
 	void createInitialTruthFile_ASySD_Neuroimaging() {
-		// Endnote DB is Neuroimaging_sorted
-		Path dir = testDir.resolve("ASySD/dedupendnote_files");
-		Path inputPath = dir.resolve("Neuroimaging_sorted.txt");
-		Path asysdInputPath = dir.resolve("Neuroimaging_sorted_asysd_gold.txt");
-		Path outputPath = dir.resolve("Neuroimaging_for_truth.txt");
-		createInitialTruthFile(inputPath, asysdInputPath, outputPath);
+		// EndNote DB is Neuroimaging_sorted
+		createInitialTruthFileWithASySDFor(testDir.resolve("ASySD/dedupendnote_files/Neuroimaging_sorted.txt"));
 	}
 
 	/*
@@ -469,70 +422,51 @@ class ValidationTests extends AbstractIntegrationTest {
 	@Disabled("Only needed for initialisation of TRUTH file")
 	@Test
 	void createInitialTruthFile_ASySD_SRSR_Human() {
-		Path dir = testDir.resolve("ASySD/dedupendnote_files");
-		Path inputPath = dir.resolve("SRSR_Human.txt");
-		Path asysdInputPath = dir.resolve("SRSR_Human_asysd_gold.txt"); // Columns L and U because of renumbering
-		Path outputPath = dir.resolve("SRSR_Human_for_truth.txt");
-		createInitialTruthFile(inputPath, asysdInputPath, outputPath);
+		// Columns L and U because of renumbering
+		createInitialTruthFileWithASySDFor(testDir.resolve("ASySD/dedupendnote_files/SRSR_Human.txt"));
 	}
 
 	@Disabled("Only needed for initialisation of TRUTH file")
 	@Test
 	void createInitialTruthFile_CTG() {
-		Path dir = testDir.resolve("clinical_trials");
-		Path inputPath = dir.resolve("clinicaltrialsdotgov.txt");
-		Path outputPath = dir.resolve("clinicaltrialsdotgov_for_truth.txt");
-		createInitialTruthFile(inputPath, outputPath);
+		createInitialTruthFileFor(testDir.resolve("clinical_trials/clinicaltrialsdotgov.txt"));
 	}
 
 	@Disabled("Only needed for initialisation of TRUTH file")
 	@Test
 	void createInitialTruthFile_McKeown_2021() {
-		Path dir = testDir.resolve("McKeown_S_2021/dedupendnote_files");
-		Path inputPath = dir.resolve("McKeown_2021.txt");
-		Path outputPath = dir.resolve("McKeown_2021_for_truth.txt");
-		createInitialTruthFile(inputPath, outputPath);
+		createInitialTruthFileFor(testDir.resolve("McKeown_S_2021/dedupendnote_files/McKeown_2021.txt"));
 	}
 
 	@Disabled("Only needed for initialisation of TRUTH file")
 	@Test
 	void createInitialTruthFile_SRA2_Haematology() {
-		Path inputPath = testDir.resolve("SRA2/Haematology.txt");
-		Path outputPath = testDir.resolve("SRA2/Haematology_for_truth.txt");
-		createInitialTruthFile(inputPath, outputPath);
+		createInitialTruthFileFor(testDir.resolve("SRA2/Haematology.txt"));
 	}
 
 	@Disabled("Only needed for initialisation of TRUTH file")
 	@Test
 	void createInitialTruthFile_SRA2_Respiratory() {
-		Path inputPath = testDir.resolve("SRA2/Respiratory.txt");
-		Path outputPath = testDir.resolve("SRA2/Respiratory_for_truth.txt");
-		createInitialTruthFile(inputPath, outputPath);
+		createInitialTruthFileFor(testDir.resolve("SRA2/Respiratory.txt"));
 	}
 
 	@Disabled("Only needed for initialisation of TRUTH file")
 	@Test
 	void createInitialTruthFile_SRA2_Stroke() {
-		Path inputPath = testDir.resolve("SRA2/Stroke.txt");
-		Path outputPath = testDir.resolve("SRA2/Stroke_for_truth.txt");
-		createInitialTruthFile(inputPath, outputPath);
+		createInitialTruthFileFor(testDir.resolve("SRA2/Stroke.txt"));
 	}
 
 	@Disabled("Only needed for initialisation of TRUTH file")
 	@Test
 	void createInitialTruthFile_TIL() {
-		Path inputPath = testDir.resolve("TIL/TIL.txt");
-		Path outputPath = testDir.resolve("TIL/TIL_for_truth.txt");
-		createInitialTruthFile(inputPath, outputPath);
+		createInitialTruthFileFor(testDir.resolve("TIL/TIL.txt"));
 	}
 
 	@Disabled("Only needed for initialisation of TRUTH file")
 	@Test
 	void createInitialTruthFile_TIL_Zotero() {
-		Path inputPath = testDir.resolve("TIL/TIL_Zotero.ris");
 		// uses the same TRUTH file as createInitialTruthFile_TIL
-		Path outputPath = testDir.resolve("TIL/TIL_Zotero_for_truth.txt");
-		createInitialTruthFile(inputPath, outputPath);
+		createInitialTruthFileFor(testDir.resolve("TIL/TIL_Zotero.ris"));
 	}
 
 	/*
@@ -572,23 +506,14 @@ class ValidationTests extends AbstractIntegrationTest {
 	@Disabled("Only needed for initialisation of TRUTH file")
 	@Test
 	void createRisWithTRUTH_BIG_SET() throws IOException {
-		Path truthPath = testDir.resolve("own/BIG_SET_TRUTH.txt");
-		Path inputPath = testDir.resolve("own/BIG_SET.txt");
-		Path outputPath = testDir.resolve("own/BIG_SET_with_TRUTH.txt");
-
-		createRisWithTRUTH(inputPath, truthPath, outputPath);
-
+		createRisWithTRUTHFor(testDir.resolve("own/BIG_SET.txt"));
 		assertThat(1*1).isEqualTo(1);
 	}
 
 	@Disabled("Only needed for initialisation of TRUTH file")
 	@Test
 	void createRisWithTRUTH_SRA2_Cytology_screening() throws IOException {
-		Path truthPath = testDir.resolve("SRA2/Cytology_screening_TRUTH.txt");
-		Path inputPath = testDir.resolve("SRA2/Cytology_screening.txt");
-		Path outputPath = testDir.resolve("SRA2/Cytology_screening_with_TRUTH.txt");
-
-		createRisWithTRUTH(inputPath, truthPath, outputPath);
+		createRisWithTRUTHFor(testDir.resolve("SRA2/Cytology_screening.txt"));
 	}
 
 	@Disabled("Only needed for initialisation of TRUTH file")
@@ -687,7 +612,7 @@ class ValidationTests extends AbstractIntegrationTest {
 		 * This closes the gap between validation and production: validation now exercises
 		 * the exact code path the production deployment runs, instead of mimicking it.
 		 */
-		Path markPath = inputPath.resolveSibling(UtilitiesService.removeFileExtension(inputPath.getFileName().toString()) + "_mark.txt");
+		Path markPath = UtilitiesService.createPath(inputPath, "_mark", "txt");
 		deduplicationService.deduplicateOneFile(inputPath, markPath, DeduplicationMode.MARK, message -> {});
 		return bibliographicItemReader.readBibliographicItems(markPath, message -> {}, /* includeLabelField= */ true);
 	}

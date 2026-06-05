@@ -76,9 +76,9 @@ public class DedupEndNoteController {
 	public void getResultFile(@RequestParam("fileNameResultFile") String fileName,
 			@RequestParam("markModeResultFile") boolean markMode, HttpServletResponse response) {
 		DeduplicationMode mode = DeduplicationMode.from(markMode);
-		String outputFileName = UtilitiesService.createOutputFileName(fileName, mode);
 		try {
-			Path path = UtilitiesService.resolveInUploadDir(uploadDir, outputFileName);
+			Path inputPath = UtilitiesService.resolveInUploadDir(uploadDir, fileName);
+			Path path = UtilitiesService.createPath(inputPath, mode.filenameSuffix(), "txt");
 			String safeFileName = path.getFileName().toString().replaceAll("[\"\\r\\n]", "_");
 			response.setContentType("text/plain");
 			response.addHeader("Content-Disposition", "attachment; filename=\"" + safeFileName + "\"");
@@ -124,8 +124,7 @@ public class DedupEndNoteController {
 
 		try {
 			Path inputPath = UtilitiesService.resolveInUploadDir(uploadDir, inputFileName);
-			Path outputPath = UtilitiesService.resolveInUploadDir(uploadDir,
-					UtilitiesService.createOutputFileName(inputFileName, mode));
+			Path outputPath = UtilitiesService.createPath(inputPath, mode.filenameSuffix(), "txt");
 
 			Consumer<String> progressReporter = message -> simpMessagingTemplate
 					.convertAndSend("/topic/messages-" + wssessionId, new StompMessage(message));
@@ -156,8 +155,7 @@ public class DedupEndNoteController {
 		try {
 			Path newInputPath = UtilitiesService.resolveInUploadDir(uploadDir, newFile);
 			Path oldInputPath = UtilitiesService.resolveInUploadDir(uploadDir, oldFile);
-			Path outputPath = UtilitiesService.resolveInUploadDir(uploadDir,
-					UtilitiesService.createOutputFileName(newFile, mode));
+			Path outputPath = UtilitiesService.createPath(newInputPath, mode.filenameSuffix(), "txt");
 
 			Consumer<String> progressReporter = message -> simpMessagingTemplate
 					.convertAndSend("/topic/messages-" + wssessionId, new StompMessage(message));

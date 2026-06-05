@@ -49,7 +49,7 @@ class AuthorExperimentsTests extends AbstractIntegrationTest {
 		ValidationResult baseline = new ValidationResult("SRA2_Haematology", 222, 6, 1186, 1, 300L, 106);
 
 		Path inputPath = testDir.resolve("SRA2/Haematology.txt");
-		Path markPath  = inputPath.resolveSibling(UtilitiesService.removeFileExtension(inputPath.getFileName().toString()) + "_mark.txt");
+		Path markPath  = UtilitiesService.createPath(inputPath, "_mark", "txt");
 		Path outputPath = testDir.resolve("SRA2/Haematology_experimental_to_validate.txt");
 		Path truthPath  = testDir.resolve("SRA2/Haematology_TRUTH.txt");
 

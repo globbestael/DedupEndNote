@@ -9,15 +9,15 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import edu.dedupendnote.domain.DeduplicationMode;
 import edu.dedupendnote.services.UtilitiesService;
 
 // HTTP-level coverage is in PathTraversalTests (integration).
 class UtilitiesServiceTest {
 
-	private static final String UPLOAD_DIR = System.getProperty("java.io.tmpdir") + "/dedup-test-uploads";
-
-	private static final String UPLOAD_DIR_PREFIX =
-			Path.of(UPLOAD_DIR).toAbsolutePath().normalize().toString();
+	private static final String UPLOAD_DIR = Path.of(System.getProperty("java.io.tmpdir")).resolve("dedup-test-uploads")
+			.toString();
+	private static final String UPLOAD_DIR_PREFIX = Path.of(UPLOAD_DIR).toAbsolutePath().normalize().toString();
 
 	@Test
 	void resolveInUploadDir_validFilename_resolvesInsideUploadDir() {
@@ -51,5 +51,45 @@ class UtilitiesServiceTest {
 	void resolveInUploadDir_emptyFilename_throws() {
 		assertThatThrownBy(() -> UtilitiesService.resolveInUploadDir(UPLOAD_DIR, ""))
 				.isInstanceOf(IllegalArgumentException.class);
+	}
+
+	@Test
+	void createPath_stripsExtensionAndAppendsSuffix() {
+		Path result = UtilitiesService.createPath(Path.of("data/Stroke.txt"), "_TRUTH", "txt");
+		assertThat(result.getFileName().toString()).isEqualTo("Stroke_TRUTH.txt");
+	}
+
+	@Test
+	void createPath_risInputAlwaysProducesTxtOutput() {
+		Path result = UtilitiesService.createPath(Path.of("data/TIL_Zotero.ris"), "_mark", "txt");
+		assertThat(result.getFileName().toString()).isEqualTo("TIL_Zotero_mark.txt");
+	}
+
+	@Test
+	void createPath_nullAdditionProducesNoSuffix() {
+		Path result = UtilitiesService.createPath(Path.of("data/Stroke.txt"), null, "txt");
+		assertThat(result.getFileName().toString()).isEqualTo("Stroke.txt");
+	}
+
+	@Test
+	void createPath_blankExtension_throws() {
+		assertThatThrownBy(() -> UtilitiesService.createPath(Path.of("data/Stroke.txt"), "_mark", "  "))
+				.isInstanceOf(IllegalArgumentException.class);
+	}
+
+	@Test
+	void createPath_nullExtension_throws() {
+		assertThatThrownBy(() -> UtilitiesService.createPath(Path.of("data/Stroke.txt"), "_mark", null))
+				.isInstanceOf(IllegalArgumentException.class);
+	}
+
+	@Test
+	void filenameSuffix_markMode() {
+		assertThat(DeduplicationMode.MARK.filenameSuffix()).isEqualTo("_mark");
+	}
+
+	@Test
+	void filenameSuffix_removeMode() {
+		assertThat(DeduplicationMode.REMOVE.filenameSuffix()).isEqualTo("_deduplicated");
 	}
 }

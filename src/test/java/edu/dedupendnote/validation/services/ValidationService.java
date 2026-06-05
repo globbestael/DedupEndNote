@@ -141,8 +141,8 @@ public class ValidationService {
 			 * which are more than 1 year apart,
 			 * because the test of the pair does not look at the bibliographicItem years
 			 */
-			Path fpAnalysisPath = inputPath.resolveSibling(UtilitiesService.removeFileExtension(inputPath.getFileName().toString()) + "_FP_Analysis.txt");
-			Path fnAnalysisPath = inputPath.resolveSibling(UtilitiesService.removeFileExtension(inputPath.getFileName().toString()) + "_FN_Analysis.txt");
+			Path fpAnalysisPath = UtilitiesService.createPath(inputPath, "_FP_Analysis", "txt");
+			Path fnAnalysisPath = UtilitiesService.createPath(inputPath, "_FN_Analysis", "txt");
 			fpAnalysisPath.toFile().delete();
 			fnAnalysisPath.toFile().delete();
 			if (!fnPairs.isEmpty()) {
