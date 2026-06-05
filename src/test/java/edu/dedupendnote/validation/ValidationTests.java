@@ -30,6 +30,7 @@ import edu.dedupendnote.integration.AbstractIntegrationTest;
 import edu.dedupendnote.domain.DeduplicationMode;
 import edu.dedupendnote.services.DeduplicationService;
 import edu.dedupendnote.services.BibliographicItemReader;
+import edu.dedupendnote.services.UtilitiesService;
 import edu.dedupendnote.validation.services.ValidationIOService;
 import edu.dedupendnote.domain.BibliographicItem;
 import edu.dedupendnote.domain.BibliographicItemDB;
@@ -686,7 +687,7 @@ class ValidationTests extends AbstractIntegrationTest {
 		 * This closes the gap between validation and production: validation now exercises
 		 * the exact code path the production deployment runs, instead of mimicking it.
 		 */
-		Path markPath = inputPath.resolveSibling(inputPath.getFileName() + "_mark.txt");
+		Path markPath = inputPath.resolveSibling(UtilitiesService.removeFileExtension(inputPath.getFileName().toString()) + "_mark.txt");
 		deduplicationService.deduplicateOneFile(inputPath, markPath, DeduplicationMode.MARK, message -> {});
 		return bibliographicItemReader.readBibliographicItems(markPath, message -> {}, /* includeLabelField= */ true);
 	}

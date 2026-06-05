@@ -31,6 +31,7 @@ import edu.dedupendnote.domain.BibliographicItem;
 import edu.dedupendnote.domain.BibliographicItemDB;
 import edu.dedupendnote.integration.utils.MemoryAppender;
 import edu.dedupendnote.services.DeduplicationService;
+import edu.dedupendnote.services.UtilitiesService;
 import edu.dedupendnote.validation.domain.ValidationResult;
 import lombok.extern.slf4j.Slf4j;
 
@@ -140,8 +141,8 @@ public class ValidationService {
 			 * which are more than 1 year apart,
 			 * because the test of the pair does not look at the bibliographicItem years
 			 */
-			Path fpAnalysisPath = inputPath.resolveSibling(inputPath.getFileName() + "_FP_Analysis.txt");
-			Path fnAnalysisPath = inputPath.resolveSibling(inputPath.getFileName() + "_FN_Analysis.txt");
+			Path fpAnalysisPath = inputPath.resolveSibling(UtilitiesService.removeFileExtension(inputPath.getFileName().toString()) + "_FP_Analysis.txt");
+			Path fnAnalysisPath = inputPath.resolveSibling(UtilitiesService.removeFileExtension(inputPath.getFileName().toString()) + "_FN_Analysis.txt");
 			fpAnalysisPath.toFile().delete();
 			fnAnalysisPath.toFile().delete();
 			if (!fnPairs.isEmpty()) {
