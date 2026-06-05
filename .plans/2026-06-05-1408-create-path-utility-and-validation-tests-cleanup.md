@@ -212,11 +212,50 @@ the input. Keep explicit paths.
 
 ---
 
+## Implementation status (executed 2026-06-05 15:28)
+
+All items implemented. Build and tests pass.
+
+### `DeduplicationMode.filenameSuffix()` ✓
+Added to `DeduplicationMode.java`. Returns `"_mark"` for `MARK`, `"_deduplicated"` for `REMOVE`.
+`toString()` unchanged.
+
+### `UtilitiesService.createPath` ✓
+Added. `createOutputFileName` and `createOutputPath` deleted along with their now-unused imports
+(`Pattern`, `StringUtils`, `DeduplicationMode`).
+
+### Controller ✓
+`getResultFile`, `startOneFile`, `startTwoFiles` updated. `startOneFile` and `startTwoFiles` each
+lose a redundant second `resolveInUploadDir` call on the output path.
+
+### Integration tests ✓
+`createOutputPath` → `createPath(inputPath, mode.filenameSuffix(), "txt")` in
+`DedupEndNoteApplicationTests`, `TwoFilesTests`, `MissedDuplicatesTests`.
+
+### `ValidationService` and `AuthorExperimentsTests` ✓
+`resolveSibling(removeFileExtension(...) + "...")` replaced with `createPath(...)`.
+
+### `ValidationTests` ✓
+Four generic helpers added: `checkResultsFor`, `createInitialTruthFileFor`,
+`createInitialTruthFileWithASySDFor`, `createRisWithTRUTHFor`. All 25+ boilerplate per-dataset
+methods collapsed to one-liners. Two documented exceptions kept explicit:
+`checkResults_TIL_Zotero` (shared truth file) and `createRisWithTRUTH_BIG_SET_DS` (truth in
+different directory). `deduplicate()` helper updated to use `createPath`.
+
+### `UtilitiesServiceTest` ✓
+7 new tests: `createPath` (normal, `.ris` input, null addition, blank/null extension throws) and
+`DeduplicationMode.filenameSuffix` (both modes).
+
+### Docs ✓
+`changelog.html` Internal bullet added. `CLAUDE.md` file-path naming convention section updated.
+
+---
+
 ## Verification
 
-- `./mvnw test -Punit-tests` — all unit tests including new `createPath` and
-  `filenameSuffix` tests pass
-- `./mvnw test -Pintegration-tests` — all integration tests pass
+- `./mvnw test -Punit-tests` — 561 tests (7 new), 0 failures ✓
+- `./mvnw test -Pintegration-tests` — 20 tests, 0 failures ✓
+- Commit: `5df17a3` — 12 files changed, net −33 lines
 - Behaviour note: output files that previously had a `.ris` extension (when the input was
   `.ris`) will now be `.txt`. This is intentional — `.ris` output files risk auto-import
   into open EndNote databases on double-click.
