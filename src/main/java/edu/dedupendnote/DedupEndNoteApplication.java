@@ -1,16 +1,15 @@
 package edu.dedupendnote;
 
-import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import org.apache.commons.io.file.PathUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Controller;
-import org.springframework.util.FileSystemUtils;
 
 import edu.dedupendnote.services.DefaultAuthorsComparisonService;
 import edu.dedupendnote.services.DefaultJournalComparisonService;
@@ -52,8 +51,11 @@ public class DedupEndNoteApplication {
 	@Bean
 	CommandLineRunner init() {
 		return args -> {
-			FileSystemUtils.deleteRecursively(new File(uploadDir));
-			Files.createDirectory(Path.of(uploadDir));
+			Path uploadPath = Path.of(uploadDir);
+			if (Files.exists(uploadPath)) {
+				PathUtils.deleteDirectory(uploadPath);
+			}
+			Files.createDirectory(uploadPath);
 		};
 	}
 }
