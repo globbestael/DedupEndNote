@@ -120,10 +120,8 @@ class MissedDuplicatesTests extends AbstractIntegrationTest {
 	void deduplicateMissedDuplicates(String fileName, int total, int totalWritten) {
 		log.debug("Log level should be debug");
 		/*
-			FIXME: Why is this conditional necessary. The @CsvSource should use relative paths. 
+			FIXME: Why is this conditional necessary. The @CsvSource should use relative paths.
 			There probably should be a testUtility function that creates the inputPath and checks if the file exists.
-			The function UtilitiesService.resolveInUploadDir() cannot be used for this because it doesn't allow
-			path separators in the second parameter.
 		 */ Path inputPath = testDir.resolve(fileName.startsWith("/") ? fileName.substring(1) : fileName);
 		DeduplicationMode mode = DeduplicationMode.REMOVE;
 		assertThat(inputPath).exists();

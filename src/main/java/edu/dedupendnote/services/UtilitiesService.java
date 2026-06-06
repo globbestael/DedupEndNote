@@ -74,34 +74,6 @@ public class UtilitiesService {
 		return removeFileExtension(filename, false);
 	}
 
-	/**
-	 * Resolves {@code userFileName} within {@code uploadDir}, rejecting any input that
-	 * contains path separators, parent-directory references, or is absolute.
-	 *
-	 * @throws IllegalArgumentException if the filename is null, empty, absolute, contains
-	 *     path separators, or is a directory reference ({@code ..} / {@code .})
-	 */
-	public static Path resolveInUploadDir(String uploadDir, @Nullable String userFileName) {
-		if (userFileName == null || userFileName.isEmpty()) {
-			throw new IllegalArgumentException("Filename must not be null or empty");
-		}
-		Path parsed = Path.of(userFileName);
-		if (parsed.isAbsolute() || parsed.getNameCount() != 1) {
-			throw new IllegalArgumentException(
-					"Filename must be a simple name with no path separators: " + userFileName);
-		}
-		String name = parsed.toString();
-		if (name.equals("..") || name.equals(".")) {
-			throw new IllegalArgumentException("Filename must not be a directory reference: " + userFileName);
-		}
-		Path base = Path.of(uploadDir).toAbsolutePath().normalize();
-		Path resolved = base.resolve(parsed).normalize();
-		if (!resolved.startsWith(base)) {
-			throw new IllegalArgumentException("Path traversal attempt rejected: " + userFileName);
-		}
-		return resolved;
-	}
-
 	public static Path getSessionDir(String uploadDir, UUID sessionId) {
 		return Path.of(uploadDir).toAbsolutePath().normalize().resolve(sessionId.toString());
 	}
