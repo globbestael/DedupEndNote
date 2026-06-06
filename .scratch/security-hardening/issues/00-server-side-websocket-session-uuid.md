@@ -1,6 +1,6 @@
 # Server-side WebSocket session UUID
 
-Status: ready-for-agent
+Status: done
 
 ## What to build
 

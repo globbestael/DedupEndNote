@@ -54,21 +54,6 @@
 			$(id).prop("disabled", false);
 			$('label[for="' + id.replace('#', '') + '"]').removeClass('disabled');
 		}
-		/*
-		 * crypto.randomUUID() is only available in secure contexts (HTTPS or localhost).
-		 * On plain HTTP it is undefined, so we fall back to a Math.random()-based UUID v4.
-		 * The UUID only needs to be unique per page load (used as a WebSocket session key),
-		 * so a non-cryptographic fallback is sufficient.
-		 */
-		function generateUUID() {
-			if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-				return crypto.randomUUID();
-			}
-			return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-				var r = Math.random() * 16 | 0;
-				return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
-			});
-		}
 		function markAsDone(id) {
 			$(id).removeClass('step-waiting step-active').addClass('step-done');
 		}
@@ -81,8 +66,7 @@
 			connect();
 
 			function connect() {
-				var wssessionId = generateUUID();
-				$("#wssessionId").val(wssessionId);
+				var wssessionId = $("#wssessionId").val();
 				var socket = new SockJS('/gs-guide-websocket');
 				stompClient = Stomp.over(socket);
 				stompClient.debug = null;
@@ -212,6 +196,7 @@
 					<p class="step-subtitle">Upload the OLD bibliographic items first, then the NEW bibliographic items</p>
 					<form class="form-horizontal" id="upload_form" method="post" enctype="multipart/form-data"
 						th:action="@{|/uploadFile|}">
+						<input type="hidden" name="wssessionId" th:value="${wssessionId}" />
 						<div class="row g-3">
 							<div class="col-6">
 								<div id="step1a" class="step-subcard step-active">
@@ -243,7 +228,7 @@
 					<form class="form-horizontal" id="start_form" method="post" action="">
 						<input type="hidden" id="oldFile" name="oldFile" value="" />
 						<input type="hidden" id="newFile" name="newFile" value="" />
-						<input type="hidden" id="wssessionId" name="wssessionId" value="" />
+						<input type="hidden" id="wssessionId" name="wssessionId" th:value="${wssessionId}" />
 						<div class="form-check form-check-inline mb-2">
 							<input class="form-check-input" type="checkbox" id="markMode" name="markMode" />
 							<label class="form-check-label" for="markMode">Do NOT deduplicate but mark the duplicate bibliographic items (see Mark mode below)</label>
@@ -271,6 +256,7 @@
 						th:action="@{|/getResultFile|}">
 						<input type="hidden" name="fileNameResultFile" id="fileNameResultFile" />
 						<input type="hidden" name="markModeResultFile" id="markModeResultFile" />
+						<input type="hidden" name="wssessionId" th:value="${wssessionId}" />
 						<button type="submit" id="buttonResultFile" disabled class="btn btn-primary mb-2"
 							onclick="this.form.submit(); markAsDone('#step3');">Get the result</button>
 					</form>

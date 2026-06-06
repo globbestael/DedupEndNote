@@ -7,6 +7,7 @@ import java.nio.channels.ReadableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -18,6 +19,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -30,7 +32,6 @@ import edu.dedupendnote.domain.StompMessage;
 import edu.dedupendnote.services.DeduplicationService;
 import edu.dedupendnote.services.UtilitiesService;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 import lombok.extern.slf4j.Slf4j;
 
 @Controller
@@ -96,7 +97,8 @@ public class DedupEndNoteController {
 	}
 
 	@GetMapping("/")
-	public String home(HttpSession session) {
+	public String home(Model model) {
+		model.addAttribute("wssessionId", UUID.randomUUID());
 		return "index";
 	}
 
@@ -119,7 +121,7 @@ public class DedupEndNoteController {
 	 */
 	@PostMapping(value = "/startOneFile", produces = "application/json")
 	public ResponseEntity<String> startOneFile(@RequestParam("fileName_1") String inputFileName,
-			@RequestParam(required = false, defaultValue = "false") boolean markMode, @RequestParam String wssessionId)
+			@RequestParam(required = false, defaultValue = "false") boolean markMode, @RequestParam UUID wssessionId)
 			throws InterruptedException, ExecutionException {
 		DeduplicationMode mode = DeduplicationMode.from(markMode);
 		String logPrefix = "1F" + (mode == DeduplicationMode.MARK ? "M" : "D");
@@ -147,7 +149,7 @@ public class DedupEndNoteController {
 
 	@PostMapping(value = "/startTwoFiles", produces = "application/json")
 	public ResponseEntity<String> startTwoFiles(@RequestParam String oldFile, @RequestParam String newFile,
-			@RequestParam(required = false, defaultValue = "false") boolean markMode, @RequestParam String wssessionId)
+			@RequestParam(required = false, defaultValue = "false") boolean markMode, @RequestParam UUID wssessionId)
 			throws InterruptedException, ExecutionException {
 		DeduplicationMode mode = DeduplicationMode.from(markMode);
 		String logPrefix = "2F" + (mode == DeduplicationMode.MARK ? "M" : "D");
@@ -175,12 +177,13 @@ public class DedupEndNoteController {
 	}
 
 	@GetMapping("/test_results_details")
-	public String testResultsDetails(HttpSession session) {
+	public String testResultsDetails() {
 		return "test_results_details";
 	}
 
 	@GetMapping("/twofiles")
-	public String twofiles(final HttpSession session) {
+	public String twofiles(Model model) {
+		model.addAttribute("wssessionId", UUID.randomUUID());
 		return "twofiles";
 	}
 
