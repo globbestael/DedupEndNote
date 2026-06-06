@@ -9,6 +9,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import java.util.UUID;
+
 import edu.dedupendnote.domain.DeduplicationMode;
 import edu.dedupendnote.services.UtilitiesService;
 
@@ -50,6 +52,31 @@ class UtilitiesServiceTest {
 	@Test
 	void resolveInUploadDir_emptyFilename_throws() {
 		assertThatThrownBy(() -> UtilitiesService.resolveInUploadDir(UPLOAD_DIR, ""))
+				.isInstanceOf(IllegalArgumentException.class);
+	}
+
+	@Test
+	void getSessionDir_resolvesUuidAsSubdirectory() {
+		UUID id = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");
+		Path result = UtilitiesService.getSessionDir(UPLOAD_DIR, id);
+		assertThat(result.toString()).startsWith(UPLOAD_DIR_PREFIX);
+		assertThat(result.getFileName().toString()).isEqualTo(id.toString());
+	}
+
+	@Test
+	void resolveInSessionDir_validInputs_resolvesInsideSessionDir() {
+		UUID id = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");
+		Path result = UtilitiesService.resolveInSessionDir(UPLOAD_DIR, id, "myfile.ris");
+		assertThat(result.toString()).startsWith(UPLOAD_DIR_PREFIX);
+		assertThat(result.toString()).contains(id.toString());
+		assertThat(result.getFileName().toString()).isEqualTo("myfile.ris");
+	}
+
+	@ParameterizedTest(name = "{index}: session dir filename traversal ''{0}''")
+	@ValueSource(strings = { "../../etc/passwd", "../secret.txt", "subdir/file.ris", "/etc/passwd" })
+	void resolveInSessionDir_traversalFilename_throws(String malicious) {
+		UUID id = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");
+		assertThatThrownBy(() -> UtilitiesService.resolveInSessionDir(UPLOAD_DIR, id, malicious))
 				.isInstanceOf(IllegalArgumentException.class);
 	}
 

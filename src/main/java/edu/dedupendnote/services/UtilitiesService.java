@@ -9,6 +9,7 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Service;
@@ -96,6 +97,31 @@ public class UtilitiesService {
 		Path base = Path.of(uploadDir).toAbsolutePath().normalize();
 		Path resolved = base.resolve(parsed).normalize();
 		if (!resolved.startsWith(base)) {
+			throw new IllegalArgumentException("Path traversal attempt rejected: " + userFileName);
+		}
+		return resolved;
+	}
+
+	public static Path getSessionDir(String uploadDir, UUID sessionId) {
+		return Path.of(uploadDir).toAbsolutePath().normalize().resolve(sessionId.toString());
+	}
+
+	public static Path resolveInSessionDir(String uploadDir, UUID sessionId, @Nullable String userFileName) {
+		Path sessionDir = getSessionDir(uploadDir, sessionId);
+		if (userFileName == null || userFileName.isEmpty()) {
+			throw new IllegalArgumentException("Filename must not be null or empty");
+		}
+		Path parsed = Path.of(userFileName);
+		if (parsed.isAbsolute() || parsed.getNameCount() != 1) {
+			throw new IllegalArgumentException(
+					"Filename must be a simple name with no path separators: " + userFileName);
+		}
+		String name = parsed.toString();
+		if (name.equals("..") || name.equals(".")) {
+			throw new IllegalArgumentException("Filename must not be a directory reference: " + userFileName);
+		}
+		Path resolved = sessionDir.resolve(parsed).normalize();
+		if (!resolved.startsWith(sessionDir)) {
 			throw new IllegalArgumentException("Path traversal attempt rejected: " + userFileName);
 		}
 		return resolved;

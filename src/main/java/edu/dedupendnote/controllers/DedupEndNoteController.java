@@ -66,10 +66,9 @@ public class DedupEndNoteController {
 	 *
 	 * Web Socket: Messages should be sent to the individual user.
 	 * There is only server --> client communication (no @MessageMapping functions).
-	 * - the client generates a UUID (wssessionId) via crypto.randomUUID() and subscribes to "/topic/messages-[wssessionId]"
-	 *   TODO: crypto.randomUUID() only runs on localhost and secure connections.
-	 * 	 As a temporary fix, a local JS function is called to generate a UUID.
-	 * - the wssessionId is passed as a request parameter for startOneFile / startTwoFiles
+	 * - the server generates a UUID (wssessionId) via UUID.randomUUID() in home() / twofiles() and injects it
+	 *   into the Thymeleaf model; the template embeds it into all form hidden fields at render time.
+	 * - the wssessionId is passed as a request parameter for all upload/start/result endpoints
 	 * - the controller creates a Consumer<String> that routes messages to "/topic/messages-[wssessionId]" via SimpMessagingTemplate
 	 * - the Consumer is passed to DeduplicationService, which calls it for each progress update
 	 */
@@ -77,10 +76,11 @@ public class DedupEndNoteController {
 
 	@PostMapping(value = "/getResultFile", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
 	public void getResultFile(@RequestParam("fileNameResultFile") String fileName,
-			@RequestParam("markModeResultFile") boolean markMode, HttpServletResponse response) {
+			@RequestParam("markModeResultFile") boolean markMode, @RequestParam UUID wssessionId,
+			HttpServletResponse response) {
 		DeduplicationMode mode = DeduplicationMode.from(markMode);
 		try {
-			Path inputPath = UtilitiesService.resolveInUploadDir(uploadDir, fileName);
+			Path inputPath = UtilitiesService.resolveInSessionDir(uploadDir, wssessionId, fileName);
 			Path path = UtilitiesService.createPath(inputPath, mode.filenameSuffix(), "txt");
 			String safeFileName = path.getFileName().toString().replaceAll("[\"\\r\\n]", "_");
 			response.setContentType("text/plain");
@@ -127,7 +127,7 @@ public class DedupEndNoteController {
 		String logPrefix = "1F" + (mode == DeduplicationMode.MARK ? "M" : "D");
 
 		try {
-			Path inputPath = UtilitiesService.resolveInUploadDir(uploadDir, inputFileName);
+			Path inputPath = UtilitiesService.resolveInSessionDir(uploadDir, wssessionId, inputFileName);
 
 			Consumer<String> progressReporter = message -> simpMessagingTemplate
 					.convertAndSend("/topic/messages-" + wssessionId, new StompMessage(message));
@@ -155,8 +155,8 @@ public class DedupEndNoteController {
 		String logPrefix = "2F" + (mode == DeduplicationMode.MARK ? "M" : "D");
 
 		try {
-			Path newInputPath = UtilitiesService.resolveInUploadDir(uploadDir, newFile);
-			Path oldInputPath = UtilitiesService.resolveInUploadDir(uploadDir, oldFile);
+			Path newInputPath = UtilitiesService.resolveInSessionDir(uploadDir, wssessionId, newFile);
+			Path oldInputPath = UtilitiesService.resolveInSessionDir(uploadDir, wssessionId, oldFile);
 
 			Consumer<String> progressReporter = message -> simpMessagingTemplate
 					.convertAndSend("/topic/messages-" + wssessionId, new StompMessage(message));
@@ -188,12 +188,18 @@ public class DedupEndNoteController {
 	}
 
 	@PostMapping(value = "/uploadFile", produces = "application/json")
-	public ResponseEntity<String> uploadFile(@RequestParam MultipartFile file) {
+	public ResponseEntity<String> uploadFile(@RequestParam MultipartFile file, @RequestParam UUID wssessionId) {
 		if (file.isEmpty()) {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"result\": \"Upload failed: file is empty\"}");
 		}
 		try {
-			Path targetPath = UtilitiesService.resolveInUploadDir(uploadDir, file.getOriginalFilename());
+			Path targetPath = UtilitiesService.resolveInSessionDir(uploadDir, wssessionId, file.getOriginalFilename());
+			try {
+				Files.createDirectories(UtilitiesService.getSessionDir(uploadDir, wssessionId));
+			} catch (IOException e) {
+				log.error("Error creating session directory", e);
+				return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"result\": \"Upload failed\"}");
+			}
 			// Open a NIO2 FileChannel to write to the file system.
 			try (ReadableByteChannel inputChannel = Channels.newChannel(file.getInputStream());
 					FileChannel outputChannel = FileChannel.open(targetPath, StandardOpenOption.CREATE,

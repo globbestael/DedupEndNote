@@ -59,6 +59,7 @@ class PathTraversalTests {
 		MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
 		params.add("fileNameResultFile", "../../pom.xml");
 		params.add("markModeResultFile", "false");
+		params.add("wssessionId", "00000000-0000-4000-8000-000000000001");
 
 		ResponseEntity<String> response = restTemplate.postForEntity(url("/getResultFile"), params, String.class);
 
@@ -78,6 +79,7 @@ class PathTraversalTests {
 			}
 		};
 		body.add("file", fileResource);
+		body.add("wssessionId", "00000000-0000-4000-8000-000000000001");
 
 		ResponseEntity<String> response = restTemplate.postForEntity(url("/uploadFile"),
 				new HttpEntity<>(body, headers), String.class);

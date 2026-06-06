@@ -1,6 +1,6 @@
 # Session-scoped upload directories
 
-Status: ready-for-agent
+Status: done
 
 ## What to build
 
