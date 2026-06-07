@@ -86,4 +86,30 @@ class PathTraversalTests {
 
 		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
 	}
+
+	@Test
+	void startOneFile_withValidUpload_returns200WithDone() {
+		String wssessionId = "00000000-0000-4000-8000-000000000002";
+		String risContent = "TY  - JOUR\nID  - 1\nTI  - Test title\nER  - \n";
+
+		HttpHeaders uploadHeaders = new HttpHeaders();
+		uploadHeaders.setContentType(MediaType.MULTIPART_FORM_DATA);
+		MultiValueMap<String, Object> uploadBody = new LinkedMultiValueMap<>();
+		uploadBody.add("file", new ByteArrayResource(risContent.getBytes()) {
+			@Override
+			public String getFilename() {
+				return "test.ris";
+			}
+		});
+		uploadBody.add("wssessionId", wssessionId);
+		restTemplate.postForEntity(url("/uploadFile"), new HttpEntity<>(uploadBody, uploadHeaders), String.class);
+
+		MultiValueMap<String, String> startParams = new LinkedMultiValueMap<>();
+		startParams.add("fileName_1", "test.ris");
+		startParams.add("wssessionId", wssessionId);
+		ResponseEntity<String> response = restTemplate.postForEntity(url("/startOneFile"), startParams, String.class);
+
+		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+		assertThat(response.getBody()).contains("DONE");
+	}
 }

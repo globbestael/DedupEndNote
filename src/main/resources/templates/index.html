@@ -162,6 +162,15 @@
 						} else {
 							$('#results').text(response.result);
 						}
+					},
+					error: function (jqXHR) {
+						var message = (jqXHR.responseJSON && jqXHR.responseJSON.result)
+							? jqXHR.responseJSON.result
+							: "ERROR: Server is busy. Please try again in a moment.";
+						$('#results').removeClass('alert-warning');
+						$('#results').addClass('alert-danger');
+						$('#results').text(message);
+						enableButton('#buttonStartDeduplication');
 					}
 				});
 			});

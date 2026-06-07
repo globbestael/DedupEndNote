@@ -11,7 +11,10 @@ import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.Semaphore;
 import java.util.function.Consumer;
+
+import jakarta.annotation.PostConstruct;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -41,6 +44,17 @@ public class DedupEndNoteController {
 	@SuppressWarnings("NullAway.Init") // necessary because of lazy / late initialization?
 	@Value("${upload-dir}")
 	private String uploadDir;
+
+	@Value("${dedup.max-concurrent-runs:4}")
+	private int maxConcurrentRuns;
+
+	@SuppressWarnings("NullAway.Init")
+	private Semaphore concurrentRunsSemaphore;
+
+	@PostConstruct
+	void initSemaphore() {
+		concurrentRunsSemaphore = new Semaphore(maxConcurrentRuns);
+	}
 
 	private final DeduplicationService deduplicationService;
 	private final SimpMessagingTemplate simpMessagingTemplate;
@@ -129,17 +143,25 @@ public class DedupEndNoteController {
 		try {
 			Path inputPath = UtilitiesService.resolveInSessionDir(uploadDir, wssessionId, inputFileName);
 
-			Consumer<String> progressReporter = message -> simpMessagingTemplate
-					.convertAndSend("/topic/messages-" + wssessionId, new StompMessage(message));
-			try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
-				RequestAttributes requestAttributes = RequestContextHolder.currentRequestAttributes();
-				Future<String> future = executor.submit(() -> {
-					RequestContextHolder.setRequestAttributes(requestAttributes);
-					return deduplicationService.deduplicateOneFile(inputPath, mode, progressReporter);
-				});
-				String result = future.get();
-				log.info("Writing to result: {}: {}", logPrefix, result);
-				return ResponseEntity.ok("{ \"result\": " + result);
+			if (!concurrentRunsSemaphore.tryAcquire()) {
+				return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+						.body("{\"result\": \"ERROR: Server is busy. Please try again in a moment.\"}");
+			}
+			try {
+				Consumer<String> progressReporter = message -> simpMessagingTemplate
+						.convertAndSend("/topic/messages-" + wssessionId, new StompMessage(message));
+				try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
+					RequestAttributes requestAttributes = RequestContextHolder.currentRequestAttributes();
+					Future<String> future = executor.submit(() -> {
+						RequestContextHolder.setRequestAttributes(requestAttributes);
+						return deduplicationService.deduplicateOneFile(inputPath, mode, progressReporter);
+					});
+					String result = future.get();
+					log.info("Writing to result: {}: {}", logPrefix, result);
+					return ResponseEntity.ok("{ \"result\": " + result);
+				}
+			} finally {
+				concurrentRunsSemaphore.release();
 			}
 		} catch (IllegalArgumentException e) {
 			log.warn("Path traversal attempt in startOneFile: {}", e.getMessage());
@@ -158,17 +180,25 @@ public class DedupEndNoteController {
 			Path newInputPath = UtilitiesService.resolveInSessionDir(uploadDir, wssessionId, newFile);
 			Path oldInputPath = UtilitiesService.resolveInSessionDir(uploadDir, wssessionId, oldFile);
 
-			Consumer<String> progressReporter = message -> simpMessagingTemplate
-					.convertAndSend("/topic/messages-" + wssessionId, new StompMessage(message));
-			try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
-				RequestAttributes requestAttributes = RequestContextHolder.currentRequestAttributes();
-				Future<String> future = executor.submit(() -> {
-					RequestContextHolder.setRequestAttributes(requestAttributes);
-					return deduplicationService.deduplicateTwoFiles(newInputPath, oldInputPath, mode, progressReporter);
-				});
-				String result = future.get();
-				log.info("Writing to result: {}: {}", logPrefix, result);
-				return ResponseEntity.ok("{ \"result\": " + result);
+			if (!concurrentRunsSemaphore.tryAcquire()) {
+				return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+						.body("{\"result\": \"ERROR: Server is busy. Please try again in a moment.\"}");
+			}
+			try {
+				Consumer<String> progressReporter = message -> simpMessagingTemplate
+						.convertAndSend("/topic/messages-" + wssessionId, new StompMessage(message));
+				try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
+					RequestAttributes requestAttributes = RequestContextHolder.currentRequestAttributes();
+					Future<String> future = executor.submit(() -> {
+						RequestContextHolder.setRequestAttributes(requestAttributes);
+						return deduplicationService.deduplicateTwoFiles(newInputPath, oldInputPath, mode, progressReporter);
+					});
+					String result = future.get();
+					log.info("Writing to result: {}: {}", logPrefix, result);
+					return ResponseEntity.ok("{ \"result\": " + result);
+				}
+			} finally {
+				concurrentRunsSemaphore.release();
 			}
 		} catch (IllegalArgumentException e) {
 			log.warn("Path traversal attempt in startTwoFiles: {}", e.getMessage());

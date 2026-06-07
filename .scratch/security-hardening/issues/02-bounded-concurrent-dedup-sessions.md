@@ -1,6 +1,6 @@
 # Bounded concurrent dedup sessions
 
-Status: ready-for-agent
+Status: done
 
 ## What to build
 
