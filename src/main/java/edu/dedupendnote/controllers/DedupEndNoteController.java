@@ -12,6 +12,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 
 import jakarta.annotation.PostConstruct;
@@ -47,6 +49,9 @@ public class DedupEndNoteController {
 
 	@Value("${dedup.max-concurrent-runs:4}")
 	private int maxConcurrentRuns;
+
+	@Value("${dedup.timeout-minutes:20}")
+	private int timeoutMinutes;
 
 	@SuppressWarnings("NullAway.Init")
 	private Semaphore concurrentRunsSemaphore;
@@ -156,9 +161,19 @@ public class DedupEndNoteController {
 						RequestContextHolder.setRequestAttributes(requestAttributes);
 						return deduplicationService.deduplicateOneFile(inputPath, mode, progressReporter);
 					});
-					String result = future.get();
-					log.info("Writing to result: {}: {}", logPrefix, result);
-					return ResponseEntity.ok("{ \"result\": " + result);
+					try {
+						String result = future.get(timeoutMinutes, TimeUnit.MINUTES);
+						log.info("Writing to result: {}: {}", logPrefix, result);
+						return ResponseEntity.ok("{ \"result\": " + result);
+					} catch (TimeoutException e) {
+						future.cancel(true);
+						try {
+							Files.deleteIfExists(UtilitiesService.createPath(inputPath, mode.filenameSuffix(), "txt"));
+						} catch (IOException ignored) {}
+						String msg = "ERROR: Deduplication timed out after " + timeoutMinutes + " minutes.";
+						progressReporter.accept(msg);
+						return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body("{\"result\": \"" + msg + "\"}");
+					}
 				}
 			} finally {
 				concurrentRunsSemaphore.release();
@@ -193,9 +208,19 @@ public class DedupEndNoteController {
 						RequestContextHolder.setRequestAttributes(requestAttributes);
 						return deduplicationService.deduplicateTwoFiles(newInputPath, oldInputPath, mode, progressReporter);
 					});
-					String result = future.get();
-					log.info("Writing to result: {}: {}", logPrefix, result);
-					return ResponseEntity.ok("{ \"result\": " + result);
+					try {
+						String result = future.get(timeoutMinutes, TimeUnit.MINUTES);
+						log.info("Writing to result: {}: {}", logPrefix, result);
+						return ResponseEntity.ok("{ \"result\": " + result);
+					} catch (TimeoutException e) {
+						future.cancel(true);
+						try {
+							Files.deleteIfExists(UtilitiesService.createPath(newInputPath, mode.filenameSuffix(), "txt"));
+						} catch (IOException ignored) {}
+						String msg = "ERROR: Deduplication timed out after " + timeoutMinutes + " minutes.";
+						progressReporter.accept(msg);
+						return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body("{\"result\": \"" + msg + "\"}");
+					}
 				}
 			} finally {
 				concurrentRunsSemaphore.release();
