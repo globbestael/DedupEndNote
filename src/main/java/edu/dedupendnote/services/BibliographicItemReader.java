@@ -130,7 +130,7 @@ public class BibliographicItemReader {
 	 */
 	public static final Pattern RIS_LINE_PATTERN = Pattern.compile("(^[A-Z][A-Z0-9])( {2}-[ ,\\u00A0])(.*)$");
 
-	private long countRecords(Path inputPath) throws IOException {
+	public long countRecords(Path inputPath) throws IOException {
 		try (Stream<String> lines = Files.lines(inputPath)) {
 			return lines.filter(l -> l.startsWith("ER  - ")).count();
 		}

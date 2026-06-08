@@ -1,6 +1,6 @@
 # Record-count cap before dedup
 
-Status: ready-for-agent
+Status: done
 
 ## What to build
 

@@ -1,5 +1,6 @@
 package edu.dedupendnote.services;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -14,6 +15,7 @@ import java.util.stream.Collectors;
 import java.util.function.Consumer;
 
 import org.jspecify.annotations.Nullable;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.annotation.RequestScope;
 
@@ -33,6 +35,9 @@ public class DeduplicationService {
 	private final BibliographicItemWriter bibliographicItemWriter;
 
 	private final EnrichmentService enrichmentService;
+
+	@Value("${dedup.max-records:100000}")
+	private int maxRecords;
 
 	// the DOIs have been lowercased
 	public static Pattern COCHRANE_DOI_PATTERN = Pattern.compile("^.*10.1002/14651858.([a-z][a-z]\\d+).*",
@@ -226,6 +231,21 @@ l						 * 		V 		W 		X
 		}
 	}
 
+	private @Nullable String checkRecordCap(Path path, Consumer<String> progressReporter) {
+		try {
+			long count = bibliographicItemReader.countRecords(path);
+			if (count > maxRecords) {
+				String msg = "ERROR: Input file " + path.getFileName() + " contains " + count
+						+ " bibliographic items, which exceeds the maximum of " + maxRecords + ".";
+				progressReporter.accept(msg);
+				return msg;
+			}
+		} catch (IOException e) {
+			// unreadable file — readBibliographicItems will handle it
+		}
+		return null;
+	}
+
 	private boolean containsDuplicateIds(List<BibliographicItem> bibliographicItems) {
 		return !bibliographicItems.stream().map(BibliographicItem::getId).allMatch(new HashSet<>()::add);
 	}
@@ -234,6 +254,8 @@ l						 * 		V 		W 		X
 			Consumer<String> progressReporter) {
 		Path outputPath = UtilitiesService.createPath(inputPath, mode.filenameSuffix(), "txt");
 		progressReporter.accept("Reading file " + inputPath.getFileName());
+		String capError = checkRecordCap(inputPath, progressReporter);
+		if (capError != null) return capError;
 		List<BibliographicItem> bibliographicItems;
 		try {
 			bibliographicItems = bibliographicItemReader.readBibliographicItems(inputPath, progressReporter);
@@ -277,6 +299,18 @@ l						 * 		V 		W 		X
 		// read the old bibliographicItems and mark them as present, then add the new bibliographicItems
 		log.info("oldInputPath: {}", oldInputPath);
 		log.info("newInputPath: {}", newInputPath);
+		try {
+			long combinedCount = bibliographicItemReader.countRecords(oldInputPath)
+					+ bibliographicItemReader.countRecords(newInputPath);
+			if (combinedCount > maxRecords) {
+				String msg = "ERROR: The two input files together contain " + combinedCount
+						+ " bibliographic items, which exceeds the maximum of " + maxRecords + ".";
+				progressReporter.accept(msg);
+				return msg;
+			}
+		} catch (IOException e) {
+			// unreadable file — readBibliographicItems will handle it
+		}
 		List<BibliographicItem> bibliographicItems;
 		try {
 			bibliographicItems = bibliographicItemReader.readBibliographicItems(oldInputPath, progressReporter);
