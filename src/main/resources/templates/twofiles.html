@@ -143,7 +143,7 @@
 				event.preventDefault();
 				disableButton('#buttonStartDeduplication');
 				$("#fileNameResultFile").val($('#newFile').val());
-				$("#markModeResultFile").val($('#markMode').prop("checked"));
+				$("#deduplicationModeResultFile").val($("input[name='deduplicationMode']:checked").val());
 
 				$.ajax({
 					url: '/startTwoFiles',
@@ -239,8 +239,12 @@
 						<input type="hidden" id="newFile" name="newFile" value="" />
 						<input type="hidden" id="wssessionId" name="wssessionId" th:value="${wssessionId}" />
 						<div class="form-check form-check-inline mb-2">
-							<input class="form-check-input" type="checkbox" id="markMode" name="markMode" />
-							<label class="form-check-label" for="markMode">Do NOT deduplicate but mark the duplicate bibliographic items (see Mark mode below)</label>
+							<input class="form-check-input" type="radio" id="deduplicationMode_REMOVE" name="deduplicationMode" value="REMOVE" checked />
+							<label class="form-check-label" for="deduplicationMode_REMOVE">Deduplicate</label>
+						</div>
+						<div class="form-check form-check-inline mb-2">
+							<input class="form-check-input" type="radio" id="deduplicationMode_MARK" name="deduplicationMode" value="MARK" />
+							<label class="form-check-label" for="deduplicationMode_MARK">Do NOT deduplicate but mark the duplicate bibliographic items (see Mark mode below)</label>
 						</div>
 						<div>
 							<button type="submit" id="buttonStartDeduplication" disabled
@@ -264,7 +268,7 @@
 					<form class="form-horizontal" id="getResultFile_form" method="post"
 						th:action="@{|/getResultFile|}">
 						<input type="hidden" name="fileNameResultFile" id="fileNameResultFile" />
-						<input type="hidden" name="markModeResultFile" id="markModeResultFile" />
+						<input type="hidden" name="deduplicationModeResultFile" id="deduplicationModeResultFile" />
 						<input type="hidden" name="wssessionId" th:value="${wssessionId}" />
 						<button type="submit" id="buttonResultFile" disabled class="btn btn-primary mb-2"
 							onclick="this.form.submit(); markAsDone('#step3');">Get the result</button>

@@ -22,7 +22,7 @@ class PathTraversalTests extends AbstractRandomPortIntegrationTest {
 	void getResultFile_traversalFilename_returns400() {
 		MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
 		params.add("fileNameResultFile", "../../pom.xml");
-		params.add("markModeResultFile", "false");
+		params.add("deduplicationModeResultFile", "REMOVE");
 		params.add("wssessionId", "00000000-0000-4000-8000-000000000001");
 
 		ResponseEntity<String> response = restTemplate.postForEntity(url("/getResultFile"), params, String.class);

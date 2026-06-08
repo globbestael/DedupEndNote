@@ -93,12 +93,11 @@ public class DedupEndNoteController {
 
 	@PostMapping(value = "/getResultFile", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
 	public void getResultFile(@RequestParam("fileNameResultFile") String fileName,
-			@RequestParam("markModeResultFile") boolean markMode, @RequestParam UUID wssessionId,
-			HttpServletResponse response) {
-		DeduplicationMode mode = DeduplicationMode.from(markMode);
+			@RequestParam("deduplicationModeResultFile") DeduplicationMode deduplicationMode,
+			@RequestParam UUID wssessionId, HttpServletResponse response) {
 		try {
 			Path inputPath = UtilitiesService.resolveInSessionDir(uploadDir, wssessionId, fileName);
-			Path path = UtilitiesService.createPath(inputPath, mode.filenameSuffix(), "txt");
+			Path path = UtilitiesService.createPath(inputPath, deduplicationMode.filenameSuffix(), "txt");
 			String safeFileName = path.getFileName().toString().replaceAll("[\"\\r\\n]", "_");
 			response.setContentType("text/plain");
 			response.addHeader("Content-Disposition", "attachment; filename=\"" + safeFileName + "\"");
@@ -138,16 +137,16 @@ public class DedupEndNoteController {
 	 */
 	@PostMapping(value = "/startOneFile", produces = "application/json")
 	public ResponseEntity<String> startOneFile(@RequestParam("fileName_1") String inputFileName,
-			@RequestParam(required = false, defaultValue = "false") boolean markMode, @RequestParam UUID wssessionId)
+			@RequestParam(defaultValue = "REMOVE") DeduplicationMode deduplicationMode,
+			@RequestParam UUID wssessionId)
 			throws InterruptedException, ExecutionException {
-		DeduplicationMode mode = DeduplicationMode.from(markMode);
 		try {
 			Path inputPath = UtilitiesService.resolveInSessionDir(uploadDir, wssessionId, inputFileName);
 			Consumer<String> progressReporter = message -> simpMessagingTemplate
 					.convertAndSend("/topic/messages-" + wssessionId, new StompMessage(message));
-			return runDedup("1F" + (mode == DeduplicationMode.MARK ? "M" : "D"),
-					UtilitiesService.createPath(inputPath, mode.filenameSuffix(), "txt"),
-					() -> deduplicationService.deduplicateOneFile(inputPath, mode, progressReporter),
+			return runDedup("1F" + deduplicationMode.logCode(),
+					UtilitiesService.createPath(inputPath, deduplicationMode.filenameSuffix(), "txt"),
+					() -> deduplicationService.deduplicateOneFile(inputPath, deduplicationMode, progressReporter),
 					progressReporter);
 		} catch (IllegalArgumentException e) {
 			log.warn("Path traversal attempt in startOneFile: {}", e.getMessage());
@@ -157,17 +156,17 @@ public class DedupEndNoteController {
 
 	@PostMapping(value = "/startTwoFiles", produces = "application/json")
 	public ResponseEntity<String> startTwoFiles(@RequestParam String oldFile, @RequestParam String newFile,
-			@RequestParam(required = false, defaultValue = "false") boolean markMode, @RequestParam UUID wssessionId)
+			@RequestParam(defaultValue = "REMOVE") DeduplicationMode deduplicationMode,
+			@RequestParam UUID wssessionId)
 			throws InterruptedException, ExecutionException {
-		DeduplicationMode mode = DeduplicationMode.from(markMode);
 		try {
 			Path newInputPath = UtilitiesService.resolveInSessionDir(uploadDir, wssessionId, newFile);
 			Path oldInputPath = UtilitiesService.resolveInSessionDir(uploadDir, wssessionId, oldFile);
 			Consumer<String> progressReporter = message -> simpMessagingTemplate
 					.convertAndSend("/topic/messages-" + wssessionId, new StompMessage(message));
-			return runDedup("2F" + (mode == DeduplicationMode.MARK ? "M" : "D"),
-					UtilitiesService.createPath(newInputPath, mode.filenameSuffix(), "txt"),
-					() -> deduplicationService.deduplicateTwoFiles(newInputPath, oldInputPath, mode, progressReporter),
+			return runDedup("2F" + deduplicationMode.logCode(),
+					UtilitiesService.createPath(newInputPath, deduplicationMode.filenameSuffix(), "txt"),
+					() -> deduplicationService.deduplicateTwoFiles(newInputPath, oldInputPath, deduplicationMode, progressReporter),
 					progressReporter);
 		} catch (IllegalArgumentException e) {
 			log.warn("Path traversal attempt in startTwoFiles: {}", e.getMessage());
