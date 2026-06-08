@@ -15,15 +15,9 @@
 - should the javascript in index.html and twofiles.html be refactored (extracted)?
 - should input file be deleted if here is a timeoutexception?
 - Matt's skill for code review is not published yet, he has a nice review of: thermo-nuclear code quality review
--  When I validated issue 03's compilation with ./mvnw clean package -DskipTests -q, the -q (quiet) flag suppresses most
-  of Maven's output. NullAway errors are emitted by the Java annotation processor inside javac, and Maven's -q mode can
-  suppress javac's diagnostic output while still allowing the build to technically succeed — this depends on how the
-  compiler plugin is configured and whether NullAway is set up to fail the build as a hard error vs. emit a warning. The
-  (Bash completed with no output) result I got means exit code 0 and zero output, so the build passed quietly.
-
-  When running ./mvnw clean test -Punit-tests without -q, the full javac output appears and NullAway's diagnostic is
-  visible.
-  CHECK maven configuration for this ========================
+-  NullAway failure output is ~22 lines. Using `tail -5` to verify compilation silently hides the
+  actual error (lines ~14-15) and BUILD FAILURE (line ~18). Always use `tail -20` or
+  `grep -E "NullAway|error:|BUILD"` when checking compilation output.
  
 ## OWASP
 
