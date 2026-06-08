@@ -1,6 +1,6 @@
 # Upload rate limiting
 
-Status: ready-for-human
+Status: done
 
 ## What to build
 
