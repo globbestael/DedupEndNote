@@ -47,6 +47,34 @@
                             <li>Dev profile: Actuator exposure restricted from <code>*</code> to
                                 <code>health,info</code>
                             </li>
+                            <li>Session-scoped upload directories: each upload session now uses an
+                                isolated subdirectory (<code>upload-dir/{UUID}/</code>), preventing
+                                one user's files from being accessible by other concurrent users
+                            </li>
+                            <li>Server-side WebSocket session UUID: the session UUID is now
+                                generated on the server and injected into the page via Thymeleaf,
+                                replacing the previous client-side JavaScript generation
+                            </li>
+                            <li>Upload rate limiting: a per-IP cooldown (configurable via
+                                <code>dedup.upload-cooldown-seconds</code>, default 10 s) prevents
+                                rapid repeated uploads from a single client
+                            </li>
+                            <li>Bounded concurrent dedup sessions: the number of simultaneous
+                                deduplication runs is now capped (configurable via
+                                <code>dedup.max-concurrent-runs</code>, default 4); requests
+                                beyond the cap return HTTP 429
+                            </li>
+                            <li>Configurable dedup run timeout: runs that exceed the configured
+                                limit (<code>dedup.timeout-minutes</code>, default 20) are
+                                cancelled and the client receives HTTP 503
+                            </li>
+                            <li>Record-count cap: input files exceeding the configured maximum
+                                (<code>dedup.max-records</code>, default 100&thinsp;000) are
+                                rejected before deduplication starts
+                            </li>
+                            <li>Filenames containing line-break characters are now rejected at
+                                upload time, preventing log-forging via crafted filenames
+                            </li>
                         </ul>
                     </li>
                     <li>Internal:
@@ -122,8 +150,8 @@
                                 <code>Files.newBufferedWriter</code> throughout; eliminates
                                 <code>.toFile()</code> bridge calls and fixes implicit
                                 platform-default encoding (was not guaranteed UTF-8 on Windows);
-                                controller result-file download switched to NIO2
-                                <code>FileChannel</code>; <code>PathUtils.deleteDirectory</code>
+                                controller file upload and download use <code>Files.copy</code>;
+                                <code>PathUtils.deleteDirectory</code>
                                 (Apache commons-io) replaces Spring's
                                 <code>FileSystemUtils.deleteRecursively</code>, removing the
                                 last <code>java.io.File</code> usage from production code
