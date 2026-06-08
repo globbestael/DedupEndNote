@@ -144,6 +144,16 @@
                                 internally from <code>inputPath</code> and <code>mode</code>,
                                 which are already available as parameters
                             </li>
+                            <li>Switch deduplication-mode selection from a boolean
+                                <code>markMode</code> flag to the <code>DeduplicationMode</code>
+                                enum end-to-end: HTML forms now use radio buttons with values
+                                <code>REMOVE</code> / <code>MARK</code>; the hidden result-file
+                                field is renamed to <code>deduplicationModeResultFile</code>;
+                                controller endpoints bind <code>DeduplicationMode</code> directly
+                                via Spring enum conversion, removing the boolean-to-enum
+                                translation; <code>DeduplicationMode.logCode()</code> replaces the
+                                inline ternary in the log prefix
+                            </li>
                             <li>Replace <code>java.io.FileReader</code> /
                                 <code>FileWriter</code> with NIO2
                                 <code>Files.newBufferedReader</code> /
