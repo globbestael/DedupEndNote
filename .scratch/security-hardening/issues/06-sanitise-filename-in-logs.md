@@ -1,6 +1,6 @@
 # Sanitise attacker-controlled filename in logs
 
-Status: ready-for-human
+Status: done
 
 ## What to build
 

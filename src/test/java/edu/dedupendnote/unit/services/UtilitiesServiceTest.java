@@ -39,7 +39,8 @@ class UtilitiesServiceTest {
 	}
 
 	@ParameterizedTest(name = "{index}: session dir filename traversal ''{0}''")
-	@ValueSource(strings = { "../../etc/passwd", "../secret.txt", "subdir/file.ris", "/etc/passwd" })
+	@ValueSource(strings = { "../../etc/passwd", "../secret.txt", "subdir/file.ris", "/etc/passwd",
+			"evil\nstuff.ris", "evil\rstuff.ris" })
 	void resolveInSessionDir_traversalFilename_throws(String malicious) {
 		UUID id = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");
 		assertThatThrownBy(() -> UtilitiesService.resolveInSessionDir(UPLOAD_DIR, id, malicious))

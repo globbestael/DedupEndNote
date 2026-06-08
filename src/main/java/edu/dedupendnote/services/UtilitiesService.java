@@ -83,6 +83,10 @@ public class UtilitiesService {
 		if (userFileName == null || userFileName.isEmpty()) {
 			throw new IllegalArgumentException("Filename must not be null or empty");
 		}
+		// OWASP A05 risk: On Logback, no JNDI injection risk, but enables log forging if the filename contains newlines.
+		if (userFileName.contains("\r") || userFileName.contains("\n")) {
+			throw new IllegalArgumentException("Filename must not contain line-break characters");
+		}
 		Path parsed = Path.of(userFileName);
 		if (parsed.isAbsolute() || parsed.getNameCount() != 1) {
 			throw new IllegalArgumentException(

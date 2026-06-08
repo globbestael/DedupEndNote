@@ -3,6 +3,7 @@ package edu.dedupendnote.controllers;
 import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -50,7 +51,7 @@ public class RateLimitInterceptor implements HandlerInterceptor {
 	 */
 	@Override
 	public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler,
-			Exception ex) {
+			@Nullable Exception ex) {
 		String ip = pendingIp.get();
 		pendingIp.remove();
 		if (ip != null && response.getStatus() == HttpServletResponse.SC_OK) {
