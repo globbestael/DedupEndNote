@@ -1,15 +1,30 @@
 # TODO
 
 ## Refactoring fileName and path
-- Are there really no changes in the calls for reading and writing?
-  See https://docs.oracle.com/javase/tutorial/essential/io/file.html#textfiles
-  Should there still be BufferedReader's (java.io) calls in the program?
 - There are some full paths in the user-facing messages, e.g. in the catch of BibliographicItemWiter l.121
   This is a OWASP risk
 - BibliographicItemWriter has e.printStackTrace(). Maybe more cases
 - There are some cases with path.resolve(filename).normalize()
   Why is this normalize() not called after every resolve(...)?
+- why 2 variable wssession_id in the form of index.html?
+- what s /testresultsdetails in the controller?
+- look into https://www.julien-dubois.com/boot-ui/
+- look into Github dependabot
+- look at Endive? https://bytecodealliance.org/articles/endive-and-the-next-chapter-of-webassembly-on-the-jvm
+  Github: https://github.com/bytecodealliance/endive
+- should the javascript in index.html and twofiles.html be refactored (extracted)?
+- should input file be deleted if here is a timeoutexception?
+- Matt's skill for code review is not published yet, he has a nice review of: thermo-nuclear code quality review
+-  When I validated issue 03's compilation with ./mvnw clean package -DskipTests -q, the -q (quiet) flag suppresses most
+  of Maven's output. NullAway errors are emitted by the Java annotation processor inside javac, and Maven's -q mode can
+  suppress javac's diagnostic output while still allowing the build to technically succeed — this depends on how the
+  compiler plugin is configured and whether NullAway is set up to fail the build as a hard error vs. emit a warning. The
+  (Bash completed with no output) result I got means exit code 0 and zero output, so the build passed quietly.
 
+  When running ./mvnw clean test -Punit-tests without -q, the full javac output appears and NullAway's diagnostic is
+  visible.
+  CHECK maven configuration for this ========================
+ 
 ## OWASP
 
 ### Configure Claude's /security-review skill?
