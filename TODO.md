@@ -13,11 +13,7 @@
 - look at Endive? https://bytecodealliance.org/articles/endive-and-the-next-chapter-of-webassembly-on-the-jvm
   Github: https://github.com/bytecodealliance/endive
 - should the javascript in index.html and twofiles.html be refactored (extracted)?
-- should input file be deleted if here is a timeoutexception?
-- Matt's skill for code review is not published yet, he has a nice review of: thermo-nuclear code quality review
--  NullAway failure output is ~22 lines. Using `tail -5` to verify compilation silently hides the
-  actual error (lines ~14-15) and BUILD FAILURE (line ~18). Always use `tail -20` or
-  `grep -E "NullAway|error:|BUILD"` when checking compilation output.
+- should input file be deleted if there is a timeoutexception?
  
 ## OWASP
 

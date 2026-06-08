@@ -52,26 +52,14 @@ public class UtilitiesService {
 		return parent.resolve(baseName + suffix + "." + newExtension);
 	}
 
-	/**
-	 * Returns the inputfilename with the last or all extensions removed. A dotfile is safe.
-	 * 
-	 * Source: https://www.baeldung.com/java-filename-without-extension
-	 * 
-	 * @param filename
-	 * @param removeAllExtensions
-	 * @return
-	 */
-	public static String removeFileExtension(String filename, boolean removeAllExtensions) {
+	/*
+	 * Based on https://www.baeldung.com/java-filename-without-extension
+	 */	
+	public static String removeFileExtension(String filename) {
 		if (filename == null || filename.isEmpty()) {
 			return filename;
 		}
-
-		String extPattern = "(?<!^)[.]" + (removeAllExtensions ? ".*" : "[^.]*$");
-		return filename.replaceAll(extPattern, "");
-	}
-
-	public static String removeFileExtension(String filename) {
-		return removeFileExtension(filename, false);
+		return filename.replaceAll("(?<!^)[.][^.]*$", "");
 	}
 
 	public static Path getSessionDir(String uploadDir, UUID sessionId) {

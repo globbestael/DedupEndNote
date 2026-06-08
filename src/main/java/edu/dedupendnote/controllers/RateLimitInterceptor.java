@@ -18,10 +18,9 @@ public class RateLimitInterceptor implements HandlerInterceptor {
 	@Value("${dedup.upload-cooldown-seconds:10}")
 	private int cooldownSeconds;
 
-	private final ConcurrentHashMap<String, Long> uploadTimestamps = new ConcurrentHashMap<>();
+	private static final String ATTR_IP = RateLimitInterceptor.class.getName() + ".ip";
 
-	// Carries the client IP from preHandle to afterCompletion on the same thread.
-	private static final ThreadLocal<String> pendingIp = new ThreadLocal<>();
+	private final ConcurrentHashMap<String, Long> uploadTimestamps = new ConcurrentHashMap<>();
 
 	@Override
 	public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
@@ -38,7 +37,7 @@ public class RateLimitInterceptor implements HandlerInterceptor {
 					"{\"result\": \"ERROR: Too many uploads. Please wait a moment before uploading again.\"}");
 			return false;
 		}
-		pendingIp.set(ip);
+		request.setAttribute(ATTR_IP, ip);
 		return true;
 	}
 
@@ -52,8 +51,7 @@ public class RateLimitInterceptor implements HandlerInterceptor {
 	@Override
 	public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler,
 			@Nullable Exception ex) {
-		String ip = pendingIp.get();
-		pendingIp.remove();
+		String ip = (String) request.getAttribute(ATTR_IP);
 		if (ip != null && response.getStatus() == HttpServletResponse.SC_OK) {
 			long now = System.currentTimeMillis();
 			uploadTimestamps.put(ip, now);

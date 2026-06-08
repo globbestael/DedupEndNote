@@ -1,13 +1,11 @@
 package edu.dedupendnote.controllers;
 
 import java.io.IOException;
-import java.nio.channels.Channels;
-import java.nio.channels.FileChannel;
-import java.nio.channels.ReadableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
+import java.nio.file.StandardCopyOption;
 import java.util.UUID;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -143,41 +141,14 @@ public class DedupEndNoteController {
 			@RequestParam(required = false, defaultValue = "false") boolean markMode, @RequestParam UUID wssessionId)
 			throws InterruptedException, ExecutionException {
 		DeduplicationMode mode = DeduplicationMode.from(markMode);
-		String logPrefix = "1F" + (mode == DeduplicationMode.MARK ? "M" : "D");
-
 		try {
 			Path inputPath = UtilitiesService.resolveInSessionDir(uploadDir, wssessionId, inputFileName);
-
-			if (!concurrentRunsSemaphore.tryAcquire()) {
-				return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
-						.body("{\"result\": \"ERROR: Server is busy. Please try again in a moment.\"}");
-			}
-			try {
-				Consumer<String> progressReporter = message -> simpMessagingTemplate
-						.convertAndSend("/topic/messages-" + wssessionId, new StompMessage(message));
-				try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
-					RequestAttributes requestAttributes = RequestContextHolder.currentRequestAttributes();
-					Future<String> future = executor.submit(() -> {
-						RequestContextHolder.setRequestAttributes(requestAttributes);
-						return deduplicationService.deduplicateOneFile(inputPath, mode, progressReporter);
-					});
-					try {
-						String result = future.get(timeoutMinutes, TimeUnit.MINUTES);
-						log.info("Writing to result: {}: {}", logPrefix, result);
-						return ResponseEntity.ok("{ \"result\": " + result);
-					} catch (TimeoutException e) {
-						future.cancel(true);
-						try {
-							Files.deleteIfExists(UtilitiesService.createPath(inputPath, mode.filenameSuffix(), "txt"));
-						} catch (IOException ignored) {}
-						String msg = "ERROR: Deduplication timed out after " + timeoutMinutes + " minutes.";
-						progressReporter.accept(msg);
-						return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body("{\"result\": \"" + msg + "\"}");
-					}
-				}
-			} finally {
-				concurrentRunsSemaphore.release();
-			}
+			Consumer<String> progressReporter = message -> simpMessagingTemplate
+					.convertAndSend("/topic/messages-" + wssessionId, new StompMessage(message));
+			return runDedup("1F" + (mode == DeduplicationMode.MARK ? "M" : "D"),
+					UtilitiesService.createPath(inputPath, mode.filenameSuffix(), "txt"),
+					() -> deduplicationService.deduplicateOneFile(inputPath, mode, progressReporter),
+					progressReporter);
 		} catch (IllegalArgumentException e) {
 			log.warn("Path traversal attempt in startOneFile: {}", e.getMessage());
 			return ResponseEntity.badRequest().body("{\"result\": \"Invalid filename\"}");
@@ -189,45 +160,48 @@ public class DedupEndNoteController {
 			@RequestParam(required = false, defaultValue = "false") boolean markMode, @RequestParam UUID wssessionId)
 			throws InterruptedException, ExecutionException {
 		DeduplicationMode mode = DeduplicationMode.from(markMode);
-		String logPrefix = "2F" + (mode == DeduplicationMode.MARK ? "M" : "D");
-
 		try {
 			Path newInputPath = UtilitiesService.resolveInSessionDir(uploadDir, wssessionId, newFile);
 			Path oldInputPath = UtilitiesService.resolveInSessionDir(uploadDir, wssessionId, oldFile);
-
-			if (!concurrentRunsSemaphore.tryAcquire()) {
-				return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
-						.body("{\"result\": \"ERROR: Server is busy. Please try again in a moment.\"}");
-			}
-			try {
-				Consumer<String> progressReporter = message -> simpMessagingTemplate
-						.convertAndSend("/topic/messages-" + wssessionId, new StompMessage(message));
-				try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
-					RequestAttributes requestAttributes = RequestContextHolder.currentRequestAttributes();
-					Future<String> future = executor.submit(() -> {
-						RequestContextHolder.setRequestAttributes(requestAttributes);
-						return deduplicationService.deduplicateTwoFiles(newInputPath, oldInputPath, mode, progressReporter);
-					});
-					try {
-						String result = future.get(timeoutMinutes, TimeUnit.MINUTES);
-						log.info("Writing to result: {}: {}", logPrefix, result);
-						return ResponseEntity.ok("{ \"result\": " + result);
-					} catch (TimeoutException e) {
-						future.cancel(true);
-						try {
-							Files.deleteIfExists(UtilitiesService.createPath(newInputPath, mode.filenameSuffix(), "txt"));
-						} catch (IOException ignored) {}
-						String msg = "ERROR: Deduplication timed out after " + timeoutMinutes + " minutes.";
-						progressReporter.accept(msg);
-						return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body("{\"result\": \"" + msg + "\"}");
-					}
-				}
-			} finally {
-				concurrentRunsSemaphore.release();
-			}
+			Consumer<String> progressReporter = message -> simpMessagingTemplate
+					.convertAndSend("/topic/messages-" + wssessionId, new StompMessage(message));
+			return runDedup("2F" + (mode == DeduplicationMode.MARK ? "M" : "D"),
+					UtilitiesService.createPath(newInputPath, mode.filenameSuffix(), "txt"),
+					() -> deduplicationService.deduplicateTwoFiles(newInputPath, oldInputPath, mode, progressReporter),
+					progressReporter);
 		} catch (IllegalArgumentException e) {
 			log.warn("Path traversal attempt in startTwoFiles: {}", e.getMessage());
 			return ResponseEntity.badRequest().body("{\"result\": \"Invalid filename\"}");
+		}
+	}
+
+	private ResponseEntity<String> runDedup(String logPrefix, Path outputPath, Callable<String> dedupTask,
+			Consumer<String> progressReporter) throws InterruptedException, ExecutionException {
+		if (!concurrentRunsSemaphore.tryAcquire()) {
+			return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+					.body("{\"result\": \"ERROR: Server is busy. Please try again in a moment.\"}");
+		}
+		try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
+			RequestAttributes requestAttributes = RequestContextHolder.currentRequestAttributes();
+			Future<String> future = executor.submit(() -> {
+				RequestContextHolder.setRequestAttributes(requestAttributes);
+				return dedupTask.call();
+			});
+			try {
+				String result = future.get(timeoutMinutes, TimeUnit.MINUTES);
+				log.info("Writing to result: {}: {}", logPrefix, result);
+				return ResponseEntity.ok("{ \"result\": " + result);
+			} catch (TimeoutException e) {
+				future.cancel(true);
+				try {
+					Files.deleteIfExists(outputPath);
+				} catch (IOException ignored) {}
+				String msg = "ERROR: Deduplication timed out after " + timeoutMinutes + " minutes.";
+				progressReporter.accept(msg);
+				return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body("{\"result\": \"" + msg + "\"}");
+			}
+		} finally {
+			concurrentRunsSemaphore.release();
 		}
 	}
 
@@ -255,26 +229,8 @@ public class DedupEndNoteController {
 				log.error("Error creating session directory", e);
 				return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"result\": \"Upload failed\"}");
 			}
-			// Open a NIO2 FileChannel to write to the file system.
-			try (ReadableByteChannel inputChannel = Channels.newChannel(file.getInputStream());
-					FileChannel outputChannel = FileChannel.open(targetPath, StandardOpenOption.CREATE,
-							StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING)) {
-
-				// NIO2 zero-copy transfer via the operating system
-				long chunkSize = 8 * 1024 * 1024;
-				long bytesTransferred = 0;
-				long fileSize = file.getSize();
-
-				while (bytesTransferred < fileSize) {
-					long bytesRemaining = fileSize - bytesTransferred;
-					long bytesToTransfer = Math.min(chunkSize, bytesRemaining);
-					long transferred = outputChannel.transferFrom(inputChannel, bytesTransferred, bytesToTransfer);
-					if (transferred <= 0) {
-						break; // Prevent endless loop at EOF
-					}
-					bytesTransferred += transferred;
-				}
-
+			try {
+				Files.copy(file.getInputStream(), targetPath, StandardCopyOption.REPLACE_EXISTING);
 				return ResponseEntity.ok("{\"result\": \"File uploaded successfully\"}");
 			} catch (IOException e) {
 				log.error("Error uploading file", e);
