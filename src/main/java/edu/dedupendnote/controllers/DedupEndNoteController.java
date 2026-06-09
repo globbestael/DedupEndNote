@@ -136,9 +136,8 @@ public class DedupEndNoteController {
 	 * 		https://blog.stackademic.com/how-to-overcome-spring-request-scope-issue-for-child-threads-ad3e2a30bf42
 	 */
 	@PostMapping(value = "/startOneFile", produces = "application/json")
-	public ResponseEntity<String> startOneFile(@RequestParam("fileName_1") String inputFileName,
-			@RequestParam(defaultValue = "REMOVE") DeduplicationMode deduplicationMode,
-			@RequestParam UUID wssessionId)
+	public ResponseEntity<ApiResponse> startOneFile(@RequestParam("fileName_1") String inputFileName,
+			@RequestParam(defaultValue = "REMOVE") DeduplicationMode deduplicationMode, @RequestParam UUID wssessionId)
 			throws InterruptedException, ExecutionException {
 		try {
 			Path inputPath = UtilitiesService.resolveInSessionDir(uploadDir, wssessionId, inputFileName);
@@ -150,14 +149,13 @@ public class DedupEndNoteController {
 					progressReporter);
 		} catch (IllegalArgumentException e) {
 			log.warn("Path traversal attempt in startOneFile: {}", e.getMessage());
-			return ResponseEntity.badRequest().body("{\"result\": \"Invalid filename\"}");
+			return ResponseEntity.badRequest().body(new ApiResponse("Invalid filename"));
 		}
 	}
 
 	@PostMapping(value = "/startTwoFiles", produces = "application/json")
-	public ResponseEntity<String> startTwoFiles(@RequestParam String oldFile, @RequestParam String newFile,
-			@RequestParam(defaultValue = "REMOVE") DeduplicationMode deduplicationMode,
-			@RequestParam UUID wssessionId)
+	public ResponseEntity<ApiResponse> startTwoFiles(@RequestParam String oldFile, @RequestParam String newFile,
+			@RequestParam(defaultValue = "REMOVE") DeduplicationMode deduplicationMode, @RequestParam UUID wssessionId)
 			throws InterruptedException, ExecutionException {
 		try {
 			Path newInputPath = UtilitiesService.resolveInSessionDir(uploadDir, wssessionId, newFile);
@@ -166,19 +164,20 @@ public class DedupEndNoteController {
 					.convertAndSend("/topic/messages-" + wssessionId, new StompMessage(message));
 			return runDedup("2F" + deduplicationMode.logCode(),
 					UtilitiesService.createPath(newInputPath, deduplicationMode.filenameSuffix(), "txt"),
-					() -> deduplicationService.deduplicateTwoFiles(newInputPath, oldInputPath, deduplicationMode, progressReporter),
+					() -> deduplicationService.deduplicateTwoFiles(newInputPath, oldInputPath, deduplicationMode,
+							progressReporter),
 					progressReporter);
 		} catch (IllegalArgumentException e) {
 			log.warn("Path traversal attempt in startTwoFiles: {}", e.getMessage());
-			return ResponseEntity.badRequest().body("{\"result\": \"Invalid filename\"}");
+			return ResponseEntity.badRequest().body(new ApiResponse("Invalid filename"));
 		}
 	}
 
-	private ResponseEntity<String> runDedup(String logPrefix, Path outputPath, Callable<String> dedupTask,
+	private ResponseEntity<ApiResponse> runDedup(String logPrefix, Path outputPath, Callable<String> dedupTask,
 			Consumer<String> progressReporter) throws InterruptedException, ExecutionException {
 		if (!concurrentRunsSemaphore.tryAcquire()) {
 			return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
-					.body("{\"result\": \"ERROR: Server is busy. Please try again in a moment.\"}");
+					.body(new ApiResponse("ERROR: Server is busy. Please try again in a moment."));
 		}
 		try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
 			RequestAttributes requestAttributes = RequestContextHolder.currentRequestAttributes();
@@ -189,15 +188,16 @@ public class DedupEndNoteController {
 			try {
 				String result = future.get(timeoutMinutes, TimeUnit.MINUTES);
 				log.info("Writing to result: {}: {}", logPrefix, result);
-				return ResponseEntity.ok("{ \"result\": " + result);
+				return ResponseEntity.ok(new ApiResponse(result));
 			} catch (TimeoutException e) {
 				future.cancel(true);
 				try {
 					Files.deleteIfExists(outputPath);
-				} catch (IOException ignored) {}
+				} catch (IOException ignored) {
+				}
 				String msg = "ERROR: Deduplication timed out after " + timeoutMinutes + " minutes.";
 				progressReporter.accept(msg);
-				return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body("{\"result\": \"" + msg + "\"}");
+				return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(new ApiResponse(msg));
 			}
 		} finally {
 			concurrentRunsSemaphore.release();
@@ -216,9 +216,9 @@ public class DedupEndNoteController {
 	}
 
 	@PostMapping(value = "/uploadFile", produces = "application/json")
-	public ResponseEntity<String> uploadFile(@RequestParam MultipartFile file, @RequestParam UUID wssessionId) {
+	public ResponseEntity<ApiResponse> uploadFile(@RequestParam MultipartFile file, @RequestParam UUID wssessionId) {
 		if (file.isEmpty()) {
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"result\": \"Upload failed: file is empty\"}");
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse("Upload failed: file is empty"));
 		}
 		try {
 			Path targetPath = UtilitiesService.resolveInSessionDir(uploadDir, wssessionId, file.getOriginalFilename());
@@ -226,21 +226,21 @@ public class DedupEndNoteController {
 				Files.createDirectories(UtilitiesService.getSessionDir(uploadDir, wssessionId));
 			} catch (IOException e) {
 				log.error("Error creating session directory", e);
-				return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"result\": \"Upload failed\"}");
+				return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ApiResponse("Upload failed"));
 			}
 			try {
 				Files.copy(file.getInputStream(), targetPath, StandardCopyOption.REPLACE_EXISTING);
-				return ResponseEntity.ok("{\"result\": \"File uploaded successfully\"}");
+				return ResponseEntity.ok(new ApiResponse("File uploaded successfully"));
 			} catch (IOException e) {
 				log.error("Error uploading file", e);
-				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"result\": \"Upload failed\"}");
+				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse("Upload failed"));
 			}
 		} catch (IllegalArgumentException e) {
 			log.warn("Path traversal attempt in uploadFile: {}", e.getMessage());
-			return ResponseEntity.badRequest().body("{\"result\": \"Invalid filename\"}");
+			return ResponseEntity.badRequest().body(new ApiResponse("Invalid filename"));
 		} catch (RuntimeException e) {
 			log.error("Unexpected error uploading file", e);
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"result\": \"Upload failed\"}");
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ApiResponse("Upload failed"));
 		}
 	}
 }
