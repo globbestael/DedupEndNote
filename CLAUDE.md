@@ -101,7 +101,7 @@ Two distinct types carry file locations; never mix them:
 
 ```
 Browser ──→ Controller (@RequestParam String fileName)
-               │  resolveInUploadDir() / createOutputPath()
+               │  resolveInSessionDir() / createPath()
                ▼
          Service layer (Path inputPath, Path outputPath, …)
 ```
