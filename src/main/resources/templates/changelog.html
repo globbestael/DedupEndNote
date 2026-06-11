@@ -55,9 +55,13 @@
                                 generated on the server and injected into the page via Thymeleaf,
                                 replacing the previous client-side JavaScript generation
                             </li>
-                            <li>Upload rate limiting: a per-IP cooldown (configurable via
-                                <code>dedup.upload-cooldown-seconds</code>, default 10 s) prevents
-                                rapid repeated uploads from a single client
+                            <li>Upload rate limiting: a per-session cooldown (configurable via
+                                <code>dedup.upload-cooldown-seconds</code>, default 10 s) and burst
+                                limit (<code>dedup.upload-burst-limit</code>, default 2) prevent
+                                rapid repeated uploads; tracking is per page-load session so the
+                                two-file flow can upload both files without triggering the limit;
+                                the 429 response carries <code>Cache-Control: no-store</code> to
+                                prevent the browser from replaying the error on subsequent uploads
                             </li>
                             <li>Bounded concurrent dedup sessions: the number of simultaneous
                                 deduplication runs is now capped (configurable via

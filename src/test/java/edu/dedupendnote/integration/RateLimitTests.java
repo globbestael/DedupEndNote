@@ -22,12 +22,10 @@ import org.springframework.util.MultiValueMap;
 class RateLimitTests extends AbstractRandomPortIntegrationTest {
 
 	private static final String RIS_CONTENT = "TY  - JOUR\nID  - 1\nTI  - Test title\nER  - \n";
-	private static final String WSSESSION_ID = "00000000-0000-4000-8000-000000000004";
 
-	private ResponseEntity<String> upload(String fakeIp) {
+	private ResponseEntity<String> upload(String sessionId) {
 		HttpHeaders headers = new HttpHeaders();
 		headers.setContentType(MediaType.MULTIPART_FORM_DATA);
-		headers.set("X-Forwarded-For", fakeIp);
 		MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
 		body.add("file", new ByteArrayResource(RIS_CONTENT.getBytes()) {
 			@Override
@@ -35,21 +33,32 @@ class RateLimitTests extends AbstractRandomPortIntegrationTest {
 				return "test.ris";
 			}
 		});
-		body.add("wssessionId", WSSESSION_ID);
+		body.add("wssessionId", sessionId);
 		return restTemplate.postForEntity(url("/uploadFile"), new HttpEntity<>(body, headers), String.class);
 	}
 
 	@Test
 	void uploadFile_firstRequest_isAllowed() {
-		ResponseEntity<String> response = upload("10.0.0.1");
+		ResponseEntity<String> response = upload("00000000-0000-4000-8000-000000000001");
 
 		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 	}
 
 	@Test
-	void uploadFile_secondRequestWithinCooldown_isRejected() {
-		upload("10.0.0.2");
-		ResponseEntity<String> response = upload("10.0.0.2");
+	void uploadFile_secondRequestWithinCooldown_isAllowed() {
+		String sessionId = "00000000-0000-4000-8000-000000000002";
+		upload(sessionId);
+		ResponseEntity<String> response = upload(sessionId);
+
+		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+	}
+
+	@Test
+	void uploadFile_thirdRequestWithinCooldown_isRejected() {
+		String sessionId = "00000000-0000-4000-8000-000000000003";
+		upload(sessionId);
+		upload(sessionId);
+		ResponseEntity<String> response = upload(sessionId);
 
 		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.TOO_MANY_REQUESTS);
 		assertThat(response.getBody()).contains("ERROR");
