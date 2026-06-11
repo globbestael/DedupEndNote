@@ -1,19 +1,18 @@
 # TODO
 
 ## Refactoring fileName and path
-- There are some full paths in the user-facing messages, e.g. in the catch of BibliographicItemWiter l.121
-  This is a OWASP risk
 - BibliographicItemWriter has e.printStackTrace(). Maybe more cases
 - There are some cases with path.resolve(filename).normalize()
   Why is this normalize() not called after every resolve(...)?
 - why 2 variable wssession_id in the form of index.html?
-- what s /testresultsdetails in the controller?
+- what is /testresultsdetails in the controller?
 - look into https://www.julien-dubois.com/boot-ui/
 - look into Github dependabot
 - look at Endive? https://bytecodealliance.org/articles/endive-and-the-next-chapter-of-webassembly-on-the-jvm
   Github: https://github.com/bytecodealliance/endive
-- should the javascript in index.html and twofiles.html be refactored (extracted)?
 - should input file be deleted if there is a timeoutexception?
+- fragments.html: why are there 3 arguments for navbar(firstLinkText, firstLinkHref, restartHref)?
+  
  
 ## OWASP
 

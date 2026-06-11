@@ -58,6 +58,8 @@
 					$('#results').html($('<span>').text(response.result));
 					$('#results').addClass('alert-danger');
 					$('#results').removeClass('alert-warning');
+					disableButton('#fileUpload1');
+					showDiv('#step2-progress');
 				},
 				progressall: function (e, data) {
 					var percentage = parseInt(data.loaded / data.total * 100, 10);
