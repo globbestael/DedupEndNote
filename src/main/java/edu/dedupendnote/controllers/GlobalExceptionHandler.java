@@ -20,9 +20,9 @@ class GlobalExceptionHandler {
 	}
 
 	@ExceptionHandler(Exception.class)
-	public ResponseEntity<String> handleException(Exception e) {
+	public ResponseEntity<ApiResponse> handleException(Exception e) {
 		log.error("Unhandled exception", e);
 		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-				.body("{\"result\": \"An internal error occurred\"}");
+				.body(new ApiResponse("An internal error occurred"));
 	}
 }
