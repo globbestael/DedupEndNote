@@ -14,6 +14,31 @@
       "name": "baseDir",
       "type": "java.lang.String",
       "description": "A description for 'baseDir'"
+    },
+    {
+      "name": "dedup.max-concurrent-runs",
+      "type": "java.lang.String",
+      "description": "A description for 'dedup.max-concurrent-runs'"
+    },
+    {
+      "name": "dedup.upload-cooldown-seconds",
+      "type": "java.lang.String",
+      "description": "A description for 'dedup.upload-cooldown-seconds'"
+    },
+    {
+      "name": "dedup.max-records",
+      "type": "java.lang.String",
+      "description": "A description for 'dedup.max-records'"
+    },
+    {
+      "name": "dedup.max-records",
+      "type": "java.lang.String",
+      "description": "A description for 'dedup.max-records'"
+    },
+    {
+      "name": "dedup.timeout-minutes",
+      "type": "java.lang.String",
+      "description": "A description for 'dedup.timeout-minutes'"
     }
   ]
 }

@@ -5,7 +5,7 @@
 
 	<groupId>dedupendnote.edu</groupId>
 	<artifactId>DedupEndNote</artifactId>
-	<version>0.9.7b-SNAPSHOT</version>
+	<version>1.1.7</version>
 
 	<name>DedupEndNote</name>
 	<description>Deduplicates EndNote export file in RIS format</description>
@@ -13,14 +13,13 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>4.0.6</version>
+		<version>4.1.0</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
  		<java.version>21</java.version>
-		<app.version>1.1.7</app.version>
 		<maven.build.timestamp.format>yyyy-MM-dd</maven.build.timestamp.format>
 		<build.date>${maven.build.timestamp}</build.date>
 	</properties>
@@ -158,6 +157,7 @@
 	</dependencies>
 	
 	<build>
+		<finalName>${project.artifactId}</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>

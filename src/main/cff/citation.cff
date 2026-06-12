@@ -16,5 +16,5 @@ authors:
     family-names: Lobbestael
 repository-code: 'https://github.com/globbestael/DedupEndNote'
 url: 'http://dedupendnote.nl'
-version: ${app.version}
+version: ${project.version}
 date-released: '${build.date}'
