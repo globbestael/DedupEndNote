@@ -197,6 +197,10 @@ The user-facing version is defined once: `<app.version>x.y.z</app.version>` in `
 
 ## Agent skills
 
+### HTML files with Mermaid diagrams
+
+When writing an HTML file that contains a `<pre class="mermaid">` block, add `<!-- htmlhint-disable -->` as a comment immediately after the opening `<body>` tag. This prevents htmlhint from flagging Mermaid diagram syntax as HTML errors.
+
 ### Issue tracker
 
 Issues live as local markdown files under `.scratch/`. See `docs/agents/issue-tracker.md`.
