@@ -1,9 +1,8 @@
 package edu.dedupendnote.validation.services;
 
 import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -32,6 +31,7 @@ import edu.dedupendnote.domain.BibliographicItem;
 import edu.dedupendnote.domain.BibliographicItemDB;
 import edu.dedupendnote.integration.utils.MemoryAppender;
 import edu.dedupendnote.services.DeduplicationService;
+import edu.dedupendnote.services.UtilitiesService;
 import edu.dedupendnote.validation.domain.ValidationResult;
 import lombok.extern.slf4j.Slf4j;
 
@@ -46,15 +46,15 @@ public class ValidationService {
 			Pattern.compile("\\d+ - \\d+ ARE (NOT )?DUPLICATES"));
 
 	public ValidationResult checkResults(
-			String setName, String inputFileName, String outputFileName, String truthFileName,
+			String setName, Path inputPath, Path outputPath, Path truthPath,
 			List<BibliographicItem> bibliographicItems, long durationMs, boolean withTracing,
 			DeduplicationService deduplicationService) throws IOException {
 
-		List<BibliographicItemDB> truthRecords = readTruthFile(truthFileName);
+		List<BibliographicItemDB> truthRecords = readTruthFile(truthPath);
 
 		Map<Integer, BibliographicItem> publicationMap = bibliographicItems.stream()
 				.collect(Collectors.toMap(BibliographicItem::getId, Function.identity()));
-		List<BibliographicItemDB> publicationDBs = recordDBService.convertToRecordDB(bibliographicItems, inputFileName);
+		List<BibliographicItemDB> publicationDBs = recordDBService.convertToRecordDB(bibliographicItems, inputPath);
 		Map<Integer, BibliographicItemDB> validationMap = publicationDBs.stream()
 				.collect(Collectors.toMap(BibliographicItemDB::getId, Function.identity(), (o1, o2) -> o1, TreeMap::new));
 		Map<Integer, Set<Integer>> trueDuplicateSets = truthRecords.stream()
@@ -127,7 +127,7 @@ public class ValidationService {
 				}
 			}
 		}
-		recordDBService.saveRecordDBs(publicationDBs, outputFileName);
+		recordDBService.saveRecordDBs(publicationDBs, outputPath);
 		long uniqueDuplicates = publicationDBs.stream()
 				.filter(r -> r.isTruePositive() == true && r.getDedupid() != null && r.getDedupid().equals(r.getId()))
 				.count();
@@ -141,18 +141,20 @@ public class ValidationService {
 			 * which are more than 1 year apart,
 			 * because the test of the pair does not look at the bibliographicItem years
 			 */
-			new File(inputFileName + "_FP_Analysis.txt").delete();
-			new File(inputFileName + "_FN_Analysis.txt").delete();
+			Path fpAnalysisPath = UtilitiesService.createPath(inputPath, "_FP_Analysis", "txt");
+			Path fnAnalysisPath = UtilitiesService.createPath(inputPath, "_FN_Analysis", "txt");
+			Files.deleteIfExists(fpAnalysisPath);
+			Files.deleteIfExists(fnAnalysisPath);
 			if (!fnPairs.isEmpty()) {
 				validationResult.setFnPairs(fnPairs);
-				writeFNandFPresults(fnPairs, inputFileName + "_FN_Analysis.txt", deduplicationService);
+				writeFNandFPresults(fnPairs, fnAnalysisPath, deduplicationService);
 			}
 			if (!fpPairs.isEmpty()) {
 				/*
 				 * There may be records in the output file with the same DOI but an error in the journal and/or pages
 				 */
 				validationResult.setFpPairs(fpPairs);
-				writeFNandFPresults(fpPairs, inputFileName + "_FP_Analysis.txt", deduplicationService);
+				writeFNandFPresults(fpPairs, fpAnalysisPath, deduplicationService);
 			}
 		}
 		if (!errors.isEmpty()) {
@@ -165,24 +167,24 @@ public class ValidationService {
 		return validationResult;
 	}
 
-	public List<BibliographicItemDB> readTruthFile(String fileName) throws IOException {
-		Path path = Path.of(fileName);
-
+	public List<BibliographicItemDB> readTruthFile(Path truthPath) throws IOException {
 		CsvMapper mapper = new CsvMapper();
 		CsvSchema schema = mapper
 				.schemaFor(BibliographicItemDB.class)
 				.withHeader()
 				.withColumnSeparator('\t')
 				.withLineSeparator("\n");
-		MappingIterator<BibliographicItemDB> it = mapper
-				.readerFor(BibliographicItemDB.class)
-				.with(schema)
-				.with(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT)
-				.readValues(path.toFile());
-		return it.readAll();
+		try (var reader = Files.newBufferedReader(truthPath)) {
+			MappingIterator<BibliographicItemDB> it = mapper
+					.readerFor(BibliographicItemDB.class)
+					.with(schema)
+					.with(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT)
+					.readValues(reader);
+			return it.readAll();
+		}
 	}
 
-	private void writeFNandFPresults(Map<Integer, List<List<BibliographicItem>>> pairsList, String outputFileName,
+	private void writeFNandFPresults(Map<Integer, List<List<BibliographicItem>>> pairsList, Path outputPath,
 			DeduplicationService deduplicationService) {
 		List<Logger> loggers = new ArrayList<>();
 		List<String> loggerNames = List.of(
@@ -192,7 +194,7 @@ public class ValidationService {
 			);
 		Level oldLevel = null;
 
-		try (BufferedWriter bw = new BufferedWriter(new FileWriter(outputFileName))) {
+		try (BufferedWriter bw = Files.newBufferedWriter(outputPath)) {
 			MemoryAppender memoryAppender = new MemoryAppender();
 			for (String loggerName : loggerNames) {
 				Logger logger = (Logger) LoggerFactory.getLogger(loggerName);

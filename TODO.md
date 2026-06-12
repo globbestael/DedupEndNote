@@ -1,5 +1,40 @@
 # TODO
 
+## Refactoring fileName and path
+- BibliographicItemWriter has e.printStackTrace(). Maybe more cases
+- There are some cases with path.resolve(filename).normalize()
+  Why is this normalize() not called after every resolve(...)?
+- why 2 variable wssession_id in the form of index.html?
+- what is /testresultsdetails in the controller?
+- look into https://www.julien-dubois.com/boot-ui/
+- look into Github dependabot
+- look at Endive? https://bytecodealliance.org/articles/endive-and-the-next-chapter-of-webassembly-on-the-jvm
+  Github: https://github.com/bytecodealliance/endive
+- should input file be deleted if there is a timeoutexception?
+- fragments.html: why are there 3 arguments for navbar(firstLinkText, firstLinkHref, restartHref)?
+- should we ask Claude of a Pocock skill if there are more ADR's hidden in the program?
+- is the message for too long running dedups clear?
+  
+ 
+## OWASP
+
+### Configure Claude's /security-review skill?
+- How can we get DoS risks reported in
+- which other risks are not reported
+
+### /security-review skill remembers last run in session?
+Do you have to clear the context to have Claude to a full analysis? It looks as if Claude on a second run of the skill within the same sessions, only looks at /reports on the changes?
+
+### Is it possibl to ask Cluade not to use it's builtin skill?
+
+### User input
+- users can overwrite each other files if the use the same filename. should the file of each user be put in a subfolder based on the UUID of
+  the websocket session?
+- Flooding of the server: each file can be 150MB
+- ...
+
+
+
 ## Performance
 - if both are isSeveralPages = false, then use a higher threshold for authors and/or title?
 - FP in BIG_SET for 8111 - 36423: 1. SP same, 2 Same because one AU is empty, NO 3 (TI comparison) because reply, 4 same Journal. One of PY = 0

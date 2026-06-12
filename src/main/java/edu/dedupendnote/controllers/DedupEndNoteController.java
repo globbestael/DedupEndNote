@@ -1,15 +1,20 @@
 package edu.dedupendnote.controllers;
 
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Files;
-import java.nio.file.LinkOption;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.util.UUID;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
+
+import jakarta.annotation.PostConstruct;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -17,6 +22,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -29,7 +35,6 @@ import edu.dedupendnote.domain.StompMessage;
 import edu.dedupendnote.services.DeduplicationService;
 import edu.dedupendnote.services.UtilitiesService;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 import lombok.extern.slf4j.Slf4j;
 
 @Controller
@@ -39,6 +44,20 @@ public class DedupEndNoteController {
 	@SuppressWarnings("NullAway.Init") // necessary because of lazy / late initialization?
 	@Value("${upload-dir}")
 	private String uploadDir;
+
+	@Value("${dedup.max-concurrent-runs:4}")
+	private int maxConcurrentRuns;
+
+	@Value("${dedup.timeout-minutes:20}")
+	private int timeoutMinutes;
+
+	@SuppressWarnings("NullAway.Init")
+	private Semaphore concurrentRunsSemaphore;
+
+	@PostConstruct
+	void initSemaphore() {
+		concurrentRunsSemaphore = new Semaphore(maxConcurrentRuns);
+	}
 
 	private final DeduplicationService deduplicationService;
 	private final SimpMessagingTemplate simpMessagingTemplate;
@@ -64,10 +83,9 @@ public class DedupEndNoteController {
 	 *
 	 * Web Socket: Messages should be sent to the individual user.
 	 * There is only server --> client communication (no @MessageMapping functions).
-	 * - the client generates a UUID (wssessionId) via crypto.randomUUID() and subscribes to "/topic/messages-[wssessionId]"
-	 *   TODO: crypto.randomUUID() only runs on localhost and secure connections.
-	 * 	 As a temporary fix, a local JS function is called to generate a UUID.
-	 * - the wssessionId is passed as a request parameter for startOneFile / startTwoFiles
+	 * - the server generates a UUID (wssessionId) via UUID.randomUUID() in home() / twofiles() and injects it
+	 *   into the Thymeleaf model; the template embeds it into all form hidden fields at render time.
+	 * - the wssessionId is passed as a request parameter for all upload/start/result endpoints
 	 * - the controller creates a Consumer<String> that routes messages to "/topic/messages-[wssessionId]" via SimpMessagingTemplate
 	 * - the Consumer is passed to DeduplicationService, which calls it for each progress update
 	 */
@@ -75,23 +93,28 @@ public class DedupEndNoteController {
 
 	@PostMapping(value = "/getResultFile", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
 	public void getResultFile(@RequestParam("fileNameResultFile") String fileName,
-			@RequestParam("markModeResultFile") boolean markMode, HttpServletResponse response) {
-		DeduplicationMode mode = DeduplicationMode.from(markMode);
-		String outputFileName = UtilitiesService.createOutputFileName(fileName, mode);
-
-		Path path = Path.of(uploadDir, outputFileName);
-		response.setContentType("text/plain");
-		response.addHeader("Content-Disposition", "attachment; filename=\"" + outputFileName + "\"");
+			@RequestParam("deduplicationModeResultFile") DeduplicationMode deduplicationMode,
+			@RequestParam UUID wssessionId, HttpServletResponse response) {
 		try {
+			Path inputPath = UtilitiesService.resolveInSessionDir(uploadDir, wssessionId, fileName);
+			Path path = UtilitiesService.createPath(inputPath, deduplicationMode.filenameSuffix(), "txt");
+			String safeFileName = path.getFileName().toString().replaceAll("[\"\\r\\n]", "_");
+			response.setContentType("text/plain");
+			response.addHeader("Content-Disposition", "attachment; filename=\"" + safeFileName + "\"");
 			Files.copy(path, response.getOutputStream());
 			response.getOutputStream().flush();
+		} catch (IllegalArgumentException e) {
+			log.warn("Path traversal attempt in getResultFile: {}", e.getMessage());
+			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
 		} catch (IOException ex) {
-			ex.printStackTrace();
+			log.error("Error sending result file", ex);
+			response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 		}
 	}
 
 	@GetMapping("/")
-	public String home(HttpSession session) {
+	public String home(Model model) {
+		model.addAttribute("wssessionId", UUID.randomUUID());
 		return "index";
 	}
 
@@ -113,84 +136,111 @@ public class DedupEndNoteController {
 	 * 		https://blog.stackademic.com/how-to-overcome-spring-request-scope-issue-for-child-threads-ad3e2a30bf42
 	 */
 	@PostMapping(value = "/startOneFile", produces = "application/json")
-	public ResponseEntity<String> startOneFile(@RequestParam("fileName_1") String inputFileName,
-			@RequestParam(required = false, defaultValue = "false") boolean markMode, @RequestParam String wssessionId)
-			throws Exception {
-		DeduplicationMode mode = DeduplicationMode.from(markMode);
-		String outputFileName = UtilitiesService.createOutputFileName(inputFileName, mode);
-		String logPrefix = "1F" + (mode == DeduplicationMode.MARK ? "M" : "D");
-
-		Consumer<String> progressReporter = message -> simpMessagingTemplate
-				.convertAndSend("/topic/messages-" + wssessionId, new StompMessage(message));
-		try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
-			RequestAttributes requestAttributes = RequestContextHolder.currentRequestAttributes();
-			Future<String> future = executor.submit(() -> {
-				RequestContextHolder.setRequestAttributes(requestAttributes);
-				return deduplicationService.deduplicateOneFile(uploadDir + File.separator + inputFileName,
-						uploadDir + File.separator + outputFileName, mode, progressReporter);
-			});
-			log.info("Writing to result: {}: {}", logPrefix, future.get());
-			return ResponseEntity.ok("{ \"result\": " + future.get());
+	public ResponseEntity<ApiResponse> startOneFile(@RequestParam("fileName_1") String inputFileName,
+			@RequestParam(defaultValue = "REMOVE") DeduplicationMode deduplicationMode, @RequestParam UUID wssessionId)
+			throws InterruptedException, ExecutionException {
+		try {
+			Path inputPath = UtilitiesService.resolveInSessionDir(uploadDir, wssessionId, inputFileName);
+			Consumer<String> progressReporter = message -> simpMessagingTemplate
+					.convertAndSend("/topic/messages-" + wssessionId, new StompMessage(message));
+			return runDedup("1F" + deduplicationMode.logCode(),
+					UtilitiesService.createPath(inputPath, deduplicationMode.filenameSuffix(), "txt"),
+					() -> deduplicationService.deduplicateOneFile(inputPath, deduplicationMode, progressReporter),
+					progressReporter);
+		} catch (IllegalArgumentException e) {
+			log.warn("Path traversal attempt in startOneFile: {}", e.getMessage());
+			return ResponseEntity.badRequest().body(new ApiResponse("Invalid filename"));
 		}
 	}
 
 	@PostMapping(value = "/startTwoFiles", produces = "application/json")
-	public ResponseEntity<String> startTwoFiles(@RequestParam String oldFile, @RequestParam String newFile,
-			@RequestParam(required = false, defaultValue = "false") boolean markMode, @RequestParam String wssessionId)
+	public ResponseEntity<ApiResponse> startTwoFiles(@RequestParam String oldFile, @RequestParam String newFile,
+			@RequestParam(defaultValue = "REMOVE") DeduplicationMode deduplicationMode, @RequestParam UUID wssessionId)
 			throws InterruptedException, ExecutionException {
-		DeduplicationMode mode = DeduplicationMode.from(markMode);
-		String logPrefix = "2F" + (mode == DeduplicationMode.MARK ? "M" : "D");
+		try {
+			Path newInputPath = UtilitiesService.resolveInSessionDir(uploadDir, wssessionId, newFile);
+			Path oldInputPath = UtilitiesService.resolveInSessionDir(uploadDir, wssessionId, oldFile);
+			Consumer<String> progressReporter = message -> simpMessagingTemplate
+					.convertAndSend("/topic/messages-" + wssessionId, new StompMessage(message));
+			return runDedup("2F" + deduplicationMode.logCode(),
+					UtilitiesService.createPath(newInputPath, deduplicationMode.filenameSuffix(), "txt"),
+					() -> deduplicationService.deduplicateTwoFiles(newInputPath, oldInputPath, deduplicationMode,
+							progressReporter),
+					progressReporter);
+		} catch (IllegalArgumentException e) {
+			log.warn("Path traversal attempt in startTwoFiles: {}", e.getMessage());
+			return ResponseEntity.badRequest().body(new ApiResponse("Invalid filename"));
+		}
+	}
 
-		Consumer<String> progressReporter = message -> simpMessagingTemplate
-				.convertAndSend("/topic/messages-" + wssessionId, new StompMessage(message));
+	private ResponseEntity<ApiResponse> runDedup(String logPrefix, Path outputPath, Callable<String> dedupTask,
+			Consumer<String> progressReporter) throws InterruptedException, ExecutionException {
+		if (!concurrentRunsSemaphore.tryAcquire()) {
+			return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+					.body(new ApiResponse("ERROR: Server is busy. Please try again in a moment."));
+		}
 		try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
 			RequestAttributes requestAttributes = RequestContextHolder.currentRequestAttributes();
 			Future<String> future = executor.submit(() -> {
 				RequestContextHolder.setRequestAttributes(requestAttributes);
-				return deduplicationService.deduplicateTwoFiles(uploadDir + File.separator + newFile,
-						uploadDir + File.separator + oldFile,
-						uploadDir + File.separator + UtilitiesService.createOutputFileName(newFile, mode), mode,
-						progressReporter);
+				return dedupTask.call();
 			});
-			log.info("Writing to result: {}: {}", logPrefix, future.get());
-			return ResponseEntity.ok("{ \"result\": " + future.get());
+			try {
+				String result = future.get(timeoutMinutes, TimeUnit.MINUTES);
+				log.info("Writing to result: {}: {}", logPrefix, result);
+				return ResponseEntity.ok(new ApiResponse(result));
+			} catch (TimeoutException e) {
+				future.cancel(true);
+				try {
+					Files.deleteIfExists(outputPath);
+				} catch (IOException ignored) {
+				}
+				String msg = "ERROR: Deduplication timed out after " + timeoutMinutes + " minutes.";
+				progressReporter.accept(msg);
+				return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(new ApiResponse(msg));
+			}
+		} finally {
+			concurrentRunsSemaphore.release();
 		}
 	}
 
 	@GetMapping("/test_results_details")
-	public String testResultsDetails(HttpSession session) {
+	public String testResultsDetails() {
 		return "test_results_details";
 	}
 
 	@GetMapping("/twofiles")
-	public String twofiles(final HttpSession session) {
+	public String twofiles(Model model) {
+		model.addAttribute("wssessionId", UUID.randomUUID());
 		return "twofiles";
 	}
 
 	@PostMapping(value = "/uploadFile", produces = "application/json")
-	public ResponseEntity<String> uploadFile(@RequestParam MultipartFile file) {
+	public ResponseEntity<ApiResponse> uploadFile(@RequestParam MultipartFile file, @RequestParam UUID wssessionId) {
 		if (file.isEmpty()) {
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
-					"{ \"result\": \"Failed to upload " + file.getOriginalFilename() + " because it was empty" + "\"}");
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse("Upload failed: file is empty"));
 		}
 		try {
-			Path path = Path.of(uploadDir, file.getOriginalFilename());
-			if (Files.exists(path, LinkOption.NOFOLLOW_LINKS)) {
-				Files.delete(path);
+			Path targetPath = UtilitiesService.resolveInSessionDir(uploadDir, wssessionId, file.getOriginalFilename());
+			try {
+				Files.createDirectories(UtilitiesService.getSessionDir(uploadDir, wssessionId));
+			} catch (IOException e) {
+				log.error("Error creating session directory", e);
+				return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ApiResponse("Upload failed"));
 			}
-			try (InputStream inputStream = file.getInputStream()) {
-				Files.copy(inputStream, path);
-				return ResponseEntity
-						.ok("{ \"result\": \"You successfully uploaded " + file.getOriginalFilename() + "\"}");
+			try {
+				Files.copy(file.getInputStream(), targetPath, StandardCopyOption.REPLACE_EXISTING);
+				return ResponseEntity.ok(new ApiResponse("File uploaded successfully"));
+			} catch (IOException e) {
+				log.error("Error uploading file", e);
+				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse("Upload failed"));
 			}
-		} catch (IOException e) {
-			e.printStackTrace();
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
-					"{ \"result\": \"Failed to upload " + file.getOriginalFilename() + " => " + e.getClass() + "\"}");
+		} catch (IllegalArgumentException e) {
+			log.warn("Path traversal attempt in uploadFile: {}", e.getMessage());
+			return ResponseEntity.badRequest().body(new ApiResponse("Invalid filename"));
 		} catch (RuntimeException e) {
-			log.error("RuntimeException met cause: {}", e.getCause());
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-					.body("{ \"result\": \"RuntimeException with cause " + e.getCause() + "\"}");
+			log.error("Unexpected error uploading file", e);
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ApiResponse("Upload failed"));
 		}
 	}
 }

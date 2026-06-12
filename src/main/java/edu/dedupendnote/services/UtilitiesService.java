@@ -1,48 +1,94 @@
 package edu.dedupendnote.services;
 
 import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
-import edu.dedupendnote.domain.DeduplicationMode;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
+@Slf4j
 public class UtilitiesService {
 
 	/*
 	 * detectBom: Detect UTF-8 BOM
-	 *
-	 * Apache commons.io BOMInputStream can't work with BufferedReader / FileReader
-	 * and with try block
 	 *
 	 * See: https://stackoverflow.com/questions/4897876/reading-utf-8-bom-marker
 	 *
 	 * See also:
 	 * https://mkyong.com/java/java-how-to-add-and-remove-bom-from-utf-8-file/
 	 */
-	public static boolean detectBom(String inputFileName) {
+	public static boolean detectBom(Path inputPath) {
 		boolean hasBom = false;
-		try (BufferedReader br = new BufferedReader(new FileReader(inputFileName))) {
+		try (BufferedReader br = Files.newBufferedReader(inputPath)) {
 			String line = br.readLine();
 			hasBom = line != null && line.startsWith("\uFEFF");
 		} catch (IOException e) {
-			e.printStackTrace();
+			log.error("Error detecting BOM in file {}", inputPath, e);
 		}
 		return hasBom;
 	}
 
-	public static String createOutputFileName(String fileName, DeduplicationMode mode) {
-		String extension = StringUtils.getFilenameExtension(fileName);
-		return fileName.replaceAll("." + extension + "$",
-				(mode == DeduplicationMode.MARK ? "_mark." : "_deduplicated.") + extension);
+	public static Path createPath(Path inputPath, @Nullable String addition, String newExtension) {
+		if (newExtension == null || newExtension.isBlank()) {
+			throw new IllegalArgumentException("newExtension must not be null or blank");
+		}
+		Path parent = inputPath.getParent();
+		if (parent == null) {
+			throw new IllegalArgumentException("inputPath must have a parent directory: " + inputPath);
+		}
+		String baseName = removeFileExtension(inputPath.getFileName().toString());
+		String suffix = (addition == null || addition.isBlank()) ? "" : addition;
+		return parent.resolve(baseName + suffix + "." + newExtension);
+	}
+
+	/*
+	 * Based on https://www.baeldung.com/java-filename-without-extension
+	 */	
+	public static String removeFileExtension(String filename) {
+		if (filename == null || filename.isEmpty()) {
+			return filename;
+		}
+		return filename.replaceAll("(?<!^)[.][^.]*$", "");
+	}
+
+	public static Path getSessionDir(String uploadDir, UUID sessionId) {
+		return Path.of(uploadDir).toAbsolutePath().normalize().resolve(sessionId.toString());
+	}
+
+	public static Path resolveInSessionDir(String uploadDir, UUID sessionId, @Nullable String userFileName) {
+		Path sessionDir = getSessionDir(uploadDir, sessionId);
+		if (userFileName == null || userFileName.isEmpty()) {
+			throw new IllegalArgumentException("Filename must not be null or empty");
+		}
+		// OWASP A05 risk: On Logback, no JNDI injection risk, but enables log forging if the filename contains newlines.
+		if (userFileName.contains("\r") || userFileName.contains("\n")) {
+			throw new IllegalArgumentException("Filename must not contain line-break characters");
+		}
+		Path parsed = Path.of(userFileName);
+		if (parsed.isAbsolute() || parsed.getNameCount() != 1) {
+			throw new IllegalArgumentException(
+					"Filename must be a simple name with no path separators: " + userFileName);
+		}
+		String name = parsed.toString();
+		if (name.equals("..") || name.equals(".")) {
+			throw new IllegalArgumentException("Filename must not be a directory reference: " + userFileName);
+		}
+		Path resolved = sessionDir.resolve(parsed).normalize();
+		if (!resolved.startsWith(sessionDir)) {
+			throw new IllegalArgumentException("Path traversal attempt rejected: " + userFileName);
+		}
+		return resolved;
 	}
 
 	/*

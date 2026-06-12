@@ -2,6 +2,8 @@ package edu.dedupendnote.integration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.nio.file.Path;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -9,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import edu.dedupendnote.services.DeduplicationService;
 import edu.dedupendnote.domain.DeduplicationMode;
-import edu.dedupendnote.services.UtilitiesService;
 
 class TwoFilesTests extends AbstractIntegrationTest {
 	@Autowired
@@ -18,17 +19,16 @@ class TwoFilesTests extends AbstractIntegrationTest {
 	@Override
 	@BeforeEach
 	void initTestDir() {
-		testDir = baseDir + "/experiments/";
+		testDir = baseDir.resolve("experiments");
 	}
 
 	@Test
 	void deduplicate_OK() {
-		String oldFileName = testDir + "TwoFiles_1.txt";
-		String newFileName = testDir + "TwoFiles_2.txt";
+		Path oldInputPath = testDir.resolve("TwoFiles_1.txt");
+		Path newInputPath = testDir.resolve("TwoFiles_2.txt");
 		DeduplicationMode mode = DeduplicationMode.REMOVE;
-		String outputFileName = UtilitiesService.createOutputFileName(newFileName, mode);
 
-		String resultString = deduplicationService.deduplicateTwoFiles(newFileName, oldFileName, outputFileName,
+		String resultString = deduplicationService.deduplicateTwoFiles(newInputPath, oldInputPath,
 				mode, message -> {});
 		System.err.println(resultString);
 		assertThat(resultString).startsWith(
@@ -38,12 +38,11 @@ class TwoFilesTests extends AbstractIntegrationTest {
 	@Disabled("TODO: Why was this disabled")
 	@Test
 	void files_without_IDs() {
-		String oldFileName = testDir + "Recurrance_rate_EndNote_Library_original_deduplicated.txt";
-		String newFileName = testDir + "Recurrence_rate_search_updated_sept_18_deduplicated.txt";
+		Path oldInputPath = testDir.resolve("Recurrance_rate_EndNote_Library_original_deduplicated.txt");
+		Path newInputPath = testDir.resolve("Recurrence_rate_search_updated_sept_18_deduplicated.txt");
 		DeduplicationMode mode = DeduplicationMode.REMOVE;
-		String outputFileName = UtilitiesService.createOutputFileName(newFileName, mode);
 
-		String resultString = deduplicationService.deduplicateTwoFiles(newFileName, oldFileName, outputFileName,
+		String resultString = deduplicationService.deduplicateTwoFiles(newInputPath, oldInputPath,
 				mode, message -> {});
 		System.err.println(resultString);
 		assertThat(resultString).startsWith("ERROR: The second input file contains records without IDs");

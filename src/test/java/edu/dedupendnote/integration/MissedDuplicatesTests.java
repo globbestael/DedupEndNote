@@ -2,7 +2,7 @@ package edu.dedupendnote.integration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.io.File;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -18,7 +18,6 @@ import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 import edu.dedupendnote.services.DeduplicationService;
 import edu.dedupendnote.domain.DeduplicationMode;
-import edu.dedupendnote.services.UtilitiesService;
 import edu.dedupendnote.integration.utils.MemoryAppender;
 import lombok.extern.slf4j.Slf4j;
 
@@ -120,12 +119,14 @@ class MissedDuplicatesTests extends AbstractIntegrationTest {
 	// @formatter:on
 	void deduplicateMissedDuplicates(String fileName, int total, int totalWritten) {
 		log.debug("Log level should be debug");
-		String inputFileName = testDir + fileName;
+		/*
+			FIXME: Why is this conditional necessary. The @CsvSource should use relative paths.
+			There probably should be a testUtility function that creates the inputPath and checks if the file exists.
+		 */ Path inputPath = testDir.resolve(fileName.startsWith("/") ? fileName.substring(1) : fileName);
 		DeduplicationMode mode = DeduplicationMode.REMOVE;
-		String outputFileName = UtilitiesService.createOutputFileName(inputFileName, mode);
-		assertThat(new File(inputFileName)).exists();
+		assertThat(inputPath).exists();
 
-		String resultString = deduplicationService.deduplicateOneFile(inputFileName, outputFileName, mode, message -> {
+		String resultString = deduplicationService.deduplicateOneFile(inputPath, mode, message -> {
 		});
 
 		System.err.println("Messages: " + memoryAppender.filterByPatterns(tracePatterns, Level.TRACE));

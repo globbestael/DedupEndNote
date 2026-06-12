@@ -305,9 +305,8 @@ WHERE t1.title2 <> t2.title2
 	 */
 	// @formatter:on
 	protected List<Triple> getValidatedJournalPairs() throws IOException {
-		String fileName = testDir + "/experiments/validated_journal_pairs.txt";
 		localTriples.clear();
-		Path path = Path.of(fileName);
+		Path path = testDir.resolve("experiments/validated_journal_pairs.txt");
 		Stream<String> lines = Files.lines(path);
 		lines.forEach(l -> {
 			String[] parts = l.split("\t");

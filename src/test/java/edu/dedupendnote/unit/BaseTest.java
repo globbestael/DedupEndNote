@@ -1,5 +1,6 @@
 package edu.dedupendnote.unit;
 
+import java.nio.file.Path;
 import java.util.List;
 
 import org.apache.commons.text.similarity.JaroWinklerSimilarity;
@@ -13,8 +14,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class BaseTest {
 
-	protected String baseDir = System.getProperty("user.home", "") + "/dedupendnote_files";
-	protected String testDir = "";
+	protected Path baseDir = Path.of(System.getProperty("user.home", "")).resolve("dedupendnote_files");
+	protected Path testDir = baseDir;
 
 	@BeforeEach
 	void initTestDir() {

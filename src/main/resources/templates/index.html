@@ -3,20 +3,9 @@
 
 <head>
 	<title>DedupEndNote</title>
+	<th:block th:replace="~{fragments :: headScripts}"></th:block>
 
-	<script th:src="@{/webjars/jquery/jquery.min.js}"></script>
-	<script th:src="@{/webjars/jquery-ui/jquery-ui.min.js}"></script>
-	<script th:src="@{/webjars/blueimp-file-upload/js/jquery.fileupload.js}"></script>
-	<script th:src="@{/webjars/blueimp-file-upload/js/jquery.fileupload-process.js}"></script>
-	<link rel="stylesheet" th:href="@{/webjars/bootstrap/css/bootstrap.min.css}">
-	<script th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}" type="text/javascript"></script>
-	<script th:src="@{/webjars/sockjs-client/dist/sockjs.min.js}"></script>
-	<script th:src="@{/webjars/stomp-websocket/stomp.min.js}"></script>
-	<link rel="stylesheet" href="/resources/common-style.css">
-
-	<script th:inline="javascript">
-		var stompClient = null;
-
+	<script>
 		function checkFileSize(evant, data) {
 			if (data.files[0].size > (150 * 1024 * 1024)) {
 				var MB = parseInt(data.files[0].size / (1024 * 1024));
@@ -27,87 +16,9 @@
 			}
 		}
 
-		function hideDiv(id) {
-			$(id).removeClass('d-block');
-			$(id).addClass('d-none');
-		}
-		function showDiv(id) {
-			$(id).removeClass('d-none');
-			$(id).addClass('d-block');
-		}
-		function showProgress(percentage) {
-			$("#progress").html(`<div class="progress-bar" role="progressbar" style="width: ${percentage}%;" aria-valuenow="${percentage}" aria-valuemin="0" aria-valuemax="100">${percentage}%</div>`);
-		}
-		function disableButton(id) {
-			$(id).prop("disabled", true);
-			$('label[for="' + id.replace('#', '') + '"]').addClass('disabled');
-		}
-		function enableButton(id) {
-			$(id).prop("disabled", false);
-			$('label[for="' + id.replace('#', '') + '"]').removeClass('disabled');
-		}
-		function markAsDone(id) {
-			$(id).removeClass('step-waiting step-active').addClass('step-done');
-		}
-		function markAsActive(id) {
-			$(id).removeClass('step-waiting step-done').addClass('step-active');
-		}
-		/*
-		 * crypto.randomUUID() is only available in secure contexts (HTTPS or localhost).
-		 * On plain HTTP it is undefined, so we fall back to a Math.random()-based UUID v4.
-		 * The UUID only needs to be unique per page load (used as a WebSocket session key),
-		 * so a non-cryptographic fallback is sufficient.
-		 */
-		function generateUUID() {
-			if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-				return crypto.randomUUID();
-			}
-			return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-				var r = Math.random() * 16 | 0;
-				return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
-			});
-		}
-		function disconnect() {
-			if (stompClient !== null) {
-				stompClient.disconnect();
-			}
-			console.log("Disconnected");
-		}
-
 		$(function () {
 
 			connect();
-
-			function connect() {
-				var wssessionId = generateUUID();
-				$("#wssessionId").val(wssessionId);
-				var socket = new SockJS('/gs-guide-websocket');
-				stompClient = Stomp.over(socket);
-				stompClient.debug = null;
-				stompClient.connect({}, function (frame) {
-					stompClient.subscribe('/topic/messages-' + wssessionId, function (stompMessage) {
-						let message = JSON.parse(stompMessage.body).name
-						if (message.match("^DONE")) {
-							showProgress(0);
-							$('#results').html(message);
-							enableButton('#buttonResultFile');
-							markAsDone('#step2');
-							markAsActive('#step3');
-						} else if (message.match("^ERROR")) {
-							$('#results').removeClass('alert-warning');
-							$('#results').addClass('alert-danger');
-							$('#results').html(message);
-						} else if (message.match("^PROGRESS:")) {
-							var found = message.match(/^PROGRESS: (.+)$/);
-							var percentage = found[1];
-							showProgress(percentage);
-						} else {
-							console.log("DATA: " + message);
-							$('#results').html("<span>" + message + "</span>");
-						}
-					});
-				});
-			}
 
 			$('#file').change(function () {
 				var fileName = $("#file").val();
@@ -130,10 +41,10 @@
 					checkFileSize(event, data);
 				},
 				done: function (e, data) {
-					$("#markModeResultFile").val($("input[name='markMode']").prop("checked"));
+					$("#deduplicationModeResultFile").val($("input[name='deduplicationMode']:checked").val());
 					if (data.textStatus == "success") {
 						showProgress(0);
-						$('#results').html("<span>File " + data.files[0].name + " has been uploaded</span>");
+						$('#results').html($('<span>').text('File ' + data.files[0].name + ' has been uploaded'));
 						$('#fileName_display').text(data.files[0].name);
 						disableButton('#fileUpload1');
 						enableButton('#buttonStartDeduplication');
@@ -144,9 +55,11 @@
 				},
 				error: function (jqXHR, data, thrownError) {
 					var response = jQuery.parseJSON(jqXHR.responseText);
-					$('#results').html("<span>" + response.result + "</span>");
+					$('#results').html($('<span>').text(response.result));
 					$('#results').addClass('alert-danger');
 					$('#results').removeClass('alert-warning');
+					disableButton('#fileUpload1');
+					showDiv('#step2-progress');
 				},
 				progressall: function (e, data) {
 					var percentage = parseInt(data.loaded / data.total * 100, 10);
@@ -158,7 +71,7 @@
 				event.preventDefault();
 				disableButton('#buttonStartDeduplication');
 				$("#fileNameResultFile").val($('#fileName_1').val());
-				$("#markModeResultFile").val($('#markMode').prop("checked"));
+				$("#deduplicationModeResultFile").val($("input[name='deduplicationMode']:checked").val());
 
 				$.ajax({
 					url: '/startOneFile',
@@ -170,14 +83,23 @@
 					success: function (response) {
 						console.log("RESPONSE: " + response.result);
 						if (response.result.match("^DONE")) {
-							$('#results').html(response.result);
+							$('#results').text(response.result);
 						} else if (response.result.match("^ERROR")) {
 							$('#results').removeClass('alert-warning');
 							$('#results').addClass('alert-danger');
-							$('#results').html(response.result);
+							$('#results').text(response.result);
 						} else {
-							$('#results').html(response.result);
+							$('#results').text(response.result);
 						}
+					},
+					error: function (jqXHR) {
+						var message = (jqXHR.responseJSON && jqXHR.responseJSON.result)
+							? jqXHR.responseJSON.result
+							: "ERROR: Server is busy. Please try again in a moment.";
+						$('#results').removeClass('alert-warning');
+						$('#results').addClass('alert-danger');
+						$('#results').text(message);
+						enableButton('#buttonStartDeduplication');
 					}
 				});
 			});
@@ -187,18 +109,7 @@
 </head>
 
 <body>
-	<nav class="navbar navbar-light bg-light border-bottom fixed-top">
-		<div class="container">
-			<span class="navbar-brand fw-bold">DedupEndNote <small
-					class="fw-normal text-muted fs-6" th:text="'v' + ${appVersion}">v1.1.5</small></span>
-			<div class="d-flex gap-2">
-				<a href="/twofiles" class="btn btn-outline-secondary btn-sm">Deduplicate 2 files</a>
-				<a href="/details" target="window2" class="btn btn-outline-secondary btn-sm">Details ↗</a>
-				<a href="/changelog" target="window2" class="btn btn-outline-secondary btn-sm">Changelog ↗</a>
-				<a href="/" class="btn btn-primary btn-sm">Restart</a>
-			</div>
-		</div>
-	</nav>
+	<th:block th:replace="~{fragments :: navbar('Deduplicate 2 files', '/twofiles', '/')}"></th:block>
 
 	<div class="container" style="padding-top: 4.5rem;">
 		<div class="row">
@@ -215,6 +126,7 @@
 					<p class="step-subtitle">Select an EndNote or Zotero export in RIS format (.ris or .txt)</p>
 					<form class="form-horizontal" id="upload_form" method="post" enctype="multipart/form-data"
 						th:action="@{|/uploadFile|}">
+						<input type="hidden" name="wssessionId" th:value="${wssessionId}" />
 						<div>
 							<label for="fileUpload1" class="btn btn-outline-secondary btn-sm">Choose file</label>
 							<input type="file" id="fileUpload1" name="file" class="d-none" />
@@ -230,11 +142,17 @@
 					</div>
 					<form class="form-horizontal" id="start_form" method="post" action="">
 						<input type="hidden" id="fileName_1" name="fileName_1" value="" />
-						<input type="hidden" id="wssessionId" name="wssessionId" value="" />
+						<input type="hidden" id="wssessionId" name="wssessionId" th:value="${wssessionId}" />
 						<div class="form-check form-check-inline mb-2">
-							<input class="form-check-input" type="checkbox" id="markMode" name="markMode" />
-							<label class="form-check-label" for="markMode">Do NOT deduplicate but mark the duplicate
-								bibliographic items (see Mark mode below)</label>
+							<input class="form-check-input" type="radio" id="deduplicationMode_REMOVE"
+								name="deduplicationMode" value="REMOVE" checked />
+							<label class="form-check-label" for="deduplicationMode_REMOVE">Remove the duplicates</label>
+						</div>
+						<div class="form-check form-check-inline mb-2">
+							<input class="form-check-input" type="radio" id="deduplicationMode_MARK"
+								name="deduplicationMode" value="MARK" />
+							<label class="form-check-label" for="deduplicationMode_MARK">Mark the duplicates (see Mark
+								mode below)</label>
 						</div>
 						<div>
 							<button type="submit" id="buttonStartDeduplication" disabled
@@ -251,17 +169,7 @@
 				</div>
 
 				<!-- Step 3: Result -->
-				<div id="step3" class="step-card step-waiting">
-					<div class="step-header">
-						<h4><span class="step-number">3</span>Result</h4>
-					</div>
-					<form class="form-horizontal" id="getResultFile_form" method="post" th:action="@{|/getResultFile|}">
-						<input type="hidden" name="fileNameResultFile" id="fileNameResultFile" />
-						<input type="hidden" name="markModeResultFile" id="markModeResultFile" />
-						<button type="submit" id="buttonResultFile" disabled class="btn btn-primary mb-2"
-							onclick="this.form.submit(); markAsDone('#step3');">Get the result</button>
-					</form>
-				</div>
+				<th:block th:replace="~{fragments :: step3}"></th:block>
 
 				<!-- Documentation accordion -->
 				<div class="accordion mt-4" id="docsAccordion">
@@ -274,7 +182,8 @@
 						</h2>
 						<div id="collapseIntro" class="accordion-collapse collapse" data-bs-parent="#docsAccordion">
 							<div class="accordion-body">
-								<p><b>DedupEndNote</b> is a tool for removing duplicate bibliographic items from EndNote or Zotero
+								<p><b>DedupEndNote</b> is a tool for removing duplicate bibliographic items from EndNote
+									or Zotero
 									databases exported in <b>RIS format</b>.
 									It is more flexible than the built-in deduplication features in EndNote or Zotero,
 									and identifies more duplicates.</p>
@@ -284,7 +193,8 @@
 									<li>Compare a new file against an existing file (see <a class="link-underline-light"
 											href="/twofiles">Deduplicate 2 files</a>)</li>
 								</ul>
-								<p>The program has been tested on EndNote and Zotero databases with bibliographic items from:
+								<p>The program has been tested on EndNote and Zotero databases with bibliographic items
+									from:
 									CINAHL (EBSCOHost), ClinicalTrials.gov, Cochrane Library, EMBASE (OVID and
 									Embase.com), Medline (OVID), PsycINFO (OVID), PubMed, Scopus, Web of Science.</p>
 							</div>
@@ -303,7 +213,8 @@
 									The page <a class="link-underline-light" href="/details" target="window2">Details,
 										lots of details ...</a> has more detailed information.
 								</div>
-								<p>DedupEndNote compares each pair of bibliographic items in up to five stages, stopping early if a
+								<p>DedupEndNote compares each pair of bibliographic items in up to five stages, stopping
+									early if a
 									mismatch is found:</p>
 								<ol>
 									<li><b>Publication Year</b>: Matches if the years are the same or differ by at most
@@ -330,7 +241,8 @@
 						</h2>
 						<div id="collapseOutput" class="accordion-collapse collapse" data-bs-parent="#docsAccordion">
 							<div class="accordion-body">
-								<p>By default, only the first bibliographic item in each duplicate set is kept. The output file:</p>
+								<p>By default, only the first bibliographic item in each duplicate set is kept. The
+									output file:</p>
 								<ul>
 									<li>Preserves all unique bibliographic items</li>
 									<li>Enriches them with missing data from duplicates (e.g., DOI, journal name,
@@ -358,8 +270,10 @@
 							<div class="accordion-body">
 								<p>Instead of removing duplicates, Mark Mode labels them for manual review:</p>
 								<ul>
-									<li>The ID of the first bibliographic item in each duplicate set is copied to the <b>Label
-											(LB)</b> field of all duplicates.</li>
+									<li>The ID of the first bibliographic item in each duplicate set is copied to the
+										<b>Label
+											(LB)</b> field of all duplicates.
+									</li>
 									<li>The original Label content is overwritten.</li>
 									<li>No enrichment or normalization is performed.</li>
 								</ul>
@@ -377,7 +291,8 @@
 						<div id="collapseCiting" class="accordion-collapse collapse" data-bs-parent="#docsAccordion">
 							<div class="accordion-body">
 								<p>If you use DedupEndNote, please cite:</p>
-								<p>Lobbestael, G. (2026). DedupEndNote (Version <span th:text="${appVersion}">1.1.5</span>) [Computer software].
+								<p>Lobbestael, G. (2026). DedupEndNote (Version <span
+										th:text="${appVersion}">1.1.5</span>) [Computer software].
 									https://github.com/globbestael/DedupEndNote</p>
 							</div>
 						</div>

@@ -102,9 +102,8 @@ class AuthorsBaseTest extends BaseTest {
 	 */
 	// @formatter:on
 	protected List<Triple> getValidatedAuthorsPairs() throws IOException {
-		String fileName = testDir + "/experiments/validated_authors_pairs.txt";
 		localTriples.clear();
-		Path path = Path.of(fileName);
+		Path path = testDir.resolve("experiments/validated_authors_pairs.txt");
 		Stream<String> lines = Files.lines(path);
 		lines.forEach(l -> {
 			String[] parts = l.split("\t");

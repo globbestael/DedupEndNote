@@ -1,7 +1,6 @@
 package edu.dedupendnote.services;
 
 import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -131,8 +130,8 @@ public class BibliographicItemReader {
 	 */
 	public static final Pattern RIS_LINE_PATTERN = Pattern.compile("(^[A-Z][A-Z0-9])( {2}-[ ,\\u00A0])(.*)$");
 
-	private long countRecords(String fileName) throws IOException {
-		try (Stream<String> lines = Files.lines(Path.of(fileName))) {
+	public long countRecords(Path inputPath) throws IOException {
+		try (Stream<String> lines = Files.lines(inputPath)) {
 			return lines.filter(l -> l.startsWith("ER  - ")).count();
 		}
 	}
@@ -140,8 +139,8 @@ public class BibliographicItemReader {
 	/*
 	 * readBibliographicItems: called in the first phase (before the comparison of bibliographicItems), includes normalization of data.
 	 */
-	public List<BibliographicItem> readBibliographicItems(String inputFileName, Consumer<String> progressReporter) {
-		return readBibliographicItems(inputFileName, progressReporter, false);
+	public List<BibliographicItem> readBibliographicItems(Path inputPath, Consumer<String> progressReporter) {
+		return readBibliographicItems(inputPath, progressReporter, false);
 	}
 
 	/**
@@ -151,13 +150,13 @@ public class BibliographicItemReader {
 	 * kept record into the LB field of every duplicate; this deliberately overwrites any LB
 	 * content from the user's original file, which is documented behaviour. To avoid carrying
 	 * a stale label from a previously marked file into a new deduplication run, the two-arg
-	 * {@link #readBibliographicItems(String, Consumer)} always passes {@code includeLabelField=false}.
+	 * {@link #readBibliographicItems(Path, Consumer)} always passes {@code includeLabelField=false}.
 	 *
 	 * <p>Pass {@code includeLabelField=true} ONLY when reading a mark-mode output file for
 	 * validation purposes (ValidationTests / ValidationService). No production caller should
 	 * pass {@code true}.
 	 */
-	public List<BibliographicItem> readBibliographicItems(String inputFileName, Consumer<String> progressReporter,
+	public List<BibliographicItem> readBibliographicItems(Path inputPath, Consumer<String> progressReporter,
 			boolean includeLabelField) {
 		List<BibliographicItem> bibliographicItems = new ArrayList<>();
 		String fieldContent = null;
@@ -174,11 +173,11 @@ public class BibliographicItemReader {
 		String journalCache = null;
 		BibliographicItem bibliographicItem = new BibliographicItem();
 
-		boolean hasBom = UtilitiesService.detectBom(inputFileName);
+		boolean hasBom = UtilitiesService.detectBom(inputPath);
 		int missingId = 1;
 		long totalRecords;
 		try {
-			totalRecords = countRecords(inputFileName);
+			totalRecords = countRecords(inputPath);
 		} catch (IOException e) {
 			totalRecords = 0;
 		}
@@ -191,7 +190,7 @@ public class BibliographicItemReader {
 
 		// Line starting with "TY - " triggers creation of record, line starting with
 		// "ER - " signals end of record
-		try (BufferedReader br = new BufferedReader(new FileReader(inputFileName))) {
+		try (BufferedReader br = Files.newBufferedReader(inputPath)) {
 			if (hasBom) {
 				br.skip(1);
 			}
@@ -499,13 +498,11 @@ public class BibliographicItemReader {
 				}
 			}
 		} catch (IOException e) {
-			e.printStackTrace();
+			log.error("IO error reading file", e);
 		} catch (NumberFormatException e) {
-			log.error("In field {} with content {}: Number could not be parsed", fieldName, fieldContent);
-			e.printStackTrace();
+			log.error("In field {} with content {}: Number could not be parsed", fieldName, fieldContent, e);
 		} catch (Exception e) {
-			log.error("In field {} with content {}: other exception: {}", fieldName, fieldContent, e.getMessage());
-			e.printStackTrace();
+			log.error("In field {} with content {}: other exception", fieldName, fieldContent, e);
 		}
 		log.debug("Publications read: {}", bibliographicItems.size());
 		return bibliographicItems;
