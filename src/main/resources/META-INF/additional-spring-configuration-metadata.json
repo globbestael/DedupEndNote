@@ -14,6 +14,11 @@
       "name": "baseDir",
       "type": "java.lang.String",
       "description": "A description for 'baseDir'"
+    },
+    {
+      "name": "dedup.max-concurrent-runs",
+      "type": "java.lang.String",
+      "description": "A description for 'dedup.max-concurrent-runs'"
     }
   ]
 }

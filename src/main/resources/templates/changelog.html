@@ -170,6 +170,22 @@
                                 <code>FileSystemUtils.deleteRecursively</code>, removing the
                                 last <code>java.io.File</code> usage from production code
                             </li>
+                            <li>Consolidate to a single version definition: the custom
+                                <code>&lt;app.version&gt;</code> Maven property is removed;
+                                <code>pom.xml</code> <code>&lt;version&gt;</code> is now the
+                                sole source of truth, filtered into
+                                <code>application.properties</code> as the standard Spring
+                                property <code>spring.application.version</code>
+                            </li>
+                            <li>Rename <code>AppVersionAdvice</code> →
+                                <code>ProjectVersionAdvice</code>; Thymeleaf model attribute
+                                renamed <code>appVersion</code> → <code>projectVersion</code>
+                            </li>
+                            <li>Fat JAR renamed from
+                                <code>DedupEndNote-{version}.jar</code> to
+                                <code>DedupEndNote.jar</code> via
+                                <code>&lt;finalName&gt;</code> in <code>pom.xml</code>
+                            </li>
                         </ul>
                     </li>
                 </ul>
