@@ -22,6 +22,14 @@ public class AuthorsNormalizationService {
 			"\\b(anonymous|No authorship, indicated|consortium|et al|grp|group|nct|study)\\b",
 			Pattern.CASE_INSENSITIVE);
 
+	/**
+	 * EndNote author names which result in type "F, R. M." for input "F RM" (instead of "Rahimi-Moghaddam F")
+	 * Occurs in PubMed nbib format, e.g. https://pubmed.ncbi.nlm.nih.gov/31531301/
+	 *
+	 * These authors are skipped. Normal Author names in all caps are also skipped!
+	 */
+	private static final Pattern ONLY_CAPITALS_IN_NAMES = Pattern.compile("^[A-Z ,\\.]+$");
+
 	private static final Pattern EXCEPT_CAPITALS_PATTERN = Pattern.compile("[^A-Z]");
 
 	private static final Pattern LAST_NAME_ADDITIONS_PATTERN = Pattern
@@ -85,6 +93,11 @@ public class AuthorsNormalizationService {
 		// skip "Anonymous", "et al" and group authors
 		Matcher matcher = ANONYMOUS_OR_GROUPNAME_PATTERN.matcher(authorInput);
 		if (matcher.find()) {
+			return new AuthorRecord(null, null, false);
+		}
+
+		matcher = ONLY_CAPITALS_IN_NAMES.matcher(authorInput);
+		if (matcher.matches()) {
 			return new AuthorRecord(null, null, false);
 		}
 

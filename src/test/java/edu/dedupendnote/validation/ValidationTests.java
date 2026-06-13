@@ -70,6 +70,7 @@ class ValidationTests extends AbstractIntegrationTest {
 	Map<String, Integer> titleCounter = new HashMap<>();
 
 	private static Logger rootLogger;
+	private boolean showDifferencesInDuration = false;
 	private boolean withTracing = false;
 	private boolean withTitleSplitterOutput = false;
 
@@ -168,7 +169,7 @@ class ValidationTests extends AbstractIntegrationTest {
 			}
 			if (v.getFn() == c.getFn() && v.getFp() == c.getFp() && v.getTn() == c.getTn() && v.getTp() == c.getTp()
 					&& (c.getDuration() >= (long) (v.getDuration() * 0.9))
-					&& c.getDuration() <= (long) (v.getDuration() * 1.1)
+					&& (!showDifferencesInDuration || c.getDuration() <= (long) (v.getDuration() * 1.1))
 					&& c.getUniqueDuplicates() == v.getUniqueDuplicates()) {
 				printValidationResult(setName, c, null);
 			} else {
@@ -198,21 +199,31 @@ class ValidationTests extends AbstractIntegrationTest {
 				"\nResults: " + setName + (oldV == null ? "" : ": HAS DIFFERENT RESULTS (first new, second old)"));
 		System.out.println(TABLE_HEADER);
 		System.out.println(TABLE_DIVIDER);
-		printIndividualValidationResult(newV);
+		printIndividualValidationResult(newV, oldV != null);
 		if (oldV != null) {
-			printIndividualValidationResult(oldV);
+			printIndividualValidationResult(oldV, false);
 		}
 		System.out.flush();
 	}
 
-	private void printIndividualValidationResult(ValidationResult v) {
-		System.out.println(
-				"| %7d | %11.2f%% | %7d | %7d | %11.2f%% | %7d | %7d | %11.3f%% | %11.3f%% | %11.3f%% | %11.3f%% | %11.2f | %9d |"
-						.formatted(v.getTotal(), v.getPercDuplicates(), v.getTp(), v.getFn(), v.getSensitivity(),
-								v.getTn(), v.getFp(), v.getSpecificity(), v.getPrecision(), v.getAccuracy(),
-								v.getF1Score(), (double) (v.getDuration() / 1000.0), v.getUniqueDuplicates()));
+	private void printIndividualValidationResult(ValidationResult v, boolean asError) {
+		if (asError) {
+			System.err.println(
+					"| %7d | %11.2f%% | %7d | %7d | %11.2f%% | %7d | %7d | %11.3f%% | %11.3f%% | %11.3f%% | %11.3f%% | %11.2f | %9d |"
+							.formatted(v.getTotal(), v.getPercDuplicates(), v.getTp(), v.getFn(), v.getSensitivity(),
+									v.getTn(), v.getFp(), v.getSpecificity(), v.getPrecision(), v.getAccuracy(),
+									v.getF1Score(), (double) (v.getDuration() / 1000.0), v.getUniqueDuplicates()));
+
+		} else {
+			System.out.println(
+					"| %7d | %11.2f%% | %7d | %7d | %11.2f%% | %7d | %7d | %11.3f%% | %11.3f%% | %11.3f%% | %11.3f%% | %11.2f | %9d |"
+							.formatted(v.getTotal(), v.getPercDuplicates(), v.getTp(), v.getFn(), v.getSensitivity(),
+									v.getTn(), v.getFp(), v.getSpecificity(), v.getPrecision(), v.getAccuracy(),
+									v.getF1Score(), (double) (v.getDuration() / 1000.0), v.getUniqueDuplicates()));
+		}
 	}
 
+	@Disabled("Only needed in special cases")
 	@Test
 	void printValidationResultsASySD() {
 		for (String setName : validationResultsMap.keySet()) {
@@ -229,7 +240,7 @@ class ValidationTests extends AbstractIntegrationTest {
 			double accuracy = (tp + tn) * 100.0 / total;
 			double f1Score = 2 * precision * sensitivity / (precision + sensitivity);
 
-			System.out.println("\nResults: " + setName);
+			System.out.println("\nResults in ASySD format: " + setName);
 			System.out.println(
 					"--------------------------------------------------------------------------------------------------------------------------------------------------------");
 			System.out.println("| %7s | %12s | %7s | %7s | %12s | %7s | %7s | %12s | %12s | %12s | %12s | %9s |"
@@ -246,6 +257,7 @@ class ValidationTests extends AbstractIntegrationTest {
 		}
 	}
 
+	@Disabled("Is this test necessary?")
 	@Test
 	void readTruthFileTest() throws IOException {
 		Path truthPath = testDir.resolve("SRA2/Cytology_screening_TRUTH.txt");
