@@ -2,24 +2,32 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-<!-- The section below is deliberately brief and trigger-based rather than prescriptive.
-     The list covers the five things that actually went stale in this project
-     (the test hierarchy was the one that just bit us). Placing it before "Commands"
-     means it appears early enough to be read before any task begins, not buried
-     after the architecture description. -->
 ## Keeping this file current
 
 Update CLAUDE.md whenever a change affects something documented here. Triggers include:
 
 - Test class renamed, added, deleted, or reclassified (hierarchy section), or moved between unit / integration / validation categories
-- New service introduced or existing service's responsibility changed (services table)
+- New service introduced or existing service's responsibility changed → also update `docs/architecture.html` (service map)
+- Algorithm step, threshold, or special-type handling changed → also update `docs/algorithm.md`
+- Domain term or mode definition changed → also update `CONTEXT.md`
 - Build command, Maven profile, or port changed (commands / configuration sections)
-- Architectural pattern added or removed (data flow, enrichment, modes, naming conventions, path helpers)
+- Architectural pattern added or removed (naming conventions, path helpers)
 - Code quality plugin version bumped or new plugin added
 - Plan-file naming convention changed (plans section)
 - Release workflow or version-management mechanism changed (configuration section)
+- Doc file added to `docs/` or existing one renamed/removed (documentation map section)
 
 The update should land in the same commit as the code change.
+
+## Documentation map
+
+| What you need | Where to find it |
+|---|---|
+| Domain term meanings (Bibliographic Item, Duplicate Set, Modes, item types, validation) | [CONTEXT.md](CONTEXT.md) |
+| Pipeline diagram, service responsibilities, sequence diagram | [docs/architecture.html](docs/architecture.html) |
+| Algorithm steps, threshold values, INSUFFICIENT_DATA, special types, enrichment | [docs/algorithm.md](docs/algorithm.md) |
+| Commands, coding rules, test structure, config, release | This file (CLAUDE.md) |
+| Architecture decisions (why X, rejected alternatives) | [docs/adr/](docs/adr/) |
 
 ## Commands
 
@@ -39,56 +47,28 @@ The update should land in the same commit as the code change.
 
 ## Architecture
 
-DedupEndNote is a Spring Boot 4.0 / Java 21 web app that deduplicates bibliographic records in RIS format (exported from EndNote, Zotero, PubMed, EMBASE, etc.). It runs on port 9777 and is deployed as a fat JAR.
+DedupEndNote is a Spring Boot 4.1 / Java 21 web app that deduplicates bibliographic records in RIS format (exported from EndNote, Zotero, PubMed, EMBASE, etc.). Runs on port 9777, deployed as a fat JAR.
 
-### Modes
-- **Single-file dedup**: removes duplicates within one RIS file
-- **Two-file dedup**: compares new records against existing ones, only outputs the new file with duplicates marked or removed
-- **Remove mode** (`DeduplicationMode.REMOVE`): default; removes duplicates and enriches the kept bibliographic item
-- **Mark mode** (`DeduplicationMode.MARK`): keeps all bibliographic items but labels duplicates with the ID of the kept bibliographic item
+See [`docs/architecture.html`](docs/architecture.html) for the pipeline diagram, full service map, and runtime sequence diagram.
 
 ### Key packages
-- `controllers/` — HTTP endpoints; file upload and dedup triggers; uses virtual threads (Java 21) for concurrent dedup runs; creates the `Consumer<String>` that routes progress messages to WebSocket
-- `domain/` — `BibliographicItem` (core model; domain term: Bibliographic Item), `BibliographicItemDB` (in-memory store), `DeduplicationMode` (enum: `REMOVE` / `MARK`)
-- `services/` — business logic (see below)
+- `controllers/` — HTTP endpoints; file upload and dedup triggers; virtual-thread concurrency; WebSocket progress routing
+- `domain/` — `BibliographicItem` (core model), `BibliographicItemDB` (in-memory store), `DeduplicationMode` (enum: `REMOVE` / `MARK`)
+- `services/` — `DeduplicationService`, `BibliographicItemReader`, `BibliographicItemWriter`, `EnrichmentService`, four `Default*ComparisonService` classes, five `*NormalizationService` classes, `FieldComparators` record
 
-### Services and their responsibilities
-| Service | Lines | Responsibility |
-|---|---|---|
-| `DeduplicationService` | ~400 | Orchestrates the full pipeline; accepts a `Consumer<String> progressReporter` for progress reporting |
-| `FieldComparators` | — | Plain `record` bundling the four per-field comparison services; wired in `DedupEndNoteApplication`; passed as one argument to `DeduplicationService` for test substitution |
-| `BibliographicItemReader` | ~560 | Parses RIS files into `BibliographicItem` objects; coordinates field Normalization during read; hosts `addNormalized*` static helpers used by test fixtures |
-| `BibliographicItemWriter` | ~220 | Writes deduplicated (Remove Mode) and marked (Mark Mode) RIS output; re-reads original input to preserve field order |
-| `EnrichmentService` | ~110 | Post-dedup enrichment (Remove Mode only): merges DOIs, fills missing year/pages, replaces Reply/ClinicalTrials.gov titles, normalises Cochrane page IDs |
-| `NormalizationService` | ~180 | Shared normalization utilities: `normalizeToBasicLatin`, `normalizeHyphensAndWhitespace`, DOI/ISSN/year parsing; each method called from `BibliographicItemReader` and the per-domain normalization services |
-| `AuthorsNormalizationService` | — | Normalizes author strings into last-name + initials; handles transposed names and group-author detection |
-| `TitlesNormalizationService` | — | Normalizes title strings; handles retractions, reprints, subtitles, HTML tags, punctuation |
-| `JournalsNormalizationService` | — | Normalizes journal names; handles abbreviations, language variants, supplement strings |
-| `PagesNormalizationService` | — | Normalizes page fields (SP/SE/C7); handles Roman numerals, page-range merging, e-pages |
-| `DefaultAuthorsComparisonService` | — | Jaro-Winkler author matching; thresholds injectable via `AuthorThresholds` record |
-| `DefaultTitleComparisonService` | — | JWS title matching; thresholds injectable via `TitleThresholds` record |
-| `DefaultJournalComparisonService` | — | Journal matching with abbreviation/initialism heuristics; thresholds injectable via `JournalThresholds` record; hosts static `compareIssns` |
-| `DefaultPagesComparisonService` | — | Exact-equality pages-or-DOI step (no thresholds); hosts static `compareSameDois` |
+### Modes
+
+`DeduplicationMode.REMOVE` (default) removes duplicates and enriches the Kept Bibliographic Item; `DeduplicationMode.MARK` keeps all items and labels duplicates. See [CONTEXT.md](CONTEXT.md) for definitions.
 
 ### 5-step comparison algorithm (all steps must pass)
-1. Publication year (±1 year, exact for Cochrane)
+
+1. Publication year (±1 year, exact for Cochrane Reviews)
 2. Starting page or DOI match
-3. Authors (Jaro-Winkler > 0.67)
-4. Title (Jaro-Winkler > 0.89)
+3. Authors (Jaro-Winkler similarity)
+4. Title (Jaro-Winkler similarity)
 5. ISBN/ISSN or journal name match
 
-### Data flow
-```
-Upload RIS file(s)
-  → DeduplicationService (virtual thread)
-    → BibliographicItemReader.readBibliographicItems()  — parse + normalize all fields
-    → DeduplicationService.compareSet()                 — O(n²) pair comparison, year-bucketed
-        → FieldComparators → Default{Authors/Title/Journal/Pages}ComparisonService
-    → EnrichmentService.enrich()                        — Remove Mode only
-    → BibliographicItemWriter.writeOutput()             — write result RIS file
-  → WebSocket progress messages → client
-  → User downloads result
-```
+See [`docs/algorithm.md`](docs/algorithm.md) for threshold values, INSUFFICIENT_DATA logic, year-bucketing, special-type handling, and enrichment detail.
 
 ### File-path naming convention
 
@@ -118,9 +98,6 @@ inputPath.resolveSibling(inputPath.getFileName() + "_mark.txt")
 // wrong — implicit toString() + concat
 Path.of(inputPath + "_mark.txt")
 ```
-
-### Record enrichment (non-mark mode)
-When a duplicate is found the kept record is enriched with data from the duplicate: missing DOI, missing year, missing/abbreviated pages, short titles replaced with full titles.
 
 ## Code quality
 
