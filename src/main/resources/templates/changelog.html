@@ -31,162 +31,27 @@
                     <li>Bug fix: the Details page showed a hardcoded earliest publication year instead of
                         the actual value used by the application</li>
                     <li>Added a Glossary to the Details page</li>
-                    <li>Security:
+                    <li>The result file always gets the extension "txt"</li>
+                    <li>Secured the application against OWASP TOP 10 risks. Changes which are relevant to users:
                         <ul>
-                            <li>Path traversal: uploaded and downloaded filenames are now validated to
-                                contain no path separators or parent-directory references; a crafted
-                                filename can no longer read or write files outside the upload directory
-                            </li>
-                            <li>DOM-based XSS: filenames and server messages are now inserted into the
-                                page as plain text instead of raw HTML, preventing a file named
-                                <code>&lt;script&gt;…&lt;/script&gt;.ris</code> from executing in the
-                                browser
-                            </li>
-                            <li>Error responses no longer echo the filename or Java exception class back
-                                to the client
-                            </li>
-                            <li>Dev profile: Actuator exposure restricted from <code>*</code> to
-                                <code>health,info</code>
-                            </li>
-                            <li>Session-scoped upload directories: each upload session now uses an
-                                isolated subdirectory (<code>upload-dir/{UUID}/</code>), preventing
-                                one user's files from being accessible by other concurrent users
-                            </li>
-                            <li>Server-side WebSocket session UUID: the session UUID is now
-                                generated on the server and injected into the page via Thymeleaf,
-                                replacing the previous client-side JavaScript generation
-                            </li>
-                            <li>Upload rate limiting: a per-session cooldown (configurable via
-                                <code>dedup.upload-cooldown-seconds</code>, default 10 s) and burst
-                                limit (<code>dedup.upload-burst-limit</code>, default 2) prevent
-                                rapid repeated uploads; tracking is per page-load session so the
-                                two-file flow can upload both files without triggering the limit;
-                                the 429 response carries <code>Cache-Control: no-store</code> to
-                                prevent the browser from replaying the error on subsequent uploads
-                            </li>
-                            <li>Bounded concurrent dedup sessions: the number of simultaneous
-                                deduplication runs is now capped (configurable via
-                                <code>dedup.max-concurrent-runs</code>, default 4); requests
-                                beyond the cap return HTTP 429
-                            </li>
-                            <li>Configurable dedup run timeout: runs that exceed the configured
-                                limit (<code>dedup.timeout-minutes</code>, default 20) are
-                                cancelled and the client receives HTTP 503
-                            </li>
-                            <li>Record-count cap: input files exceeding the configured maximum
-                                (<code>dedup.max-records</code>, default 100&thinsp;000) are
-                                rejected before deduplication starts
-                            </li>
-                            <li>Filenames containing line-break characters are now rejected at
-                                upload time, preventing log-forging via crafted filenames
-                            </li>
+                            <li>Deduplications which last longer than 20 minutes are canceled and the user gets a
+                                "Service unavailable" message</li>
+                            <li>If a user uploads many files in a short time, the user gets a message to try again at a
+                                later time</li>
+                            <li>If the program is busy deduplicating some files, a new user can get a message "Too many
+                                requests. Try again later"</li>
+                            <li>Next to the limit of max input file size of 150MB, there is a new limit of 100,000 input
+                                records. For two-files deduplication
+                                these limit apply to the combination of both files</li>
+
                         </ul>
                     </li>
-                    <li>Internal:
+                    <li>Internal: lots of refactorings</li>
+                    <li>For developers:
                         <ul>
-                            <li>Rename core class <code>Publication</code> → <code>BibliographicItem</code>
-                                to align code with the domain language</li>
-                            <li>Introduce <code>DeduplicationMode</code> enum (<code>REMOVE</code> /
-                                <code>MARK</code>) replacing a boolean flag
-                            </li>
-                            <li>Add <code>.gitattributes</code> to normalise line endings; fix stray
-                                UTF-8 BOM characters in Java source files</li>
-                            <li>Change <code>BibliographicItem.id</code> and <code>publicationYear</code>
-                                from boxed <code>Integer</code> to primitive <code>int</code></li>
-                            <li>Extract per-domain normalization out of <code>NormalizationService</code>
-                                into <code>PagesNormalizationService</code>,
-                                <code>JournalsNormalizationService</code>,
-                                <code>TitlesNormalizationService</code>, and
-                                <code>AuthorsNormalizationService</code>
-                            </li>
-                            <li>Split <code>IOService</code> into <code>BibliographicItemReader</code>
-                                and <code>BibliographicItemWriter</code></li>
-                            <li>Extract <code>EnrichmentService</code> from
-                                <code>DeduplicationService</code>
-                            </li>
-                            <li>Delete <code>ComparisonService</code> pass-through; introduce
-                                <code>FieldComparators</code> record bundling the four per-field
-                                comparison services
-                            </li>
-                            <li>Move regex patterns from <code>NormPatterns</code> into the
-                                normalization services that own them; delete <code>NormPatterns</code></li>
-                            <li>Replace <code>docs/architecture.md</code> with a self-contained
-                                HTML document (<code>docs/architecture.html</code>) with interactive
-                                Mermaid diagrams and a visual service map</li>
-                            <li>Rename unit test classes: <code>Similarity*Test</code> and matching
-                                <code>JWSimilarity*Test</code> classes renamed to
-                                <code>Default*ComparisonServiceTest</code> for boolean
-                                <code>compare()</code> tests; raw JWS-score tests retain the
-                                <code>JWSimilarity*Test</code> name; <code>JournalsBaseTest</code>
-                                absorbed into <code>DefaultJournalComparisonServiceTest</code> and
-                                deleted
-                            </li>
-                            <li>Consistent file-path naming: service methods now accept
-                                <code>java.nio.file.Path</code> instead of <code>String</code> file
-                                paths; <code>String</code> is reserved for bare filenames at the
-                                browser/upload boundary; added <code>UtilitiesService.createOutputPath</code>
-                                for path-level callers alongside the existing
-                                <code>createOutputFileName</code> for the controller
-                            </li>
-                            <li>Add <code>UtilitiesService.removeFileExtension</code>; fix
-                                double-extension filenames produced by appending a suffix (e.g.
-                                <code>_mark.txt</code>) directly to a filename that already had an
-                                extension, yielding names like
-                                <code>Haematology.txt_mark.txt</code> instead of
-                                <code>Haematology_mark.txt</code>
-                            </li>
-                            <li>Add <code>UtilitiesService.createPath</code> and
-                                <code>DeduplicationMode.filenameSuffix</code>; remove
-                                <code>createOutputFileName</code> and <code>createOutputPath</code>;
-                                all derived output files now use <code>.txt</code> extension
-                                regardless of input extension (avoids auto-import of
-                                <code>.ris</code> output files into open EndNote databases on
-                                double-click)
-                            </li>
-                            <li>Remove <code>outputPath</code> parameter from
-                                <code>deduplicateOneFile</code> and
-                                <code>deduplicateTwoFiles</code>; the path is now derived
-                                internally from <code>inputPath</code> and <code>mode</code>,
-                                which are already available as parameters
-                            </li>
-                            <li>Switch deduplication-mode selection from a boolean
-                                <code>markMode</code> flag to the <code>DeduplicationMode</code>
-                                enum end-to-end: HTML forms now use radio buttons with values
-                                <code>REMOVE</code> / <code>MARK</code>; the hidden result-file
-                                field is renamed to <code>deduplicationModeResultFile</code>;
-                                controller endpoints bind <code>DeduplicationMode</code> directly
-                                via Spring enum conversion, removing the boolean-to-enum
-                                translation; <code>DeduplicationMode.logCode()</code> replaces the
-                                inline ternary in the log prefix
-                            </li>
-                            <li>Replace <code>java.io.FileReader</code> /
-                                <code>FileWriter</code> with NIO2
-                                <code>Files.newBufferedReader</code> /
-                                <code>Files.newBufferedWriter</code> throughout; eliminates
-                                <code>.toFile()</code> bridge calls and fixes implicit
-                                platform-default encoding (was not guaranteed UTF-8 on Windows);
-                                controller file upload and download use <code>Files.copy</code>;
-                                <code>PathUtils.deleteDirectory</code>
-                                (Apache commons-io) replaces Spring's
-                                <code>FileSystemUtils.deleteRecursively</code>, removing the
-                                last <code>java.io.File</code> usage from production code
-                            </li>
-                            <li>Consolidate to a single version definition: the custom
-                                <code>&lt;app.version&gt;</code> Maven property is removed;
-                                <code>pom.xml</code> <code>&lt;version&gt;</code> is now the
-                                sole source of truth, filtered into
-                                <code>application.properties</code> as the standard Spring
-                                property <code>spring.application.version</code>
-                            </li>
-                            <li>Rename <code>AppVersionAdvice</code> →
-                                <code>ProjectVersionAdvice</code>; Thymeleaf model attribute
-                                renamed <code>appVersion</code> → <code>projectVersion</code>
-                            </li>
-                            <li>Fat JAR renamed from
-                                <code>DedupEndNote-{version}.jar</code> to
-                                <code>DedupEndNote.jar</code> via
-                                <code>&lt;finalName&gt;</code> in <code>pom.xml</code>
-                            </li>
+                            <li>The JAR file is now named 'DedupEndNote.jar'</li>
+                            <li>Added "For developers / Documentation" in details.html</li>
+                            <li>Reorganized technical documentation</li>
                         </ul>
                     </li>
                 </ul>
