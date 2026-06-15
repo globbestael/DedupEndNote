@@ -15,7 +15,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import edu.dedupendnote.services.BibliographicItemReader;
-import edu.dedupendnote.services.TitlesNormalizationService;
+import edu.dedupendnote.services.normalization.TitlesNormalizationService;
 import edu.dedupendnote.domain.BibliographicItem;
 import edu.dedupendnote.domain.TitleRecord;
 

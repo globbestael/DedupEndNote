@@ -20,10 +20,10 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import edu.dedupendnote.services.BibliographicItemReader;
-import edu.dedupendnote.services.TitleThresholds;
+import edu.dedupendnote.services.comparison.TitleThresholds;
 import edu.dedupendnote.unit.BaseTest;
 import edu.dedupendnote.domain.BibliographicItem;
-import edu.dedupendnote.services.TitlesNormalizationService;
+import edu.dedupendnote.services.normalization.TitlesNormalizationService;
 
 // TODO: For boolean compare() tests on DefaultTitleComparisonService, see DefaultTitleComparisonServiceTest.
 class JWSimilarityTitleTest extends BaseTest {

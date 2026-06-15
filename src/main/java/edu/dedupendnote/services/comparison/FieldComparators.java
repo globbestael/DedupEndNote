@@ -1,4 +1,4 @@
-package edu.dedupendnote.services;
+package edu.dedupendnote.services.comparison;
 
 public record FieldComparators(
 		AuthorsComparisonService authors,

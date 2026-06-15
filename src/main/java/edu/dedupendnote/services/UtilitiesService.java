@@ -138,7 +138,7 @@ public class UtilitiesService {
 		return result;
 	}
 
-	static boolean setsContainSameString(Set<String> set1, Set<String> set2) {
+	public static boolean setsContainSameString(Set<String> set1, Set<String> set2) {
 		if (set1.isEmpty() || set2.isEmpty()) {
 			return false;
 		}

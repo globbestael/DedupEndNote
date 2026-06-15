@@ -1,4 +1,4 @@
-package edu.dedupendnote.services;
+package edu.dedupendnote.services.normalization;
 
 import java.util.Arrays;
 import java.util.HashSet;

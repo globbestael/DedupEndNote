@@ -11,9 +11,9 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import edu.dedupendnote.services.AuthorThresholds;
-import edu.dedupendnote.services.AuthorsComparisonService;
-import edu.dedupendnote.services.DefaultAuthorsComparisonService;
+import edu.dedupendnote.services.comparison.AuthorThresholds;
+import edu.dedupendnote.services.comparison.AuthorsComparisonService;
+import edu.dedupendnote.services.comparison.DefaultAuthorsComparisonService;
 import edu.dedupendnote.domain.BibliographicItem;
 import lombok.extern.slf4j.Slf4j;
 

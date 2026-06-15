@@ -1,4 +1,4 @@
-package edu.dedupendnote.services;
+package edu.dedupendnote.services.comparison;
 
 import org.apache.commons.text.similarity.JaroWinklerSimilarity;
 

@@ -11,7 +11,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import edu.dedupendnote.domain.BibliographicItem;
 import edu.dedupendnote.services.BibliographicItemReader;
-import edu.dedupendnote.services.DefaultTitleComparisonService;
+import edu.dedupendnote.services.comparison.DefaultTitleComparisonService;
 
 class DefaultTitleComparisonServiceTest {
 

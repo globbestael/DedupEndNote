@@ -21,6 +21,9 @@ import org.springframework.web.context.annotation.RequestScope;
 
 import edu.dedupendnote.domain.BibliographicItem;
 import edu.dedupendnote.domain.DeduplicationMode;
+import edu.dedupendnote.services.comparison.DefaultJournalComparisonService;
+import edu.dedupendnote.services.comparison.DefaultPagesComparisonService;
+import edu.dedupendnote.services.comparison.FieldComparators;
 import lombok.extern.slf4j.Slf4j;
 
 @Service

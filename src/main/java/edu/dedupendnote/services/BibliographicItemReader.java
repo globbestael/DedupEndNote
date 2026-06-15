@@ -25,6 +25,11 @@ import edu.dedupendnote.domain.BibliographicItem;
 import edu.dedupendnote.domain.IsbnIssnRecord;
 import edu.dedupendnote.domain.PageRecord;
 import edu.dedupendnote.domain.TitleRecord;
+import edu.dedupendnote.services.normalization.AuthorsNormalizationService;
+import edu.dedupendnote.services.normalization.JournalsNormalizationService;
+import edu.dedupendnote.services.normalization.NormalizationService;
+import edu.dedupendnote.services.normalization.PagesNormalizationService;
+import edu.dedupendnote.services.normalization.TitlesNormalizationService;
 import lombok.extern.slf4j.Slf4j;
 
 /*

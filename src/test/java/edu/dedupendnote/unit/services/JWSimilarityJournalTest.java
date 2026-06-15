@@ -10,9 +10,9 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import edu.dedupendnote.services.JournalThresholds;
-import edu.dedupendnote.services.JournalsNormalizationService;
-import edu.dedupendnote.services.TitlesNormalizationService;
+import edu.dedupendnote.services.comparison.JournalThresholds;
+import edu.dedupendnote.services.normalization.JournalsNormalizationService;
+import edu.dedupendnote.services.normalization.TitlesNormalizationService;
 import lombok.extern.slf4j.Slf4j;
 
 // TODO: For boolean compare() tests on DefaultJournalComparisonService, see DefaultJournalComparisonServiceTest.

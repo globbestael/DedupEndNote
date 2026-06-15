@@ -17,7 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import edu.dedupendnote.services.DeduplicationService;
 import edu.dedupendnote.services.BibliographicItemReader;
-import edu.dedupendnote.services.NormalizationService;
+import edu.dedupendnote.services.normalization.NormalizationService;
 import edu.dedupendnote.domain.DeduplicationMode;
 import lombok.extern.slf4j.Slf4j;
 

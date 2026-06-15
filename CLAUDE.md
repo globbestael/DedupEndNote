@@ -54,7 +54,9 @@ See [`docs/architecture.html`](docs/architecture.html) for the pipeline diagram,
 ### Key packages
 - `controllers/` — HTTP endpoints; file upload and dedup triggers; virtual-thread concurrency; WebSocket progress routing
 - `domain/` — `BibliographicItem` (core model), `BibliographicItemDB` (in-memory store), `DeduplicationMode` (enum: `REMOVE` / `MARK`)
-- `services/` — `DeduplicationService`, `BibliographicItemReader`, `BibliographicItemWriter`, `EnrichmentService`, four `Default*ComparisonService` classes, five `*NormalizationService` classes, `FieldComparators` record
+- `services/` — `DeduplicationService`, `BibliographicItemReader`, `BibliographicItemWriter`, `EnrichmentService`, `UtilitiesService`
+- `services/comparison/` — four `*ComparisonService` interfaces, four `Default*ComparisonService` implementations, three `*Thresholds` value objects, `FieldComparators` record
+- `services/normalization/` — `NormalizationService` plus four `*NormalizationService` classes
 
 ### Modes
 

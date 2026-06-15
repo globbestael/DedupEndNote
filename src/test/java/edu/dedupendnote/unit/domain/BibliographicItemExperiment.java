@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
 
 import edu.dedupendnote.domain.AuthorRecord;
 import edu.dedupendnote.domain.BibliographicItem;
-import edu.dedupendnote.services.AuthorsNormalizationService;
+import edu.dedupendnote.services.normalization.AuthorsNormalizationService;
 
 /*
  * Used in tests for evaluating alternatives.

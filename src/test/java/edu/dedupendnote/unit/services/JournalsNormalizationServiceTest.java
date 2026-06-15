@@ -13,7 +13,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import edu.dedupendnote.services.BibliographicItemReader;
-import edu.dedupendnote.services.JournalsNormalizationService;
+import edu.dedupendnote.services.normalization.JournalsNormalizationService;
 import edu.dedupendnote.domain.BibliographicItem;
 import lombok.extern.slf4j.Slf4j;
 

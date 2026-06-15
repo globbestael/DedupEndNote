@@ -1,4 +1,4 @@
-package edu.dedupendnote.services;
+package edu.dedupendnote.services.comparison;
 
 import java.util.HashSet;
 import java.util.Map;
@@ -12,6 +12,7 @@ import org.apache.commons.text.similarity.JaroWinklerSimilarity;
 import org.jspecify.annotations.Nullable;
 
 import edu.dedupendnote.domain.BibliographicItem;
+import edu.dedupendnote.services.UtilitiesService;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j

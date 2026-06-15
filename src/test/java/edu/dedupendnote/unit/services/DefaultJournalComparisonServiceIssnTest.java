@@ -10,8 +10,8 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import edu.dedupendnote.domain.BibliographicItem;
-import edu.dedupendnote.services.DefaultJournalComparisonService;
-import edu.dedupendnote.services.NormalizationService;
+import edu.dedupendnote.services.comparison.DefaultJournalComparisonService;
+import edu.dedupendnote.services.normalization.NormalizationService;
 
 // TODO: compareIssns() is a static helper on DefaultJournalComparisonService; see DefaultJournalComparisonServiceTest for the companion compare() tests.
 class DefaultJournalComparisonServiceIssnTest {

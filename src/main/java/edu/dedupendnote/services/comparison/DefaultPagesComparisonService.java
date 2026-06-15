@@ -1,4 +1,4 @@
-package edu.dedupendnote.services;
+package edu.dedupendnote.services.comparison;
 
 import java.util.Map;
 import java.util.Set;
@@ -6,6 +6,7 @@ import java.util.Set;
 import org.jspecify.annotations.Nullable;
 
 import edu.dedupendnote.domain.BibliographicItem;
+import edu.dedupendnote.services.UtilitiesService;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
