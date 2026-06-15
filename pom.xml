@@ -141,6 +141,20 @@
 			<groupId>org.webjars.npm</groupId>
 			<artifactId>sockjs-client</artifactId>
 			<version>1.6.1</version>
+			<exclusions>
+				<!-- faye-websocket and websocket-extensions are Node.js server-side packages
+				     pulled in transitively. Their CVEs (CVE-2020-11020, CVE-2020-15134,
+				     CVE-2020-7663) only apply to a Node.js runtime; they are never executed
+				     in this JVM app and can be safely excluded. -->
+				<exclusion>
+					<groupId>org.webjars.npm</groupId>
+					<artifactId>faye-websocket</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.webjars.npm</groupId>
+					<artifactId>websocket-extensions</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.webjars</groupId>
@@ -259,6 +273,21 @@
 							<version>0.12.12</version>
 						</path>
 					</annotationProcessorPaths>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.owasp</groupId>
+				<artifactId>dependency-check-maven</artifactId>
+				<version>12.1.1</version>
+				<configuration>
+					<!-- Fail on CVSS score >= 7 (High). Adjust if false positives accumulate. -->
+					<failBuildOnCVSS>7</failBuildOnCVSS>
+					<!-- Register a free NVD API key at https://nvd.nist.gov/developers/request-an-api-key
+					     and pass it via -DnvdApiKey=... or set NVD_API_KEY env var to avoid rate-limiting. -->
+					<!-- <nvdApiKey>${env.NVD_API_KEY}</nvdApiKey> -->
+					<!-- Sonatype OSS Index requires authentication and rate-limits anonymous use;
+					     NVD is sufficient as the primary vulnerability source. -->
+					<ossindexAnalyzerEnabled>false</ossindexAnalyzerEnabled>
 				</configuration>
 			</plugin>
    		</plugins>

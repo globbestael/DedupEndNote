@@ -46,7 +46,12 @@
 
                         </ul>
                     </li>
-                    <li>Internal: lots of refactorings</li>
+                    <li>Internal:
+                        <ul>
+                            <li>lots of refactorings</li>
+                            <li>Added dependency-check-maven to the POM</li>
+                        </ul>
+                    </li>
                     <li>For developers:
                         <ul>
                             <li>The JAR file is now named 'DedupEndNote.jar'</li>
@@ -72,8 +77,10 @@
                 <h2 class="bg-success-subtle">1.1.5 (2026-04-13)</h2>
                 <ul>
                     <li>CINAHL can have an ID (numbers, numbers and hyphens) in ST field</li>
-                    <li>Redesigned web interface: visual step-by-step workflow with active/done/waiting indicators,
-                        fixed navigation bar, and progress bar shown inline during both file parsing and deduplication
+                    <li>Redesigned web interface: visual step-by-step workflow with active/done/waiting
+                        indicators,
+                        fixed navigation bar, and progress bar shown inline during both file parsing and
+                        deduplication
                     </li>
                     <li>Performance: compiled journal-matching patterns and similarity objects are now cached,
                         reducing repeated work during large deduplication runs</li>
@@ -113,30 +120,40 @@
                 <ul>
                     <li>Some changes in the comparisons:
                         <ul>
-                            <li>Step 2: If at least one of the two publications has more than 2 pages, the DOIs are
+                            <li>Step 2: If at least one of the two publications has more than 2 pages, the DOIs
+                                are
                                 compared
                                 before the starting pages are compared</li>
                             <li>Step 3: Only the first 40 authors are compared</li>
-                            <li>Step 4: Changes in splitting titles with subtitles. Most common languages at the end of
+                            <li>Step 4: Changes in splitting titles with subtitles. Most common languages at the
+                                end of
                                 title are removed. If one or both titles are empty, the answer is "YES"</li>
-                            <li>Step 5: If both records have a ISBN, they are compared. If they are not the same,
+                            <li>Step 5: If both records have a ISBN, they are compared. If they are not the
+                                same,
                                 step 5 gets the answer "NO"</li>
                         </ul>
                     </li>
-                    <li>Records originally from clinicaltrials.gov but imported from clinicaltrials.gov, Cochrane
-                        Library and EMBASE are deduplicated much better and the deduplicated output is standardized. See
+                    <li>Records originally from clinicaltrials.gov but imported from clinicaltrials.gov,
+                        Cochrane
+                        Library and EMBASE are deduplicated much better and the deduplicated output is
+                        standardized. See
                         <a href="/details#clinical_trials_gov">Details: Special cases: ClinicalTrials.gov </a>
                     </li>
-                    <li>Better handling of conference proceedings and books. Triggered by a new test file with a query
+                    <li>Better handling of conference proceedings and books. Triggered by a new test file with a
+                        query
                         on AI. The changed comparison by ISBN (see above) was triggered by this.</li>
                     <li>Errata and comments are treated in the same way as replies ("step 4: compare titles" is
-                        skipped; and in "enrich the deduplicated records" the longest duplicate title is used)</li>
+                        skipped; and in "enrich the deduplicated records" the longest duplicate title is used)
+                    </li>
                     <li>Retractions / retracted publications: in the preprocessing all parts of the title
-                        referring to the retraction are removed, and in "enrich the deduplicated records" the longest
+                        referring to the retraction are removed, and in "enrich the deduplicated records" the
+                        longest
                         duplicate title is used). There is no special treatment of retraction notices</li>
                     <li>Comparison of export and deduplication of same publications in EndNote and Zotero</li>
-                    <li>The text on the front page is simplified / shortened (with the help of Copilot). The full
-                        details are merged and updated in one file, appropriately called "Details, lots of details ...".
+                    <li>The text on the front page is simplified / shortened (with the help of Copilot). The
+                        full
+                        details are merged and updated in one file, appropriately called "Details, lots of
+                        details ...".
                     </li>
                     <li>Upgrade to Spring Boot 3.5.6, Bootstrap 5.3.8</li>
                 </ul>
@@ -156,16 +173,21 @@
                 <ul>
                     <li>2024-01-14: 1.0.1: BUG: Doesn't handle author last name starting with a hyphen</li>
                     <li>2023-09-02: ISBN-10 and ISBN-13 are compared correctly: 9024274214 = 9789024274215</li>
-                    <li>2023-09-02: BUG: Publication years of form "1-1-1989" (instead of "1989") are parsed as years
+                    <li>2023-09-02: BUG: Publication years of form "1-1-1989" (instead of "1989") are parsed as
+                        years
                     </li>
-                    <li>2023-08-21: If a title with ": " has at least 50 characters before the ": ", that first part is
+                    <li>2023-08-21: If a title with ": " has at least 50 characters before the ": ", that first
+                        part is
                         also used as a title variant</li>
-                    <li>2023-08-21: BUG: Result file for deduplication of two files in Mark mode was not always written
+                    <li>2023-08-21: BUG: Result file for deduplication of two files in Mark mode was not always
+                        written
                     </li>
                     <li>2023-08-18: "How to cite" added (CITATION.cff)</li>
-                    <li>2023-08-12: Files without IDs (record numbers) for each record (e.g. Zotero), get an ID assigned
+                    <li>2023-08-12: Files without IDs (record numbers) for each record (e.g. Zotero), get an ID
+                        assigned
                         by DedupEndNote</li>
-                    <li>2023-08-12: Deduplication of Conference proceedings from Web of Science was very poor (too many
+                    <li>2023-08-12: Deduplication of Conference proceedings from Web of Science was very poor
+                        (too many
                         false positives). This problem has been solved</li>
                 </ul>
             </div>
