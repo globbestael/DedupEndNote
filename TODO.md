@@ -12,8 +12,8 @@
   Github: https://github.com/bytecodealliance/endive
 - should input file be deleted if there is a timeoutexception?
 - fragments.html: why are there 3 arguments for navbar(firstLinkText, firstLinkHref, restartHref)?
-- should we ask Claude of a Pocock skill if there are more ADR's hidden in the program?
 - is the message for too long running dedups clear?
+- Look into https://www.agentsview.io/
   
  
 ## OWASP

@@ -17,20 +17,21 @@
 </head>
 
 <body class="bg-stone-50 text-slate-900 font-sans">
+  <!-- htmlhint-disable -->
   <main class="max-w-5xl mx-auto px-6 py-12 space-y-14">
 
     <!-- Header -->
     <header class="border-b border-slate-200 pb-6">
       <div class="flex items-baseline justify-between">
         <h1 class="text-3xl font-serif font-bold">DedupEndNote — Architecture</h1>
-        <span class="text-sm text-slate-400 font-mono">Spring Boot 4.0 · Java 21</span>
+        <span class="text-sm text-slate-400 font-mono">Spring Boot 4.1 · Java 21</span>
       </div>
       <p class="mt-2 text-sm text-slate-500">
         A web application that deduplicates Bibliographic Items exported from reference managers.
         Runs on port 9777, deployed as a fat JAR.
       </p>
     </header>
-    <!-- htmlhint-disable -->
+
     <!-- ── 1. Data pipeline ─────────────────────────────────────────────── -->
     <section>
       <h2 class="text-xl font-serif font-semibold mb-1">1. Data pipeline</h2>
@@ -86,6 +87,12 @@ flowchart TD
         All five comparison steps must pass for a pair to be considered a Duplicate.
         The comparison short-circuits on the first mismatch, so cheap checks (year, page/DOI) run before expensive ones
         (Jaro-Winkler similarity).
+      </p>
+      <p class="mt-1 text-xs text-slate-500">
+        See <a href="algorithm.md" class="underline"><code
+            class="bg-slate-100 rounded px-1">docs/algorithm.md</code></a>
+        for step details, threshold values, INSUFFICIENT_DATA logic, year-bucketing, special-type handling, and
+        enrichment.
       </p>
     </section>
 
@@ -206,19 +213,13 @@ flowchart TD
       </p>
 
       <p class="text-xs text-slate-500 mb-3">
-        <strong>File-path naming convention:</strong>
-        <code class="bg-slate-100 rounded px-1">String …FileName</code> (bare name, e.g. <code
-          class="bg-slate-100 rounded px-1">t1.txt</code>) is used
-        only at the browser/upload boundary — <code class="bg-slate-100 rounded px-1">@RequestParam</code> fields and
-        the
-        <code class="bg-slate-100 rounded px-1">UtilitiesService</code> helpers called by the controller.
-        <code class="bg-slate-100 rounded px-1">Path …Path</code> (<code
-          class="bg-slate-100 rounded px-1">java.nio.file.Path</code>) is used everywhere in the service layer.
-        The controller converts at the boundary via
-        <code class="bg-slate-100 rounded px-1">resolveInSessionDir()</code> (validates the filename and resolves it
-        inside the session-scoped upload directory
-        <code class="bg-slate-100 rounded px-1">upload-dir/{wssessionId}/</code>) and <code
-          class="bg-slate-100 rounded px-1">createPath()</code> (derives the output path from the input path).
+        <strong>File-path naming convention</strong> (coding rule):
+        <code class="bg-slate-100 rounded px-1">String …FileName</code> at the browser/upload boundary,
+        <code class="bg-slate-100 rounded px-1">Path …Path</code> in the service layer, converted via
+        <code class="bg-slate-100 rounded px-1">resolveInSessionDir()</code> and
+        <code class="bg-slate-100 rounded px-1">createPath()</code>.
+        See the <a href="../CLAUDE.md#file-path-naming-convention" class="underline">CLAUDE.md rule</a> for full
+        details and path helpers.
       </p>
 
       <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -302,7 +303,7 @@ sequenceDiagram
 
     <!-- Footer -->
     <footer class="border-t border-slate-200 pt-4 text-xs text-slate-400 text-right">
-      Generated 2026-05-31, updated 2026-06-11 · replaces <code>docs/architecture.md</code>
+      Generated 2026-05-31, updated 2026-06-14 · replaces <code>docs/architecture.md</code>
     </footer>
 
   </main>
