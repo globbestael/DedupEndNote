@@ -54,7 +54,7 @@
 					}
 				},
 				error: function (jqXHR, data, thrownError) {
-					var response = jQuery.parseJSON(jqXHR.responseText);
+					var response = JSON.parse(jqXHR.responseText);
 					$('#results').html($('<span>').text(response.result));
 					$('#results').addClass('alert-danger');
 					$('#results').removeClass('alert-warning');
