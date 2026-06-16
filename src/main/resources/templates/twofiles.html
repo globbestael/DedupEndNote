@@ -9,73 +9,71 @@
 		var sizeOldFile = 0;
 		var sizeNewFile = 0;
 
-		function checkFileSize(evant, data) {
-			if (data.fileInput[0].id == 'fileUpload1') {
-				sizeOldFile = data.files[0].size
-				$("#oldFile").val(data.files[0].name);
-			} else {
-				sizeNewFile = data.files[0].size
-				$("#newFile").val(data.files[0].name);
-				$("#fileName").val(data.files[0].name);
-			}
-			if ((sizeOldFile + sizeNewFile) > (150 * 1024 * 2014)) {
-				var MB = parseInt((sizeOldFile + sizeNewFile) / (1024 * 1024));
-				alert("The 2 files together are bigger than 150 MB! These files are " + MB + "MB");
-			} else {
-				data.submit();
-			}
+		function buildUploadFormData(file) {
+			var formData = new FormData();
+			formData.append('file', file);
+			formData.append('wssessionId', document.getElementById('wssessionId').value);
+			return formData;
+		}
+
+		function uploadError(xhr) {
+			var response = JSON.parse(xhr.responseText);
+			$('#results').html($('<span>').text(response.result));
+			$('#results').addClass('alert-danger');
+			$('#results').removeClass('alert-warning');
+			disableButton('#fileUpload1');
+			disableButton('#fileUpload2');
+			showDiv('#step2-progress');
 		}
 
 		$(function () {
 
 			connect();
 
-			$('#upload_form').fileupload({
-				dataType: 'json',
-				limitMultiFileUploads: 1,
-				singleFileUploads: true,
-				replaceFileInput: false,
-				autoUpload: true,
-				start: function () {
-					showProgress(0);
-				},
-				add: function (event, data) {
-					checkFileSize(event, data);
-				},
-				done: function (e, data) {
-					if (data.textStatus == "success") {
-						if (data.fileInput[0].id == 'fileUpload1') {
-							$('#results').html($('<span>').text('File ' + data.files[0].name + ' has been uploaded. Waiting for file with NEW bibliographic items'));
-							$('#fileName_old_display').text(data.files[0].name);
-							disableButton('#fileUpload1');
-							enableButton('#fileUpload2');
-							markAsDone('#step1a');
-							markAsActive('#step1b');
-						} else {
-							$('#results').html($('<span>').text('File ' + data.files[0].name + ' has been uploaded. Both files received'));
-							$('#fileName_new_display').text(data.files[0].name);
-							disableButton('#fileUpload2');
-							enableButton('#buttonStartDeduplication');
-							markAsDone('#step1b');
-							markAsDone('#step1');
-							markAsActive('#step2');
-							showDiv('#step2-progress');
-						}
-					}
-				},
-				error: function (jqXHR, data, thrownError) {
-					var response = JSON.parse(jqXHR.responseText);
-					$('#results').html($('<span>').text(response.result));
-					$('#results').addClass('alert-danger');
-					$('#results').removeClass('alert-warning');
-					disableButton('#fileUpload1');
-					disableButton('#fileUpload2');
-					showDiv('#step2-progress');
-				},
-				progressall: function (e, data) {
-					var percentage = parseInt(data.loaded / data.total * 100, 10);
-					$("#progress").html(`<div class="progress-bar" role="progressbar" style="width: ${percentage}%;" aria-valuenow="${percentage}" aria-valuemin="0" aria-valuemax="100">${percentage}%</div>`);
+			$('#fileUpload1').on('change', function(event) {
+				var file = event.target.files[0];
+				if (!file) return;
+				sizeOldFile = file.size;
+				if ((sizeOldFile + sizeNewFile) > (150 * 1024 * 1024)) {
+					alert("The 2 files together are bigger than 150 MB! These files are " + parseInt((sizeOldFile + sizeNewFile) / (1024 * 1024)) + "MB");
+					return;
 				}
+				$("#oldFile").val(file.name);
+				uploadWithXHR(buildUploadFormData(file), '/uploadFile',
+					function() {
+						$('#results').html($('<span>').text('File ' + file.name + ' has been uploaded. Waiting for file with NEW bibliographic items'));
+						$('#fileName_old_display').text(file.name);
+						disableButton('#fileUpload1');
+						enableButton('#fileUpload2');
+						markAsDone('#step1a');
+						markAsActive('#step1b');
+					},
+					uploadError
+				);
+			});
+
+			$('#fileUpload2').on('change', function(event) {
+				var file = event.target.files[0];
+				if (!file) return;
+				sizeNewFile = file.size;
+				if ((sizeOldFile + sizeNewFile) > (150 * 1024 * 1024)) {
+					alert("The 2 files together are bigger than 150 MB! These files are " + parseInt((sizeOldFile + sizeNewFile) / (1024 * 1024)) + "MB");
+					return;
+				}
+				$("#newFile").val(file.name);
+				uploadWithXHR(buildUploadFormData(file), '/uploadFile',
+					function() {
+						$('#results').html($('<span>').text('File ' + file.name + ' has been uploaded. Both files received'));
+						$('#fileName_new_display').text(file.name);
+						disableButton('#fileUpload2');
+						enableButton('#buttonStartDeduplication');
+						markAsDone('#step1b');
+						markAsDone('#step1');
+						markAsActive('#step2');
+						showDiv('#step2-progress');
+					},
+					uploadError
+				);
 			});
 
 			$('#buttonStartDeduplication').on('click', function (event) {

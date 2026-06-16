@@ -32,6 +32,26 @@ function disconnect() {
 	console.log("Disconnected");
 }
 
+function uploadWithXHR(formData, url, onSuccess, onError) {
+	var xhr = new XMLHttpRequest();
+	xhr.upload.addEventListener('progress', function(e) {
+		if (e.lengthComputable) {
+			showProgress(parseInt(e.loaded / e.total * 100, 10));
+		}
+	});
+	xhr.addEventListener('load', function() {
+		if (xhr.status >= 200 && xhr.status < 300) {
+			onSuccess();
+		} else {
+			onError(xhr);
+		}
+	});
+	xhr.addEventListener('error', function() { onError(xhr); });
+	showProgress(0);
+	xhr.open('POST', url);
+	xhr.send(formData);
+}
+
 function connect() {
 	var wssessionId = $("#wssessionId").val();
 	var socket = new SockJS('/gs-guide-websocket');
