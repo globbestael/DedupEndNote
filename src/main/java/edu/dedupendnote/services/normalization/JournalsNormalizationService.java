@@ -3,6 +3,7 @@ package edu.dedupendnote.services.normalization;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -235,9 +236,9 @@ public class JournalsNormalizationService {
 		Set<String> journals = new HashSet<>();
 		for (String j : journalSet) {
 			j = j.strip();
-			if (!j.isEmpty() && !EXCLUDED_JOURNALS_PARTS.contains(j.toLowerCase())) {
-				if (j.equals(j.toUpperCase()) && (j.contains(" ") || j.length() > 6)) {
-					List<String> words = Arrays.asList(j.toLowerCase().split(" "));
+			if (!j.isEmpty() && !EXCLUDED_JOURNALS_PARTS.contains(j.toLowerCase(Locale.ROOT))) {
+				if (j.equals(j.toUpperCase(Locale.ROOT)) && (j.contains(" ") || j.length() > 6)) {
+					List<String> words = Arrays.asList(j.toLowerCase(Locale.ROOT).split(" "));
 					j = words.stream().map(StringUtils::capitalize).collect(Collectors.joining(" "));
 				}
 				String normalized = normalizeJournal(j);

@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.SequencedSet;
 import java.util.Set;
@@ -411,14 +412,14 @@ public class BibliographicItemReader {
 						addNormalizedTitle(fieldContent, bibliographicItem);
 						// Don't do this in BibliographicItemReader::readBibliographicItems because these 2 patterns are only applied to TI
 						// field, not to the other fields which are added to List<String> titles
-						if (REPLY_PATTERN.matcher(fieldContent.toLowerCase()).matches()
+						if (REPLY_PATTERN.matcher(fieldContent.toLowerCase(Locale.ROOT)).matches()
 								|| ERRATUM_PATTERN.matcher(fieldContent).matches()
 								|| (fieldContent.endsWith(")") && SOURCE_PATTERN.matcher(fieldContent).matches())
 								|| COMMENT_PATTERN.matcher(fieldContent).matches()) {
 							bibliographicItem.setReply(true);
 							bibliographicItem.setTitle(fieldContent);
 						}
-						if (PHASE_PATTERN.matcher(fieldContent.toLowerCase()).matches()) {
+						if (PHASE_PATTERN.matcher(fieldContent.toLowerCase(Locale.ROOT)).matches()) {
 							bibliographicItem.setPhase(true);
 						}
 						titleCache = fieldContent;

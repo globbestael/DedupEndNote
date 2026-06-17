@@ -43,6 +43,10 @@ The update should land in the same commit as the code change.
 ./mvnw test -Pvalidation-tests               # Run only validation tests (slow, requires truth files)
 ./mvnw -Dtest=ClassNameTest test              # Run a single test class
 ./mvnw -Dtest=ClassNameTest#methodName test   # Run a single test method
+
+# Security scanning
+./mvnw verify -DskipTests                      # Run SpotBugs + Find Security Bugs (skip tests for speed)
+./mvnw dependency-check:check                  # Run OWASP dependency CVE scan (slow, needs NVD download)
 ```
 
 ## Architecture
@@ -106,6 +110,9 @@ Path.of(inputPath + "_mark.txt")
 Two compile-time plugins are active — violations are **build errors**:
 - **NullAway** (v0.12.12): enforces JSpecify null-safety annotations on all public APIs. Annotate new public methods with `@Nullable` where applicable; unannotated parameters are treated as `@NonNull`.
 - **Error Prone** (v2.42.0): catches common Java mistakes at compile time.
+
+One verify-phase plugin runs during `./mvnw verify`:
+- **SpotBugs + Find Security Bugs** (v4.10.2.0 / findsecbugs v1.14.0): scans compiled bytecode for OWASP Top 10 security patterns. Only `SECURITY`-category bugs are reported (see `spotbugs-security-include.xml`). Known false positives and accepted-risk findings are documented in `spotbugs-security-exclude.xml`.
 
 ## Testing
 

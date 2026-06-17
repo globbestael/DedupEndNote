@@ -1,6 +1,7 @@
 package edu.dedupendnote.services.comparison;
 
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -59,7 +60,7 @@ public class DefaultJournalComparisonService implements JournalComparisonService
                 if (s1.startsWith("http") && s2.startsWith("http") && !s1.equals(s2)) {
                     continue;
                 }
-                Double similarity = JWS.apply(s1.toLowerCase(), s2.toLowerCase());
+                Double similarity = JWS.apply(s1.toLowerCase(Locale.ROOT), s2.toLowerCase(Locale.ROOT));
                 if (isReply && similarity > thresholds.reply()) {
                     log.trace("- 4. Journal similarity above treshold (reply)");
                     return true;
@@ -72,7 +73,7 @@ public class DefaultJournalComparisonService implements JournalComparisonService
                     Claude analysis of Jspecify and NullAway has a minor issue with these charAt() calls. However the Set<String> journals
                     cannot contain null Strings.
                  */
-                if (s1.toLowerCase().charAt(0) != s2.toLowerCase().charAt(0)) {
+                if (s1.toLowerCase(Locale.ROOT).charAt(0) != s2.toLowerCase(Locale.ROOT).charAt(0)) {
                     continue;
                 }
                 if (compareJournals_FirstAsAbbreviation(s1, s2)) {
@@ -83,11 +84,11 @@ public class DefaultJournalComparisonService implements JournalComparisonService
                     log.trace("- 4. compareJournals_FirstAsAbbreviation(2,2) is true");
                     return true;
                 }
-                if (s1.length() < 10 && s1.toUpperCase().equals(s1) && compareJournals_FirstAsInitialism(s1, s2)) {
+                if (s1.length() < 10 && s1.toUpperCase(Locale.ROOT).equals(s1) && compareJournals_FirstAsInitialism(s1, s2)) {
                     log.trace("- 4. compareJournals_FirstAsInitialism(1,2) is true");
                     return true;
                 }
-                if (s2.length() < 10 && s2.toUpperCase().equals(s2) && compareJournals_FirstAsInitialism(s2, s1)) {
+                if (s2.length() < 10 && s2.toUpperCase(Locale.ROOT).equals(s2) && compareJournals_FirstAsInitialism(s2, s1)) {
                     log.trace("- 4. compareJournals_FirstAsInitialism(2,1) is true");
                     return true;
                 }
@@ -152,7 +153,7 @@ public class DefaultJournalComparisonService implements JournalComparisonService
         if ("Samj".equals(words[0])) {
             words[0] = "SAMJ";
         }
-        if (words[0].length() > 2 && words[0].equals(words[0].toUpperCase())
+        if (words[0].length() > 2 && words[0].equals(words[0].toUpperCase(Locale.ROOT))
                 || words.length == 1 && words[0].length() < 6) {
             if ("AJNR".equals(words[0])) {
                 words[0] = "AJN";
