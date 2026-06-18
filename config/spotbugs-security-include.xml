@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter>
+    <!-- Only report bugs in the SECURITY category (Find Security Bugs detectors).
+         SpotBugs correctness/style bugs (EI_EXPOSE_REP2, etc.) are excluded by scope. -->
+    <Match>
+        <Bug category="SECURITY"/>
+    </Match>
+</FindBugsFilter>

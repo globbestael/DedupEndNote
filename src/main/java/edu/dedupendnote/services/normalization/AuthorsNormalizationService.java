@@ -1,8 +1,9 @@
-package edu.dedupendnote.services;
+package edu.dedupendnote.services.normalization;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -118,8 +119,8 @@ public class AuthorsNormalizationService {
 		 * - additions (2nd, Jr, Sr, III) as part of LastName are removed. These additions usually are the 3rd part of the EndNote names
 		 *   (and not used, see above)
 		 */
-		if (lastName.equals(lastName.toUpperCase())) {
-			String[] lastNameParts2 = lastName.toLowerCase().split(" ");
+		if (lastName.equals(lastName.toUpperCase(Locale.ROOT))) {
+			String[] lastNameParts2 = lastName.toLowerCase(Locale.ROOT).split(" ");
 			List<String> lastNameParts = new ArrayList<>(Arrays.asList(lastNameParts2));
 			lastName = lastNameParts.stream().map(StringUtils::capitalize).collect(Collectors.joining(" "));
 		}
@@ -169,7 +170,7 @@ public class AuthorsNormalizationService {
 		 */
 		// @formatter:on
 		if (lastName.contains(" ")) {
-			lastName = lastName.substring(0, 1).toUpperCase() + lastName.substring(1);
+			lastName = lastName.substring(0, 1).toUpperCase(Locale.ROOT) + lastName.substring(1);
 			String[] lastNameParts2 = lastName.split("\\s+");
 			List<String> lastNameParts = new ArrayList<>(Arrays.asList(lastNameParts2));
 			String lastPart = lastNameParts.remove(lastNameParts.size() - 1);

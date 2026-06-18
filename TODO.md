@@ -14,6 +14,8 @@
 - fragments.html: why are there 3 arguments for navbar(firstLinkText, firstLinkHref, restartHref)?
 - is the message for too long running dedups clear?
 - Look into https://www.agentsview.io/
+- ./spotbugs-security-exclude.xml
+  - look at the current content
   
  
 ## OWASP

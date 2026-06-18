@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter>
+
+    <!--
+        CRLF_INJECTION_LOGS: Log calls throughout the service and controller layer include
+        bibliographic text (titles, author names, journal names, file paths) sourced from
+        user-uploaded RIS files. 
+        The theoretical attack — embedding CRLF characters in a bibliographic field to forge log 
+        entries — has minimal impact: logs are debug/trace traces of the deduplication algorithm, 
+        not a security audit trail. Any reader of these
+        logs is an operator, not an external system that would be deceived.
+
+        Accepted risk: log pollution from crafted input. 
+        No sanitisation of log parameters.
+    -->
+    <Match>
+        <Bug pattern="CRLF_INJECTION_LOGS"/>
+    </Match>
+
+    <!--
+        MODIFICATION_AFTER_VALIDATION: The "validation" detected by the scanner is
+        data-processing logic — startsWith("http"), regex pattern checks — used to branch
+        normalisation steps, not security input validation. No bypass attack is possible:
+        the strings are bibliographic metadata, and the "modification" (e.g. replacing
+        "http:" with "https:") is the intended operation.
+    -->
+    <Match>
+        <Bug pattern="MODIFICATION_AFTER_VALIDATION"/>
+    </Match>
+
+    <!--
+        NORMALIZATION_AFTER_VALIDATION: The scanner sees NON_BASIC_LATIN_PATTERN.find() as
+        "validation" and Normalizer.normalize(s, NFD) as "normalisation after validation".
+        In reality the find() is an early-exit optimisation (avoid NFD work if the string is
+        already pure Basic Latin), not a security gate. No bypass is possible.
+    -->
+    <Match>
+        <Bug pattern="NORMALIZATION_AFTER_VALIDATION"/>
+    </Match>
+
+    <!--
+        IMPROPER_UNICODE: All findings are in normalization/comparison services that apply
+        case mapping (toLowerCase/toUpperCase with Locale.ROOT) and Unicode NFD decomposition
+        to bibliographic text for string-similarity comparison. None of these operations are
+        part of a security validation; they are data-normalisation steps for deduplication.
+        Case mapping results are compared against each other (not used to gate access),
+        so the "bypass via Unicode trick" concern does not apply here.
+    -->
+    <Match>
+        <Bug pattern="IMPROPER_UNICODE"/>
+    </Match>
+
+    <!--
+        SPRING_ENDPOINT: findsecbugs tags every @RequestMapping/@GetMapping/@PostMapping
+        method with this pattern as an informational marker ("this is a public entry point —
+        review its security"). It is not an actionable bug finding. All endpoints in
+        DedupEndNoteController have been reviewed in the pre-release security review.
+    -->
+    <Match>
+        <Bug pattern="SPRING_ENDPOINT"/>
+    </Match>
+
+    <!--
+        SERVLET_HEADER / SERVLET_PARAMETER in RateLimitInterceptor: The interceptor uses
+        the wssessionId request parameter (client-supplied) as a rate-limit bucket key, with
+        X-Forwarded-For as a fallback. Both can be spoofed. Accepted because:
+        1. The rate limiter is best-effort DoS prevention, not an authentication gate.
+        2. A spoofed wssessionId creates extra buckets but each is still rate-limited.
+        3. X-Forwarded-For is only used when wssessionId is absent (non-upload requests).
+        See the design note at the top of RateLimitInterceptor.java.
+    -->
+    <Match>
+        <Bug pattern="SERVLET_HEADER"/>
+        <Class name="edu.dedupendnote.controllers.RateLimitInterceptor"/>
+    </Match>
+    <Match>
+        <Bug pattern="SERVLET_PARAMETER"/>
+        <Class name="edu.dedupendnote.controllers.RateLimitInterceptor"/>
+    </Match>
+
+    <!--
+        XSS_SERVLET in RateLimitInterceptor: flags response.getWriter().write(json) at the
+        rate-limit rejection path. The written string is produced by Jackson serializing a
+        hardcoded message ("ERROR: Too many uploads…"); no user input flows into the response
+        body. Content-Type is set to application/json before writing. False positive.
+    -->
+    <Match>
+        <Bug pattern="XSS_SERVLET"/>
+        <Class name="edu.dedupendnote.controllers.RateLimitInterceptor"/>
+    </Match>
+
+</FindBugsFilter>

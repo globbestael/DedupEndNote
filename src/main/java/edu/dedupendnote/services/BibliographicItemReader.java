@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.SequencedSet;
 import java.util.Set;
@@ -25,6 +26,11 @@ import edu.dedupendnote.domain.BibliographicItem;
 import edu.dedupendnote.domain.IsbnIssnRecord;
 import edu.dedupendnote.domain.PageRecord;
 import edu.dedupendnote.domain.TitleRecord;
+import edu.dedupendnote.services.normalization.AuthorsNormalizationService;
+import edu.dedupendnote.services.normalization.JournalsNormalizationService;
+import edu.dedupendnote.services.normalization.NormalizationService;
+import edu.dedupendnote.services.normalization.PagesNormalizationService;
+import edu.dedupendnote.services.normalization.TitlesNormalizationService;
 import lombok.extern.slf4j.Slf4j;
 
 /*
@@ -406,14 +412,14 @@ public class BibliographicItemReader {
 						addNormalizedTitle(fieldContent, bibliographicItem);
 						// Don't do this in BibliographicItemReader::readBibliographicItems because these 2 patterns are only applied to TI
 						// field, not to the other fields which are added to List<String> titles
-						if (REPLY_PATTERN.matcher(fieldContent.toLowerCase()).matches()
+						if (REPLY_PATTERN.matcher(fieldContent.toLowerCase(Locale.ROOT)).matches()
 								|| ERRATUM_PATTERN.matcher(fieldContent).matches()
 								|| (fieldContent.endsWith(")") && SOURCE_PATTERN.matcher(fieldContent).matches())
 								|| COMMENT_PATTERN.matcher(fieldContent).matches()) {
 							bibliographicItem.setReply(true);
 							bibliographicItem.setTitle(fieldContent);
 						}
-						if (PHASE_PATTERN.matcher(fieldContent.toLowerCase()).matches()) {
+						if (PHASE_PATTERN.matcher(fieldContent.toLowerCase(Locale.ROOT)).matches()) {
 							bibliographicItem.setPhase(true);
 						}
 						titleCache = fieldContent;

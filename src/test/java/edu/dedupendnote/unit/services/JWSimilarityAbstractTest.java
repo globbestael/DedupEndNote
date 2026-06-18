@@ -16,7 +16,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import com.github.difflib.text.DiffRow;
 import com.github.difflib.text.DiffRowGenerator;
 
-import edu.dedupendnote.services.NormalizationService;
+import edu.dedupendnote.services.normalization.NormalizationService;
 import info.debatty.java.stringsimilarity.RatcliffObershelp;
 
 /*

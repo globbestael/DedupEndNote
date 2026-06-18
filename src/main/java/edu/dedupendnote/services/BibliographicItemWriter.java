@@ -18,6 +18,7 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Service;
 
 import edu.dedupendnote.domain.BibliographicItem;
+import edu.dedupendnote.services.normalization.NormalizationService;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j

@@ -18,7 +18,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import edu.dedupendnote.domain.BibliographicItem;
 import edu.dedupendnote.services.BibliographicItemReader;
-import edu.dedupendnote.services.DefaultJournalComparisonService;
+import edu.dedupendnote.services.comparison.DefaultJournalComparisonService;
 import edu.dedupendnote.unit.BaseTest;
 import lombok.extern.slf4j.Slf4j;
 

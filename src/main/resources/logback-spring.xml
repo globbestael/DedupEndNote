@@ -32,7 +32,6 @@
 	</appender>
 	<logger name="edu.dedupendnote"								level="info" />
  	<logger name="edu.dedupendnote.services"					level="info" />
- 	<logger name="edu.dedupendnote.services.IOService"			level="info" />
 	<logger name="org.apache.commons" 							level="warn" />
 	<logger name="org.springframework" 							level="warn" />
 	<logger name="org.springframework.beans"					level="warn" />

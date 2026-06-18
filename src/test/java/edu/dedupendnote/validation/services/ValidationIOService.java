@@ -17,7 +17,7 @@ import org.springframework.stereotype.Service;
 
 import edu.dedupendnote.domain.BibliographicItemDB;
 import edu.dedupendnote.services.BibliographicItemReader;
-import edu.dedupendnote.services.NormalizationService;
+import edu.dedupendnote.services.normalization.NormalizationService;
 import edu.dedupendnote.services.UtilitiesService;
 import lombok.extern.slf4j.Slf4j;
 

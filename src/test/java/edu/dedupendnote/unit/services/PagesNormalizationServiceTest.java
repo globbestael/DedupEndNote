@@ -12,7 +12,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import edu.dedupendnote.services.BibliographicItemReader;
-import edu.dedupendnote.services.PagesNormalizationService;
+import edu.dedupendnote.services.normalization.PagesNormalizationService;
 import edu.dedupendnote.domain.PageRecord;
 import edu.dedupendnote.domain.BibliographicItem;
 

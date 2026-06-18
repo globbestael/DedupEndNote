@@ -11,11 +11,11 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Controller;
 
-import edu.dedupendnote.services.DefaultAuthorsComparisonService;
-import edu.dedupendnote.services.DefaultJournalComparisonService;
-import edu.dedupendnote.services.DefaultPagesComparisonService;
-import edu.dedupendnote.services.DefaultTitleComparisonService;
-import edu.dedupendnote.services.FieldComparators;
+import edu.dedupendnote.services.comparison.DefaultAuthorsComparisonService;
+import edu.dedupendnote.services.comparison.DefaultJournalComparisonService;
+import edu.dedupendnote.services.comparison.DefaultPagesComparisonService;
+import edu.dedupendnote.services.comparison.DefaultTitleComparisonService;
+import edu.dedupendnote.services.comparison.FieldComparators;
 
 import lombok.extern.slf4j.Slf4j;
 

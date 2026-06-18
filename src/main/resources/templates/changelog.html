@@ -27,7 +27,6 @@
 
                 <h2 class="bg-success-subtle">1.1.7 (2026-06-03)</h2>
                 <ul>
-                    <li>Upgrade to Spring Boot 4.1.0</li>
                     <li>Bug fix: the Details page showed a hardcoded earliest publication year instead of
                         the actual value used by the application</li>
                     <li>Added a Glossary to the Details page</li>
@@ -43,13 +42,19 @@
                             <li>Next to the limit of max input file size of 150MB, there is a new limit of 100,000 input
                                 records. For two-files deduplication
                                 these limit apply to the combination of both files</li>
-
+                            <li>Added SpotBugs + Find Security Bugs to the POM for automated OWASP Top 10 Static
+                                Application Security Testing</li>
                         </ul>
                     </li>
                     <li>Internal:
                         <ul>
                             <li>lots of refactorings</li>
+                            <li>Upgrade to Spring Boot 4.1.0</li>
+                            <li>Upgrade to Jquery 4.0.0</li>
+                            <li>Removed Javasrcript library blueimp-file-upload (Github repository archived)</li>
                             <li>Added dependency-check-maven to the POM</li>
+                            <li>Added spotbugs-maven-plugin to the POM, inclusions and exclusions in the XML files in
+                                ./config. ADR in ./docs/adr/0006-findsecbugs-owasp-sast.md</li>
                         </ul>
                     </li>
                     <li>For developers:
