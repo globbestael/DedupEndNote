@@ -4,11 +4,14 @@
     <!--
         CRLF_INJECTION_LOGS: Log calls throughout the service and controller layer include
         bibliographic text (titles, author names, journal names, file paths) sourced from
-        user-uploaded RIS files. The theoretical attack — embedding CRLF characters in a
-        bibliographic field to forge log entries — has minimal impact: logs are debug/trace
-        traces of the deduplication algorithm, not a security audit trail. Any reader of these
+        user-uploaded RIS files. 
+        The theoretical attack — embedding CRLF characters in a bibliographic field to forge log 
+        entries — has minimal impact: logs are debug/trace traces of the deduplication algorithm, 
+        not a security audit trail. Any reader of these
         logs is an operator, not an external system that would be deceived.
-        Accepted risk: log pollution from crafted input. No sanitisation of log parameters.
+
+        Accepted risk: log pollution from crafted input. 
+        No sanitisation of log parameters.
     -->
     <Match>
         <Bug pattern="CRLF_INJECTION_LOGS"/>
