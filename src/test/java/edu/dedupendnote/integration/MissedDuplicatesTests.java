@@ -41,6 +41,11 @@ class MissedDuplicatesTests extends AbstractIntegrationTest {
 	 * FIXME: There is a big overlap with ValidationTests::writeFNandFPresults in initialization of the memoryAppender
 	 */
 	@BeforeEach
+	void initTestDir() {
+		testDir = baseDir.resolve("integration");
+	}
+
+	@BeforeEach
 	void addMemoryAppender() {
 		List<Logger> loggers = new ArrayList<>();
 		List<String> loggerNames = List.of("edu.dedupendnote.services.DeduplicationService",
@@ -106,8 +111,8 @@ class MissedDuplicatesTests extends AbstractIntegrationTest {
 		 * On 2025-12-18 copying the label from the bibliographicItem to the pivot has been disabled
 		 */
 		"'/problems/Rayyan/missed_10_11.txt', 2, 1", // Rayyan
-		"'/ASySD/dedupendnote_files/missed_duplicates/SRSR_Human_missed_2_4.txt', 4, 2", // Cochrane
-		"'/ASySD/dedupendnote_files/missed_duplicates/SRSR_Human_missed_2_6.txt', 6, 3", // Cochrane
+		"'/problems/missed_duplicates/SRSR_Human_missed_2_4.txt', 4, 2", // Cochrane
+		"'/problems/missed_duplicates/SRSR_Human_missed_2_6.txt', 6, 3", // Cochrane
 		// "'/ASySD/dedupendnote_files/missed_duplicates/SRSR_Human_missed_3.txt', 2, 2", // book chapters
 		// "'/ASySD/dedupendnote_files/missed_duplicates/SRSR_Human_missed_4.txt', 2, 2", // book chapters
 		// "'/ASySD/dedupendnote_files/missed_duplicates/Neuroimaging_missed_1.txt', 2, 2",

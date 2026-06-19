@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -41,6 +42,11 @@ class AuthorExperimentsTests extends AbstractIntegrationTest {
 
 	@Autowired
 	BibliographicItemReader bibliographicItemReader;
+
+	@BeforeEach
+	void initTestDir() {
+		testDir = baseDir.resolve("validation");
+	}
 
 	@Test
 	void higherAuthorThresholdsReduceSensitivityAndIncreaseSpecificity() throws IOException {

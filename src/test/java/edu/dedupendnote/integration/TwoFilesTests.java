@@ -16,10 +16,9 @@ class TwoFilesTests extends AbstractIntegrationTest {
 	@Autowired
 	DeduplicationService deduplicationService;
 
-	@Override
 	@BeforeEach
 	void initTestDir() {
-		testDir = baseDir.resolve("experiments");
+		testDir = baseDir.resolve("integration").resolve("experiments");
 	}
 
 	@Test

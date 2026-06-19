@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import edu.dedupendnote.services.BibliographicItemReader;
@@ -20,6 +21,11 @@ import lombok.extern.slf4j.Slf4j;
 class AuthorsBaseTest extends BaseTest {
 
 	List<Triple> localTriples = new ArrayList<>();
+
+	@BeforeEach
+	void initTestDir() {
+		testDir = baseDir.resolve("unit");
+	}
 
 	@Test
 	void fillerTest() {

@@ -14,6 +14,7 @@ import java.util.stream.Stream;
 
 import org.assertj.core.api.SoftAssertions;
 // import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -27,6 +28,11 @@ import edu.dedupendnote.services.normalization.TitlesNormalizationService;
 
 // TODO: For boolean compare() tests on DefaultTitleComparisonService, see DefaultTitleComparisonServiceTest.
 class JWSimilarityTitleTest extends BaseTest {
+
+	@BeforeEach
+	void initTestDir() {
+		testDir = baseDir.resolve("unit");
+	}
 
 	@ParameterizedTest(name = "{index}: jaroWinkler({0}, {1})={2}")
 	@MethodSource("positiveArgumentProvider")

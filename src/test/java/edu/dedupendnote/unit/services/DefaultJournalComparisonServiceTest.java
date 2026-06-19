@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -25,6 +26,11 @@ import lombok.extern.slf4j.Slf4j;
 // TODO: compareIssns() tests on DefaultJournalComparisonService are in DefaultJournalComparisonServiceIssnTest.
 @Slf4j
 class DefaultJournalComparisonServiceTest extends BaseTest {
+
+	@BeforeEach
+	void initTestDir() {
+		testDir = baseDir.resolve("unit");
+	}
 
 	/*
 	 * full comparison for normalized journals: positive

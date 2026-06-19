@@ -4,7 +4,6 @@ import java.nio.file.Path;
 import java.util.List;
 
 import org.apache.commons.text.similarity.JaroWinklerSimilarity;
-import org.junit.jupiter.api.BeforeEach;
 import org.slf4j.LoggerFactory;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
@@ -13,14 +12,16 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class BaseTest {
-
-	protected Path baseDir = Path.of(System.getProperty("user.home", "")).resolve("dedupendnote_files");
+	/*
+		This Java initialization instead of an application.properties key-value
+		is necessary bcause unit tests don't start a Spring context.
+		Same initialization in AbstractIntegrationTest.
+	
+		Reading the properties file in @BeforeEach function with content "dedup.base_dir = ${user.home}/dedupendnote_input_files"
+		does NOT resolve the placeholder.
+	 */
+	protected Path baseDir = Path.of(System.getProperty("user.home", "")).resolve("dedupendnote_input_files");
 	protected Path testDir = baseDir;
-
-	@BeforeEach
-	void initTestDir() {
-		testDir = baseDir;
-	}
 
 	protected JaroWinklerSimilarity jws = new JaroWinklerSimilarity();
 
