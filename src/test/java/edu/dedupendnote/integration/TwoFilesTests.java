@@ -18,7 +18,7 @@ class TwoFilesTests extends AbstractIntegrationTest {
 
 	@BeforeEach
 	void initTestDir() {
-		testDir = baseDir.resolve("integration").resolve("experiments");
+		testDir = baseDir.resolve("integration").resolve("other");
 	}
 
 	@Test
@@ -27,8 +27,8 @@ class TwoFilesTests extends AbstractIntegrationTest {
 		Path newInputPath = testDir.resolve("TwoFiles_2.txt");
 		DeduplicationMode mode = DeduplicationMode.REMOVE;
 
-		String resultString = deduplicationService.deduplicateTwoFiles(newInputPath, oldInputPath,
-				mode, message -> {});
+		String resultString = deduplicationService.deduplicateTwoFiles(newInputPath, oldInputPath, mode, message -> {
+		});
 		System.err.println(resultString);
 		assertThat(resultString).startsWith(
 				"DONE: DedupEndNote removed 551 bibliographic items from the new set, and has written 114 bibliographic items.");
@@ -41,8 +41,8 @@ class TwoFilesTests extends AbstractIntegrationTest {
 		Path newInputPath = testDir.resolve("Recurrence_rate_search_updated_sept_18_deduplicated.txt");
 		DeduplicationMode mode = DeduplicationMode.REMOVE;
 
-		String resultString = deduplicationService.deduplicateTwoFiles(newInputPath, oldInputPath,
-				mode, message -> {});
+		String resultString = deduplicationService.deduplicateTwoFiles(newInputPath, oldInputPath, mode, message -> {
+		});
 		System.err.println(resultString);
 		assertThat(resultString).startsWith("ERROR: The second input file contains records without IDs");
 	}
