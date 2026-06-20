@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.nio.file.Path;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -20,11 +21,6 @@ class DedupEndNoteApplicationTests extends AbstractIntegrationTest {
 	@BeforeEach
 	void initTestDir() {
 		testDir = baseDir.resolve("integration").resolve("other");
-	}
-
-	@Test
-	void contextLoads() {
-		assertThat(deduplicationService).isNotNull();
 	}
 
 	@Test
@@ -67,6 +63,32 @@ class DedupEndNoteApplicationTests extends AbstractIntegrationTest {
 				+ inputPath.getFileName() + " are not unique");
 	}
 
-	// FIXME: tests for mode = true;
+	@Test
+	void deduplicateTwoFiles_OK() {
+		Path oldInputPath = testDir.resolve("TwoFiles_1.txt");
+		Path newInputPath = testDir.resolve("TwoFiles_2.txt");
+		DeduplicationMode mode = DeduplicationMode.REMOVE;
+
+		String resultString = deduplicationService.deduplicateTwoFiles(newInputPath, oldInputPath, mode, message -> {
+		});
+		System.err.println(resultString);
+		assertThat(resultString).startsWith(
+				"DONE: DedupEndNote removed 551 bibliographic items from the new set, and has written 114 bibliographic items.");
+	}
+
+	@Disabled("TODO: Why was this disabled")
+	@Test
+	void files_without_IDs() {
+		Path oldInputPath = testDir.resolve("Recurrance_rate_EndNote_Library_original_deduplicated.txt");
+		Path newInputPath = testDir.resolve("Recurrence_rate_search_updated_sept_18_deduplicated.txt");
+		DeduplicationMode mode = DeduplicationMode.REMOVE;
+
+		String resultString = deduplicationService.deduplicateTwoFiles(newInputPath, oldInputPath, mode, message -> {
+		});
+		System.err.println(resultString);
+		assertThat(resultString).startsWith("ERROR: The second input file contains records without IDs");
+	}
+
+	// FIXME: tests for DeduplicationMode.MARK;
 
 }
