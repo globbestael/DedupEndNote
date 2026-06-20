@@ -48,9 +48,9 @@ A first correction:
 ```
 - [HOME]/dedupendnote_files_input
     - integration
-        - experiments
+        - other                 (they were not experiments)
         - missed_duplicates     (Rayyan within problems were also missed duplicates)
-    - unit                      (all files sre bigger selections for unit tests)
+    - unit                      (all files are bigger selections for unit tests)
     - validation
         - AI_subset
         - ASySD
