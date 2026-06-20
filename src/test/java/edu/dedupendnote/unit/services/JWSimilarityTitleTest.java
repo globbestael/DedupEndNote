@@ -10,6 +10,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import org.assertj.core.api.SoftAssertions;
@@ -460,7 +461,7 @@ class JWSimilarityTitleTest extends BaseTest {
 
 	@Test
 	void testErrataFromFile() throws IOException {
-		Path path = testDir.resolve("all/all__ST_TI_ending_with_round_bracket.txt");
+		Path path = testDir.resolve("All__ST_TI_ending_with_round_bracket.txt");
 		List<String> lines = Files.readAllLines(path);
 
 		List<String> results = new ArrayList<>();
@@ -479,7 +480,7 @@ class JWSimilarityTitleTest extends BaseTest {
 
 	@Test
 	void testPositiveCommentsFromFile() throws IOException {
-		Path path = testDir.resolve("all/All__comment__positive_examples.txt");
+		Path path = testDir.resolve("All__comment__positive_examples.txt");
 		List<String> lines = Files.readAllLines(path);
 
 		List<String> nonMatchedCases = new ArrayList<>();
@@ -506,7 +507,7 @@ class JWSimilarityTitleTest extends BaseTest {
 
 	@Test
 	void testNegativeCommentsFromFile() throws IOException {
-		Path path = testDir.resolve("all/All__comment__negative_examples.txt");
+		Path path = testDir.resolve("All__comment__negative_examples.txt");
 		List<String> lines = Files.readAllLines(path);
 
 		List<String> negativeResults = new ArrayList<>();
@@ -530,7 +531,7 @@ class JWSimilarityTitleTest extends BaseTest {
 
 	@Test
 	void testPositiveCommentsAndRepliesFromFile() throws IOException {
-		Path path = testDir.resolve("all/All__comment_AND_reply__positive_examples.txt");
+		Path path = testDir.resolve("All__comment_AND_reply__positive_examples.txt");
 		List<String> lines = Files.readAllLines(path);
 
 		List<String> nonMatchedCases = new ArrayList<>();
@@ -554,6 +555,41 @@ class JWSimilarityTitleTest extends BaseTest {
 		// softAssertions.assertThat((100 * matchedCases.size()) / lines.size())
 		// 		.as("Only " + (100 * matchedCases.size()) / lines.size() + "% of positive cases caught").isEqualTo(100);
 		softAssertions.assertAll();
+	}
+
+	@Test
+	void lineSeparator() {
+		String lineSep = "\u2028"; // Unicode LINE SEPARATOR
+		String line = "ST  - Total Pancreatectomy With Islet Cell Transplantation" + lineSep
+				+ "for the Treatment of Pancreatic Cancer";
+		Stream<String> lines = line.lines();
+		List<String> linesList = lines.toList();
+
+		assertThat(linesList.size()).as("LINE SEPARATOR is not an end of line character").isEqualTo(1);
+
+		// LINE SEPARATOR messes with '.*$'
+		Matcher matcher = BibliographicItemReader.RIS_LINE_PATTERN.matcher(line);
+		assertThat(matcher.matches()).as("LINE SEPARATOR messes with '.*$'").isFalse();
+
+		// Replacing the LINE SEPARATOR is necessary
+		line = line.replace(lineSep, " ");
+		matcher = BibliographicItemReader.RIS_LINE_PATTERN.matcher(line);
+
+		assertThat(matcher.matches()).isTrue();
+		assertThat(matcher.group(1)).isEqualTo("ST");
+		assertThat(matcher.group(3)).endsWith("for the Treatment of Pancreatic Cancer");
+	}
+
+	// FIXME: This test uses a local copy of part of BibliographicItemReader.REPLY_PATTERN (which is private
+	// and has since grown). Check whether REPLY_PATTERN is tested anywhere else; if not, expose it
+	// (@VisibleForTesting / package-private) so the full pattern can be asserted here instead.
+	@Test
+	void checkReply() {
+		Pattern replyPattern = Pattern.compile("(.*\\breply\\b.*|.*author(.+)respon.*|^response$)");
+		Stream<String> titles = Stream
+				.of("Could TIPS be Applied in All Kinds of Portal Vein Thrombosis: We are not Sure! Reply", "Reply");
+
+		titles.forEach(t -> assertThat(replyPattern.matcher(t.toLowerCase()).matches()).isTrue());
 	}
 
 }

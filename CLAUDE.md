@@ -136,7 +136,7 @@ Tests live under three roots, each with a corresponding Maven profile:
 - **`unit/services/DefaultJournalComparisonServiceTest extends BaseTest`** — boolean `compare()` tests for journals (inline parameterized) and a file-based test against validated journal pairs; absorbed `JournalsBaseTest`
 - **`unit/services/JWSimilarityTitleTest extends BaseTest`** — title JWS-similarity tests; also holds the out-of-scope `BibliographicItemReader` pattern tests
 - **`unit/services/JWSimilarityAuthorTest extends AuthorsBaseTest`** — plain JUnit 5, no Spring; tests raw `jws.apply` score
-- Standalone unit test classes (no Spring context): `NormalizationService*Test` (6 files), `DefaultJournalComparisonServiceIssnTest`, `DefaultJournalComparisonServiceTest`, `DefaultTitleComparisonServiceTest`, `JWSimilarityJournalTest`, `JWSimilarityAbstractTest`, `AuthorsComparisonThresholdTest`, `AuthorVariantsExperimentsTest`, etc.
+- Standalone unit test classes (no Spring context): `NormalizationService*Test` (7 files, including `NormalizationServiceIssnTest`), `DefaultJournalComparisonServiceIssnTest`, `DefaultJournalComparisonServiceTest`, `DefaultTitleComparisonServiceTest`, `JWSimilarityJournalTest`, `JWSimilarityAbstractTest`, `AuthorsComparisonThresholdTest`, `AuthorVariantsExperimentsTest`, etc.
 
 **Integration (`edu.dedupendnote.integration.*`)**
 - **`integration/AbstractIntegrationTest`** — base for all `@SpringBootTest` tests; provides `@ActiveProfiles("test")`, `@MockitoBean SimpMessagingTemplate`, `Path baseDir`, `Path testDir`, `@BeforeAll` (log level → INFO), `@BeforeEach initTestDir()`. Subclasses override `initTestDir()` when they need a subdirectory.

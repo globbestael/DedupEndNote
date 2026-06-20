@@ -42,7 +42,7 @@ class MissedDuplicatesTests extends AbstractIntegrationTest {
 	 */
 	@BeforeEach
 	void initTestDir() {
-		testDir = baseDir.resolve("integration");
+		testDir = baseDir.resolve("integration/missed_duplicates");
 	}
 
 	@BeforeEach
@@ -68,30 +68,36 @@ class MissedDuplicatesTests extends AbstractIntegrationTest {
 	/*
 	 * Solved cases
 	 *
-	 	//  "'/own/missed_duplicates/9165.txt', 2, 1", // solved
-		//  "'/own/missed_duplicates/Rofo.txt', 3, 1",
-		// "'/own/missed_duplicates/chinese_and_english_title.txt', 2, 1", // 1 ST in Chinese, 1 ST and 2 TI in English, 1 T3 = '-1'
-		// Solved: authors in ALL are treated better
-		// "'/ASySD/dedupendnote_files/missed_duplicates/SRSR_Human_52927.txt', 2, 1",
-		// "'/problems/AI_Query_2022_missed_duplicates_1.txt', 2, 1",
-		// "'/problems/AI_Query_2022_missed_duplicates_2.txt', 4, 1",
-		// "'/problems/AI_Query_2022_missed_duplicates_3.txt', 2, 1",
-		// "'/problems/BIG_SET_missed_1.txt', 4, 1", 
-		// "'/problems/BIG_SET_missed_2.txt', 3, 1",
-		// "'/problems/Rayyan/missed_251_252.txt', 2, 2", // SOLVED: Rayyan: both isSeveralPages = false
-		// "'/problems/TIL_missed_duplicates.txt', 3, 1",
-		// "'/problems/TIL_missed_duplicates_3.txt', 4, 1", // SOLVED: same pages and DOI, different journal
-		// "'/problems/TIL_missed_duplicates_3.txt', 4, 1", // SOLVED: same pages and DOI, different journal
-		// "'Wilson_Emma_2025/missed_duplicates/Birtele_M.txt', 2, 2" // different pages
+		// "'AI_Query_2022_missed_duplicates_1.txt', 2, 1",
+		// "'AI_Query_2022_missed_duplicates_2.txt', 4, 1",
+		// "'AI_Query_2022_missed_duplicates_3.txt', 2, 1",
+		// "'AI_Query_2022_missed_duplicates_4.txt', 2, 2", // title too different
+		// "'AI_Query_2022_missed_duplicates_5.txt', 2, 2", // ISSN same, ISBN different
+		// "'BIG_SET_9165.txt', 2, 1", // solved
+		// "'BIG_SET_Rofo.txt', 3, 1",
+		// "'BIG_SET_chinese_and_english_title.txt', 2, 1", // 1 ST in Chinese, 1 ST and 2 TI in English, 1 T3 = '-1'
+		// "'BIG_SET_SP_C7_none.txt', 3, 1", // after refactoring pages: record with SP, C7 and none
+		// "'BIG_SET_missed_3.txt', 3, 2", 
+		// "'SRSR_Human_52927.txt', 2, 1",
+		// "'BIG_SET_missed_1.txt', 4, 1", 
+		// "'BIG_SET_missed_2.txt', 3, 1",
+		// "'Cardiac_Human_missed_duplicates_1.txt', 2, 2",
+		// "'Rayyan_missed_251_252.txt', 2, 2", // SOLVED: Rayyan: both isSeveralPages = false
+		// "'Neuroimaging_missed_1.txt', 2, 2",
+		// "'Semaglutide_wrong_duplicates.txt', 4, 2",
+		// "'SRSR_Human_missed_1.txt', 6, 2", // Cochrane
+		// "'SRSR_Human_missed_3.txt', 2, 2", // book chapters
+		// "'SRSR_Human_missed_4.txt', 2, 2", // book chapters 	
+		// "'test805_missed_duplicates_1.txt', 2, 1", 
+		// "'TIL_missed_duplicates.txt', 3, 1",
+		// "'TIL_missed_duplicates_2.txt', 3, 1", // different pages, same DOI
+		// "'TIL_missed_duplicates_3.txt', 4, 1", // SOLVED: same pages and DOI, different journal
+		// "'TIL_Zotero_missed_duplicates_1.txt', 5, 2",
+		// "'Wilson_Emma_Birtele_M.txt', 2, 2" // different pages
 	 */
 	@ParameterizedTest
 	@CsvSource({
-		// "'/own/missed_duplicates/SP_C7_none.txt', 3, 1", // after refactoring pages: record with SP, C7 and none
-		// "'/problems/test805_missed_duplicates_1.txt', 2, 1", 
-		// "'/problems/AI_Query_2022_missed_duplicates_4.txt', 2, 2", // title too different
-		// "'/problems/AI_Query_2022_missed_duplicates_5.txt', 2, 2", // ISSN same, ISBN different
-		// "'/ASySD/dedupendnote_files/missed_duplicates/Cardiac_Human_missed_duplicates_1.txt', 2, 2",
-		// "'/ASySD/dedupendnote_files/missed_duplicates/SRSR_Human_missed_1.txt', 6, 2", // Cochrane
+
 		/*
 		 * Originally
 		 * False positives or negatives for these 2 versions of Cochrane review CD006069
@@ -110,24 +116,14 @@ class MissedDuplicatesTests extends AbstractIntegrationTest {
 		 * 
 		 * On 2025-12-18 copying the label from the bibliographicItem to the pivot has been disabled
 		 */
-		"'/problems/Rayyan/missed_10_11.txt', 2, 1", // Rayyan
-		"'/problems/missed_duplicates/SRSR_Human_missed_2_4.txt', 4, 2", // Cochrane
-		"'/problems/missed_duplicates/SRSR_Human_missed_2_6.txt', 6, 3", // Cochrane
-		// "'/ASySD/dedupendnote_files/missed_duplicates/SRSR_Human_missed_3.txt', 2, 2", // book chapters
-		// "'/ASySD/dedupendnote_files/missed_duplicates/SRSR_Human_missed_4.txt', 2, 2", // book chapters
-		// "'/ASySD/dedupendnote_files/missed_duplicates/Neuroimaging_missed_1.txt', 2, 2",
-		// "'/problems/Semaglutide_wrong_duplicates.txt', 4, 2",
-		// "'/problems/BIG_SET_missed_3.txt', 3, 2", 
-		// "'/problems/TIL_missed_duplicates_2.txt', 3, 1", // different pages, same DOI
-		// "'/TIL/missed_duplicates_TIL_Zotero_1.txt', 5, 2",
+		"'Rayyan_missed_10_11.txt', 2, 1",
+		"'SRSR_Human_missed_2_4.txt', 4, 2", // Cochrane
+		"'SRSR_Human_missed_2_6.txt', 6, 3", // Cochrane
 	})
 	// @formatter:on
 	void deduplicateMissedDuplicates(String fileName, int total, int totalWritten) {
 		log.debug("Log level should be debug");
-		/*
-			FIXME: Why is this conditional necessary. The @CsvSource should use relative paths.
-			There probably should be a testUtility function that creates the inputPath and checks if the file exists.
-		 */ Path inputPath = testDir.resolve(fileName.startsWith("/") ? fileName.substring(1) : fileName);
+		Path inputPath = testDir.resolve(fileName);
 		DeduplicationMode mode = DeduplicationMode.REMOVE;
 		assertThat(inputPath).exists();
 

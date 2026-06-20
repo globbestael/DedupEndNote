@@ -355,7 +355,7 @@ class ValidationTests extends AbstractIntegrationTest {
 	 * Deduplicates the whole file, but checks only the results of the validated subset
 	 */
 	ValidationResult checkResults_BIG_SET() throws IOException {
-		return checkResultsFor("BIG_SET", testDir.resolve("own/BIG_SET.txt"));
+		return checkResultsFor("BIG_SET", testDir.resolve("BIG_SET/BIG_SET.txt"));
 	}
 
 	ValidationResult checkResults_Clinical_trials() throws IOException {
@@ -502,7 +502,7 @@ class ValidationTests extends AbstractIntegrationTest {
 	@Disabled("Only needed for initialisation of TRUTH file")
 	@Test
 	void createRisWithTRUTH_BIG_SET_DS() throws IOException {
-		Path truthPath = testDir.resolve("own/BIG_SET_TRUTH.txt");
+		Path truthPath = testDir.resolve("BIG_SET/BIG_SET_TRUTH.txt");
 		Path inputPath = testDir.resolve("Dedupe-sweep/BIG_SET_mark_DS.txt");
 		Path outputPath = testDir.resolve("Dedupe-sweep/BIG_SET_mark_DS_with_TRUTH.txt");
 
@@ -524,7 +524,7 @@ class ValidationTests extends AbstractIntegrationTest {
 	@Disabled("Only needed for initialisation of TRUTH file")
 	@Test
 	void createRisWithTRUTH_BIG_SET() throws IOException {
-		createRisWithTRUTHFor(testDir.resolve("own/BIG_SET.txt"));
+		createRisWithTRUTHFor(testDir.resolve("BIG_SET/BIG_SET.txt"));
 		assertThat(1*1).isEqualTo(1);
 	}
 
