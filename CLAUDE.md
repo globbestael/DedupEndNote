@@ -140,7 +140,7 @@ Tests live under three roots, each with a corresponding Maven profile:
 
 **Integration (`edu.dedupendnote.integration.*`)**
 - **`integration/AbstractIntegrationTest`** — base for all `@SpringBootTest` tests; provides `@ActiveProfiles("test")`, `@MockitoBean SimpMessagingTemplate`, `Path baseDir`, `Path testDir`, `@BeforeAll` (log level → INFO), `@BeforeEach initTestDir()`. Subclasses override `initTestDir()` when they need a subdirectory.
-- Integration test classes extending `AbstractIntegrationTest`: `DedupEndNoteApplicationTests`, `MissedDuplicatesTests`, `TwoFilesTests`
+- Integration test classes extending `AbstractIntegrationTest`: `DeduplicationServiceTests` (one-file and two-file deduplication smoke tests), `MissedDuplicatesTests`
 
 **Validation (`edu.dedupendnote.validation.*`)**
 - **`validation/ValidationTests`** — measures sensitivity/specificity of the production deduplication engine across 14 validated real-world datasets; not a regression guard but a performance monitor. Requires truth files in `~/dedupendnote_files` (not in git). Run with `-Pvalidation-tests`.

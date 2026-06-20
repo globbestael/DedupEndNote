@@ -14,7 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import edu.dedupendnote.domain.DeduplicationMode;
 import edu.dedupendnote.services.DeduplicationService;
 
-class DedupEndNoteApplicationTests extends AbstractIntegrationTest {
+class DeduplicationServiceTests extends AbstractIntegrationTest {
 	@Autowired
 	DeduplicationService deduplicationService;
 
