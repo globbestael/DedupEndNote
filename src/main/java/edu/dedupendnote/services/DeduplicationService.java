@@ -260,25 +260,30 @@ l						 * 		V 		W 		X
 
 		searchYearOneFile(bibliographicItems, progressReporter);
 
-		if (mode == DeduplicationMode.MARK) {
-			int numberWritten = bibliographicItemWriter.writeMarkedBibliographicItems(bibliographicItems, inputPath,
-					outputPath);
-			long labeledBibliographicItems = bibliographicItems.stream().filter(r -> r.getLabel() != null).count();
-			String s = "DONE: DedupEndNote has written " + numberWritten + " bibliographic items with "
-					+ labeledBibliographicItems + " duplicates marked in the Label field.";
-			progressReporter.accept(s);
-			return s;
-		}
-
-		progressReporter.accept("Enriching the " + bibliographicItems.size() + " deduplicated results");
-		enrichmentService.enrich(bibliographicItems);
-		progressReporter.accept("Saving the " + bibliographicItems.size() + " deduplicated results");
-		int numberWritten = bibliographicItemWriter.writeDeduplicatedBibliographicItems(bibliographicItems, inputPath,
-				outputPath);
-		String s = formatResultString(bibliographicItems.size(), numberWritten);
-		progressReporter.accept(s);
-
-		return s;
+		// @formatter:off
+		return switch (mode) {
+			case MARK -> {
+				int numberWritten = bibliographicItemWriter.writeMarkedBibliographicItems(bibliographicItems, inputPath,
+						outputPath);
+				long labeledBibliographicItems = bibliographicItems.stream().filter(r -> r.getLabel() != null).count();
+				// TODO: use formatResultString which accepts a mode argument?
+				String s = "DONE: DedupEndNote has written " + numberWritten + " bibliographic items with "
+						+ labeledBibliographicItems + " duplicates marked in the Label field.";
+				progressReporter.accept(s);
+				yield s;
+			}
+			case REMOVE -> {
+				progressReporter.accept("Enriching the " + bibliographicItems.size() + " deduplicated results");
+				enrichmentService.enrich(bibliographicItems);
+				progressReporter.accept("Saving the " + bibliographicItems.size() + " deduplicated results");
+				int numberWritten = bibliographicItemWriter.writeDeduplicatedBibliographicItems(bibliographicItems,
+						inputPath, outputPath);
+				String s = formatResultString(bibliographicItems.size(), numberWritten);
+				progressReporter.accept(s);
+				yield s;
+			}
+		};
+		// @formatter:on
 	}
 
 	public String deduplicateTwoFiles(Path newInputPath, Path oldInputPath, DeduplicationMode mode,
@@ -323,30 +328,35 @@ l						 * 		V 		W 		X
 
 		searchYearTwoFiles(bibliographicItems, progressReporter);
 
-		if (mode == DeduplicationMode.MARK) {
-			int numberWritten = bibliographicItemWriter.writeMarkedBibliographicItems(bibliographicItems, newInputPath,
-					outputPath);
-			long numberLabeledBibliographicItems = bibliographicItems.stream()
-					.filter(r -> r.getLabel() != null && !r.isPresentInOldFile()).count();
-			String s = "DONE: DedupEndNote has written %s bibliographic items with %d duplicates marked in the Label field."
-					.formatted(numberWritten, numberLabeledBibliographicItems);
-			progressReporter.accept(s);
-			return s;
-		}
-
-		enrichmentService.enrich(bibliographicItems);
-		// Get the bibliographicItems from the new file that are not duplicates or not duplicates of bibliographicItems of the old
-		// file
-		List<BibliographicItem> filteredBibliographicItems = bibliographicItems.stream()
-				.filter(r -> !r.isPresentInOldFile() && (r.getLabel() == null || !r.getLabel().startsWith("-")))
-				.toList();
-		log.error("Publications to write: {}", filteredBibliographicItems.size());
-		int numberWritten = bibliographicItemWriter.writeDeduplicatedBibliographicItems(filteredBibliographicItems,
-				newInputPath, outputPath);
-		String s = "DONE: DedupEndNote removed %d bibliographic items from the new set, and has written %d bibliographic items."
-				.formatted((newBibliographicItems.size() - numberWritten), numberWritten);
-		progressReporter.accept(s);
-		return s;
+		// @formatter:off
+		return switch (mode) {
+			case MARK -> {
+				int numberWritten = bibliographicItemWriter.writeMarkedBibliographicItems(bibliographicItems, newInputPath,
+						outputPath);
+				long numberLabeledBibliographicItems = bibliographicItems.stream()
+						.filter(r -> r.getLabel() != null && !r.isPresentInOldFile()).count();
+				String s = "DONE: DedupEndNote has written %s bibliographic items with %d duplicates marked in the Label field."
+						.formatted(numberWritten, numberLabeledBibliographicItems);
+				progressReporter.accept(s);
+				yield s;
+			}
+			case REMOVE -> {
+				enrichmentService.enrich(bibliographicItems);
+				// Get the bibliographicItems from the new file that are not duplicates or not duplicates of bibliographicItems of the old
+				// file
+				List<BibliographicItem> filteredBibliographicItems = bibliographicItems.stream()
+						.filter(r -> !r.isPresentInOldFile() && (r.getLabel() == null || !r.getLabel().startsWith("-")))
+						.toList();
+				log.error("Publications to write: {}", filteredBibliographicItems.size());
+				int numberWritten = bibliographicItemWriter.writeDeduplicatedBibliographicItems(filteredBibliographicItems,
+						newInputPath, outputPath);
+				String s = "DONE: DedupEndNote removed %d bibliographic items from the new set, and has written %d bibliographic items."
+						.formatted((newBibliographicItems.size() - numberWritten), numberWritten);
+				progressReporter.accept(s);
+				yield s;
+			}
+		};
+		// @formatter:on
 	}
 
 	public void doSanityChecks(List<BibliographicItem> bibliographicItems, Path inputPath) {

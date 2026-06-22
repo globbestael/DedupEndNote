@@ -1,7 +1,6 @@
 # TODO
 
 ## Refactoring fileName and path
-- BibliographicItemWriter has e.printStackTrace(). Maybe more cases
 - There are some cases with path.resolve(filename).normalize()
   Why is this normalize() not called after every resolve(...)?
 - why 2 variable wssession_id in the form of index.html?
@@ -16,17 +15,11 @@
 - Look into https://www.agentsview.io/
 - ./spotbugs-security-exclude.xml
   - look at the current content
-- BibliographicItemReader::readBibliographicItems has at "case TI" a comment:
-  // Don't do this in BibliographicItemReader::readBibliographicItems because these 2 patterns are only applied to TI
-	// field, not to the other fields which are added to List<String> titles
-  Look into this comment, the comment may have been stale
-- Should the last plan also lead to a new ADR?
 - DedupEndNoteController::runDedup has a "future.cancel(true)"
   Is this the way to allow the user to cancel a deduplication?
-- should DeduplicateService::deduplicate(One|Two)File(s) use a switch for the 2 DeduplicationMode's?
-  what about sealed interface?
 - should there be external files for some of the new tests in BibliographicItemReaderTests?
 - better tests in DefaultTitleComparisonServiceTest?
+- should we test Mendeley? see C:\Users\geert\dedupendnote_input_files\validation\other
 
   
  

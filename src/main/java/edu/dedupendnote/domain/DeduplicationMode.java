@@ -1,8 +1,7 @@
 package edu.dedupendnote.domain;
 
 public enum DeduplicationMode {
-	REMOVE,
-	MARK;
+	REMOVE, MARK;
 
 	public String filenameSuffix() {
 		return this == MARK ? "_mark" : "_deduplicated";
