@@ -16,6 +16,18 @@
 - Look into https://www.agentsview.io/
 - ./spotbugs-security-exclude.xml
   - look at the current content
+- BibliographicItemReader::readBibliographicItems has at "case TI" a comment:
+  // Don't do this in BibliographicItemReader::readBibliographicItems because these 2 patterns are only applied to TI
+	// field, not to the other fields which are added to List<String> titles
+  Look into this comment, the comment may have been stale
+- Should the last plan also lead to a new ADR?
+- DedupEndNoteController::runDedup has a "future.cancel(true)"
+  Is this the way to allow the user to cancel a deduplication?
+- should DeduplicateService::deduplicate(One|Two)File(s) use a switch for the 2 DeduplicationMode's?
+  what about sealed interface?
+- should there be external files for some of the new tests in BibliographicItemReaderTests?
+- better tests in DefaultTitleComparisonServiceTest?
+
   
  
 ## OWASP

@@ -62,7 +62,7 @@ public class BibliographicItemReader {
 			.compile("((^\\d)|(.*(\\d{4}|Annual|Conference|Congress|Meeting|Society|Symposium))).*");
 
 	/** Pattern to identify clinical trials phase (1 ..4, i .. iv) */
-	private static final Pattern PHASE_PATTERN = Pattern.compile(".*phase\\s[\\di].*", Pattern.CASE_INSENSITIVE);
+	public static final Pattern PHASE_PATTERN = Pattern.compile(".*phase\\s[\\di].*", Pattern.CASE_INSENSITIVE);
 
 	// @formatter:on
 	/*
@@ -119,10 +119,9 @@ public class BibliographicItemReader {
 	 * of them in BibliographicItem::addTitles.
 	 */
 	// @formatter:on
-	// FIXME: Can some of these 4 patterns be merged?
-	private static final Pattern REPLY_PATTERN = Pattern
+	public static final Pattern REPLY_PATTERN = Pattern
 			.compile("(^C(omment|OMMENT)|^R[Ee]: .+|.*\\breply\\b.*|.*author(.+)respon.*|^response$)");
-	private static final Pattern ERRATUM_PATTERN = Pattern.compile(
+	public static final Pattern ERRATUM_PATTERN = Pattern.compile(
 			"(^(Correction|Corrigendum|Erratum)( to (?=[A-Z])| to '|( to)?: ).*)|(.*(Correction|Corrigendum|Erratum)$)");
 	public static final Pattern SOURCE_PATTERN = Pattern.compile(".+(\\(vol \\d+\\D+\\d+\\D+\\d+\\D*\\))");
 	public static final Pattern COMMENT_PATTERN = Pattern.compile(
@@ -410,18 +409,6 @@ public class BibliographicItemReader {
 					// "Een 45-jarige patiente met chronische koliekachtige abdominale pijn". Not found in test set!
 					case "TI": // Title
 						addNormalizedTitle(fieldContent, bibliographicItem);
-						// Don't do this in BibliographicItemReader::readBibliographicItems because these 2 patterns are only applied to TI
-						// field, not to the other fields which are added to List<String> titles
-						if (REPLY_PATTERN.matcher(fieldContent.toLowerCase(Locale.ROOT)).matches()
-								|| ERRATUM_PATTERN.matcher(fieldContent).matches()
-								|| (fieldContent.endsWith(")") && SOURCE_PATTERN.matcher(fieldContent).matches())
-								|| COMMENT_PATTERN.matcher(fieldContent).matches()) {
-							bibliographicItem.setReply(true);
-							bibliographicItem.setTitle(fieldContent);
-						}
-						if (PHASE_PATTERN.matcher(fieldContent.toLowerCase(Locale.ROOT)).matches()) {
-							bibliographicItem.setPhase(true);
-						}
 						titleCache = fieldContent;
 						previousFieldName = fieldName;
 						break;
@@ -559,6 +546,28 @@ public class BibliographicItemReader {
 			if (normalizedTitle.originalTitle() != null) {
 				bibliographicItem.setTitle(normalizedTitle.originalTitle());
 			}
+		}
+		detectReplyAndPhase(fieldContent, bibliographicItem);
+	}
+
+	/*
+	 * Flags replies / errata / comments (setReply) and clinical-trial phases (setPhase) from the title content.
+	 * Called from addNormalizedTitle, so it is applied to EVERY title-bearing field (TI, OP, ST, T3 and the
+	 * TI continuation line), not only to the TI field. setReply and setPhase are sticky (only ever set to true),
+	 * so a later non-matching title field cannot clear a flag set by an earlier one. On a reply/erratum/comment
+	 * match the raw fieldContent is kept as the title (overriding the normalized title), because for replies the
+	 * original/longest title is preferred in the enrich step. Runs after normalization so the raw title wins.
+	 */
+	private static void detectReplyAndPhase(String fieldContent, BibliographicItem bibliographicItem) {
+		if (REPLY_PATTERN.matcher(fieldContent.toLowerCase(Locale.ROOT)).matches()
+				|| ERRATUM_PATTERN.matcher(fieldContent).matches()
+				|| (fieldContent.endsWith(")") && SOURCE_PATTERN.matcher(fieldContent).matches())
+				|| COMMENT_PATTERN.matcher(fieldContent).matches()) {
+			bibliographicItem.setReply(true);
+			bibliographicItem.setTitle(fieldContent);
+		}
+		if (PHASE_PATTERN.matcher(fieldContent.toLowerCase(Locale.ROOT)).matches()) {
+			bibliographicItem.setPhase(true);
 		}
 	}
 

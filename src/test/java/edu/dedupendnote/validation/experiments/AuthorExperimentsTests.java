@@ -79,13 +79,13 @@ class AuthorExperimentsTests extends AbstractIntegrationTest {
 		ValidationResult expResult = validationService.checkResults("SRA2_Haematology_experimental", inputPath,
 				outputPath, truthPath, bibliographicItems, duration, /* withTracing= */ false, expService);
 
+		System.err.println("Baseline:   " + baseline);
+		System.err.println("Experiment: " + expResult);
+
 		// Higher author thresholds miss more duplicates (lower sensitivity) …
 		assertThat(expResult.getSensitivity()).isLessThan(baseline.getSensitivity());
 		// … but produce fewer false positives (higher or equal specificity).
 		assertThat(expResult.getSpecificity()).isGreaterThanOrEqualTo(baseline.getSpecificity());
-
-		System.err.println("Baseline:   " + baseline);
-		System.err.println("Experiment: " + expResult);
 	}
 
 }

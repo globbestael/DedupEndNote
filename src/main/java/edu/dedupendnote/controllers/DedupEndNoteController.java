@@ -32,6 +32,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import edu.dedupendnote.domain.DeduplicationMode;
 import edu.dedupendnote.domain.StompMessage;
+import edu.dedupendnote.services.DeduplicationException;
 import edu.dedupendnote.services.DeduplicationService;
 import edu.dedupendnote.services.UtilitiesService;
 import jakarta.servlet.http.HttpServletResponse;
@@ -198,6 +199,12 @@ public class DedupEndNoteController {
 				String msg = "ERROR: Deduplication timed out after " + timeoutMinutes + " minutes.";
 				progressReporter.accept(msg);
 				return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(new ApiResponse(msg));
+			} catch (ExecutionException e) {
+				if (e.getCause() instanceof DeduplicationException de) {
+					progressReporter.accept(de.getErrorMessage());
+					return ResponseEntity.ok(new ApiResponse(de.getErrorMessage()));
+				}
+				throw e;
 			}
 		} finally {
 			concurrentRunsSemaphore.release();

@@ -1,6 +1,7 @@
 package edu.dedupendnote.integration;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.nio.file.Path;
 
@@ -13,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import edu.dedupendnote.domain.DeduplicationMode;
 import edu.dedupendnote.services.DeduplicationService;
+import edu.dedupendnote.services.DuplicateIdsException;
 
 class DeduplicationServiceTests extends AbstractIntegrationTest {
 	@Autowired
@@ -56,11 +58,9 @@ class DeduplicationServiceTests extends AbstractIntegrationTest {
 		Path inputPath = testDir.resolve("File_with_duplicate_IDs.txt");
 		DeduplicationMode mode = DeduplicationMode.REMOVE;
 
-		String resultString = deduplicationService.deduplicateOneFile(inputPath, mode, message -> {
-		});
-
-		assertThat(resultString).startsWith("ERROR: The IDs of the bibliographic items of input file "
-				+ inputPath.getFileName() + " are not unique");
+		assertThatThrownBy(() -> deduplicationService.deduplicateOneFile(inputPath, mode, message -> {}))
+				.isInstanceOf(DuplicateIdsException.class)
+				.hasMessageContaining("are not unique");
 	}
 
 	@Test

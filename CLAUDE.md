@@ -134,7 +134,8 @@ Tests live under three roots, each with a corresponding Maven profile:
 - **`unit/BaseTest`** — provides `Path baseDir` (`~/dedupendnote_files`) and `Path testDir` (both initialized directly as fields), `@BeforeEach initTestDir()`, plus utilities (`jws`, `getHighestSimilarityForAuthors`, `setLoggerToDebug`)
 - **`unit/services/AuthorsBaseTest extends BaseTest`** — shared logic for author-comparison tests
 - **`unit/services/DefaultJournalComparisonServiceTest extends BaseTest`** — boolean `compare()` tests for journals (inline parameterized) and a file-based test against validated journal pairs; absorbed `JournalsBaseTest`
-- **`unit/services/JWSimilarityTitleTest extends BaseTest`** — title JWS-similarity tests; also holds the out-of-scope `BibliographicItemReader` pattern tests
+- **`unit/services/JWSimilarityTitleTest extends BaseTest`** — title JWS-similarity tests only
+- **`unit/services/BibliographicItemReaderTest extends BaseTest`** — tests the reader's title-derived patterns (`REPLY_PATTERN`, `ERRATUM_PATTERN`, `SOURCE_PATTERN`, `COMMENT_PATTERN`, `PHASE_PATTERN`, `RIS_LINE_PATTERN`); inline `@ValueSource` cases plus file-based tests against the curated `All__*` example sets. Moved out of `JWSimilarityTitleTest`.
 - **`unit/services/JWSimilarityAuthorTest extends AuthorsBaseTest`** — plain JUnit 5, no Spring; tests raw `jws.apply` score
 - Standalone unit test classes (no Spring context): `NormalizationService*Test` (7 files, including `NormalizationServiceIssnTest`), `DefaultJournalComparisonServiceIssnTest`, `DefaultJournalComparisonServiceTest`, `DefaultTitleComparisonServiceTest`, `JWSimilarityJournalTest`, `JWSimilarityAbstractTest`, `AuthorsComparisonThresholdTest`, `AuthorVariantsExperimentsTest`, etc.
 

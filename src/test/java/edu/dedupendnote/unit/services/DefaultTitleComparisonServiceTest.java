@@ -49,7 +49,9 @@ class DefaultTitleComparisonServiceTest {
 		// @formatter:off
 		return Stream.of(
 			arguments("This is a test title", "This is a test title"),
-			arguments("Title with sufficient pages", "Title with sufficient pages")
+			arguments("Title with sufficient pages", "Title with sufficient pages"),
+			// addNormalizedTitle now sets isReply (REPLY_PATTERN), so the title comparison short-circuits to true
+			arguments("Reply to a title", "Some other title")
 		);
 		// @formatter:on
 	}
@@ -57,9 +59,7 @@ class DefaultTitleComparisonServiceTest {
 	static Stream<Arguments> fullNegativeArgumentProvider() {
 		// @formatter:off
 		return Stream.of(
-			arguments("Another test title", "A different test title"),
-			// isReply would make this true, but BibliographicItem.isReply is not set here
-			arguments("Reply to a title", "Some other title")
+			arguments("Another test title", "A different test title")
 		);
 		// @formatter:on
 	}
