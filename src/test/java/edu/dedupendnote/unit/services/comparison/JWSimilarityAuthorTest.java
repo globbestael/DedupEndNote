@@ -1,4 +1,4 @@
-package edu.dedupendnote.unit.services;
+package edu.dedupendnote.unit.services.comparison;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;

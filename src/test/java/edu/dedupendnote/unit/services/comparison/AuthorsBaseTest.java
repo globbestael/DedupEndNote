@@ -1,4 +1,4 @@
-package edu.dedupendnote.unit.services;
+package edu.dedupendnote.unit.services.comparison;
 
 import java.io.IOException;
 import java.nio.file.Files;

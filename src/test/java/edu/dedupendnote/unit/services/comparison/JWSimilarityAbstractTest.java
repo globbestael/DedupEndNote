@@ -1,4 +1,4 @@
-package edu.dedupendnote.unit.services;
+package edu.dedupendnote.unit.services.comparison;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
@@ -141,7 +141,7 @@ class JWSimilarityAbstractTest {
 	@Nested
 	class RatcliffObershelpAbstracttextTest {
 		@ParameterizedTest(name = "{index}: RatcliffObershelp({0}, {1})={2}")
-		@MethodSource("edu.dedupendnote.services.JWSimilarityAbstractTest#negativeArgumentProvider")
+		@MethodSource("edu.dedupendnote.unit.services.comparison.JWSimilarityAbstractTest#negativeArgumentProvider")
 		void ratcliffObershelpNegative(String input1, String input2, double expected) {
 			System.err.println("RO: %.3f\tROlc: %.3f\tROclean: %.3f\tJWS: %.3f\tJWSclean: %.3f\texpected: %.3f"
 					.formatted(ro.similarity(input1, input2), ro.similarity(input1.toLowerCase(), input2.toLowerCase()),
@@ -152,7 +152,7 @@ class JWSimilarityAbstractTest {
 		}
 
 		@ParameterizedTest(name = "{index}: RatcliffObershelp({0}, {1})={2}")
-		@MethodSource("edu.dedupendnote.services.JWSimilarityAbstractTest#negativeArgumentProvider")
+		@MethodSource("edu.dedupendnote.unit.services.comparison.JWSimilarityAbstractTest#negativeArgumentProvider")
 		void ratcliffObershelpNegative200(String input1, String input2, double expected) {
 			input1 = input1.substring(0, 200);
 			input2 = input2.substring(0, 200);
@@ -165,7 +165,7 @@ class JWSimilarityAbstractTest {
 		}
 
 		@ParameterizedTest(name = "{index}: RatcliffObershelp({0}, {1})={2}")
-		@MethodSource("edu.dedupendnote.services.JWSimilarityAbstractTest#positiveArgumentProvider")
+		@MethodSource("edu.dedupendnote.unit.services.comparison.JWSimilarityAbstractTest#positiveArgumentProvider")
 		void ratcliffObershelpPositive(String input1, String input2, double expected) {
 			System.err.println("RO: %.3f\tROlc: %.3f\tROclean: %.3f\tJWS: %.3f\tJWSclean: %.3f\texpected: %.3f"
 					.formatted(ro.similarity(input1, input2), ro.similarity(input1.toLowerCase(), input2.toLowerCase()),
@@ -176,7 +176,7 @@ class JWSimilarityAbstractTest {
 		}
 
 		@ParameterizedTest(name = "{index}: RatcliffObershelp({0}, {1})={2}")
-		@MethodSource("edu.dedupendnote.services.JWSimilarityAbstractTest#positiveArgumentProvider")
+		@MethodSource("edu.dedupendnote.unit.services.comparison.JWSimilarityAbstractTest#positiveArgumentProvider")
 		void ratcliffObershelpPositive200(String input1, String input2, double expected) {
 			input1 = input1.substring(0, 200);
 			input2 = input2.substring(0, 200);

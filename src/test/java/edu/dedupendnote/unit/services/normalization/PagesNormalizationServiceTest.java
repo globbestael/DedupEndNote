@@ -1,4 +1,4 @@
-package edu.dedupendnote.unit.services;
+package edu.dedupendnote.unit.services.normalization;
 
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
