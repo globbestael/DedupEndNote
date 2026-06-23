@@ -40,7 +40,7 @@ public class DeduplicationService {
 	private final EnrichmentService enrichmentService;
 
 	@Value("${dedup.max-records:100000}")
-	private int maxRecords;
+	private int maxRecords = 100000;
 
 	// the DOIs have been lowercased
 	public static Pattern COCHRANE_DOI_PATTERN = Pattern.compile("^.*10.1002/14651858.([a-z][a-z]\\d+).*",
@@ -234,70 +234,60 @@ l						 * 		V 		W 		X
 		}
 	}
 
-	private @Nullable String checkRecordCap(Path path, Consumer<String> progressReporter) {
+	private void checkRecordCap(Path path) {
 		try {
 			long count = bibliographicItemReader.countRecords(path);
 			if (count > maxRecords) {
-				String msg = "ERROR: Input file " + path.getFileName() + " contains " + count
-						+ " bibliographic items, which exceeds the maximum of " + maxRecords + ".";
-				progressReporter.accept(msg);
-				return msg;
+				throw new RecordCapExceededException("ERROR: Input file " + path.getFileName() + " contains " + count
+						+ " bibliographic items, which exceeds the maximum of " + maxRecords + ".");
 			}
 		} catch (IOException e) {
 			// unreadable file — readBibliographicItems will handle it
 		}
-		return null;
 	}
 
 	private boolean containsDuplicateIds(List<BibliographicItem> bibliographicItems) {
 		return !bibliographicItems.stream().map(BibliographicItem::getId).allMatch(new HashSet<>()::add);
 	}
 
-	public String deduplicateOneFile(Path inputPath, DeduplicationMode mode,
-			Consumer<String> progressReporter) {
+	public String deduplicateOneFile(Path inputPath, DeduplicationMode mode, Consumer<String> progressReporter) {
 		Path outputPath = UtilitiesService.createPath(inputPath, mode.filenameSuffix(), "txt");
 		progressReporter.accept("Reading file " + inputPath.getFileName());
-		String capError = checkRecordCap(inputPath, progressReporter);
-		if (capError != null) return capError;
-		List<BibliographicItem> bibliographicItems;
-		try {
-			bibliographicItems = bibliographicItemReader.readBibliographicItems(inputPath, progressReporter);
-		} catch (InvalidRisFileException e) {
-			progressReporter.accept(e.getErrorMessage());
-			return e.getErrorMessage();
-		}
-
-		String s = doSanityChecks(bibliographicItems, inputPath);
-		if (s != null) {
-			progressReporter.accept(s);
-			return s;
-		}
+		checkRecordCap(inputPath);
+		List<BibliographicItem> bibliographicItems = bibliographicItemReader.readBibliographicItems(inputPath,
+				progressReporter);
+		doSanityChecks(bibliographicItems, inputPath);
 
 		searchYearOneFile(bibliographicItems, progressReporter);
 
-		if (mode == DeduplicationMode.MARK) {
-			int numberWritten = bibliographicItemWriter.writeMarkedBibliographicItems(bibliographicItems, inputPath,
-					outputPath);
-			long labeledBibliographicItems = bibliographicItems.stream().filter(r -> r.getLabel() != null).count();
-			s = "DONE: DedupEndNote has written " + numberWritten + " bibliographic items with "
-					+ labeledBibliographicItems + " duplicates marked in the Label field.";
-			progressReporter.accept(s);
-			return s;
-		}
-
-		progressReporter.accept("Enriching the " + bibliographicItems.size() + " deduplicated results");
-		enrichmentService.enrich(bibliographicItems);
-		progressReporter.accept("Saving the " + bibliographicItems.size() + " deduplicated results");
-		int numberWritten = bibliographicItemWriter.writeDeduplicatedBibliographicItems(bibliographicItems,
-				inputPath, outputPath);
-		s = formatResultString(bibliographicItems.size(), numberWritten);
-		progressReporter.accept(s);
-
-		return s;
+		// @formatter:off
+		return switch (mode) {
+			case MARK -> {
+				int numberWritten = bibliographicItemWriter.writeMarkedBibliographicItems(bibliographicItems, inputPath,
+						outputPath);
+				long labeledBibliographicItems = bibliographicItems.stream().filter(r -> r.getLabel() != null).count();
+				// TODO: use formatResultString which accepts a mode argument?
+				String s = "DONE: DedupEndNote has written " + numberWritten + " bibliographic items with "
+						+ labeledBibliographicItems + " duplicates marked in the Label field.";
+				progressReporter.accept(s);
+				yield s;
+			}
+			case REMOVE -> {
+				progressReporter.accept("Enriching the " + bibliographicItems.size() + " deduplicated results");
+				enrichmentService.enrich(bibliographicItems);
+				progressReporter.accept("Saving the " + bibliographicItems.size() + " deduplicated results");
+				int numberWritten = bibliographicItemWriter.writeDeduplicatedBibliographicItems(bibliographicItems,
+						inputPath, outputPath);
+				String s = formatResultString(bibliographicItems.size(), numberWritten);
+				progressReporter.accept(s);
+				yield s;
+			}
+		};
+		// @formatter:on
 	}
 
-	public String deduplicateTwoFiles(Path newInputPath, Path oldInputPath,
-			DeduplicationMode mode, Consumer<String> progressReporter) {
+	public String deduplicateTwoFiles(Path newInputPath, Path oldInputPath, DeduplicationMode mode,
+			Consumer<String> progressReporter) {
 		Path outputPath = UtilitiesService.createPath(newInputPath, mode.filenameSuffix(), "txt");
 		// read the old bibliographicItems and mark them as present, then add the new bibliographicItems
 		log.info("oldInputPath: {}", oldInputPath);
@@ -306,27 +296,15 @@ l						 * 		V 		W 		X
 			long combinedCount = bibliographicItemReader.countRecords(oldInputPath)
 					+ bibliographicItemReader.countRecords(newInputPath);
 			if (combinedCount > maxRecords) {
-				String msg = "ERROR: The two input files together contain " + combinedCount
-						+ " bibliographic items, which exceeds the maximum of " + maxRecords + ".";
-				progressReporter.accept(msg);
-				return msg;
+				throw new RecordCapExceededException("ERROR: The two input files together contain " + combinedCount
+						+ " bibliographic items, which exceeds the maximum of " + maxRecords + ".");
 			}
 		} catch (IOException e) {
 			// unreadable file — readBibliographicItems will handle it
 		}
-		List<BibliographicItem> bibliographicItems;
-		try {
-			bibliographicItems = bibliographicItemReader.readBibliographicItems(oldInputPath, progressReporter);
-		} catch (InvalidRisFileException e) {
-			progressReporter.accept(e.getErrorMessage());
-			return e.getErrorMessage();
-		}
-
-		String s = doSanityChecks(bibliographicItems, oldInputPath);
-		if (s != null) {
-			progressReporter.accept(s);
-			return s;
-		}
+		List<BibliographicItem> bibliographicItems = bibliographicItemReader.readBibliographicItems(oldInputPath,
+				progressReporter);
+		doSanityChecks(bibliographicItems, oldInputPath);
 
 		/*
 		 * Put "-" before the IDs of the old bibliographicItems. In this way the labels of the bibliographicItems (used for
@@ -342,50 +320,46 @@ l						 * 		V 		W 		X
 			r.setPresentInOldFile(true);
 		});
 
-		List<BibliographicItem> newBibliographicItems;
-		try {
-			newBibliographicItems = bibliographicItemReader.readBibliographicItems(newInputPath, progressReporter);
-		} catch (InvalidRisFileException e) {
-			progressReporter.accept(e.getErrorMessage());
-			return e.getErrorMessage();
-		}
-		s = doSanityChecks(newBibliographicItems, newInputPath);
-		if (s != null) {
-			progressReporter.accept(s);
-			return s;
-		}
+		List<BibliographicItem> newBibliographicItems = bibliographicItemReader.readBibliographicItems(newInputPath,
+				progressReporter);
+		doSanityChecks(newBibliographicItems, newInputPath);
 		bibliographicItems.addAll(newBibliographicItems);
 		log.info("Publications read from 2 files: {}", bibliographicItems.size());
 
 		searchYearTwoFiles(bibliographicItems, progressReporter);
 
-		if (mode == DeduplicationMode.MARK) {
-			int numberWritten = bibliographicItemWriter.writeMarkedBibliographicItems(bibliographicItems,
-					newInputPath, outputPath);
-			long numberLabeledBibliographicItems = bibliographicItems.stream()
-					.filter(r -> r.getLabel() != null && !r.isPresentInOldFile()).count();
-			s = "DONE: DedupEndNote has written %s bibliographic items with %d duplicates marked in the Label field."
-					.formatted(numberWritten, numberLabeledBibliographicItems);
-			progressReporter.accept(s);
-			return s;
-		}
-
-		enrichmentService.enrich(bibliographicItems);
-		// Get the bibliographicItems from the new file that are not duplicates or not duplicates of bibliographicItems of the old
-		// file
-		List<BibliographicItem> filteredBibliographicItems = bibliographicItems.stream()
-				.filter(r -> !r.isPresentInOldFile() && (r.getLabel() == null || !r.getLabel().startsWith("-")))
-				.toList();
-		log.error("Publications to write: {}", filteredBibliographicItems.size());
-		int numberWritten = bibliographicItemWriter.writeDeduplicatedBibliographicItems(filteredBibliographicItems,
-				newInputPath, outputPath);
-		s = "DONE: DedupEndNote removed %d bibliographic items from the new set, and has written %d bibliographic items."
-				.formatted((newBibliographicItems.size() - numberWritten), numberWritten);
-		progressReporter.accept(s);
-		return s;
+		// @formatter:off
+		return switch (mode) {
+			case MARK -> {
+				int numberWritten = bibliographicItemWriter.writeMarkedBibliographicItems(bibliographicItems, newInputPath,
+						outputPath);
+				long numberLabeledBibliographicItems = bibliographicItems.stream()
+						.filter(r -> r.getLabel() != null && !r.isPresentInOldFile()).count();
+				String s = "DONE: DedupEndNote has written %s bibliographic items with %d duplicates marked in the Label field."
+						.formatted(numberWritten, numberLabeledBibliographicItems);
+				progressReporter.accept(s);
+				yield s;
+			}
+			case REMOVE -> {
+				enrichmentService.enrich(bibliographicItems);
+				// Get the bibliographicItems from the new file that are not duplicates or not duplicates of bibliographicItems of the old
+				// file
+				List<BibliographicItem> filteredBibliographicItems = bibliographicItems.stream()
+						.filter(r -> !r.isPresentInOldFile() && (r.getLabel() == null || !r.getLabel().startsWith("-")))
+						.toList();
+				log.error("Publications to write: {}", filteredBibliographicItems.size());
+				int numberWritten = bibliographicItemWriter.writeDeduplicatedBibliographicItems(filteredBibliographicItems,
+						newInputPath, outputPath);
+				String s = "DONE: DedupEndNote removed %d bibliographic items from the new set, and has written %d bibliographic items."
+						.formatted((newBibliographicItems.size() - numberWritten), numberWritten);
+				progressReporter.accept(s);
+				yield s;
+			}
+		};
+		// @formatter:on
 	}
 
-	public @Nullable String doSanityChecks(List<BibliographicItem> bibliographicItems, Path inputPath) {
+	public void doSanityChecks(List<BibliographicItem> bibliographicItems, Path inputPath) {
 		/*
 		 * "containsBibliographicItemsWithoutId" check removed: id is now a primitive int.
 		 * BibliographicItemReader always assigns an id >= 1; InvalidRisFileException is thrown for non-numeric ID fields.
@@ -395,10 +369,10 @@ l						 * 		V 		W 		X
 		 * year-bucketing simply groups everything in the year-0 bucket and comparisons still run.
 		 */
 		if (containsDuplicateIds(bibliographicItems)) {
-			return "ERROR: The IDs of the bibliographic items of input file " + inputPath.getFileName()
-					+ " are not unique. The input file is not an Export as RIS-file from 1 EndNote library!";
+			throw new DuplicateIdsException(
+					"ERROR: The IDs of the bibliographic items of input file " + inputPath.getFileName()
+							+ " are not unique. The input file is not an Export as RIS-file from 1 EndNote library!");
 		}
-		return null;
 	}
 
 	public String formatResultString(int total, int totalWritten) {

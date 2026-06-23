@@ -14,9 +14,9 @@ import edu.dedupendnote.services.normalization.NormalizationService;
 
 class NormalizationServiceDoiTest {
 
-	@ParameterizedTest(name = "{index}: addDois({0})=({1},{2})")
+	@ParameterizedTest(name = "{index}: normalizeInputDois({0})=({1},{2})")
 	@MethodSource("argumentProvider")
-	void addDois(String input, int numberOfDois, Set<String> dois) {
+	void normalizeInputDois(String input, int numberOfDois, Set<String> dois) {
 		Set<String> normalized = NormalizationService.normalizeInputDois(input);
 
 		assertThat(normalized).hasSize(numberOfDois).containsAll(dois);
@@ -33,7 +33,11 @@ class NormalizationServiceDoiTest {
 				arguments("10.1007/s12035-015-9182-6 [doi];10.1007/s12035-015-9182-6_bla [pii]", 2,
 						Set.of("10.1007/s12035-015-9182-6", "10.1007/s12035-015-9182-6_bla")),
 				arguments("10.1002/(SICI)1098-1063(1998)8:6&lt;627::AID-HIPO5&gt;3.0.CO;2-X [doi]", 1,
-						Set.of("10.1002/(sici)1098-1063(1998)8:6<627::aid-hipo5>3.0.co;2-x")));
+						Set.of("10.1002/(sici)1098-1063(1998)8:6<627::aid-hipo5>3.0.co;2-x")),
+				arguments("10.1371/journal.pone.11 onzin http://dx.doi.org/10.1371/journal%2EPONE.22. 10.1371/journal.pone", 3,
+						Set.of("10.1371/journal.pone.11", "10.1371/journal.pone.22", "10.1371/journal.pone")),
+				arguments("10.1016/S0016-5085(18)34101-5 http://dx.doi.org/10.1016/S0016-5085%2818%2934101-5", 1,
+						Set.of("10.1016/s0016-5085(18)34101-5"))); // is lowercased!
 		/*
 		 * The following strings were taken from a UR field to test whether using this
 		 * field would add more duplicates. Verdict: NO, more false positives with corrections etc

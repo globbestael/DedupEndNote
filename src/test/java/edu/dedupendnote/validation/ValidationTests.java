@@ -18,6 +18,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
@@ -84,6 +85,11 @@ class ValidationTests extends AbstractIntegrationTest {
 			FN solvable can be found with regex: ^\\d+\\t\\t\\d+\\ttrue\\tfalse\\tfalse\\tfalse\\ttrue\\tfalse
 			TP which will be kept can be found with regex: ^(\\d+)\\t\\1\\t\\ttrue\\ttrue\\t
 			""";
+
+	@BeforeEach
+	void initTestDir() {
+		testDir = baseDir.resolve("validation");
+	}
 
 	@BeforeAll
 	static void beforeAll() {
@@ -326,30 +332,30 @@ class ValidationTests extends AbstractIntegrationTest {
 	}
 
 	ValidationResult checkResults_ASySD_Cardiac_human() throws IOException {
-		return checkResultsFor("ASySD_Cardiac_human", testDir.resolve("ASySD/dedupendnote_files/Cardiac_human.txt"));
+		return checkResultsFor("ASySD_Cardiac_human", testDir.resolve("ASySD/Cardiac_human.txt"));
 	}
 
 	// ValidationResult checkResults_ASySD_Depression() throws IOException {
-	// 	return checkResultsFor("ASySD_Depression", testDir.resolve("ASySD/dedupendnote_files/Depression.txt"));
+	// 	return checkResultsFor("ASySD_Depression", testDir.resolve("ASySD/Depression.txt"));
 	// }
 
 	ValidationResult checkResults_ASySD_Diabetes() throws IOException {
-		return checkResultsFor("ASySD_Diabetes", testDir.resolve("ASySD/dedupendnote_files/Diabetes.txt"));
+		return checkResultsFor("ASySD_Diabetes", testDir.resolve("ASySD/Diabetes.txt"));
 	}
 
 	ValidationResult checkResults_ASySD_Neuroimaging() throws IOException {
-		return checkResultsFor("ASySD_Neuroimaging", testDir.resolve("ASySD/dedupendnote_files/Neuroimaging_sorted.txt"));
+		return checkResultsFor("ASySD_Neuroimaging", testDir.resolve("ASySD/Neuroimaging_sorted.txt"));
 	}
 
 	ValidationResult checkResults_ASySD_SRSR_Human() throws IOException {
-		return checkResultsFor("ASySD_SRSR_Human", testDir.resolve("ASySD/dedupendnote_files/SRSR_Human.txt"));
+		return checkResultsFor("ASySD_SRSR_Human", testDir.resolve("ASySD/SRSR_Human.txt"));
 	}
 
 	/*
 	 * Deduplicates the whole file, but checks only the results of the validated subset
 	 */
 	ValidationResult checkResults_BIG_SET() throws IOException {
-		return checkResultsFor("BIG_SET", testDir.resolve("own/BIG_SET.txt"));
+		return checkResultsFor("BIG_SET", testDir.resolve("BIG_SET/BIG_SET.txt"));
 	}
 
 	ValidationResult checkResults_Clinical_trials() throws IOException {
@@ -357,7 +363,7 @@ class ValidationTests extends AbstractIntegrationTest {
 	}
 
 	ValidationResult checkResults_McKeown_2021() throws IOException {
-		return checkResultsFor("McKeown_2021", testDir.resolve("McKeown_S_2021/dedupendnote_files/McKeown_2021.txt"));
+		return checkResultsFor("McKeown_2021", testDir.resolve("McKeown_S_2021/McKeown_2021.txt"));
 	}
 
 	ValidationResult checkResults_SRA2_Cytology_screening() throws IOException {
@@ -402,7 +408,7 @@ class ValidationTests extends AbstractIntegrationTest {
 	@Disabled("Only needed for initialisation of TRUTH file")
 	@Test
 	void createInitialTruthFile_ASySD_Cardiac_human() {
-		createInitialTruthFileWithASySDFor(testDir.resolve("ASySD/dedupendnote_files/Cardiac_human.txt"));
+		createInitialTruthFileWithASySDFor(testDir.resolve("ASySD/Cardiac_human.txt"));
 	}
 
 	// @Disabled("Only needed for initialisation of TRUTH file")
@@ -418,14 +424,14 @@ class ValidationTests extends AbstractIntegrationTest {
 	@Disabled("Only needed for initialisation of TRUTH file")
 	@Test
 	void createInitialTruthFile_ASySD_Diabetes() {
-		createInitialTruthFileWithASySDFor(testDir.resolve("ASySD/dedupendnote_files/Diabetes.txt"));
+		createInitialTruthFileWithASySDFor(testDir.resolve("ASySD/Diabetes.txt"));
 	}
 
 	@Disabled("Only needed for initialisation of TRUTH file")
 	@Test
 	void createInitialTruthFile_ASySD_Neuroimaging() {
 		// EndNote DB is Neuroimaging_sorted
-		createInitialTruthFileWithASySDFor(testDir.resolve("ASySD/dedupendnote_files/Neuroimaging_sorted.txt"));
+		createInitialTruthFileWithASySDFor(testDir.resolve("ASySD/Neuroimaging_sorted.txt"));
 	}
 
 	/*
@@ -435,19 +441,19 @@ class ValidationTests extends AbstractIntegrationTest {
 	@Test
 	void createInitialTruthFile_ASySD_SRSR_Human() {
 		// Columns L and U because of renumbering
-		createInitialTruthFileWithASySDFor(testDir.resolve("ASySD/dedupendnote_files/SRSR_Human.txt"));
+		createInitialTruthFileWithASySDFor(testDir.resolve("ASySD/SRSR_Human.txt"));
 	}
 
 	@Disabled("Only needed for initialisation of TRUTH file")
 	@Test
 	void createInitialTruthFile_CTG() {
-		createInitialTruthFileFor(testDir.resolve("clinical_trials/clinicaltrialsdotgov.txt"));
+		createInitialTruthFileFor(testDir.resolve("Clinical_trials/clinicaltrialsdotgov.txt"));
 	}
 
 	@Disabled("Only needed for initialisation of TRUTH file")
 	@Test
 	void createInitialTruthFile_McKeown_2021() {
-		createInitialTruthFileFor(testDir.resolve("McKeown_S_2021/dedupendnote_files/McKeown_2021.txt"));
+		createInitialTruthFileFor(testDir.resolve("McKeown_S_2021/McKeown_2021.txt"));
 	}
 
 	@Disabled("Only needed for initialisation of TRUTH file")
@@ -496,9 +502,9 @@ class ValidationTests extends AbstractIntegrationTest {
 	@Disabled("Only needed for initialisation of TRUTH file")
 	@Test
 	void createRisWithTRUTH_BIG_SET_DS() throws IOException {
-		Path truthPath = testDir.resolve("own/BIG_SET_TRUTH.txt");
-		Path inputPath = testDir.resolve("Dedupe-sweep/dedupendnote_files/BIG_SET_mark_DS.txt");
-		Path outputPath = testDir.resolve("Dedupe-sweep/dedupendnote_files/BIG_SET_mark_DS_with_TRUTH.txt");
+		Path truthPath = testDir.resolve("BIG_SET/BIG_SET_TRUTH.txt");
+		Path inputPath = testDir.resolve("Dedupe-sweep/BIG_SET_mark_DS.txt");
+		Path outputPath = testDir.resolve("Dedupe-sweep/BIG_SET_mark_DS_with_TRUTH.txt");
 
 		List<BibliographicItemDB> truthRecords = validationService.readTruthFile(truthPath);
 		validationIOService.writeRisWithTRUTH_forDS(truthRecords, inputPath, outputPath);
@@ -518,7 +524,7 @@ class ValidationTests extends AbstractIntegrationTest {
 	@Disabled("Only needed for initialisation of TRUTH file")
 	@Test
 	void createRisWithTRUTH_BIG_SET() throws IOException {
-		createRisWithTRUTHFor(testDir.resolve("own/BIG_SET.txt"));
+		createRisWithTRUTHFor(testDir.resolve("BIG_SET/BIG_SET.txt"));
 		assertThat(1*1).isEqualTo(1);
 	}
 

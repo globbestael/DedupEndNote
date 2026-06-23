@@ -1,6 +1,7 @@
 package edu.dedupendnote.integration;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -15,6 +16,7 @@ import org.springframework.test.context.ActiveProfiles;
 
 import edu.dedupendnote.domain.DeduplicationMode;
 import edu.dedupendnote.services.DeduplicationService;
+import edu.dedupendnote.services.RecordCapExceededException;
 
 @SpringBootTest(properties = "dedup.max-records=2")
 @ActiveProfiles("test")
@@ -46,14 +48,14 @@ class RecordCountCapTests extends AbstractIntegrationTest {
 			""";
 
 	@Test
-	void deduplicateOneFile_whenCapExceeded_returnsError(@TempDir Path tempDir) throws IOException {
+	void deduplicateOneFile_whenCapExceeded_throwsException(@TempDir Path tempDir) throws IOException {
 		Path inputPath = tempDir.resolve("test.ris");
 		Files.writeString(inputPath, THREE_RECORD_RIS);
 
-		String result = deduplicationService.deduplicateOneFile(inputPath, DeduplicationMode.REMOVE, message -> {});
-
-		assertThat(result).startsWith("ERROR:");
-		assertThat(result).contains("exceeds the maximum");
+		assertThatThrownBy(() -> deduplicationService.deduplicateOneFile(inputPath, DeduplicationMode.REMOVE,
+				message -> {}))
+				.isInstanceOf(RecordCapExceededException.class)
+				.hasMessageContaining("exceeds the maximum");
 	}
 
 	@Test
@@ -67,7 +69,7 @@ class RecordCountCapTests extends AbstractIntegrationTest {
 	}
 
 	@Test
-	void deduplicateTwoFiles_whenCombinedCapExceeded_returnsError(@TempDir Path tempDir) throws IOException {
+	void deduplicateTwoFiles_whenCombinedCapExceeded_throwsException(@TempDir Path tempDir) throws IOException {
 		Path oldPath = tempDir.resolve("old.ris");
 		Path newPath = tempDir.resolve("new.ris");
 		// two records each = 4 combined, exceeds max-records=2
@@ -75,11 +77,10 @@ class RecordCountCapTests extends AbstractIntegrationTest {
 		Files.writeString(oldPath, twoRecords);
 		Files.writeString(newPath, twoRecords.replace("ID  - 1", "ID  - 10").replace("ID  - 2", "ID  - 20"));
 
-		String result = deduplicationService.deduplicateTwoFiles(newPath, oldPath, DeduplicationMode.REMOVE,
-				message -> {});
-
-		assertThat(result).startsWith("ERROR:");
-		assertThat(result).contains("exceeds the maximum");
+		assertThatThrownBy(() -> deduplicationService.deduplicateTwoFiles(newPath, oldPath, DeduplicationMode.REMOVE,
+				message -> {}))
+				.isInstanceOf(RecordCapExceededException.class)
+				.hasMessageContaining("exceeds the maximum");
 	}
 
 	@Test

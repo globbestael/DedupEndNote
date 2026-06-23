@@ -3,8 +3,10 @@ package edu.dedupendnote.unit.services;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.SequencedSet;
+import java.util.regex.Matcher;
 import java.util.stream.Stream;
 
 import org.assertj.core.api.SoftAssertions;
@@ -192,6 +194,24 @@ class TitlesNormalizationServiceTest {
 
 		System.err.println(titles);
 		assertThat(titles).as("Second part has embedded colon").hasSize(3);
+	}
+
+	/*
+	 * FIXME: This is far from complete. See comment in BibliographicItemReader (above ERRATUM_PATTERN) with the examples
+	 * of errata WITHOUT words as erratum / correction / corrigendum in the title.
+	 * See https://github.com/globbestael/DedupEndNote/issues/32
+	 */
+	@Test
+	void testBalanceBracesPattern() {
+		// https://stackoverflow.com/questions/47162098/is-it-possible-to-match-nested-brackets-with-a-regex-without-using-recursion-or/47162099#47162099
+		String s = "Severe deficiency of the specific von Willebrand factor-cleaving protease (ADAMTS 13) activity in a subgroup of children with atypical hemolytic uremic syndrome (vol 142, pg 310, 2003)";
+		Matcher matcher = TitlesNormalizationService.BALANCED_BRACES_PATTERN.matcher(s);
+		List<String> expectedMatches = List.of("(ADAMTS 13)", "(vol 142, pg 310, 2003)");
+		List<String> foundMatches = new ArrayList<>();
+		while (matcher.find()) {
+			foundMatches.add(matcher.group(0));
+		}
+		assertThat(foundMatches).isEqualTo(expectedMatches);
 	}
 
 }

@@ -1,7 +1,6 @@
 # TODO
 
 ## Refactoring fileName and path
-- BibliographicItemWriter has e.printStackTrace(). Maybe more cases
 - There are some cases with path.resolve(filename).normalize()
   Why is this normalize() not called after every resolve(...)?
 - why 2 variable wssession_id in the form of index.html?
@@ -16,6 +15,13 @@
 - Look into https://www.agentsview.io/
 - ./spotbugs-security-exclude.xml
   - look at the current content
+- DedupEndNoteController::runDedup has a "future.cancel(true)"
+  Is this the way to allow the user to cancel a deduplication?
+- should there be external files for some of the new tests in BibliographicItemReaderTests?
+- better tests in DefaultTitleComparisonServiceTest?
+- should we test Mendeley? see C:\Users\geert\dedupendnote_input_files\validation\other
+- should tests which write files, remove the output files from previous runs at the start of the test? Several types of Exceptions are thrown
+  now which will show that something went wrong, but the old output files might (later) suggest that they are current
   
  
 ## OWASP

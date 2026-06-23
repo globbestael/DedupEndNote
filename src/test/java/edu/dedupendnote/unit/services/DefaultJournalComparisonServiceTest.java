@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -25,6 +26,11 @@ import lombok.extern.slf4j.Slf4j;
 // TODO: compareIssns() tests on DefaultJournalComparisonService are in DefaultJournalComparisonServiceIssnTest.
 @Slf4j
 class DefaultJournalComparisonServiceTest extends BaseTest {
+
+	@BeforeEach
+	void initTestDir() {
+		testDir = baseDir.resolve("unit");
+	}
 
 	/*
 	 * full comparison for normalized journals: positive
@@ -300,13 +306,13 @@ WHERE t1.title2 <> t2.title2
   AND t1.id < t2.id
   AND t1.Validated = True;
 
-	 * The whole file validated_authors_pairs.txt is created on the TRUTH files for
+	 * The whole file validated_journals_pairs.txt is created on the TRUTH files for
 	 * BIG_SET, ASySD_SRSR_Human.
 	 */
 	// @formatter:on
 	protected List<Triple> getValidatedJournalPairs() throws IOException {
 		localTriples.clear();
-		Path path = testDir.resolve("experiments/validated_journal_pairs.txt");
+		Path path = testDir.resolve("validated_journal_pairs.txt");
 		Stream<String> lines = Files.lines(path);
 		lines.forEach(l -> {
 			String[] parts = l.split("\t");

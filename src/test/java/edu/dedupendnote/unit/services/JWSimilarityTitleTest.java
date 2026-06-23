@@ -1,20 +1,12 @@
 package edu.dedupendnote.unit.services;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.regex.Matcher;
 import java.util.stream.Stream;
 
 import org.assertj.core.api.SoftAssertions;
-// import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -23,10 +15,14 @@ import edu.dedupendnote.services.BibliographicItemReader;
 import edu.dedupendnote.services.comparison.TitleThresholds;
 import edu.dedupendnote.unit.BaseTest;
 import edu.dedupendnote.domain.BibliographicItem;
-import edu.dedupendnote.services.normalization.TitlesNormalizationService;
 
 // TODO: For boolean compare() tests on DefaultTitleComparisonService, see DefaultTitleComparisonServiceTest.
 class JWSimilarityTitleTest extends BaseTest {
+
+	@BeforeEach
+	void initTestDir() {
+		testDir = baseDir.resolve("unit");
+	}
 
 	@ParameterizedTest(name = "{index}: jaroWinkler({0}, {1})={2}")
 	@MethodSource("positiveArgumentProvider")
@@ -431,123 +427,5 @@ class JWSimilarityTitleTest extends BaseTest {
 		);
 	}
 	// @formatter:on
-
-	/*
-	 * FIXME: This is far from complete. See comment in BibliographicItemReader (above erratumPattern) with the examples of errata
-	 * WITHOUT words as erratum / correction / corrigendum in the title.
-	 * See https://github.com/globbestael/DedupEndNote/issues/32
-	 */
-	@Test
-	void testBalanceBracesPattern() {
-		// https://stackoverflow.com/questions/47162098/is-it-possible-to-match-nested-brackets-with-a-regex-without-using-recursion-or/47162099#47162099
-		String s = "Severe deficiency of the specific von Willebrand factor-cleaving protease (ADAMTS 13) activity in a subgroup of children with atypical hemolytic uremic syndrome (vol 142, pg 310, 2003)";
-		Matcher matcher = TitlesNormalizationService.BALANCED_BRACES_PATTERN.matcher(s);
-		List<String> expectedMatches = List.of("(ADAMTS 13)", "(vol 142, pg 310, 2003)");
-		List<String> foundMatches = new ArrayList<>();
-		while (matcher.find()) {
-			System.err.println("Found: " + matcher.group(0) + "\t ends at " + matcher.end(0) + " in string with length "
-					+ s.length());
-			foundMatches.add(matcher.group(0));
-		}
-		assertThat(foundMatches).isEqualTo(expectedMatches);
-	}
-
-	@Test
-	void testErrataFromFile() throws IOException {
-		Path path = testDir.resolve("all/all__ST_TI_ending_with_round_bracket.txt");
-		List<String> lines = Files.readAllLines(path);
-
-		List<String> results = new ArrayList<>();
-
-		for (String line : lines) {
-			Matcher matcher = BibliographicItemReader.SOURCE_PATTERN.matcher(line);
-			if (matcher.matches()) {
-				System.err.println("\t- " + matcher.group(1));
-				results.add(matcher.group(1));
-			}
-		}
-
-		assertThat(results).as("There are more than 10 results").hasSizeGreaterThan(10);
-		assertThat(lines).as("There are more than 100 lines").hasSizeGreaterThan(100);
-	}
-
-	@Test
-	void testPositiveCommentsFromFile() throws IOException {
-		Path path = testDir.resolve("all/All__comment__positive_examples.txt");
-		List<String> lines = Files.readAllLines(path);
-
-		List<String> nonMatchedCases = new ArrayList<>();
-		List<String> matchedCases = new ArrayList<>();
-
-		for (String line : lines) {
-			Matcher matcher = BibliographicItemReader.COMMENT_PATTERN.matcher(line);
-			if (matcher.matches()) {
-				// System.err.println("- OK: Real comment matched by regex: " + line);
-				matchedCases.add(line);
-			} else {
-				System.err.println("- ERROR: Real comment NOT matched by regex: " + line);
-				nonMatchedCases.add(line);
-			}
-		}
-
-		SoftAssertions softAssertions = new SoftAssertions();
-		softAssertions.assertThat(nonMatchedCases)
-				.as("There are positive examples which are NOT caught as normal comments").hasSize(0);
-		softAssertions.assertThat((100 * matchedCases.size()) / lines.size())
-				.as("Only " + (100 * matchedCases.size()) / lines.size() + "% of positive cases caught").isEqualTo(100);
-		softAssertions.assertAll();
-	}
-
-	@Test
-	void testNegativeCommentsFromFile() throws IOException {
-		Path path = testDir.resolve("all/All__comment__negative_examples.txt");
-		List<String> lines = Files.readAllLines(path);
-
-		List<String> negativeResults = new ArrayList<>();
-		int EXPECTED_NUMBER_OF_ERRORS = 8;
-
-		for (String line : lines) {
-			Matcher matcher = BibliographicItemReader.COMMENT_PATTERN.matcher(line);
-			if (matcher.matches()) {
-				System.err.println("- ERROR: Non-comment matched by regex: " + line);
-				negativeResults.add(line);
-			}
-		}
-
-		SoftAssertions softAssertions = new SoftAssertions();
-		softAssertions.assertThat(negativeResults).as("There are non-comments which are not matched as normal comments")
-				.hasSize(EXPECTED_NUMBER_OF_ERRORS);
-		// softAssertions.assertThat((100 * negativeResults.size()) / lines.size())
-		// 		.as((100 * negativeResults.size()) / lines.size() + "% of negative cases are not caught").isEqualTo(0);
-		softAssertions.assertAll();
-	}
-
-	@Test
-	void testPositiveCommentsAndRepliesFromFile() throws IOException {
-		Path path = testDir.resolve("all/All__comment_AND_reply__positive_examples.txt");
-		List<String> lines = Files.readAllLines(path);
-
-		List<String> nonMatchedCases = new ArrayList<>();
-		List<String> matchedCases = new ArrayList<>();
-		int EXPECTED_NUMBER_OF_ERRORS = 1;
-
-		for (String line : lines) {
-			Matcher matcher = BibliographicItemReader.COMMENT_PATTERN.matcher(line);
-			if (matcher.matches()) {
-				// System.err.println("- OK: Real comment and reply matched by regex: " + line);
-				matchedCases.add(line);
-			} else {
-				System.err.println("- ERROR: Real comment and reply NOT matched by regex: " + line);
-				nonMatchedCases.add(line);
-			}
-		}
-
-		SoftAssertions softAssertions = new SoftAssertions();
-		softAssertions.assertThat(nonMatchedCases).as("There are examples which are NOT caught as comments and replies")
-				.hasSize(EXPECTED_NUMBER_OF_ERRORS);
-		// softAssertions.assertThat((100 * matchedCases.size()) / lines.size())
-		// 		.as("Only " + (100 * matchedCases.size()) / lines.size() + "% of positive cases caught").isEqualTo(100);
-		softAssertions.assertAll();
-	}
 
 }

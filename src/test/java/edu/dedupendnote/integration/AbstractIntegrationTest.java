@@ -3,7 +3,6 @@ package edu.dedupendnote.integration;
 import java.nio.file.Path;
 
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -23,7 +22,7 @@ public abstract class AbstractIntegrationTest {
 	@MockitoBean
 	protected SimpMessagingTemplate simpMessagingTemplate;
 
-	protected Path baseDir = Path.of(System.getProperty("user.home", "")).resolve("dedupendnote_files");
+	protected Path baseDir = Path.of(System.getProperty("user.home", "")).resolve("dedupendnote_input_files");
 
 	protected Path testDir = baseDir;
 
@@ -35,8 +34,4 @@ public abstract class AbstractIntegrationTest {
 		log.debug("Logging level set to INFO");
 	}
 
-	@BeforeEach
-	void initTestDir() {
-		testDir = baseDir;
-	}
 }

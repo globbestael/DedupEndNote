@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -42,6 +43,11 @@ class AuthorExperimentsTests extends AbstractIntegrationTest {
 	@Autowired
 	BibliographicItemReader bibliographicItemReader;
 
+	@BeforeEach
+	void initTestDir() {
+		testDir = baseDir.resolve("validation");
+	}
+
 	@Test
 	void higherAuthorThresholdsReduceSensitivityAndIncreaseSpecificity() throws IOException {
 		// SRA2_Haematology: 222 TP, 6 FN, 1186 TN, 1 FP — has both TN and FP, making
@@ -73,13 +79,13 @@ class AuthorExperimentsTests extends AbstractIntegrationTest {
 		ValidationResult expResult = validationService.checkResults("SRA2_Haematology_experimental", inputPath,
 				outputPath, truthPath, bibliographicItems, duration, /* withTracing= */ false, expService);
 
+		System.err.println("Baseline:   " + baseline);
+		System.err.println("Experiment: " + expResult);
+
 		// Higher author thresholds miss more duplicates (lower sensitivity) …
 		assertThat(expResult.getSensitivity()).isLessThan(baseline.getSensitivity());
 		// … but produce fewer false positives (higher or equal specificity).
 		assertThat(expResult.getSpecificity()).isGreaterThanOrEqualTo(baseline.getSpecificity());
-
-		System.err.println("Baseline:   " + baseline);
-		System.err.println("Experiment: " + expResult);
 	}
 
 }

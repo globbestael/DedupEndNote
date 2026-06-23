@@ -131,11 +131,13 @@ Bibliographic Items with no year (year = 0) are added to the adjacent-year bucke
 
 These categories affect which comparison rules apply. Detected during normalization (`BibliographicItemReader`) and stored as boolean flags on `BibliographicItem`.
 
+Reply and Phase detection runs in `BibliographicItemReader.addNormalizedTitle`, so it is applied to **every** title-bearing field (`TI`, `OP`, `ST`, `T3`, and the `TI` continuation line), not only `TI`. The flags are sticky — once set by any title field they are never cleared.
+
 | Type | Detection | Effect on algorithm |
 |---|---|---|
 | **Cochrane Review** | DOI matches pattern `10.1002/14651858.*` | Year must match exactly; DOI compared before pages in step 2; no INSUFFICIENT_DATA leniency |
-| **Reply** | Title matches reply/letter/erratum/comment patterns | Step 4 (title) skipped; higher author threshold in step 3; stricter journal threshold in step 5 |
-| **Phase Publication** | "Phase I", "Phase II", "Phase III" in title | Title threshold raised to 0.96 (strictest) |
+| **Reply** | Any title field matches reply/letter/erratum/comment patterns (`REPLY_PATTERN`, `ERRATUM_PATTERN`, `SOURCE_PATTERN`, `COMMENT_PATTERN`) | Step 4 (title) skipped; higher author threshold in step 3; stricter journal threshold in step 5 |
+| **Phase Publication** | Any title field matches `PHASE_PATTERN` ("Phase I", "Phase II", "Phase III", "Phase 1..4") | Title threshold raised to 0.96 (strictest) |
 | **ClinicalTrials.gov Publication** | Source field indicates ClinicalTrials.gov origin | Step 4 (title) skipped when both items originate from CTG; titles normalised in enrichment |
 
 Types are not mutually exclusive — a Bibliographic Item can be simultaneously a Reply and a Phase Publication.
