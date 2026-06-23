@@ -47,6 +47,10 @@ The update should land in the same commit as the code change.
 # Security scanning
 ./mvnw verify -DskipTests                      # Run SpotBugs + Find Security Bugs (skip tests for speed)
 ./mvnw dependency-check:check                  # Run OWASP dependency CVE scan (slow, needs NVD download)
+
+# Coverage
+# JaCoCo report is written to target/site/jacoco/ after any test run except -Pvalidation-tests
+# VS Code: Coverage Gutters extension reads target/site/jacoco/jacoco.xml → Display Coverage
 ```
 
 ## Architecture
@@ -110,6 +114,9 @@ Path.of(inputPath + "_mark.txt")
 Two compile-time plugins are active — violations are **build errors**:
 - **NullAway** (v0.12.12): enforces JSpecify null-safety annotations on all public APIs. Annotate new public methods with `@Nullable` where applicable; unannotated parameters are treated as `@NonNull`.
 - **Error Prone** (v2.42.0): catches common Java mistakes at compile time.
+
+One test-phase plugin runs automatically on every `./mvnw test` (skipped for `-Pvalidation-tests`):
+- **JaCoCo** (v0.8.12): instruments bytecode and writes coverage data to `target/site/jacoco/`. Excluded from the report: `DedupEndNoteApplication`, `WebConfig`, `WebSocketConfig`, `ProjectVersionAdvice`, and `package-info` stubs. Lombok-generated methods are excluded automatically via `@lombok.Generated`. The `argLine` property in `pom.xml` uses `@{argLine}` late-binding so JaCoCo's agent string is injected at execution time.
 
 One verify-phase plugin runs during `./mvnw verify`:
 - **SpotBugs + Find Security Bugs** (v4.10.2.0 / findsecbugs v1.14.0): scans compiled bytecode for OWASP Top 10 security patterns. Only `SECURITY`-category bugs are reported (see `spotbugs-security-include.xml`). Known false positives and accepted-risk findings are documented in `spotbugs-security-exclude.xml`.
