@@ -17,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
  * Testing the threshold of author comparison with the authors of validated duplicates
  */
 @Slf4j
-class AuthorsComparisonThresholdTest extends AuthorsBaseTest {
+class DefaultAuthorsComparisonServiceThresholdTest extends AuthorsBaseTest {
 
 	List<Triple> triples = new ArrayList<>();
 

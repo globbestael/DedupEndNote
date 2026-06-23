@@ -139,7 +139,7 @@ Tests live under three roots, each with a corresponding Maven profile:
 - **`unit/services/comparison/DefaultJournalComparisonServiceTest extends BaseTest`** — boolean `compare()` tests for journals (inline parameterized) and a file-based test against validated journal pairs
 - **`unit/services/comparison/JWSimilarityTitleTest extends BaseTest`** — title JWS-similarity tests only
 - **`unit/services/comparison/JWSimilarityAuthorTest extends AuthorsBaseTest`** — plain JUnit 5, no Spring; tests raw `jws.apply` score
-- Standalone comparison test classes (no Spring context): `DefaultJournalComparisonServiceIssnTest`, `DefaultTitleComparisonServiceTest`, `JWSimilarityJournalTest`, `JWSimilarityAbstractTest`, `AuthorsComparisonThresholdTest`, `AuthorVariantsExperimentsTest`, `AuthorPermutationsExperimentsTest`
+- Standalone comparison test classes (no Spring context): `DefaultJournalComparisonServiceIssnTest`, `DefaultTitleComparisonServiceTest`, `DefaultAuthorsComparisonServiceThresholdTest`, `JWSimilarityJournalTest`, `JWSimilarityAbstractTest`, `AuthorVariantsExperimentsTest`, `AuthorPermutationsExperimentsTest`
 
 - Normalization test classes in `unit/services/normalization/` (no Spring context): `AuthorsNormalizationServiceTest`, `JournalsNormalizationServiceTest`, `PagesNormalizationServiceTest`, `TitlesNormalizationServiceTest`, `NormalizationServiceTextTest`, `NormalizationServiceDoiTest`, `NormalizationServiceIssnTest`
 
