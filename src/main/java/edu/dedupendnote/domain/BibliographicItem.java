@@ -98,7 +98,7 @@ public class BibliographicItem {
 	 * Publications which are replies need special treatment. See the Pattern in the {@link BibliographicItemReader#REPLY_PATTERN}
 	 * - bibliographicItem pairs where one of them is isReply == true, aren't compared for title (always true)
 	 * - journals are compared stricter (JournalThresholds.DEFAULT.reply() > JournalThresholds.DEFAULT.noReply())
-	 * - in enrich() the longest title of a duplicate set is used
+	 * - in EnrichmentService::enrich() the longest title of a duplicate set with is used
 	 */
 	private boolean isReply = false;
 	public boolean isSeveralPages;

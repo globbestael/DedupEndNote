@@ -86,7 +86,7 @@ public class BibliographicItemReader {
 	 * "Corrigendum to '"
 	 * "Corrigendum to: "
 	 * "Corrigendum: "
-
+	
 	 * "Erratum to "  [A-Z]...
 	 * "Erratum: "
 	 *
@@ -114,9 +114,6 @@ public class BibliographicItemReader {
 	 * Errata are treated in the same was as replies: In BibliographicItemReader::readBibliographicItems titles which match
 	 * the erratumPattern also set the BibliographicItem::isReply field. In the comparisons of the DeduplicationService
 	 * and in the enrich steps they are treated exactly like replies.
-	 *
-	 * Because the errata titles are skipped in the DeduplicationService::compareTtitlesm, there is NO proprocessing
-	 * of them in BibliographicItem::addTitles.
 	 */
 	// @formatter:on
 	public static final Pattern REPLY_PATTERN = Pattern
@@ -517,7 +514,8 @@ public class BibliographicItemReader {
 		if (fieldContent.toLowerCase().contains("cochrane")) {
 			bibliographicItem.setCochrane(true);
 		}
-		bibliographicItem.getJournals().addAll(JournalsNormalizationService.normalizeInputJournals(fieldContent, fieldName));
+		bibliographicItem.getJournals()
+				.addAll(JournalsNormalizationService.normalizeInputJournals(fieldContent, fieldName));
 	}
 
 	public static void addNormalizedPages(Map<String, String> pagesInputMap, BibliographicItem bibliographicItem) {
@@ -530,7 +528,8 @@ public class BibliographicItemReader {
 			}
 		}
 
-		PageRecord normalizedPages = PagesNormalizationService.normalizeInputPages(pagesInputMap, bibliographicItem.getId());
+		PageRecord normalizedPages = PagesNormalizationService.normalizeInputPages(pagesInputMap,
+				bibliographicItem.getId());
 		bibliographicItem.setPageStart(normalizedPages.pageStart());
 		bibliographicItem.setPagesOutput(normalizedPages.pagesOutput());
 		bibliographicItem.setSeveralPages(normalizedPages.isSeveralPages());
@@ -606,7 +605,8 @@ public class BibliographicItemReader {
 	 */
 	private static @Nullable String getCochranePagesFromDoi(BibliographicItem bibliographicItem) {
 		String c7 = null;
-		log.debug("Reached Cochrane bibliographicItem without pageStart, getting it from the DOIs: {}", bibliographicItem.getAuthors());
+		log.debug("Reached Cochrane bibliographicItem without pageStart, getting it from the DOIs: {}",
+				bibliographicItem.getAuthors());
 		for (String doi : bibliographicItem.getDois()) {
 			Matcher matcher = DeduplicationService.COCHRANE_DOI_PATTERN.matcher(doi);
 			if (matcher.matches()) {
