@@ -1,5 +1,7 @@
 package edu.dedupendnote.services;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -132,6 +134,64 @@ public class EnrichmentService {
 		}
 
 		log.debug("Finished enrich");
+	}
+
+	/*
+	 * Applies enriched BibliographicItem data to the raw RIS field map assembled by BibliographicItemWriter
+	 * from the original input file. Called once per Kept Bibliographic Item during Remove Mode writing.
+	 * Complements enrich(): that method populates the domain object; this one projects those values —
+	 * plus RIS-map-specific enrichments (T2 from J2, ClinicalTrials.gov URL, author cleanup) — onto the map.
+	 */
+	public void enrichMap(Map<String, String> map, BibliographicItem bibliographicItem) {
+		if (!bibliographicItem.getDois().isEmpty()) {
+			map.put("DO", "https://doi.org/"
+					+ bibliographicItem.getDois().stream().collect(Collectors.joining("\nhttps://doi.org/")));
+		}
+		if (bibliographicItem.getPagesOutput() == null || bibliographicItem.getPagesOutput().isEmpty()) {
+			map.remove("SP");
+		} else {
+			map.put("SP", bibliographicItem.getPagesOutput());
+		}
+		if (bibliographicItem.isReply() || bibliographicItem.getTitle() != null) {
+			map.put("TI", bibliographicItem.getTitle());
+			map.put("ST", bibliographicItem.getTitle());
+		}
+		if (bibliographicItem.isClinicalTrialGov()) {
+			map.put("TY", "JOUR");
+			map.put("T2", "https://clinicaltrials.gov");
+			String url = "https://clinicaltrials.gov/study/" + bibliographicItem.getPageStart();
+			List<String> urlList = new ArrayList<>();
+			if (map.containsKey("UR")) {
+				String urls = map.get("UR");
+				urlList.addAll(Arrays.asList(urls.split("\n")));
+				urlList.removeIf(u -> u.startsWith("https://clinicaltrials.gov"));
+				if (urlList.isEmpty()) {
+					map.put("UR", url);
+				} else {
+					map.put("UR", url + "\nUR  - " + urlList.stream().map(u -> u.replace("UR  - ", ""))
+							.collect(Collectors.joining("\nUR  - ")));
+				}
+			} else {
+				map.put("UR", url);
+			}
+		}
+
+		// Some unusual authors should be kept, e.g. Group authors
+		if (bibliographicItem.getAuthors().isEmpty()
+				&& ("Anonymous".equals(map.get("AU")) || "Nct".equals(map.get("AU")))) {
+			map.remove("AU");
+		}
+		if (!map.containsKey("PY") && bibliographicItem.getPublicationYear() != 0) {
+			map.put("PY", Integer.toString(bibliographicItem.getPublicationYear()));
+		}
+		if (!map.containsKey("T2")) {
+			if (map.containsKey("J2")) {
+				map.put("T2", map.get("J2"));
+			} else if (map.containsKey("DO") && map.get("DO").contains("https://doi.org/10.2139/ssrn")) {
+				// alternative test could be ISSN 1556-5068
+				map.put("T2", "Social Science Research Network");
+			}
+		}
 	}
 
 }

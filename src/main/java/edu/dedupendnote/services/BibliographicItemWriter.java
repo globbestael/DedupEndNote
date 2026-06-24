@@ -5,8 +5,6 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -14,7 +12,6 @@ import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 
-import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Service;
 
 import edu.dedupendnote.domain.BibliographicItem;
@@ -26,23 +23,17 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 public class BibliographicItemWriter {
 
-	// @formatter:off
-	/**
-	 * - PageStart (PG) and DOIs (DO) are replaced or inserted, but written at the same place as in the input file to
-	 *   make comparisons between input file and output file easier.
-	 * - Absent BibliographicItem year (PY) is replaced if there is one found in a duplicate record.
-	 * - Author (AU) Anonymous is skipped.
-	 * - Title (TI) is replaced with the longest duplicate title when it contains "Reply".
-	 * - Article Number (C7) is skipped.
-	 * - Absent Journal Name (T2) is copied from J2 (or filed in based on DOI foor SSRN): for embase.com records
-	 *   (but no check on this origin!)
-	 *
-	 * bibliographicItems are read into a TreeMap, with continuation lines added.
-	 * writeBibliographicItems(...) does the replacements, and writes to the output file.
-	 */
-	// @formatter:on
-	public int writeBibliographicItems(List<BibliographicItem> bibliographicItems, Path inputPath,
-			Path outputPath, DeduplicationMode mode) {
+	private final EnrichmentService enrichmentService;
+
+	public BibliographicItemWriter(EnrichmentService enrichmentService) {
+		this.enrichmentService = enrichmentService;
+	}
+
+	// Fields are read into a TreeMap (continuation lines merged), written with TY first and ID/ER last.
+	// In Remove Mode, EnrichmentService.enrichMap() applies enriched data before the fields are written.
+	// In Remove Mode, C7 (Article Number) is skipped.
+	public int writeBibliographicItems(List<BibliographicItem> bibliographicItems, Path inputPath, Path outputPath,
+			DeduplicationMode mode) {
 		log.debug("Start writing to file {}", outputPath);
 		List<BibliographicItem> bibliographicItemsToKeep = bibliographicItems.stream()
 				.filter(BibliographicItem::isKeptBibliographicItem).toList();
@@ -136,59 +127,11 @@ public class BibliographicItemWriter {
 	 * Ordering of an EndNote export RIS file: the fields are ordered
 	 * alphabetically, except for TY (first), and ID and ER (last fields)
 	 */
-	private void writeBibliographicItem(Map<String, String> map, @Nullable BibliographicItem bibliographicItem,
-			BufferedWriter bw, DeduplicationMode mode) throws IOException {
+	private void writeBibliographicItem(Map<String, String> map, BibliographicItem bibliographicItem, BufferedWriter bw,
+			DeduplicationMode mode) throws IOException {
 		boolean removeMode = mode == DeduplicationMode.REMOVE;
-		if (removeMode && bibliographicItem != null) {
-			if (!bibliographicItem.getDois().isEmpty()) {
-				map.put("DO", "https://doi.org/"
-						+ bibliographicItem.getDois().stream().collect(Collectors.joining("\nhttps://doi.org/")));
-			}
-			if (bibliographicItem.getPagesOutput() == null || bibliographicItem.getPagesOutput().isEmpty()) {
-				map.remove("SP");
-			} else {
-				map.put("SP", bibliographicItem.getPagesOutput());
-			}
-			if (bibliographicItem.isReply() || bibliographicItem.getTitle() != null) {
-				map.put("TI", bibliographicItem.getTitle());
-				map.put("ST", bibliographicItem.getTitle());
-			}
-			if (bibliographicItem.isClinicalTrialGov()) {
-				map.put("TY", "JOUR");
-				map.put("T2", "https://clinicaltrials.gov");
-				String url = "https://clinicaltrials.gov/study/" + bibliographicItem.getPageStart();
-				List<String> urlList = new ArrayList<>();
-				if (map.containsKey("UR")) {
-					String urls = map.get("UR");
-					urlList.addAll(Arrays.asList(urls.split("\n")));
-					urlList.removeIf(u -> u.startsWith("https://clinicaltrials.gov"));
-					if (urlList.isEmpty()) {
-						map.put("UR", url);
-					} else {
-						map.put("UR", url + "\nUR  - " + urlList.stream().map(u -> u.replace("UR  - ", ""))
-								.collect(Collectors.joining("\nUR  - ")));
-					}
-				} else {
-					map.put("UR", url);
-				}
-			}
-
-			// Some unusual authors should be kept, e.g. Group authors
-			if (bibliographicItem.getAuthors().isEmpty()
-					&& ("Anonymous".equals(map.get("AU")) || "Nct".equals(map.get("AU")))) {
-				map.remove("AU");
-			}
-			if (!map.containsKey("PY") && bibliographicItem.getPublicationYear() != 0) {
-				map.put("PY", Integer.toString(bibliographicItem.getPublicationYear()));
-			}
-			if (!map.containsKey("T2")) {
-				if (map.containsKey("J2")) {
-					map.put("T2", map.get("J2"));
-				} else if (map.containsKey("DO") && map.get("DO").contains("https://doi.org/10.2139/ssrn")) {
-					// alternative test could be ISSN 1556-5068
-					map.put("T2", "Social Science Research Network");
-				}
-			}
+		if (removeMode) {
+			enrichmentService.enrichMap(map, bibliographicItem);
 		}
 		// in REMOVE mode C7 (Article number) is skipped; in MARK mode C7 is kept
 		String skipFields = removeMode ? "(C7|ER|ID|TY|XYZ)" : "(ER|ID|TY|XYZ)";
