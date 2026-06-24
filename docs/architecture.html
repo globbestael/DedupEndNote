@@ -272,7 +272,7 @@ sequenceDiagram
     DS->>ES: enrich(bibliographicItems)
     ES-->>DS: Kept Bibliographic Items enriched
 
-    DS->>Writer: writeDeduplicatedBibliographicItems / writeMarkedBibliographicItems
+    DS->>Writer: writeBibliographicItems(mode)
     DS-->>WS: progressReporter.accept("DONE: N duplicates found …")
     deactivate DS
     WS-->>Browser: DONE: N duplicates found …

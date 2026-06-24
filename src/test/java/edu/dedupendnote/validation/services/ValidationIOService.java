@@ -196,7 +196,7 @@ public class ValidationIOService {
 		log.debug("Finished writing to file. # records: {}", numberWritten);
 	}
 
-	// Duplicates the non-enhance path of BibliographicItemWriter.writeBibliographicItem.
+	// Duplicates the MARK-mode path of BibliographicItemWriter.writeBibliographicItem.
 	private void writeRecord(Map<String, String> map, BufferedWriter bw) throws IOException {
 		StringBuilder sb = new StringBuilder();
 		sb.append("TY  - ").append(map.get("TY")).append("\n");

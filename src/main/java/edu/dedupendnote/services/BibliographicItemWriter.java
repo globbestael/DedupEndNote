@@ -18,6 +18,7 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Service;
 
 import edu.dedupendnote.domain.BibliographicItem;
+import edu.dedupendnote.domain.DeduplicationMode;
 import edu.dedupendnote.services.normalization.NormalizationService;
 import lombok.extern.slf4j.Slf4j;
 
@@ -37,11 +38,11 @@ public class BibliographicItemWriter {
 	 *   (but no check on this origin!)
 	 *
 	 * bibliographicItems are read into a TreeMap, with continuation lines added.
-	 * writebibliographicItems(...) does the replacements, and writes to the output file.
+	 * writeBibliographicItems(...) does the replacements, and writes to the output file.
 	 */
 	// @formatter:on
-	public int writeDeduplicatedBibliographicItems(List<BibliographicItem> bibliographicItems, Path inputPath,
-			Path outputPath) {
+	public int writeBibliographicItems(List<BibliographicItem> bibliographicItems, Path inputPath,
+			Path outputPath, DeduplicationMode mode) {
 		log.debug("Start writing to file {}", outputPath);
 		List<BibliographicItem> bibliographicItemsToKeep = bibliographicItems.stream()
 				.filter(BibliographicItem::isKeptBibliographicItem).toList();
@@ -79,92 +80,6 @@ public class BibliographicItemWriter {
 					previousFieldName = "XYZ";
 					switch (fieldName) {
 					case "ER":
-						map.put(fieldName, fieldContent);
-						phantomId++;
-						if (realId == null) {
-							bibliographicItem = recordIdMap.get(phantomId);
-							if (bibliographicItem != null) {
-								bibliographicItem.setId(phantomId);
-								map.put("ID", Integer.toString(phantomId));
-							}
-						}
-						if (bibliographicItem != null && bibliographicItem.isKeptBibliographicItem()) {
-							writeBibliographicItem(map, bibliographicItem, bw, true);
-							numberWritten++;
-						}
-						map.clear();
-						realId = null;
-						break;
-					case "ID": // EndNote BibliographicItem number
-						map.put(fieldName, fieldContent);
-						realId = fieldContent;
-						bibliographicItem = recordIdMap.get(Integer.parseInt(realId));
-						break;
-					default:
-						if (map.containsKey(fieldName)) {
-							if (line.startsWith(fieldName)) {
-								//								map.put(fieldName, map.get(fieldName) + "\n" + fieldContent);
-								map.put(fieldName, map.get(fieldName) + "\n" + line);
-							} else {
-								map.put(fieldName, map.get(fieldName) + "\n" + line);
-							}
-						} else {
-							map.put(fieldName, fieldContent);
-						}
-						previousFieldName = fieldName;
-						break;
-					}
-				} else { // continuation line
-					map.put(previousFieldName, map.get(previousFieldName) + "\n" + line);
-				}
-			}
-		} catch (IOException e) {
-			String message = "IOException while writing deduplicated records to %s at line %d: %s"
-					.formatted(outputPath.getFileName(), lineNumber, e.getMessage());
-			log.error(message, e);
-			throw new RuntimeException(message, e);
-		}
-		log.debug("Finished writing to file. # records: {}", numberWritten);
-		return numberWritten;
-	}
-
-	public int writeMarkedBibliographicItems(List<BibliographicItem> bibliographicItems, Path inputPath,
-			Path outputPath) {
-		log.debug("Start writing to file {}", outputPath);
-		List<BibliographicItem> bibliographicItemsToKeep = bibliographicItems.stream()
-				.filter(BibliographicItem::isKeptBibliographicItem).toList();
-		log.debug("Publications to be kept: {}", bibliographicItemsToKeep.size());
-
-		Map<Integer, BibliographicItem> recordIdMap = bibliographicItems.stream().filter(p -> p.getId() > 0)
-				.collect(Collectors.toMap(BibliographicItem::getId, Function.identity()));
-
-		int numberWritten = 0;
-		String fieldContent = null;
-		String fieldName = null;
-		String previousFieldName = "XYZ";
-		Map<String, String> map = new TreeMap<>();
-
-		boolean hasBom = UtilitiesService.detectBom(inputPath);
-
-		try (BufferedWriter bw = Files.newBufferedWriter(outputPath);
-				BufferedReader br = Files.newBufferedReader(inputPath)) {
-			if (hasBom) {
-				br.skip(1);
-			}
-			String line;
-			BibliographicItem bibliographicItem = null;
-			int phantomId = 0;
-			String realId = null;
-
-			while ((line = br.readLine()) != null) {
-				line = NormalizationService.normalizeHyphensAndWhitespace(line);
-				Matcher matcher = BibliographicItemReader.RIS_LINE_PATTERN.matcher(line);
-				if (matcher.matches()) {
-					fieldName = matcher.group(1);
-					fieldContent = matcher.group(3);
-					previousFieldName = "XYZ";
-					switch (fieldName) {
-					case "ER":
 						phantomId++;
 						if (realId == null) {
 							bibliographicItem = recordIdMap.get(phantomId);
@@ -175,10 +90,10 @@ public class BibliographicItemWriter {
 						}
 						if (bibliographicItem != null && bibliographicItem.isKeptBibliographicItem()) {
 							map.put(fieldName, fieldContent);
-							if (bibliographicItem.getLabel() != null) {
+							if (mode == DeduplicationMode.MARK && bibliographicItem.getLabel() != null) {
 								map.put("LB", bibliographicItem.getLabel());
 							}
-							writeBibliographicItem(map, bibliographicItem, bw, false);
+							writeBibliographicItem(map, bibliographicItem, bw, mode);
 							numberWritten++;
 						}
 						map.clear();
@@ -190,7 +105,10 @@ public class BibliographicItemWriter {
 						bibliographicItem = recordIdMap.get(Integer.parseInt(realId));
 						break;
 					case "LB":
-						break; // to ensure that the present Label is not used.
+						if (mode == DeduplicationMode.MARK) {
+							break; // drop stale label; the computed label is added at ER
+						}
+						// REMOVE mode: fall through to default so existing LB is preserved
 					default:
 						if (map.containsKey(fieldName)) {
 							map.put(fieldName, map.get(fieldName) + "\n" + line);
@@ -205,7 +123,10 @@ public class BibliographicItemWriter {
 				}
 			}
 		} catch (IOException e) {
-			e.printStackTrace();
+			String message = "IOException while writing bibliographic items to %s at line %d: %s"
+					.formatted(outputPath.getFileName(), lineNumber, e.getMessage());
+			log.error(message, e);
+			throw new RuntimeException(message, e);
 		}
 		log.debug("Finished writing to file. # records: {}", numberWritten);
 		return numberWritten;
@@ -216,8 +137,9 @@ public class BibliographicItemWriter {
 	 * alphabetically, except for TY (first), and ID and ER (last fields)
 	 */
 	private void writeBibliographicItem(Map<String, String> map, @Nullable BibliographicItem bibliographicItem,
-			BufferedWriter bw, boolean enhance) throws IOException {
-		if (enhance && bibliographicItem != null) {
+			BufferedWriter bw, DeduplicationMode mode) throws IOException {
+		boolean removeMode = mode == DeduplicationMode.REMOVE;
+		if (removeMode && bibliographicItem != null) {
 			if (!bibliographicItem.getDois().isEmpty()) {
 				map.put("DO", "https://doi.org/"
 						+ bibliographicItem.getDois().stream().collect(Collectors.joining("\nhttps://doi.org/")));
@@ -268,8 +190,8 @@ public class BibliographicItemWriter {
 				}
 			}
 		}
-		// in enhanced mode C7 (Article number) is skipped, in Mark mode C7 is NOT skipped
-		String skipFields = enhance ? "(C7|ER|ID|TY|XYZ)" : "(ER|ID|TY|XYZ)";
+		// in REMOVE mode C7 (Article number) is skipped; in MARK mode C7 is kept
+		String skipFields = removeMode ? "(C7|ER|ID|TY|XYZ)" : "(ER|ID|TY|XYZ)";
 		StringBuilder sb = new StringBuilder();
 		sb.append("TY  - ").append(map.get("TY")).append("\n");
 		map.forEach((k, v) -> {

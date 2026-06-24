@@ -32,13 +32,14 @@ import lombok.extern.slf4j.Slf4j;
 public class DeduplicationService {
 
 	private final FieldComparators fieldComparators;
-
 	private final BibliographicItemReader bibliographicItemReader;
-
 	private final BibliographicItemWriter bibliographicItemWriter;
-
 	private final EnrichmentService enrichmentService;
 
+	/*
+		AuthorExperimentsTests builds it's own DeduplicationService. 
+		This int maxRecords is NOT initialized by @Value in that case, therefore  also initialized in Java ("= 100000").
+	 */
 	@Value("${dedup.max-records:100000}")
 	private int maxRecords = 100000;
 
@@ -65,7 +66,7 @@ public class DeduplicationService {
 	 *     copy the original content of the fields of this bibliographicItem from the input file to the output file
 	 *     except for the fields where content is standardized (DOI) or where content is enriched from the duplicates.
 	 *
-	 *   If markMode is set, bibliographicItems are not enriched and ALL bibliographicItems are written back.
+	 *   If DeduplicationMode.MARK, bibliographicItems are not enriched and ALL bibliographicItems are written back.
 	 *   If a bibliographicItem is a duplicate, the Label field (LB) contains the ID of the first duplicate found.
 	 *
 	 *
@@ -93,7 +94,7 @@ public class DeduplicationService {
 	 *    copy the original content of the fields of this bibliographicItem from the input file to the output file
 	 *    except for the fields where content is standardized (DOI) or where content is enriched from the duplicates.
 	 *
-	 *  If markMode is set, bibliographicItems are not enriched and ALL bibliographicItems of the NEW inputfile are written back.
+	 *  If If DeduplicationMode.MARK, bibliographicItems are not enriched and ALL bibliographicItems of the NEW inputfile are written back.
 	 *  If a bibliographicItem is a duplicate, the Label field (LB) contains the ID of the first duplicate found.
 	 *  If the label starts with "-", it is a duplicate from a bibliographicItem from the OLD input file.
 	 */
@@ -263,8 +264,8 @@ l						 * 		V 		W 		X
 		// @formatter:off
 		return switch (mode) {
 			case MARK -> {
-				int numberWritten = bibliographicItemWriter.writeMarkedBibliographicItems(bibliographicItems, inputPath,
-						outputPath);
+				int numberWritten = bibliographicItemWriter.writeBibliographicItems(bibliographicItems, inputPath,
+						outputPath, mode);
 				long labeledBibliographicItems = bibliographicItems.stream().filter(r -> r.getLabel() != null).count();
 				// TODO: use formatResultString which accepts a mode argument?
 				String s = "DONE: DedupEndNote has written " + numberWritten + " bibliographic items with "
@@ -276,8 +277,8 @@ l						 * 		V 		W 		X
 				progressReporter.accept("Enriching the " + bibliographicItems.size() + " deduplicated results");
 				enrichmentService.enrich(bibliographicItems);
 				progressReporter.accept("Saving the " + bibliographicItems.size() + " deduplicated results");
-				int numberWritten = bibliographicItemWriter.writeDeduplicatedBibliographicItems(bibliographicItems,
-						inputPath, outputPath);
+				int numberWritten = bibliographicItemWriter.writeBibliographicItems(bibliographicItems,
+						inputPath, outputPath, mode);
 				String s = formatResultString(bibliographicItems.size(), numberWritten);
 				progressReporter.accept(s);
 				yield s;
@@ -331,8 +332,8 @@ l						 * 		V 		W 		X
 		// @formatter:off
 		return switch (mode) {
 			case MARK -> {
-				int numberWritten = bibliographicItemWriter.writeMarkedBibliographicItems(bibliographicItems, newInputPath,
-						outputPath);
+				int numberWritten = bibliographicItemWriter.writeBibliographicItems(bibliographicItems, newInputPath,
+						outputPath, mode);
 				long numberLabeledBibliographicItems = bibliographicItems.stream()
 						.filter(r -> r.getLabel() != null && !r.isPresentInOldFile()).count();
 				String s = "DONE: DedupEndNote has written %s bibliographic items with %d duplicates marked in the Label field."
@@ -348,8 +349,8 @@ l						 * 		V 		W 		X
 						.filter(r -> !r.isPresentInOldFile() && (r.getLabel() == null || !r.getLabel().startsWith("-")))
 						.toList();
 				log.error("Publications to write: {}", filteredBibliographicItems.size());
-				int numberWritten = bibliographicItemWriter.writeDeduplicatedBibliographicItems(filteredBibliographicItems,
-						newInputPath, outputPath);
+				int numberWritten = bibliographicItemWriter.writeBibliographicItems(filteredBibliographicItems,
+						newInputPath, outputPath, mode);
 				String s = "DONE: DedupEndNote removed %d bibliographic items from the new set, and has written %d bibliographic items."
 						.formatted((newBibliographicItems.size() - numberWritten), numberWritten);
 				progressReporter.accept(s);
