@@ -126,6 +126,7 @@ class MissedDuplicatesTests extends AbstractIntegrationTest {
 		Path inputPath = testDir.resolve(fileName);
 		DeduplicationMode mode = DeduplicationMode.REMOVE;
 		assertThat(inputPath).exists();
+		deleteDerivedOutputs(inputPath);
 
 		String resultString = deduplicationService.deduplicateOneFile(inputPath, mode, message -> {
 		});

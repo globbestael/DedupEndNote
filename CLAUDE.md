@@ -151,7 +151,7 @@ Tests live under three roots, each with a corresponding Maven profile:
 - Normalization test classes in `unit/services/normalization/` (no Spring context): `AuthorsNormalizationServiceTest`, `JournalsNormalizationServiceTest`, `PagesNormalizationServiceTest`, `TitlesNormalizationServiceTest`, `NormalizationServiceTextTest`, `NormalizationServiceDoiTest`, `NormalizationServiceIssnTest`
 
 **Integration (`edu.dedupendnote.integration.*`)**
-- **`integration/AbstractIntegrationTest`** — base for all `@SpringBootTest` tests; provides `@ActiveProfiles("test")`, `@MockitoBean SimpMessagingTemplate`, `Path baseDir`, `Path testDir`, `@BeforeAll` (log level → INFO), `@BeforeEach initTestDir()`. Subclasses override `initTestDir()` when they need a subdirectory.
+- **`integration/AbstractIntegrationTest`** — base for all `@SpringBootTest` tests; provides `@ActiveProfiles("test")`, `@MockitoBean SimpMessagingTemplate`, `Path baseDir`, `Path testDir`, `@BeforeAll` (log level → INFO), `@BeforeEach initTestDir()`. Subclasses override `initTestDir()` when they need a subdirectory. Also provides `deleteDerivedOutputs(Path inputPath)` — call this as the first action in any test that writes output files so a failed run cannot leave a previous run's output on disk to mislead a developer.
 - Integration test classes extending `AbstractIntegrationTest`: `DeduplicationServiceTests` (one-file and two-file deduplication smoke tests), `MissedDuplicatesTests`
 
 **Validation (`edu.dedupendnote.validation.*`)**

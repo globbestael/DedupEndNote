@@ -29,6 +29,7 @@ class DeduplicationServiceTests extends AbstractIntegrationTest {
 	void deduplicate_OK() {
 		Path inputPath = testDir.resolve("t1.txt");
 		DeduplicationMode mode = DeduplicationMode.REMOVE;
+		deleteDerivedOutputs(inputPath);
 
 		String resultString = deduplicationService.deduplicateOneFile(inputPath, mode, message -> {
 		});
@@ -46,6 +47,7 @@ class DeduplicationServiceTests extends AbstractIntegrationTest {
 		Path inputPath = testDir.resolve(fileName);
 		DeduplicationMode mode = DeduplicationMode.REMOVE;
 		assertThat(inputPath).exists();
+		deleteDerivedOutputs(inputPath);
 
 		String resultString = deduplicationService.deduplicateOneFile(inputPath, mode, message -> {
 		});
@@ -57,6 +59,7 @@ class DeduplicationServiceTests extends AbstractIntegrationTest {
 	void deduplicate_withDuplicateIDs() {
 		Path inputPath = testDir.resolve("File_with_duplicate_IDs.txt");
 		DeduplicationMode mode = DeduplicationMode.REMOVE;
+		deleteDerivedOutputs(inputPath);
 
 		assertThatThrownBy(() -> deduplicationService.deduplicateOneFile(inputPath, mode, message -> {}))
 				.isInstanceOf(DuplicateIdsException.class)
@@ -68,6 +71,7 @@ class DeduplicationServiceTests extends AbstractIntegrationTest {
 		Path oldInputPath = testDir.resolve("TwoFiles_1.txt");
 		Path newInputPath = testDir.resolve("TwoFiles_2.txt");
 		DeduplicationMode mode = DeduplicationMode.REMOVE;
+		deleteDerivedOutputs(newInputPath); // output is derived from the new-file input
 
 		String resultString = deduplicationService.deduplicateTwoFiles(newInputPath, oldInputPath, mode, message -> {
 		});

@@ -57,6 +57,7 @@ class AuthorExperimentsTests extends AbstractIntegrationTest {
 		Path inputPath = testDir.resolve("SRA2/Haematology.txt");
 		Path outputPath = testDir.resolve("SRA2/Haematology_experimental_to_validate.txt");
 		Path truthPath = testDir.resolve("SRA2/Haematology_TRUTH.txt");
+		deleteDerivedOutputs(inputPath);
 
 		// Threshold == 1.0 (the max JWS score) — similarity > 1.0 is never true, so no author
 		// match ever succeeds; sensitivity drops to 0%, specificity reaches 100%.
