@@ -20,8 +20,6 @@
 - should there be external files for some of the new tests in BibliographicItemReaderTests?
 - better tests in DefaultTitleComparisonServiceTest?
 - should we test Mendeley? see C:\Users\geert\dedupendnote_input_files\validation\other
-- should tests which write files, remove the output files from previous runs at the start of the test? Several types of Exceptions are thrown
-  now which will show that something went wrong, but the old output files might (later) suggest that they are current
 
 ## OWASP
 

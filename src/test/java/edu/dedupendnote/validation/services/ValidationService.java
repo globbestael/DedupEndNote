@@ -45,8 +45,7 @@ public class ValidationService {
 	List<Pattern> tracePatterns = List.of(Pattern.compile("- (0|1|2|3|4). .+"),
 			Pattern.compile("\\d+ - \\d+ ARE (NOT )?DUPLICATES"));
 
-	public ValidationResult checkResults(
-			String setName, Path inputPath, Path outputPath, Path truthPath,
+	public ValidationResult checkResults(String setName, Path inputPath, Path outputPath, Path truthPath,
 			List<BibliographicItem> bibliographicItems, long durationMs, boolean withTracing,
 			DeduplicationService deduplicationService) throws IOException {
 
@@ -55,10 +54,9 @@ public class ValidationService {
 		Map<Integer, BibliographicItem> publicationMap = bibliographicItems.stream()
 				.collect(Collectors.toMap(BibliographicItem::getId, Function.identity()));
 		List<BibliographicItemDB> publicationDBs = recordDBService.convertToRecordDB(bibliographicItems, inputPath);
-		Map<Integer, BibliographicItemDB> validationMap = publicationDBs.stream()
-				.collect(Collectors.toMap(BibliographicItemDB::getId, Function.identity(), (o1, o2) -> o1, TreeMap::new));
-		Map<Integer, Set<Integer>> trueDuplicateSets = truthRecords.stream()
-				.filter(r -> r.getDedupid() != null)
+		Map<Integer, BibliographicItemDB> validationMap = publicationDBs.stream().collect(
+				Collectors.toMap(BibliographicItemDB::getId, Function.identity(), (o1, o2) -> o1, TreeMap::new));
+		Map<Integer, Set<Integer>> trueDuplicateSets = truthRecords.stream().filter(r -> r.getDedupid() != null)
 				.collect(Collectors.groupingBy(BibliographicItemDB::getDedupid,
 						Collectors.mapping(BibliographicItemDB::getId, Collectors.toSet())));
 		int tns = 0, tps = 0, fps = 0, fns = 0;
@@ -133,7 +131,8 @@ public class ValidationService {
 				.count();
 
 		System.err.println("File " + setName + " has unique duplicates: " + uniqueDuplicates);
-		ValidationResult validationResult = new ValidationResult(setName, tps, fns, tns, fps, durationMs, (int) uniqueDuplicates);
+		ValidationResult validationResult = new ValidationResult(setName, tps, fns, tns, fps, durationMs,
+				(int) uniqueDuplicates);
 
 		if (withTracing) {
 			/*
@@ -143,8 +142,6 @@ public class ValidationService {
 			 */
 			Path fpAnalysisPath = UtilitiesService.createPath(inputPath, "_FP_Analysis", "txt");
 			Path fnAnalysisPath = UtilitiesService.createPath(inputPath, "_FN_Analysis", "txt");
-			Files.deleteIfExists(fpAnalysisPath);
-			Files.deleteIfExists(fnAnalysisPath);
 			if (!fnPairs.isEmpty()) {
 				validationResult.setFnPairs(fnPairs);
 				writeFNandFPresults(fnPairs, fnAnalysisPath, deduplicationService);
@@ -167,6 +164,7 @@ public class ValidationService {
 		return validationResult;
 	}
 
+	// @formatter:off
 	public List<BibliographicItemDB> readTruthFile(Path truthPath) throws IOException {
 		CsvMapper mapper = new CsvMapper();
 		CsvSchema schema = mapper
@@ -183,7 +181,9 @@ public class ValidationService {
 			return it.readAll();
 		}
 	}
+	// @formatter:on
 
+	// @formatter:off
 	private void writeFNandFPresults(Map<Integer, List<List<BibliographicItem>>> pairsList, Path outputPath,
 			DeduplicationService deduplicationService) {
 		List<Logger> loggers = new ArrayList<>();
@@ -191,7 +191,7 @@ public class ValidationService {
 			"edu.dedupendnote.services.DeduplicationService",
 			"edu.dedupendnote.services.DefaultAuthorsComparisonService",
 			"edu.dedupendnote.services.ValidationTests" // add this file because of trace on bibliographicItem year
-			);
+		);
 		Level oldLevel = null;
 
 		try (BufferedWriter bw = Files.newBufferedWriter(outputPath)) {
@@ -219,12 +219,15 @@ public class ValidationService {
 					// deduplicate pair after writing because deduplication alters the pair
 					BibliographicItem p1 = pair.get(0);
 					BibliographicItem p2 = pair.get(1);
-					if (p1.getPublicationYear() > 0 && p2.getPublicationYear() > 0 && Math.abs(p1.getPublicationYear() - p2.getPublicationYear()) > 1) {
+					if (p1.getPublicationYear() > 0 && p2.getPublicationYear() > 0
+							&& Math.abs(p1.getPublicationYear() - p2.getPublicationYear()) > 1) {
 						log.trace("\nStarting comparison {} - {}", p1.getId(), p2.getId());
-						log.trace("- 0. BibliographicItem years are too far apart: {} and {}", p1.getPublicationYear(), p2.getPublicationYear());
+						log.trace("- 0. BibliographicItem years are too far apart: {} and {}", p1.getPublicationYear(),
+								p2.getPublicationYear());
 						log.trace("{} - {} ARE NOT DUPLICATES", p1.getId(), p2.getId());
 					} else {
-						deduplicationService.compareSet(pair, p1.getPublicationYear(), true, message -> {});
+						deduplicationService.compareSet(pair, p1.getPublicationYear(), true, message -> {
+						});
 					}
 
 					bw.write("\nANALYSIS:\n");
@@ -244,5 +247,5 @@ public class ValidationService {
 			}
 		}
 	}
-
+	// @formatter:on
 }
