@@ -44,7 +44,7 @@ public class DeduplicationService {
 	private int maxRecords = 100000;
 
 	// the DOIs have been lowercased
-	public static Pattern COCHRANE_DOI_PATTERN = Pattern.compile("^.*10.1002/14651858.([a-z][a-z]\\d+).*",
+	public static final Pattern COCHRANE_DOI_PATTERN = Pattern.compile("^.*10.1002/14651858.([a-z][a-z]\\d+).*",
 			Pattern.CASE_INSENSITIVE);
 
 	// @formatter:off
