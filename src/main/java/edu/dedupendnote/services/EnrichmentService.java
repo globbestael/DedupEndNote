@@ -17,6 +17,10 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class EnrichmentService {
 
+	/*
+	 * Enriches the bibliographicItems that will be kept with data from the bibliographicItems that belong to the same 
+	 * DuplicateSet
+	 */
 	public void enrich(List<BibliographicItem> bibliographicItems) {
 		log.debug("Start enrich");
 		// First the bibliographicItems with duplicates
@@ -139,7 +143,8 @@ public class EnrichmentService {
 	/*
 	 * Applies enriched BibliographicItem data to the raw RIS field map assembled by BibliographicItemWriter
 	 * from the original input file. Called once per Kept Bibliographic Item during Remove Mode writing.
-	 * Complements enrich(): that method populates the domain object; this one projects those values —
+	 * Complements enrich(): that method enriches the bibliographicItem that was kept with data from the other
+	 * bibliographicItems in the same DuplicateSet.  This method projects values from the kept bibliographicItem —
 	 * plus RIS-map-specific enrichments (T2 from J2, ClinicalTrials.gov URL, author cleanup) — onto the map.
 	 */
 	public void enrichMap(Map<String, String> map, BibliographicItem bibliographicItem) {
