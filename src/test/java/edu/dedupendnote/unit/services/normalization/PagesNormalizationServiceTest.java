@@ -18,6 +18,8 @@ import edu.dedupendnote.domain.BibliographicItem;
 
 class PagesNormalizationServiceTest {
 
+	private final BibliographicItemReader reader = new BibliographicItemReader();
+
 	/*
 	 * Tests PagesNormalizationService.normalizeInputPages for a single SP-field input.
 	 * Complements normalizePagesTest_new which covers field selection (C7/SE/SP) via BibliographicItemReader.addNormalizedPages.
@@ -58,7 +60,7 @@ class PagesNormalizationServiceTest {
 		if (spInput != null) {
 			pagesMap.put("SP", spInput);
 		}
-		BibliographicItemReader.addNormalizedPages(pagesMap, bibliographicItem);
+		reader.addNormalizedPages(pagesMap, bibliographicItem);
 
 		SoftAssertions.assertSoftly(softAssertions -> {
 			softAssertions.assertThat(bibliographicItem.getPageStart())

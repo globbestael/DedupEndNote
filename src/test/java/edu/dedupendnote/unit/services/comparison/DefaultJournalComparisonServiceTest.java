@@ -27,6 +27,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 class DefaultJournalComparisonServiceTest extends BaseTest {
 
+	private final BibliographicItemReader reader = new BibliographicItemReader();
+
 	@BeforeEach
 	void initTestDir() {
 		testDir = baseDir.resolve("unit");
@@ -42,8 +44,8 @@ class DefaultJournalComparisonServiceTest extends BaseTest {
 		BibliographicItem p2 = new BibliographicItem();
 		log.debug("==================================================================");
 
-		BibliographicItemReader.addNormalizedJournal(input1, p1, "T2");
-		BibliographicItemReader.addNormalizedJournal(input2, p2, "T2");
+		reader.addNormalizedJournal(input1, p1, "T2");
+		reader.addNormalizedJournal(input2, p2, "T2");
 
 		assertThat(new DefaultJournalComparisonService().compare(p1, p2, false))
 				.as("Journals are NOT similar: " + p1.getJournals() + " versus " + p2.getJournals()).isTrue();
@@ -57,8 +59,8 @@ class DefaultJournalComparisonServiceTest extends BaseTest {
 	void fullNegativeTest(String input1, String input2) {
 		BibliographicItem p1 = new BibliographicItem();
 		BibliographicItem p2 = new BibliographicItem();
-		BibliographicItemReader.addNormalizedJournal(input1, p1, "T2");
-		BibliographicItemReader.addNormalizedJournal(input2, p2, "T2");
+		reader.addNormalizedJournal(input1, p1, "T2");
+		reader.addNormalizedJournal(input2, p2, "T2");
 
 		assertThat(new DefaultJournalComparisonService().compare(p1, p2, false))
 				.as("Journals are similar: %s versus %s", p1.getJournals(), p2.getJournals()).isFalse();
@@ -341,9 +343,9 @@ WHERE t1.title2 <> t2.title2
 		for (int i = 0; i < triples.size(); i++) {
 			Triple triple = triples.get(i);
 			BibliographicItem p1 = new BibliographicItem();
-			BibliographicItemReader.addNormalizedJournal(triple.journal1(), p1, "T2");
+			reader.addNormalizedJournal(triple.journal1(), p1, "T2");
 			BibliographicItem p2 = new BibliographicItem();
-			BibliographicItemReader.addNormalizedJournal(triple.journal2(), p2, "T2");
+			reader.addNormalizedJournal(triple.journal2(), p2, "T2");
 
 			triples.set(i, triple.withSimilar(new DefaultJournalComparisonService().compare(p1, p2, false)));
 		}

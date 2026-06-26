@@ -20,6 +20,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 class JournalsNormalizationServiceTest {
 
+	private final BibliographicItemReader reader = new BibliographicItemReader();
+
 	@ParameterizedTest(name = "{index}: normalizeJournal({0})={1}")
 	@MethodSource("journalArgumentProvider")
 	void normalizeJournalTest(String input, String expected) {
@@ -34,7 +36,7 @@ class JournalsNormalizationServiceTest {
 	@MethodSource("slashArgumentProvider")
 	void slashTest(String input1, List<String> list) {
 		BibliographicItem p1 = new BibliographicItem();
-		BibliographicItemReader.addNormalizedJournal(input1, p1, "T2");
+		reader.addNormalizedJournal(input1, p1, "T2");
 
 		for (String j : p1.getJournals()) {
 			log.error("For input '{}': {}", input1, j);
@@ -45,7 +47,7 @@ class JournalsNormalizationServiceTest {
 	@Test
 	void journalWithSquareBracketsAtEnd() {
 		BibliographicItem p1 = new BibliographicItem();
-		BibliographicItemReader.addNormalizedJournal("Zhonghua wai ke za zhi [Chinese journal of surgery]", p1, "T2");
+		reader.addNormalizedJournal("Zhonghua wai ke za zhi [Chinese journal of surgery]", p1, "T2");
 
 		assertThat(p1.getJournals()).hasSize(3);
 		assertThat(p1.getJournals()).containsAll(Set.of("Zhonghua wai ke za zhi", "Chinese journal of surgery",
@@ -56,7 +58,7 @@ class JournalsNormalizationServiceTest {
 	void journalWithSquareBracketsAtStart() {
 		BibliographicItem p1 = new BibliographicItem();
 
-		BibliographicItemReader.addNormalizedJournal("[Rinsho ketsueki] The Japanese journal of clinical hematology", p1, "T2");
+		reader.addNormalizedJournal("[Rinsho ketsueki] The Japanese journal of clinical hematology", p1, "T2");
 
 		assertThat(p1.getJournals()).hasSize(3);
 		// The variant with both parts has NOT removed the leading article of second part

@@ -19,6 +19,8 @@ import edu.dedupendnote.domain.BibliographicItem;
 // TODO: For boolean compare() tests on DefaultTitleComparisonService, see DefaultTitleComparisonServiceTest.
 class JWSimilarityTitleTest extends BaseTest {
 
+	private final BibliographicItemReader reader = new BibliographicItemReader();
+
 	@BeforeEach
 	void initTestDir() {
 		testDir = baseDir.resolve("unit");
@@ -29,8 +31,8 @@ class JWSimilarityTitleTest extends BaseTest {
 	void jwFullPositiveTest(String input1, String input2, double expected) {
 		BibliographicItem p1 = new BibliographicItem();
 		BibliographicItem p2 = new BibliographicItem();
-		BibliographicItemReader.addNormalizedTitle(input1, p1);
-		BibliographicItemReader.addNormalizedTitle(input2, p2);
+		reader.addNormalizedTitle(input1, p1);
+		reader.addNormalizedTitle(input2, p2);
 
 		Double highestSimilarity = 0.0;
 
@@ -74,8 +76,8 @@ class JWSimilarityTitleTest extends BaseTest {
 	void jwFullNegativeTest(String input1, String input2, double expected) {
 		BibliographicItem p1 = new BibliographicItem();
 		BibliographicItem p2 = new BibliographicItem();
-		BibliographicItemReader.addNormalizedTitle(input1, p1);
-		BibliographicItemReader.addNormalizedTitle(input2, p2);
+		reader.addNormalizedTitle(input1, p1);
+		reader.addNormalizedTitle(input2, p2);
 
 		Double highestSimilarity = 0.0;
 		String highestTitle1 = "";

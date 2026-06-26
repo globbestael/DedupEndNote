@@ -20,6 +20,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 class AuthorsBaseTest extends BaseTest {
 
+	protected final BibliographicItemReader reader = new BibliographicItemReader();
+
 	List<Triple> localTriples = new ArrayList<>();
 
 	@BeforeEach
@@ -35,8 +37,8 @@ class AuthorsBaseTest extends BaseTest {
 	protected BibliographicItem fillBibliographicItem(String authors) {
 		BibliographicItem bibliographicItem = new BibliographicItem();
 		List<String> authorList1 = Arrays.asList(authors.split("; "));
-		authorList1.stream().forEach(author -> BibliographicItemReader.addNormalizedAuthor(author, bibliographicItem));
-		BibliographicItemReader.fillAllAuthors(bibliographicItem);
+		authorList1.stream().forEach(author -> reader.addNormalizedAuthor(author, bibliographicItem));
+		reader.fillAllAuthors(bibliographicItem);
 		return bibliographicItem;
 	}
 

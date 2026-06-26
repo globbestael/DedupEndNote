@@ -23,6 +23,8 @@ import edu.dedupendnote.domain.TitleRecord;
 
 class TitlesNormalizationServiceTest {
 
+	private final BibliographicItemReader reader = new BibliographicItemReader();
+
 	@ParameterizedTest(name = "[{index}] Input: \"{0}\" -> No Title")
 	@ValueSource(strings = { "not available", "[not available]", "untitled" })
 	void normalizeInputTitles_whenNoTitle_shouldReturnEmpty(String input) {
@@ -161,35 +163,35 @@ class TitlesNormalizationServiceTest {
 		BibliographicItem bibliographicItem = new BibliographicItem();
 		String t1 = "Severe deficiency of the specific von Willebrand factor-cleaving protease";
 		String t2 = "ADAMTS 13 activity in a subgroup of children with atypical hemolytic uremic syndrome";
-		BibliographicItemReader.addNormalizedTitle(t1 + ": " + t2, bibliographicItem);
+		reader.addNormalizedTitle(t1 + ": " + t2, bibliographicItem);
 		SequencedSet<String> titles = bibliographicItem.getTitles();
 
 		System.err.println(titles);
 		assertThat(titles).hasSize(3);
 
 		bibliographicItem.getTitles().clear();
-		BibliographicItemReader.addNormalizedTitle(t1.substring(0, 10) + ": " + t2, bibliographicItem);
+		reader.addNormalizedTitle(t1.substring(0, 10) + ": " + t2, bibliographicItem);
 		titles = bibliographicItem.getTitles();
 
 		System.err.println(titles);
 		assertThat(titles).as("First part smaller than 50, no split").hasSize(1);
 
 		bibliographicItem.getTitles().clear();
-		BibliographicItemReader.addNormalizedTitle(t1 + ": " + t2.substring(0, 10), bibliographicItem);
+		reader.addNormalizedTitle(t1 + ": " + t2.substring(0, 10), bibliographicItem);
 		titles = bibliographicItem.getTitles();
 
 		System.err.println(titles);
 		assertThat(titles).as("Second part smaller than 50, no split").hasSize(1);
 
 		bibliographicItem.getTitles().clear();
-		BibliographicItemReader.addNormalizedTitle(t1.substring(0, 10) + ": " + t2.substring(0, 10), bibliographicItem);
+		reader.addNormalizedTitle(t1.substring(0, 10) + ": " + t2.substring(0, 10), bibliographicItem);
 		titles = bibliographicItem.getTitles();
 
 		System.err.println(titles);
 		assertThat(titles).as("Both parts smaller than 50, no split").hasSize(1);
 
 		bibliographicItem.getTitles().clear();
-		BibliographicItemReader.addNormalizedTitle(t1 + ": " + t2.substring(0, 10) + ": " + t2.substring(11), bibliographicItem);
+		reader.addNormalizedTitle(t1 + ": " + t2.substring(0, 10) + ": " + t2.substring(11), bibliographicItem);
 		titles = bibliographicItem.getTitles();
 
 		System.err.println(titles);

@@ -498,7 +498,7 @@ public class BibliographicItemReader {
 		return bibliographicItems;
 	}
 
-	public static void addNormalizedAuthor(String fieldContent, BibliographicItem bibliographicItem) {
+	public void addNormalizedAuthor(String fieldContent, BibliographicItem bibliographicItem) {
 		AuthorRecord normalizedAuthor = AuthorsNormalizationService.normalizeInputAuthors(fieldContent);
 		if (normalizedAuthor.author() != null) {
 			bibliographicItem.getAuthors().add(normalizedAuthor.author());
@@ -509,7 +509,7 @@ public class BibliographicItemReader {
 		}
 	}
 
-	public static void addNormalizedJournal(String fieldContent, BibliographicItem bibliographicItem,
+	public void addNormalizedJournal(String fieldContent, BibliographicItem bibliographicItem,
 			String fieldName) {
 		if (fieldContent.toLowerCase().contains("cochrane")) {
 			bibliographicItem.setCochrane(true);
@@ -518,7 +518,7 @@ public class BibliographicItemReader {
 				.addAll(JournalsNormalizationService.normalizeInputJournals(fieldContent, fieldName));
 	}
 
-	public static void addNormalizedPages(Map<String, String> pagesInputMap, BibliographicItem bibliographicItem) {
+	public void addNormalizedPages(Map<String, String> pagesInputMap, BibliographicItem bibliographicItem) {
 		bibliographicItem.setPagesInput(pagesInputMap.toString());
 
 		if (bibliographicItem.isCochrane() && pagesInputMap.isEmpty()) {
@@ -535,7 +535,7 @@ public class BibliographicItemReader {
 		bibliographicItem.setSeveralPages(normalizedPages.isSeveralPages());
 	}
 
-	public static void addNormalizedTitle(String fieldContent, BibliographicItem bibliographicItem) {
+	public void addNormalizedTitle(String fieldContent, BibliographicItem bibliographicItem) {
 		if (UtilitiesService.setsContainSameString(skipNormalizationTitleFor, bibliographicItem.getJournals())) {
 			bibliographicItem.getTitles().clear();
 			bibliographicItem.getTitles().add(fieldContent);
@@ -557,7 +557,7 @@ public class BibliographicItemReader {
 	 * match the raw fieldContent is kept as the title (overriding the normalized title), because for replies the
 	 * original/longest title is preferred in the enrich step. Runs after normalization so the raw title wins.
 	 */
-	private static void detectReplyAndPhase(String fieldContent, BibliographicItem bibliographicItem) {
+	private void detectReplyAndPhase(String fieldContent, BibliographicItem bibliographicItem) {
 		if (REPLY_PATTERN.matcher(fieldContent.toLowerCase(Locale.ROOT)).matches()
 				|| ERRATUM_PATTERN.matcher(fieldContent).matches()
 				|| (fieldContent.endsWith(")") && SOURCE_PATTERN.matcher(fieldContent).matches())
@@ -570,7 +570,7 @@ public class BibliographicItemReader {
 		}
 	}
 
-	public static void addReversedTitles(BibliographicItem bibliographicItem) {
+	public void addReversedTitles(BibliographicItem bibliographicItem) {
 		if (!UtilitiesService.setsContainSameString(skipNormalizationTitleFor, bibliographicItem.getJournals())) {
 			SequencedSet<String> titles = bibliographicItem.getTitles();
 			if (!titles.isEmpty()) {
@@ -583,7 +583,7 @@ public class BibliographicItemReader {
 		}
 	}
 
-	public static void fillAllAuthors(BibliographicItem bibliographicItem) {
+	public void fillAllAuthors(BibliographicItem bibliographicItem) {
 		List<String> authors = bibliographicItem.getAuthors();
 		if (authors.isEmpty()) {
 			return;
@@ -603,7 +603,7 @@ public class BibliographicItemReader {
 	 * Tries to extract ArticleNumber (C7) from the DOI of Cochrane bibliographicItem.
 	 * This function is only called if (1) isCochrane and (2) pagesInputMap is empty
 	 */
-	private static @Nullable String getCochranePagesFromDoi(BibliographicItem bibliographicItem) {
+	private @Nullable String getCochranePagesFromDoi(BibliographicItem bibliographicItem) {
 		String c7 = null;
 		log.debug("Reached Cochrane bibliographicItem without pageStart, getting it from the DOIs: {}",
 				bibliographicItem.getAuthors());
