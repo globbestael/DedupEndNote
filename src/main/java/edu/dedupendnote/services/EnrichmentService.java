@@ -19,20 +19,24 @@ public class EnrichmentService {
 
 	/*
 	 * Enriches the bibliographicItems that will be kept with data from the bibliographicItems that belong to the same 
-	 * DuplicateSet
+	 * DuplicateSet.
+	 * 
+	 * The Cochrane records without duplicates are also enriched!
+	 * 
+	 * Except for this last Cochrane set this is akways enrichment WITHIN a duplicate set.
 	 */
 	public void enrich(List<BibliographicItem> bibliographicItems) {
 		log.debug("Start enrich");
 		// First the bibliographicItems with duplicates
-		Map<String, List<BibliographicItem>> labelMap = bibliographicItems.stream()
-				// when comparing 2 files, duplicates from the old file start with "-"
-				.filter(r -> r.getLabel() != null && !r.getLabel().startsWith("-"))
+		Map<Integer, List<BibliographicItem>> labelMap = bibliographicItems.stream()
+				// when comparing 2 files, duplicates of old-file items have a negative label
+				.filter(r -> r.getLabel() != null && r.getLabel() >= 0)
 				.collect(Collectors.groupingBy(BibliographicItem::getLabel));
 		log.debug("Number of duplicate lists {}, and IDs of kept bibliographicItems: {}", labelMap.size(),
 				labelMap.keySet());
 		List<BibliographicItem> bibliographicItemList;
 		if (!labelMap.isEmpty()) {
-			for (Map.Entry<String, List<BibliographicItem>> entry : labelMap.entrySet()) {
+			for (Map.Entry<Integer, List<BibliographicItem>> entry : labelMap.entrySet()) {
 				bibliographicItemList = entry.getValue();
 				BibliographicItem bibliographicItemToKeep = bibliographicItemList.remove(0);
 				log.debug("Kept: {}: {}", bibliographicItemToKeep.getId(),

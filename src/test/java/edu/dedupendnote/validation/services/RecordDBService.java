@@ -111,7 +111,7 @@ public class RecordDBService {
 						bibliographicItem = recordIdMap.get(publicationDB.getId());
 						if (bibliographicItem != null) {
 							if (bibliographicItem.getLabel() != null) {
-								publicationDB.setDedupid(Integer.valueOf(bibliographicItem.getLabel()));
+								publicationDB.setDedupid(bibliographicItem.getLabel());
 							}
 							publicationDBs.add(publicationDB);
 						}

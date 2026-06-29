@@ -208,8 +208,8 @@ l						 * 		V 		W 		X
 					} else {
 						// log.debug("=== Both pivot {} and pub {} get label {} from the publicationId of the pivot {}",
 						// pivot.getId(), p.getId(), pivot.getId(), pivot.getId());
-						pivot.setLabel(String.valueOf(pivot.getId()));
-						p.setLabel(String.valueOf(pivot.getId()));
+						pivot.setLabel(pivot.getId());
+						p.setLabel(pivot.getId());
 					}
 
 					if (p.isReply()) {
@@ -318,7 +318,6 @@ l						 * 		V 		W 		X
 		 */
 		bibliographicItems.forEach(r -> {
 			r.setId(-r.getId());
-			r.setPresentInOldFile(true);
 		});
 
 		List<BibliographicItem> newBibliographicItems = bibliographicItemReader.readBibliographicItems(newInputPath,
@@ -335,7 +334,7 @@ l						 * 		V 		W 		X
 				int numberWritten = bibliographicItemWriter.writeBibliographicItems(bibliographicItems, newInputPath,
 						outputPath, mode);
 				long numberLabeledBibliographicItems = bibliographicItems.stream()
-						.filter(r -> r.getLabel() != null && !r.isPresentInOldFile()).count();
+						.filter(r -> r.getLabel() != null && r.getId() > 0).count();
 				String s = "DONE: DedupEndNote has written %s bibliographic items with %d duplicates marked in the Label field."
 						.formatted(numberWritten, numberLabeledBibliographicItems);
 				progressReporter.accept(s);
@@ -346,7 +345,7 @@ l						 * 		V 		W 		X
 				// Get the bibliographicItems from the new file that are not duplicates or not duplicates of bibliographicItems of the old
 				// file
 				List<BibliographicItem> filteredBibliographicItems = bibliographicItems.stream()
-						.filter(r -> !r.isPresentInOldFile() && (r.getLabel() == null || !r.getLabel().startsWith("-")))
+						.filter(r -> r.getId() > 0 && (r.getLabel() == null || r.getLabel() >= 0))
 						.toList();
 				log.error("Publications to write: {}", filteredBibliographicItems.size());
 				int numberWritten = bibliographicItemWriter.writeBibliographicItems(filteredBibliographicItems,

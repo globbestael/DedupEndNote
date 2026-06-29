@@ -294,7 +294,13 @@ public class BibliographicItemReader {
 					case "LB": // Label (deduplication group ID written by mark mode)
 						if (includeLabelField) {
 							// LB is a single short integer ID; continuation lines are not expected
-							bibliographicItem.setLabel(fieldContent);
+							try {
+								bibliographicItem.setLabel(Integer.parseInt(fieldContent));
+							} catch (NumberFormatException e) {
+								throw new InvalidRisFileException(
+										"The input file contains LB fields which are not numbers. "
+												+ "The input file is not an Export as RIS-file from an EndNote library!");
+							}
 						}
 						break;
 					case "OP":

@@ -82,7 +82,7 @@ public class BibliographicItemWriter {
 						if (bibliographicItem != null && bibliographicItem.isKeptBibliographicItem()) {
 							map.put(fieldName, fieldContent);
 							if (mode == DeduplicationMode.MARK && bibliographicItem.getLabel() != null) {
-								map.put("LB", bibliographicItem.getLabel());
+								map.put("LB", String.valueOf(bibliographicItem.getLabel()));
 							}
 							writeBibliographicItem(map, bibliographicItem, bw, mode);
 							numberWritten++;
