@@ -20,6 +20,13 @@
 - should there be external files for some of the new tests in BibliographicItemReaderTests?
 - better tests in DefaultTitleComparisonServiceTest?
 - should we test Mendeley? see C:\Users\geert\dedupendnote_input_files\validation\other
+- Shouldn't the 2 calls to the enrichmentservice not happen either in the BibliographicItemWriter or in the DeduplicationService?
+  The current BibliographicItemWriter has no knowledge of the Consumer<String> progressReporter, 
+  but the BibliographicItemReader already uses this progressReporter.
+- In BibliographicItemReader (around l. 297 LB field) there is a try catch with an InvalidRisFileException:
+  do we really want an exception, or should the program silenlty (?) skip this field?
+- run a small 2 files compare with REMOVE: there is such a test?
+- the code still has "markMode" in some comments
 
 ## OWASP
 

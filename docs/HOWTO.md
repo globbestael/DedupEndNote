@@ -4,7 +4,7 @@ Documents questions for developers
 
 ## JSpecify: Find unnecessary @Nullable annotations
 
-NullAway and JSpecify do not warn when an argument to a function is called with @Nullable annotation which is superfluous.
+NullAway and JSpecify do not warn when an argument to a function is called with unnecessary @Nullable annotation.
 
 In BibliographicItemwriter at 2026-06-24, l.139 the argument bibliographicItem is annotated with @Nullable
 ```
@@ -66,6 +66,6 @@ Claude's answer:
   command-line path is more useful for CI enforcement.
   ```
 
-There is VS Code xtension that could work together with Qodana.
+There is VS Code extension that could work together with Qodana.
 
 This is ***not*** implemented yet in this project.

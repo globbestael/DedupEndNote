@@ -13,7 +13,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import edu.dedupendnote.services.comparison.AuthorThresholds;
-import edu.dedupendnote.services.BibliographicItemReader;
 import edu.dedupendnote.domain.BibliographicItem;
 import edu.dedupendnote.unit.domain.BibliographicItemExperiment;
 import lombok.extern.slf4j.Slf4j;
