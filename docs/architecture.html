@@ -66,11 +66,9 @@ flowchart TD
         FC --> S1 --> S2 --> S3 --> S4 --> S5
     end
 
-    subgraph post["③ Post-process"]
+    subgraph post["③ Post-process — BibliographicItemWriter"]
         direction LR
-        Enrich["EnrichmentService\n(Remove Mode only)\nmerge DOIs · fill year/pages\nreplace short titles"]
-        Write["BibliographicItemWriter\nwrite result RIS file"]
-        Enrich --> Write
+        Write["write result RIS file\n(Remove Mode: enrich() · enrichCochrane()\nand enrichMap() via EnrichmentService)"]
     end
 
     In --> parse
@@ -126,23 +124,31 @@ flowchart TD
             <div class="rounded-lg border border-slate-200 bg-white p-4">
               <p class="text-xs font-mono font-semibold text-slate-700">BibliographicItemWriter</p>
               <p class="text-xs text-slate-500 mt-1">Writes deduplicated (Remove Mode) and marked (Mark Mode) RIS
-                output; re-reads original input to preserve field order. In Remove Mode, delegates map-level enrichment
-                to <code>EnrichmentService.enrichMap()</code> per record.</p>
+                output; re-reads original input to preserve field order. Accepts a <code>Consumer&lt;String&gt;
+                progressReporter</code>. In Remove Mode, owns all enrichment: calls
+                <code>EnrichmentService.enrich()</code> (synthesise duplicate-set representation),
+                <code>EnrichmentService.enrichCochrane()</code> (Cochrane page IDs), and
+                <code>EnrichmentService.enrichMap()</code> per Kept Bibliographic Item during writing.</p>
             </div>
           </div>
         </div>
 
         <!-- Enrichment -->
         <div>
-          <p class="text-xs uppercase tracking-wider text-slate-400 mb-2">Enrichment (Remove Mode only)</p>
+          <p class="text-xs uppercase tracking-wider text-slate-400 mb-2">Enrichment (Remove Mode only) — called from BibliographicItemWriter</p>
           <div class="grid grid-cols-3 gap-3">
             <div class="rounded-lg border border-slate-200 bg-white p-4">
               <p class="text-xs font-mono font-semibold text-slate-700">EnrichmentService</p>
-              <p class="text-xs text-slate-500 mt-1">Two-phase enrichment. <code>enrich()</code>: merges DOIs, fills
-                missing year/pages, replaces Reply/ClinicalTrials.gov titles, normalises Cochrane page IDs — applied to
-                the domain objects before writing. <code>enrichMap()</code>: projects the enriched domain data and
-                RIS-map-specific enrichments (T2 from J2, ClinicalTrials.gov URL normalisation, author cleanup) onto the
-                raw RIS field map during Remove Mode writing.</p>
+              <p class="text-xs text-slate-500 mt-1">Three-phase enrichment, all called by
+                <code>BibliographicItemWriter</code> in Remove Mode.
+                <code>enrich()</code>: marks non-representative duplicates as not-kept, merges DOIs, fills missing
+                year/pages, replaces Reply/ClinicalTrials.gov titles; also marks new-file duplicates of old-file items
+                as not-kept (two-file mode).
+                <code>enrichCochrane()</code>: uppercases Cochrane page IDs for all kept Cochrane items (both those
+                with duplicates and singletons); must run after <code>enrich()</code>.
+                <code>enrichMap()</code>: projects the enriched domain data and RIS-map-specific enrichments
+                (T2 from J2, ClinicalTrials.gov URL normalisation, author cleanup) onto the raw RIS field map per
+                Kept Bibliographic Item.</p>
             </div>
           </div>
         </div>
@@ -271,12 +277,15 @@ sequenceDiagram
         WS-->>Browser: PROGRESS: N
     end
 
-    Note over DS: (Remove Mode only)
-    DS->>ES: enrich(bibliographicItems)
-    ES-->>DS: Kept Bibliographic Items enriched
-
-    DS->>Writer: writeBibliographicItems(mode)
-    Note over Writer,ES: (Remove Mode only) Writer calls ES.enrichMap() per Kept Bibliographic Item
+    DS->>Writer: writeBibliographicItems(mode, progressReporter)
+    activate Writer
+    Note over Writer: (Remove Mode only)
+    Writer-->>WS: progressReporter.accept("Enriching N …")
+    Writer->>ES: enrich(bibliographicItems)
+    Writer->>ES: enrichCochrane(bibliographicItems)
+    Writer-->>WS: progressReporter.accept("Saving N …")
+    Note over Writer,ES: enrichMap() called per Kept Bibliographic Item during write
+    deactivate Writer
     DS-->>WS: progressReporter.accept("DONE: N duplicates found …")
     deactivate DS
     WS-->>Browser: DONE: N duplicates found …
@@ -310,7 +319,7 @@ sequenceDiagram
 
     <!-- Footer -->
     <footer class="border-t border-slate-200 pt-4 text-xs text-slate-400 text-right">
-      Generated 2026-05-31, updated 2026-06-14 · replaces <code>docs/architecture.md</code>
+      Generated 2026-05-31, updated 2026-06-29 · replaces <code>docs/architecture.md</code>
     </footer>
 
   </main>
