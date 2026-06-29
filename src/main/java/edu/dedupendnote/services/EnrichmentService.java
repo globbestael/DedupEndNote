@@ -18,16 +18,13 @@ import lombok.extern.slf4j.Slf4j;
 public class EnrichmentService {
 
 	/*
-	 * Enriches the bibliographicItems that will be kept with data from the bibliographicItems that belong to the same 
-	 * DuplicateSet.
-	 * 
-	 * The Cochrane records without duplicates are also enriched!
-	 * 
-	 * Except for this last Cochrane set this is akways enrichment WITHIN a duplicate set.
+	 * Synthesises the representation of each duplicate set from its members:
+	 * marks which items are not the representative (isKeptBibliographicItem = false),
+	 * then enriches the representative with data from the others (DOIs, year, pages, title).
+	 * Called only in REMOVE mode.
 	 */
 	public void enrich(List<BibliographicItem> bibliographicItems) {
 		log.debug("Start enrich");
-		// First the bibliographicItems with duplicates
 		Map<Integer, List<BibliographicItem>> labelMap = bibliographicItems.stream()
 				// when comparing 2 files, duplicates of old-file items have a negative label
 				.filter(r -> r.getLabel() != null && r.getLabel() >= 0)
@@ -46,10 +43,8 @@ public class EnrichmentService {
 					It may look a bit strange to call setKeptBibliographicItem on the BibliographicItems in this
 					enrich function, but calling it in the compareSet function is wrong: it is a no-op in MARK mode,
 					and enrich is only called in REMOVE mode.
-				
-					This could be called before the call to enrich(), but the creation of the 
-						Map<String, List<BibliographicItem>> labelMaplabelMap
-					would then be duplicated.
+					This field originally had a role in the deduplication phase,
+					now it only has a role in the output phase.
 				
 					An older comment also said:
 					Don't set keptPublication in compareSet(): trouble when multiple duplicates and no bibliographicItem year
@@ -107,11 +102,6 @@ public class EnrichmentService {
 							.ifPresent(r -> bibliographicItemToKeep.setPublicationYear(r.getPublicationYear()));
 				}
 
-				if (bibliographicItemToKeep.isCochrane() && bibliographicItemToKeep.getPagesOutput() != null) {
-					// replaceCochranePageStart(bibliographicItemToKeep, bibliographicItemList);
-					bibliographicItemToKeep.setPagesOutput(bibliographicItemToKeep.getPagesOutput().toUpperCase());
-				}
-
 				// Add missing pagesOutput
 				if (bibliographicItemToKeep.getPagesOutput() == null
 						|| bibliographicItemToKeep.getPagesOutput().isEmpty()) {
@@ -133,15 +123,26 @@ public class EnrichmentService {
 			}
 		}
 
-		// Then the Cochrane bibliographicItems without duplicates
+		// In two-file mode: new-file items that are duplicates of old-file items have label < 0.
+		// They were not processed by the loop above (which only handles label >= 0 sets).
+		// Mark them as not-kept so the writer skips them.
+		bibliographicItems.stream().filter(r -> r.getId() > 0 && r.getLabel() != null && r.getLabel() < 0)
+				.forEach(r -> r.setKeptBibliographicItem(false));
+
+		log.debug("Finished enrich");
+	}
+
+	/*
+	 * Uppercases pagesOutput for all kept Cochrane items (both those in duplicate sets
+	 * and singletons). Must be called after enrich() so isKeptBibliographicItem is set.
+	 * Called only in REMOVE mode.
+	 */
+	public void enrichCochrane(List<BibliographicItem> bibliographicItems) {
 		for (BibliographicItem r : bibliographicItems) {
-			if (r.isCochrane() && r.getLabel() == null && r.getPagesOutput() != null) {
-				// replaceCochranePageStart(r, Collections.emptyList());
+			if (r.isKeptBibliographicItem() && r.isCochrane() && r.getPagesOutput() != null) {
 				r.setPagesOutput(r.getPagesOutput().toUpperCase());
 			}
 		}
-
-		log.debug("Finished enrich");
 	}
 
 	/*

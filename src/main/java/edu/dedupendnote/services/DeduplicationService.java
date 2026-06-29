@@ -34,7 +34,6 @@ public class DeduplicationService {
 	private final FieldComparators fieldComparators;
 	private final BibliographicItemReader bibliographicItemReader;
 	private final BibliographicItemWriter bibliographicItemWriter;
-	private final EnrichmentService enrichmentService;
 
 	/*
 		AuthorExperimentsTests builds it's own DeduplicationService. 
@@ -49,63 +48,25 @@ public class DeduplicationService {
 
 	// @formatter:off
 	/*
-	 * Procedure for 1 file:
-	 *
-	 * 1. Do preliminary checks on the input file (EndNote IDs are present and unique) and exit when the checks do not pass.
-	 * 2. Read all EndNote bibliographicItems from inputfile and make BibliographicItem objects only with the fields relevant for deduplication.
-	 *    Normalize fields as much as possible while calling the setters.
-	 *    Normalize the rest as the last field (EndNote ER field) is read.
-	 *    (All bibliographicItems start with kepBibliographicItem = true (default))
-	 * 3. Deduplicate the bibliographicItems.
-	 *    When duplicates are found:
-	 *    - put the id (EndNote ID field) of the first duplicate into the label (EndNote LB field) of all the duplicates
-	 *    - set kepBibliographicItem = false for all but the first duplicate
-	 *  4. Enrich the first duplicate with data from the other duplicates (DOI, starting page)
-	 *  5. Read the input file again, extract the ID and get the corresponding bibliographicItem.
-	 *     If the bibliographicItem is kepBibliographicItem = true,
-	 *     copy the original content of the fields of this bibliographicItem from the input file to the output file
-	 *     except for the fields where content is standardized (DOI) or where content is enriched from the duplicates.
-	 *
-	 *   If DeduplicationMode.MARK, bibliographicItems are not enriched and ALL bibliographicItems are written back.
-	 *   If a bibliographicItem is a duplicate, the Label field (LB) contains the ID of the first duplicate found.
-	 *
+	 * Procedure for 1 file: read → compare → write.
+	 * Comparison assigns labels (groups items into duplicate sets). The output phase
+	 * (writeBibliographicItems) synthesises a representation for each set (REMOVE mode)
+	 * or annotates all items with their set membership (MARK mode).
 	 *
 	 * Procedure for 2 files:
-	 *
-	 * 1. Do preliminary checks on input file for old bibliographicItems (EndNote IDs are present and unique) and exit when the checks do not pass.
-	 * 2. Read all EndNote bibliographicItems from this inputfile and make BibliographicItem objects only with the fields relevant for deduplication.
-	 *    Normalize fields as much as possible while calling the setters.
-	 *    Normalize the rest as the last field (EndNote ER field) is read.
-	 *    Alter the ID by prefixing them with "-" (to distinguish them from the IDs of the second file and making them unique over both files).
-	 *    All OLD bibliographicItems start with kepBibliographicItem = false and presentInOldFile = true.
-	 * 3. Do preliminary checks on input file for new bibliographicItems (EndNote IDs are present and unique) and exit when the checks do not pass.
-	 * 4. Read all EndNote bibliographicItems from this inputfile and make BibliographicItem objects only with the fields relevant for deduplication.
-	 *    Normalize fields as much as possible while calling the setters.
-	 *    Normalize the rest as the last field (EndNote ER field) is read.
-	 *    All NEW bibliographicItems start with kepBibliographicItem = true (default)  and presentInOldFile = false (default).
-	 * 5. Deduplicate the bibliographicItems.
-	 *    When duplicates are found:
-	 *    - put the id (EndNote ID field) of the first duplicate into the label (EndNote LB field) of all the duplicates
-	 *    - set kepBibliographicItem = false for all but the first duplicate
-	 * 6. Enrich the first duplicate with data from the other duplicates (DOI, starting page)
-	 *    only if the label exists and does not start with "-", i.e. is NOT a duplicate from an OLD bibliographicItem.
-	 * 7. Read the NEW input file again, extract the ID and get the corresponding bibliographicItem.
-	 *    If the bibliographicItem is kepBibliographicItem = true,
-	 *    copy the original content of the fields of this bibliographicItem from the input file to the output file
-	 *    except for the fields where content is standardized (DOI) or where content is enriched from the duplicates.
-	 *
-	 *  If If DeduplicationMode.MARK, bibliographicItems are not enriched and ALL bibliographicItems of the NEW inputfile are written back.
-	 *  If a bibliographicItem is a duplicate, the Label field (LB) contains the ID of the first duplicate found.
-	 *  If the label starts with "-", it is a duplicate from a bibliographicItem from the OLD input file.
+	 * Old-file items have their id negated (id < 0). New-file items keep positive ids.
+	 * After comparison, new-file items with label < 0 are duplicates of old-file items
+	 * and are excluded from the REMOVE output by the writer's enrich() pass.
+	 * MARK mode writes all new-file items (old-file items are excluded by the writer's
+	 * recordIdMap which filters id > 0).
 	 */
 	// @formatter:on
 
 	public DeduplicationService(FieldComparators fieldComparators, BibliographicItemReader bibliographicItemReader,
-			BibliographicItemWriter bibliographicItemWriter, EnrichmentService enrichmentService) {
+			BibliographicItemWriter bibliographicItemWriter) {
 		this.bibliographicItemReader = bibliographicItemReader;
 		this.bibliographicItemWriter = bibliographicItemWriter;
 		this.fieldComparators = fieldComparators;
-		this.enrichmentService = enrichmentService;
 	}
 
 	public void compareSet(List<BibliographicItem> bibliographicItems, Integer year, boolean descending,
@@ -265,7 +226,7 @@ l						 * 		V 		W 		X
 		return switch (mode) {
 			case MARK -> {
 				int numberWritten = bibliographicItemWriter.writeBibliographicItems(bibliographicItems, inputPath,
-						outputPath, mode);
+						outputPath, mode, progressReporter);
 				long labeledBibliographicItems = bibliographicItems.stream().filter(r -> r.getLabel() != null).count();
 				// TODO: use formatResultString which accepts a mode argument?
 				String s = "DONE: DedupEndNote has written " + numberWritten + " bibliographic items with "
@@ -274,11 +235,8 @@ l						 * 		V 		W 		X
 				yield s;
 			}
 			case REMOVE -> {
-				progressReporter.accept("Enriching the " + bibliographicItems.size() + " deduplicated results");
-				enrichmentService.enrich(bibliographicItems);
-				progressReporter.accept("Saving the " + bibliographicItems.size() + " deduplicated results");
 				int numberWritten = bibliographicItemWriter.writeBibliographicItems(bibliographicItems,
-						inputPath, outputPath, mode);
+						inputPath, outputPath, mode, progressReporter);
 				String s = formatResultString(bibliographicItems.size(), numberWritten);
 				progressReporter.accept(s);
 				yield s;
@@ -307,18 +265,11 @@ l						 * 		V 		W 		X
 				progressReporter);
 		doSanityChecks(bibliographicItems, oldInputPath);
 
-		/*
-		 * Put "-" before the IDs of the old bibliographicItems. In this way the labels of the bibliographicItems (used for
-		 * identifying duplicate bibliographicItems) will be unique over both lists.
-		 * When writing the deduplicated bibliographicItems for the second list, bibliographicItems with label "-..." can
-		 * be skipped because they are duplicates of bibliographicItems from the first list.
-		 * When MARK mode is set, these bibliographicItems are written.
-		 * Because of this "-", the bibliographicItems which have duplicates in the first file (label = "-...")
-		 * can be distinguished from bibliographicItems which have duplicates in the second file.
-		 */
-		bibliographicItems.forEach(r -> {
-			r.setId(-r.getId());
-		});
+		// Negate IDs of old-file items so labels remain unique across both lists.
+		// Old-file items: id < 0. New-file items: id > 0.
+		// A new-file item whose duplicate-set representative is an old-file item gets label < 0;
+		// enrich() in the writer marks such items as not-kept so they are excluded from REMOVE output.
+		bibliographicItems.forEach(r -> r.setId(-r.getId()));
 
 		List<BibliographicItem> newBibliographicItems = bibliographicItemReader.readBibliographicItems(newInputPath,
 				progressReporter);
@@ -332,7 +283,7 @@ l						 * 		V 		W 		X
 		return switch (mode) {
 			case MARK -> {
 				int numberWritten = bibliographicItemWriter.writeBibliographicItems(bibliographicItems, newInputPath,
-						outputPath, mode);
+						outputPath, mode, progressReporter);
 				long numberLabeledBibliographicItems = bibliographicItems.stream()
 						.filter(r -> r.getLabel() != null && r.getId() > 0).count();
 				String s = "DONE: DedupEndNote has written %s bibliographic items with %d duplicates marked in the Label field."
@@ -341,15 +292,8 @@ l						 * 		V 		W 		X
 				yield s;
 			}
 			case REMOVE -> {
-				enrichmentService.enrich(bibliographicItems);
-				// Get the bibliographicItems from the new file that are not duplicates or not duplicates of bibliographicItems of the old
-				// file
-				List<BibliographicItem> filteredBibliographicItems = bibliographicItems.stream()
-						.filter(r -> r.getId() > 0 && (r.getLabel() == null || r.getLabel() >= 0))
-						.toList();
-				log.error("Publications to write: {}", filteredBibliographicItems.size());
-				int numberWritten = bibliographicItemWriter.writeBibliographicItems(filteredBibliographicItems,
-						newInputPath, outputPath, mode);
+				int numberWritten = bibliographicItemWriter.writeBibliographicItems(bibliographicItems,
+						newInputPath, outputPath, mode, progressReporter);
 				String s = "DONE: DedupEndNote removed %d bibliographic items from the new set, and has written %d bibliographic items."
 						.formatted((newBibliographicItems.size() - numberWritten), numberWritten);
 				progressReporter.accept(s);
