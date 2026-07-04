@@ -46,7 +46,7 @@ cancel" requires.
 
 | File | Action |
 |---|---|
-| `pom.xml` | Add Playwright dependency + `browser-tests` profile; add exclude to `integration-tests` profile |
+| `pom.xml` | Add Playwright dependency; add `browser-tests` and `all-integration-tests` profiles; add exclude to `integration-tests` profile |
 | `src/test/java/edu/dedupendnote/integration/browser/BrowserCancellationTests.java` | New test class |
 | `CLAUDE.md` | Document new subfolder and profile |
 | `docs/adr/0010-controller-tests-over-browser-tests.md` | Update status — browser tests now exist |
@@ -100,7 +100,38 @@ tests, which require a separately installed browser binary):
 </excludes>
 ```
 
+**Add `all-integration-tests` profile** — runs the full integration tree including the
+browser subfolder. The include pattern is the same as `integration-tests` but with no
+exclude, so it naturally picks up everything under `integration/`:
+
+```xml
+<profile>
+    <id>all-integration-tests</id>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <includes>
+                        <include>**/integration/**/*Tests.java</include>
+                    </includes>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</profile>
+```
+
 The `unit-tests` profile needs no change — it already excludes `**/integration/**`.
+
+Summary of the three integration-level profiles:
+
+| Profile | What it runs | Requires browser binary |
+|---|---|---|
+| `integration-tests` | `integration/` excluding `integration/browser/` | No |
+| `browser-tests` | `integration/browser/` only | Yes |
+| `all-integration-tests` | All of `integration/` | Yes |
 
 ## Step 3 — Create `BrowserCancellationTests.java`
 
@@ -255,9 +286,12 @@ Update the test folder/profile table — add a new row:
 Note: the `integration-tests` profile excludes `integration/browser/` — running
 `-Pintegration-tests` will NOT execute browser tests.
 
-Add a new command to the Commands section:
+Add new commands to the Commands section:
 ```bash
-./mvnw test -Pbrowser-tests    # Run browser tests (requires: ./mvnw exec:java -e -D exec.mainClass=com.microsoft.playwright.CLI -D exec.args="install chromium")
+./mvnw test -Pbrowser-tests          # Run browser tests only (requires Chromium — see below)
+./mvnw test -Pall-integration-tests  # Run all integration tests including browser (requires Chromium)
+# One-time Chromium install:
+./mvnw exec:java -e -D exec.mainClass=com.microsoft.playwright.CLI -D exec.args="install chromium"
 ```
 
 ---
