@@ -151,8 +151,14 @@ Tests live under three roots, each with a corresponding Maven profile:
 - Normalization test classes in `unit/services/normalization/` (no Spring context): `AuthorsNormalizationServiceTest`, `JournalsNormalizationServiceTest`, `PagesNormalizationServiceTest`, `TitlesNormalizationServiceTest`, `NormalizationServiceTextTest`, `NormalizationServiceDoiTest`, `NormalizationServiceIssnTest`
 
 **Integration (`edu.dedupendnote.integration.*`)**
-- **`integration/AbstractIntegrationTest`** — base for all `@SpringBootTest` tests; provides `@ActiveProfiles("test")`, `@MockitoBean SimpMessagingTemplate`, `Path baseDir`, `Path testDir`, `@BeforeAll` (log level → INFO), `@BeforeEach initTestDir()`. Subclasses override `initTestDir()` when they need a subdirectory. Also provides `deleteDerivedOutputs(Path inputPath)` — call this as the first action in any test that writes output files so a failed run cannot leave a previous run's output on disk to mislead a developer.
-- Integration test classes extending `AbstractIntegrationTest`: `DeduplicationServiceTests` (one-file and two-file deduplication smoke tests), `MissedDuplicatesTests`
+
+Two base classes exist; the choice depends on whether the test needs real HTTP (see ADR-0010):
+
+- **`integration/AbstractIntegrationTest`** — mock web environment (`@SpringBootTest` default); service methods called directly via `@Autowired`. Provides `@ActiveProfiles("test")`, `@MockitoBean SimpMessagingTemplate`, `Path baseDir`, `Path testDir`, `@BeforeAll` (log level → INFO), `@BeforeEach initTestDir()`. Subclasses override `initTestDir()` when they need a subdirectory. Also provides `deleteDerivedOutputs(Path inputPath)` — call this as the first action in any test that writes output files so a failed run cannot leave a previous run's output on disk to mislead a developer. **Default choice** for new integration tests.
+- Integration test classes extending `AbstractIntegrationTest`: `DeduplicationServiceTests` (one-file and two-file deduplication smoke tests), `MissedDuplicatesTests`, `RecordCountCapTests`
+
+- **`integration/AbstractRandomPortIntegrationTest`** — real HTTP via `RestTemplate` on `RANDOM_PORT`; exercises the controller's routing, HTTP status codes, and error branches. Use only when the test specifically needs real HTTP or a property override that affects Spring Boot startup behaviour.
+- Integration test classes extending `AbstractRandomPortIntegrationTest`: `ConcurrentRunsTests` (semaphore cap → 429), `PathTraversalTests` (upload/getResultFile path traversal → 400; happy-path smoke test), `DeduplicationTimeoutTests` (timeout → 503), `RateLimitTests` (upload rate limit → 429)
 
 **Validation (`edu.dedupendnote.validation.*`)**
 - **`validation/ValidationTests`** — measures sensitivity/specificity of the production deduplication engine across 14 validated real-world datasets; not a regression guard but a performance monitor. Requires truth files in `~/dedupendnote_files` (not in git). Run with `-Pvalidation-tests`.
@@ -169,7 +175,7 @@ There are a number of tests with expected errors. These tests are NOT disabled, 
 
 ### Test profile
 
-`@ActiveProfiles("test")` on `AbstractIntegrationTest` activates the `test` profile for all integration and validation tests, loading `src/main/resources/application-test.properties`. Unit tests don't start Spring and get `baseDir` directly from `BaseTest` via `System.getProperty("user.home")`.
+`@ActiveProfiles("test")` activates the `test` profile for all integration and validation tests, loading `src/main/resources/application-test.properties`. It is declared on `AbstractIntegrationTest` (inherited by subclasses) and repeated on each `AbstractRandomPortIntegrationTest` subclass (which has no common Spring-context parent). Unit tests don't start Spring and get `baseDir` directly from `BaseTest` via `System.getProperty("user.home")`.
 
 ## Plans
 
