@@ -2,7 +2,6 @@ package edu.dedupendnote.integration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
-
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -19,12 +18,13 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
+
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 class CancellationTests extends AbstractRandomPortIntegrationTest {
 
 	private static final String NO_FUTURE_SESSION = "00000000-0000-4000-8000-000000000010";
-	private static final String CANCEL_SESSION     = "00000000-0000-4000-8000-000000000011";
+	private static final String CANCEL_SESSION    = "00000000-0000-4000-8000-000000000011";
 
 	/*
 	 * Every record has the same year, same starting page, and the same author so that
@@ -47,10 +47,14 @@ class CancellationTests extends AbstractRandomPortIntegrationTest {
 	}
 
 	private void uploadRis(String filename, String content, String wssessionId) {
+		uploadRis(filename, content.getBytes(), wssessionId);
+	}
+
+	private void uploadRis(String filename, byte[] content, String wssessionId) {
 		HttpHeaders headers = new HttpHeaders();
 		headers.setContentType(MediaType.MULTIPART_FORM_DATA);
 		MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-		body.add("file", new ByteArrayResource(content.getBytes()) {
+		body.add("file", new ByteArrayResource(content) {
 			@Override
 			public String getFilename() {
 				return filename;
@@ -103,4 +107,5 @@ class CancellationTests extends AbstractRandomPortIntegrationTest {
 		assertThat(dedupResponse.getBody()).contains("ERROR");
 		assertThat(dedupResponse.getBody()).contains("cancelled");
 	}
+
 }

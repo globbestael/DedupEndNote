@@ -222,6 +222,7 @@ l						 * 		V 		W 		X
 		List<BibliographicItem> bibliographicItems = bibliographicItemReader.readBibliographicItems(inputPath,
 				progressReporter);
 		doSanityChecks(bibliographicItems, inputPath);
+		progressReporter.accept("Read " + bibliographicItems.size() + " bibliographic items");
 
 		searchYearOneFile(bibliographicItems, progressReporter);
 
@@ -279,6 +280,7 @@ l						 * 		V 		W 		X
 		doSanityChecks(newBibliographicItems, newInputPath);
 		bibliographicItems.addAll(newBibliographicItems);
 		log.info("Publications read from 2 files: {}", bibliographicItems.size());
+		progressReporter.accept("Read " + bibliographicItems.size() + " bibliographic items");
 
 		searchYearTwoFiles(bibliographicItems, progressReporter);
 

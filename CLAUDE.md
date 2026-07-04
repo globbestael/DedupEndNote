@@ -133,12 +133,12 @@ Tests live under three roots, each with a corresponding Maven profile:
 
 **Integration tests** assert on the string returned by `deduplicateOneFile` (or record counts) on small known inputs — they are regression guards that fail if behaviour changes.
 
-**Validation tests** measure sensitivity/specificity against manually validated truth files in `~/dedupendnote_files` (not in git). They are slow and intended to be run before releases or after structural changes, not on every commit. Validation runs `deduplicateOneFile` in mark mode to exercise the full production code path, then re-reads the mark-mode output with `includeLabelField=true` to extract deduplication groups.
+**Validation tests** measure sensitivity/specificity against manually validated truth files in `~/dedupendnote_input_files` (not in git). They are slow and intended to be run before releases or after structural changes, not on every commit. Validation runs `deduplicateOneFile` in mark mode to exercise the full production code path, then re-reads the mark-mode output with `includeLabelField=true` to extract deduplication groups.
 
 ### Test class hierarchy
 
 **Unit (`edu.dedupendnote.unit.*`)**
-- **`unit/BaseTest`** — provides `Path baseDir` (`~/dedupendnote_files`) and `Path testDir` (both initialized directly as fields), `@BeforeEach initTestDir()`, plus utilities (`jws`, `getHighestSimilarityForAuthors`, `setLoggerToDebug`)
+- **`unit/BaseTest`** — provides `Path baseDir` (`~/dedupendnote_input_files`) and `Path testDir` (both initialized directly as fields), `@BeforeEach initTestDir()`, plus utilities (`jws`, `getHighestSimilarityForAuthors`, `setLoggerToDebug`)
 - **`unit/services/BibliographicItemReaderTest extends BaseTest`** — tests the reader's title-derived patterns (`REPLY_PATTERN`, `ERRATUM_PATTERN`, `SOURCE_PATTERN`, `COMMENT_PATTERN`, `PHASE_PATTERN`, `RIS_LINE_PATTERN`); inline `@ValueSource` cases plus file-based tests against the curated `All__*` example sets.
 - Standalone unit test classes directly in `unit/services/`: `UtilitiesServiceTest`
 
@@ -161,7 +161,7 @@ Two base classes exist; the choice depends on whether the test needs real HTTP (
 - Integration test classes extending `AbstractRandomPortIntegrationTest`: `ConcurrentRunsTests` (semaphore cap → 429), `PathTraversalTests` (upload/getResultFile path traversal → 400; happy-path smoke test), `DeduplicationTimeoutTests` (timeout → 503), `RateLimitTests` (upload rate limit → 429)
 
 **Validation (`edu.dedupendnote.validation.*`)**
-- **`validation/ValidationTests`** — measures sensitivity/specificity of the production deduplication engine across 14 validated real-world datasets; not a regression guard but a performance monitor. Requires truth files in `~/dedupendnote_files` (not in git). Run with `-Pvalidation-tests`.
+- **`validation/ValidationTests`** — measures sensitivity/specificity of the production deduplication engine across 14 validated real-world datasets; not a regression guard but a performance monitor. Requires truth files in `~/dedupendnote_input_files` (not in git). Run with `-Pvalidation-tests`.
 - **`validation/experiments/AuthorExperimentsTests`** — runs `DefaultAuthorsComparisonService` with experimental thresholds (`AuthorThresholds(1.0, 1.0, 1.0)`) against a validated dataset and asserts on relative sensitivity/specificity. The `experiments` sub-package holds controlled A/B experiments against production-engine baselines.
 - **`validation/services/ValidationService`** — test-only Spring `@Service` that encapsulates the truth-file scoring logic (TP/FP/FN/TN computation, FN/FP analysis file writing). Shared by `ValidationTests` and future experiments tests.
 - **`validation/services/RecordDBService`** — test-only Spring `@Service` for reading/writing the tab-delimited DB export format.
