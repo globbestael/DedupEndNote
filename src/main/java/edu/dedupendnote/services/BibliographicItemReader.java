@@ -503,6 +503,17 @@ public class BibliographicItemReader {
 			log.error("While reading the input file: {}", e.getMessage());
 			throw e;
 		} catch (RuntimeException e) {
+			/*
+			 * VS Code's "unreachable code" warning with the roriginal "catch (Exception e)" was a false positive. 
+			 * catch (Exception e) is only truly unreachable (in the Java language specification sense) 
+			 * if the try block provably throws no checked exceptions other than those already caught 
+			 * — and even then only for the checked part. For unchecked exceptions (RuntimeException and  subclasses), 
+			 * the compiler has no such rule. 
+			 * The block was a legitimate defensive safety net. 
+			 * catch (RuntimeException e) preserves the intent and is harder for VS Code to misread, 
+			 * since it makes explicit that this is a catch-all for unexpected bugs 
+			 * rather than an accidental duplicate of the checked-exception handlers above it.
+			 */
 			log.error("In field {} with content {}: unexpected exception", fieldName, fieldContent, e);
 		}
 		log.debug("Publications read: {}", bibliographicItems.size());
