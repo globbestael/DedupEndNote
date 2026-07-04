@@ -262,6 +262,9 @@ public class BibliographicItemReader {
 							addReversedTitles(bibliographicItem);
 						}
 						bibliographicItems.add(bibliographicItem);
+						if (Thread.currentThread().isInterrupted()) {
+							throw new CancelledException("ERROR: Deduplication was cancelled by the user.");
+						}
 						if (totalRecords > 0) {
 							int newPct = (int) (100L * bibliographicItems.size() / totalRecords);
 							if (newPct != lastPct) {
@@ -497,6 +500,9 @@ public class BibliographicItemReader {
 			log.error("IO error reading file", e);
 		} catch (NumberFormatException e) {
 			log.error("In field {} with content {}: Number could not be parsed", fieldName, fieldContent, e);
+		} catch (CancelledException e) {
+			log.error("While reading the input file: {}", e.getMessage());
+			throw e;
 		} catch (Exception e) {
 			log.error("In field {} with content {}: other exception", fieldName, fieldContent, e);
 		}
@@ -515,8 +521,7 @@ public class BibliographicItemReader {
 		}
 	}
 
-	public void addNormalizedJournal(String fieldContent, BibliographicItem bibliographicItem,
-			String fieldName) {
+	public void addNormalizedJournal(String fieldContent, BibliographicItem bibliographicItem, String fieldName) {
 		if (fieldContent.toLowerCase().contains("cochrane")) {
 			bibliographicItem.setCochrane(true);
 		}

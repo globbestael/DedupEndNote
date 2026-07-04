@@ -78,7 +78,9 @@
 
 			$('#buttonStartDeduplication').on('click', function (event) {
 				event.preventDefault();
+				dedupFinished = false;
 				disableButton('#buttonStartDeduplication');
+				showDiv('#buttonCancelDeduplication');
 				$("#fileNameResultFile").val($('#newFile').val());
 				$("#deduplicationModeResultFile").val($("input[name='deduplicationMode']:checked").val());
 
@@ -109,8 +111,18 @@
 						$('#results').addClass('alert-danger');
 						$('#results').text(message);
 						enableButton('#buttonStartDeduplication');
+					},
+					complete: function () {
+						hideDiv('#buttonCancelDeduplication');
+						enableButton('#buttonCancelDeduplication');
 					}
 				});
+			});
+
+			$('#buttonCancelDeduplication').on('click', function () {
+				disableButton('#buttonCancelDeduplication');
+				var wssessionId = document.getElementById('wssessionId').value;
+				$.post('/cancelDedup', { wssessionId: wssessionId });
 			});
 		});
 	</script>
@@ -189,6 +201,8 @@
 							<div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0"
 								aria-valuemax="100"></div>
 						</div>
+						<button type="button" id="buttonCancelDeduplication"
+							class="btn btn-warning btn-sm mt-2 d-none">Cancel</button>
 						<p id="results" class="alert alert-warning mt-2">Waiting for new input file ...</p>
 					</div>
 				</div>

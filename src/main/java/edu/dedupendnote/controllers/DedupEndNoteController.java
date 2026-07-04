@@ -6,6 +6,8 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.UUID;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -32,6 +34,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import edu.dedupendnote.domain.DeduplicationMode;
 import edu.dedupendnote.domain.StompMessage;
+import edu.dedupendnote.services.CancelledException;
 import edu.dedupendnote.services.DeduplicationException;
 import edu.dedupendnote.services.DeduplicationService;
 import edu.dedupendnote.services.UtilitiesService;
@@ -55,6 +58,8 @@ public class DedupEndNoteController {
 	@SuppressWarnings("NullAway.Init")
 	private Semaphore concurrentRunsSemaphore;
 
+	private final ConcurrentHashMap<UUID, Future<?>> runningFutures = new ConcurrentHashMap<>();
+
 	@PostConstruct
 	void initSemaphore() {
 		concurrentRunsSemaphore = new Semaphore(maxConcurrentRuns);
@@ -74,12 +79,10 @@ public class DedupEndNoteController {
 	 * Communication between client / browser uses different techniques
 	 *
 	 * - in the onLoad of the web page a web socket connect and subscribe is called.
-	 *   Reloading the page (e.g. with the Restart button) start a new connection and subscription. A running deduplication is NOT stopped!
-	 *   FIXME: is it possible to stop these running deduplications? A server could be flooded with interrupted calls?
-	 *   See a.o. https://stackoverflow.com/questions/54946096/spring-boot-websocket-how-do-i-know-when-a-client-has-unsubscribed/54948213
-	 *   Is StructuredTaskScope (java 21) a solution?
+	 *   Reloading the page (e.g. with the Restart button) starts a new connection and subscription.
+	 *   A running deduplication can be stopped explicitly via POST /cancelDedup.
 	 * - files are uploaded with AJAX (uploadFile)
-	 * - deduplication is started with AJAX (startOneFile|StartTwoFiles) which calls the DeduplicationService.
+	 * - deduplication is started with AJAX (startOneFile|startTwoFiles) which calls the DeduplicationService.
 	 * - the DeduplicationService uses Web Sockets to report progress to the browser.
 	 *
 	 * Web Socket: Messages should be sent to the individual user.
@@ -142,12 +145,15 @@ public class DedupEndNoteController {
 			throws InterruptedException, ExecutionException {
 		try {
 			Path inputPath = UtilitiesService.resolveInSessionDir(uploadDir, wssessionId, inputFileName);
-			Consumer<String> progressReporter = message -> simpMessagingTemplate
-					.convertAndSend("/topic/messages-" + wssessionId, new StompMessage(message));
+			Consumer<String> progressReporter = message -> {
+				if (!Thread.currentThread().isInterrupted()) {
+					simpMessagingTemplate.convertAndSend("/topic/messages-" + wssessionId, new StompMessage(message));
+				}
+			};
 			return runDedup("1F" + deduplicationMode.logCode(),
 					UtilitiesService.createPath(inputPath, deduplicationMode.filenameSuffix(), "txt"),
 					() -> deduplicationService.deduplicateOneFile(inputPath, deduplicationMode, progressReporter),
-					progressReporter);
+					progressReporter, wssessionId);
 		} catch (IllegalArgumentException e) {
 			log.warn("Path traversal attempt in startOneFile: {}", e.getMessage());
 			return ResponseEntity.badRequest().body(new ApiResponse("Invalid filename"));
@@ -161,13 +167,16 @@ public class DedupEndNoteController {
 		try {
 			Path newInputPath = UtilitiesService.resolveInSessionDir(uploadDir, wssessionId, newFile);
 			Path oldInputPath = UtilitiesService.resolveInSessionDir(uploadDir, wssessionId, oldFile);
-			Consumer<String> progressReporter = message -> simpMessagingTemplate
-					.convertAndSend("/topic/messages-" + wssessionId, new StompMessage(message));
+			Consumer<String> progressReporter = message -> {
+				if (!Thread.currentThread().isInterrupted()) {
+					simpMessagingTemplate.convertAndSend("/topic/messages-" + wssessionId, new StompMessage(message));
+				}
+			};
 			return runDedup("2F" + deduplicationMode.logCode(),
 					UtilitiesService.createPath(newInputPath, deduplicationMode.filenameSuffix(), "txt"),
 					() -> deduplicationService.deduplicateTwoFiles(newInputPath, oldInputPath, deduplicationMode,
 							progressReporter),
-					progressReporter);
+					progressReporter, wssessionId);
 		} catch (IllegalArgumentException e) {
 			log.warn("Path traversal attempt in startTwoFiles: {}", e.getMessage());
 			return ResponseEntity.badRequest().body(new ApiResponse("Invalid filename"));
@@ -175,7 +184,7 @@ public class DedupEndNoteController {
 	}
 
 	private ResponseEntity<ApiResponse> runDedup(String logPrefix, Path outputPath, Callable<String> dedupTask,
-			Consumer<String> progressReporter) throws InterruptedException, ExecutionException {
+			Consumer<String> progressReporter, UUID wssessionId) throws InterruptedException, ExecutionException {
 		if (!concurrentRunsSemaphore.tryAcquire()) {
 			return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
 					.body(new ApiResponse("ERROR: Server is busy. Please try again in a moment."));
@@ -186,6 +195,7 @@ public class DedupEndNoteController {
 				RequestContextHolder.setRequestAttributes(requestAttributes);
 				return dedupTask.call();
 			});
+			runningFutures.put(wssessionId, future);
 			try {
 				String result = future.get(timeoutMinutes, TimeUnit.MINUTES);
 				log.info("Writing to result: {}: {}", logPrefix, result);
@@ -199,7 +209,23 @@ public class DedupEndNoteController {
 				String msg = "ERROR: Deduplication timed out after " + timeoutMinutes + " minutes.";
 				progressReporter.accept(msg);
 				return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(new ApiResponse(msg));
+			} catch (CancellationException e) {
+				try {
+					Files.deleteIfExists(outputPath);
+				} catch (IOException ignored) {
+				}
+				String msg = "ERROR: Deduplication was cancelled by the user.";
+				progressReporter.accept(msg);
+				return ResponseEntity.ok(new ApiResponse(msg));
 			} catch (ExecutionException e) {
+				if (e.getCause() instanceof CancelledException ce) {
+					try {
+						Files.deleteIfExists(outputPath);
+					} catch (IOException ignored) {
+					}
+					progressReporter.accept(ce.getErrorMessage());
+					return ResponseEntity.ok(new ApiResponse(ce.getErrorMessage()));
+				}
 				if (e.getCause() instanceof DeduplicationException de) {
 					progressReporter.accept(de.getErrorMessage());
 					return ResponseEntity.ok(new ApiResponse(de.getErrorMessage()));
@@ -207,8 +233,20 @@ public class DedupEndNoteController {
 				throw e;
 			}
 		} finally {
+			runningFutures.remove(wssessionId);
 			concurrentRunsSemaphore.release();
 		}
+	}
+
+	@PostMapping(value = "/cancelDedup", produces = "application/json")
+	public ResponseEntity<ApiResponse> cancelDedup(@RequestParam UUID wssessionId) {
+		Future<?> future = runningFutures.get(wssessionId);
+		if (future == null) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND)
+					.body(new ApiResponse("No running deduplication found."));
+		}
+		future.cancel(true);
+		return ResponseEntity.ok(new ApiResponse("Cancellation requested."));
 	}
 
 	@GetMapping("/test_results_details")

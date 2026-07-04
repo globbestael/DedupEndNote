@@ -88,6 +88,9 @@ public class DeduplicationService {
 		// Map<String, Boolean> map = new HashMap<>(Map.of("isSameDois", null));
 
 		while (bibliographicItems.size() > 1) {
+			if (Thread.currentThread().isInterrupted()) {
+				throw new CancelledException("ERROR: Deduplication was cancelled by the user.");
+			}
 			BibliographicItem pivot = bibliographicItems.remove(0);
 			/*
 			 * If descending / OneFile mode: only bibliographicItems of year1 should be compared to bibliographicItems of year1 and year2.
