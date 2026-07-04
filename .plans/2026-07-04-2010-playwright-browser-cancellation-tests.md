@@ -46,9 +46,9 @@ cancel" requires.
 
 | File | Action |
 |---|---|
-| `pom.xml` | Add Playwright dependency + `browser-tests` Maven profile |
-| `src/test/java/edu/dedupendnote/browser/BrowserCancellationTests.java` | New test class |
-| `CLAUDE.md` | Document new test folder and profile |
+| `pom.xml` | Add Playwright dependency + `browser-tests` profile; add exclude to `integration-tests` profile |
+| `src/test/java/edu/dedupendnote/integration/browser/BrowserCancellationTests.java` | New test class |
+| `CLAUDE.md` | Document new subfolder and profile |
 | `docs/adr/0010-controller-tests-over-browser-tests.md` | Update status — browser tests now exist |
 
 ---
@@ -66,10 +66,9 @@ Inside the `<dependencies>` block (with other test-scoped deps):
 </dependency>
 ```
 
-## Step 2 — Add `browser-tests` Maven profile to `pom.xml`
+## Step 2 — Maven profile changes in `pom.xml`
 
-Inside `<profiles>`, alongside the existing `unit-tests`, `integration-tests`,
-`validation-tests` profiles:
+**Add `browser-tests` profile** inside `<profiles>`, alongside the existing profiles:
 
 ```xml
 <profile>
@@ -81,7 +80,7 @@ Inside `<profiles>`, alongside the existing `unit-tests`, `integration-tests`,
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
                     <includes>
-                        <include>**/browser/**/*Tests.java</include>
+                        <include>**/integration/browser/**/*Tests.java</include>
                     </includes>
                 </configuration>
             </plugin>
@@ -90,21 +89,31 @@ Inside `<profiles>`, alongside the existing `unit-tests`, `integration-tests`,
 </profile>
 ```
 
-Also ensure the existing `unit-tests` profile exclusion list excludes
-`**/browser/**` so browser tests never run under `-Punit-tests`:
+**Update the existing `integration-tests` profile** to exclude the browser subfolder
+(the current include `**/integration/**/*Tests.java` would otherwise pick up browser
+tests, which require a separately installed browser binary):
 
 ```xml
-<!-- inside unit-tests profile surefire excludes -->
-<exclude>**/browser/**</exclude>
+<!-- inside integration-tests profile surefire configuration, add: -->
+<excludes>
+    <exclude>**/integration/browser/**/*Tests.java</exclude>
+</excludes>
 ```
+
+The `unit-tests` profile needs no change — it already excludes `**/integration/**`.
 
 ## Step 3 — Create `BrowserCancellationTests.java`
 
 New file at:
-`src/test/java/edu/dedupendnote/browser/BrowserCancellationTests.java`
+`src/test/java/edu/dedupendnote/integration/browser/BrowserCancellationTests.java`
+
+Browser tests are integration tests — they use `@SpringBootTest(RANDOM_PORT)` and test
+the same server. They live in `integration/browser/` rather than a separate peer folder.
+The `browser-tests` Maven profile selects them specifically; the `integration-tests`
+profile excludes the subfolder (browser binary is a prerequisite).
 
 ```java
-package edu.dedupendnote.browser;
+package edu.dedupendnote.integration.browser;
 
 import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
 
@@ -131,14 +140,15 @@ import com.microsoft.playwright.options.WaitForSelectorState;
 @ActiveProfiles("test")
 class BrowserCancellationTests {
 
-    // test file: 805 records, comparison takes several seconds — long enough to cancel
+    // comparison-phase test: 805 records, comparison takes several seconds
     private static final Path TEST_FILE = Path.of(
         System.getProperty("user.home", ""),
         "dedupendnote_input_files", "integration", "other", "test805.txt");
 
-    private static final Path LARGE_FILE = Path.of(
+    // reading-phase test: large real dataset — reading alone takes > 1 s
+    private static final Path MCKEOWN_FILE = Path.of(
         System.getProperty("user.home", ""),
-        "dedupendnote_input_files", "integration", "other", "cancellation_read_test.ris");
+        "dedupendnote_input_files", "validation", "McKeown_S_2021", "McKeown_2021.txt");
 
     @LocalServerPort
     private int port;
@@ -200,10 +210,11 @@ class BrowserCancellationTests {
     }
 
     @Test
-    @Timeout(30)
+    @Timeout(60)
     void cancelDuringReading_showsErrorAndHidesCancelButton() {
-        // LARGE_FILE must be pre-generated — see "Setup note" below.
-        page.setInputFiles("#fileUpload1", LARGE_FILE);
+        // McKeown_2021.txt is large enough that reading takes > 1 s — long enough
+        // for Playwright to click Cancel before the reading phase finishes.
+        page.setInputFiles("#fileUpload1", MCKEOWN_FILE);
         page.locator("#buttonStartDeduplication").waitFor(
             new Locator.WaitForOptions().setState(WaitForSelectorState.ENABLED));
 
@@ -220,68 +231,33 @@ class BrowserCancellationTests {
 }
 ```
 
-### Setup note for `LARGE_FILE`
-
-`test805.txt` (805 records) reads in < 200 ms — too fast to cancel during reading even
-with Playwright's browser speed. The reading-phase test needs a file where reading takes
-at least 1 s. Options (choose one):
-
-**Option A — pre-generate a large RIS file (recommended):**
-Add a `@BeforeAll` that generates a 10 000-record synthetic RIS file to
-`~/dedupendnote_input_files/integration/other/cancellation_read_test.ris` if it does not
-already exist. Use the same synthetic record shape as `CancellationTests.generateRis()`:
-same year, page, author, unique journal per record. Once the file exists it is reused
-across runs. This avoids storing a large binary in git.
-
-```java
-@BeforeAll
-static void generateLargeFile() throws Exception {
-    if (Files.exists(LARGE_FILE)) return;
-    Files.createDirectories(LARGE_FILE.getParent());
-    StringBuilder sb = new StringBuilder();
-    for (int i = 1; i <= 10_000; i++) {
-        sb.append("TY  - JOUR\n")
-          .append("ID  - ").append(i).append("\n")
-          .append("TI  - Effect of treatment on patient outcomes trial ").append(i).append("\n")
-          .append("AU  - Smith, John\n")
-          .append("PY  - 2020\n")
-          .append("SP  - 100\n")
-          .append("JO  - Journal of Medicine ").append(i).append("\n")
-          .append("ER  - \n");
-    }
-    Files.writeString(LARGE_FILE, sb.toString());
-}
-```
-
-**Option B — skip the reading-phase test if the controller test already covers it:**
-`CancellationTests.startOneFile_whenCancelledMidRun_returnsErrorWithCancelledMessage`
-covers the reading-phase interrupt at the HTTP level. The browser test for
-reading-phase cancellation adds Cancel-button visibility — if that coverage is not
-required, skip this test and keep only `cancelDuringComparison_showsErrorAndHidesCancelButton`.
-
 ---
 
 ## Step 4 — Update `CLAUDE.md`
 
-Add a new row in the test class hierarchy table (under Validation, or a new "Browser" section):
+Add a new entry to the Integration section of the test class hierarchy (browser tests
+are integration tests — they belong under the Integration heading):
 
 ```
-**Browser (`edu.dedupendnote.browser.*`)**
-- **`browser/BrowserCancellationTests`** — Playwright browser tests verifying the Cancel
-  button UI, WebSocket `#results` updates, and end-to-end cancellation flow in a real
-  Chromium browser; requires Playwright browser binaries installed separately.
-  Run with `-Pbrowser-tests`.
+- Integration test classes in `integration/browser/` (no common Spring-context parent;
+  do NOT add `@MockitoBean SimpMessagingTemplate` — real WebSocket required):
+  `BrowserCancellationTests` (Playwright end-to-end: Cancel button visibility, `#results`
+  WebSocket display, reading-phase and comparison-phase cancellation).
+  Run with `-Pbrowser-tests`; requires Chromium binary (see Commands).
 ```
 
-Add a new row to the test folder/profile table:
+Update the test folder/profile table — add a new row:
 
 | Folder | Profile | Spring context | Run frequency |
 |---|---|---|---|
-| `src/test/java/edu/dedupendnote/browser/` | `browser-tests` | `@SpringBootTest(RANDOM_PORT)`, real WebSocket | On demand (browser binary required) |
+| `src/test/java/edu/dedupendnote/integration/browser/` | `browser-tests` | `@SpringBootTest(RANDOM_PORT)`, real WebSocket | On demand (browser binary required) |
+
+Note: the `integration-tests` profile excludes `integration/browser/` — running
+`-Pintegration-tests` will NOT execute browser tests.
 
 Add a new command to the Commands section:
 ```bash
-./mvnw test -Pbrowser-tests    # Run browser tests (requires: mvnw exec:java -e -D exec.mainClass=com.microsoft.playwright.CLI -D exec.args="install chromium")
+./mvnw test -Pbrowser-tests    # Run browser tests (requires: ./mvnw exec:java -e -D exec.mainClass=com.microsoft.playwright.CLI -D exec.args="install chromium")
 ```
 
 ---
@@ -310,8 +286,9 @@ verification (Cancel button visibility, `#results` updates, `dedupFinished` latc
    ./mvnw exec:java -e -D exec.mainClass=com.microsoft.playwright.CLI -D exec.args="install chromium"
    ```
 
-2. Ensure test file exists at `~/dedupendnote_input_files/integration/other/test805.txt`
-   (already used by `DeduplicationServiceTests`).
+2. Ensure both test files exist:
+   - `~/dedupendnote_input_files/integration/other/test805.txt` (used by `DeduplicationServiceTests`)
+   - `~/dedupendnote_input_files/validation/McKeown_S_2021/McKeown_2021.txt` (used by `ValidationTests`)
 
 3. Run:
    ```
@@ -348,7 +325,5 @@ verification (Cancel button visibility, `#results` updates, `dedupFinished` latc
   a local cache (e.g. `~/.cache/ms-playwright`). This is a developer-machine prerequisite.
   When a CI pipeline is added, install the binary as a CI step.
 
-- **Existing `unit-tests` profile**: Verify the exclusion list in the `unit-tests`
-  surefire configuration already excludes `**/browser/**`, or add it. The path-based
-  filter currently excludes `**/integration/**` and `**/validation/**`; browser tests
-  would otherwise be picked up by the default surefire configuration with no profile.
+- **`unit-tests` profile**: No change needed — it already excludes `**/integration/**`,
+  which covers `integration/browser/` automatically.
