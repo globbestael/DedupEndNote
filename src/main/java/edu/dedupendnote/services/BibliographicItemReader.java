@@ -289,7 +289,6 @@ public class BibliographicItemReader {
 									"The input file contains ID fields which are not numbers. "
 											+ "The input file is not an Export as RIS-file from an EndNote library!");
 						}
-						// log.debug("Read ID {}", fieldContent);
 						break;
 					case "J2": // Alternate journal
 						addNormalizedJournal(fieldContent, bibliographicItem, fieldName);
@@ -503,8 +502,8 @@ public class BibliographicItemReader {
 		} catch (CancelledException e) {
 			log.error("While reading the input file: {}", e.getMessage());
 			throw e;
-		} catch (Exception e) {
-			log.error("In field {} with content {}: other exception", fieldName, fieldContent, e);
+		} catch (RuntimeException e) {
+			log.error("In field {} with content {}: unexpected exception", fieldName, fieldContent, e);
 		}
 		log.debug("Publications read: {}", bibliographicItems.size());
 		return bibliographicItems;
