@@ -16,6 +16,7 @@ import org.springframework.test.context.ActiveProfiles;
 
 import com.microsoft.playwright.Browser;
 import com.microsoft.playwright.BrowserContext;
+import com.microsoft.playwright.BrowserType;
 import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.Playwright;
@@ -47,7 +48,8 @@ class BrowserCancellationTests {
 	@BeforeAll
 	static void launchBrowser() {
 		playwright = Playwright.create();
-		browser = playwright.chromium().launch();
+		boolean headless = !Boolean.parseBoolean(System.getProperty("playwright.headed", "false"));
+		browser = playwright.chromium().launch(new BrowserType.LaunchOptions().setHeadless(headless));
 	}
 
 	@AfterAll
