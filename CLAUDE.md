@@ -4,10 +4,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Keeping this file current
 
-Update CLAUDE.md whenever a change affects something documented here. Triggers include:
+Update CLAUDE.md (same commit as the code change) when any of the following change:
 
-- Test class renamed, added, deleted, or reclassified (hierarchy section), or moved between unit / integration / validation categories
-- New service introduced or existing service's responsibility changed → also update `docs/architecture.html` (service map)
+- Test class renamed, added, deleted, or reclassified → also update `docs/test-hierarchy.md`
+- New service introduced or existing service's responsibility changed → also update `docs/architecture.html`
 - Algorithm step, threshold, or special-type handling changed → also update `docs/algorithm.md`
 - Domain term or mode definition changed → also update `CONTEXT.md`
 - Build command, Maven profile, or port changed (commands / configuration sections)
@@ -17,8 +17,6 @@ Update CLAUDE.md whenever a change affects something documented here. Triggers i
 - Release workflow or version-management mechanism changed (configuration section)
 - Doc file added to `docs/` or existing one renamed/removed (documentation map section)
 
-The update should land in the same commit as the code change.
-
 ## Documentation map
 
 | What you need | Where to find it |
@@ -26,6 +24,7 @@ The update should land in the same commit as the code change.
 | Domain term meanings (Bibliographic Item, Duplicate Set, Modes, item types, validation) | [CONTEXT.md](CONTEXT.md) |
 | Pipeline diagram, service responsibilities, sequence diagram | [docs/architecture.html](docs/architecture.html) |
 | Algorithm steps, threshold values, INSUFFICIENT_DATA, special types, enrichment | [docs/algorithm.md](docs/algorithm.md) |
+| Test class listing, base class details, taxonomy, test profile | [docs/test-hierarchy.md](docs/test-hierarchy.md) |
 | Commands, coding rules, test structure, config, release | This file (CLAUDE.md) |
 | Architecture decisions (why X, rejected alternatives) | [docs/adr/](docs/adr/) |
 
@@ -127,7 +126,7 @@ One verify-phase plugin runs during `./mvnw verify`:
 
 ## Testing
 
-Tests live under three roots, each with a corresponding Maven profile:
+Tests live under four roots, each with a corresponding Maven profile:
 
 | Folder | Profile | Spring context | Run frequency |
 |---|---|---|---|
@@ -140,51 +139,11 @@ Note: `-Pintegration-tests` excludes `integration/browser/`; `-Pall-integration-
 
 **Integration tests** assert on the string returned by `deduplicateOneFile` (or record counts) on small known inputs — they are regression guards that fail if behaviour changes.
 
-**Validation tests** measure sensitivity/specificity against manually validated truth files in `~/dedupendnote_input_files` (not in git). They are slow and intended to be run before releases or after structural changes, not on every commit. Validation runs `deduplicateOneFile` in mark mode to exercise the full production code path, then re-reads the mark-mode output with `includeLabelField=true` to extract deduplication groups.
+**Validation tests** measure sensitivity/specificity against manually validated truth files in `~/dedupendnote_input_files` (not in git). They are slow and intended to be run before releases or after structural changes, not on every commit.
 
 ### Test class hierarchy
 
-**Unit (`edu.dedupendnote.unit.*`)**
-- **`unit/BaseTest`** — provides `Path baseDir` (`~/dedupendnote_input_files`) and `Path testDir` (both initialized directly as fields), `@BeforeEach initTestDir()`, plus utilities (`jws`, `getHighestSimilarityForAuthors`, `setLoggerToDebug`)
-- **`unit/services/BibliographicItemReaderTest extends BaseTest`** — tests the reader's title-derived patterns (`REPLY_PATTERN`, `ERRATUM_PATTERN`, `SOURCE_PATTERN`, `COMMENT_PATTERN`, `PHASE_PATTERN`, `RIS_LINE_PATTERN`); inline `@ValueSource` cases plus file-based tests against the curated `All__*` example sets.
-- Standalone unit test classes directly in `unit/services/`: `UtilitiesServiceTest`
-
-- **`unit/services/comparison/AuthorsBaseTest extends BaseTest`** — shared logic for author-comparison tests
-- **`unit/services/comparison/DefaultJournalComparisonServiceTest extends BaseTest`** — boolean `compare()` tests for journals (inline parameterized) and a file-based test against validated journal pairs
-- **`unit/services/comparison/JWSimilarityTitleTest extends BaseTest`** — title JWS-similarity tests only
-- **`unit/services/comparison/JWSimilarityAuthorTest extends AuthorsBaseTest`** — plain JUnit 5, no Spring; tests raw `jws.apply` score
-- Standalone comparison test classes (no Spring context): `DefaultJournalComparisonServiceIssnTest`, `DefaultTitleComparisonServiceTest`, `DefaultAuthorsComparisonServiceThresholdTest`, `JWSimilarityJournalTest`, `JWSimilarityAbstractTest`, `AuthorVariantsExperimentsTest`, `AuthorPermutationsExperimentsTest`
-
-- Normalization test classes in `unit/services/normalization/` (no Spring context): `AuthorsNormalizationServiceTest`, `JournalsNormalizationServiceTest`, `PagesNormalizationServiceTest`, `TitlesNormalizationServiceTest`, `NormalizationServiceTextTest`, `NormalizationServiceDoiTest`, `NormalizationServiceIssnTest`
-
-**Integration (`edu.dedupendnote.integration.*`)**
-
-Two base classes exist; the choice depends on whether the test needs real HTTP (see ADR-0010):
-
-- **`integration/AbstractIntegrationTest`** — mock web environment (`@SpringBootTest` default); service methods called directly via `@Autowired`. Provides `@ActiveProfiles("test")`, `@MockitoBean SimpMessagingTemplate`, `Path baseDir`, `Path testDir`, `@BeforeAll` (log level → INFO), `@BeforeEach initTestDir()`. Subclasses override `initTestDir()` when they need a subdirectory. Also provides `deleteDerivedOutputs(Path inputPath)` — call this as the first action in any test that writes output files so a failed run cannot leave a previous run's output on disk to mislead a developer. **Default choice** for new integration tests.
-- Integration test classes extending `AbstractIntegrationTest`: `DeduplicationServiceTests` (one-file and two-file deduplication smoke tests), `MissedDuplicatesTests`, `RecordCountCapTests`
-
-- **`integration/AbstractRandomPortIntegrationTest`** — real HTTP via `RestTemplate` on `RANDOM_PORT`; exercises the controller's routing, HTTP status codes, and error branches. Use only when the test specifically needs real HTTP or a property override that affects Spring Boot startup behaviour.
-- Integration test classes extending `AbstractRandomPortIntegrationTest`: `ConcurrentRunsTests` (semaphore cap → 429), `PathTraversalTests` (upload/getResultFile path traversal → 400; happy-path smoke test), `DeduplicationTimeoutTests` (timeout → 503), `RateLimitTests` (upload rate limit → 429), `CancellationTests` (cancel with no running task → 404; cancel mid-run → ERROR response)
-
-- Integration test classes in `integration/browser/` (no common Spring-context parent; do NOT add `@MockitoBean SimpMessagingTemplate` — real WebSocket required so the browser receives progress messages): `BrowserCancellationTests` (Playwright end-to-end: Cancel button visibility, `#results` WebSocket updates, reading-phase and comparison-phase cancellation). `@ActiveProfiles("test")` declared directly on the class. Run with `-Pbrowser-tests` or `-Pall-integration-tests`; requires Chromium binary.
-
-**Validation (`edu.dedupendnote.validation.*`)**
-- **`validation/ValidationTests`** — measures sensitivity/specificity of the production deduplication engine across 14 validated real-world datasets; not a regression guard but a performance monitor. Requires truth files in `~/dedupendnote_input_files` (not in git). Run with `-Pvalidation-tests`.
-- **`validation/experiments/AuthorExperimentsTests`** — runs `DefaultAuthorsComparisonService` with experimental thresholds (`AuthorThresholds(1.0, 1.0, 1.0)`) against a validated dataset and asserts on relative sensitivity/specificity. The `experiments` sub-package holds controlled A/B experiments against production-engine baselines.
-- **`validation/services/ValidationService`** — test-only Spring `@Service` that encapsulates the truth-file scoring logic (TP/FP/FN/TN computation, FN/FP analysis file writing). Shared by `ValidationTests` and future experiments tests.
-- **`validation/services/RecordDBService`** — test-only Spring `@Service` for reading/writing the tab-delimited DB export format.
-- **`validation/domain/ValidationResult`** — POJO holding per-dataset scores (sensitivity, specificity, precision, accuracy, F1, FN/FP pair maps).
-
-Test files follow a three-category taxonomy per field: **Normalization** (`*NormalizationServiceTest` for concrete service classes; `NormalizationService*Test` for base-class topics like DOI, ISSN, text) / **Comparison** (`Default*ComparisonServiceTest`, boolean result from `compare()` or equivalent static helpers) / **JWSimilarity** (`JWSimilarity*Test`, raw JWS score vs threshold). Files are further split by Spring-context requirement and now mirror the production subfolder structure (`services/comparison/`, `services/normalization/`).
-
-The split is enforced by folder. The Maven profiles in `pom.xml` use path-based filters: `unit-tests` (excludes `**/integration/**` and `**/validation/**`), `integration-tests` (includes `**/integration/**/*Tests.java`, excludes `**/integration/browser/**`), `browser-tests` (includes only `**/integration/browser/**/*Tests.java`), `all-integration-tests` (includes all of `**/integration/**/*Tests.java`), `validation-tests` (includes only `**/validation/**/*Tests.java`). Selecting the folder in VS Code's Test Explorer automatically runs only that category.
-
-There are a number of tests with expected errors. These tests are NOT disabled, but use an int EXPECTED_NUMBER_OF_ERRORS which is used in an assertion.
-
-### Test profile
-
-`@ActiveProfiles("test")` activates the `test` profile for all integration and validation tests, loading `src/main/resources/application-test.properties`. It is declared on `AbstractIntegrationTest` (inherited by subclasses), repeated on each `AbstractRandomPortIntegrationTest` subclass (which has no common Spring-context parent), and declared directly on `BrowserCancellationTests` (which extends no base class). Unit tests don't start Spring and get `baseDir` directly from `BaseTest` via `System.getProperty("user.home")`.
+See [`docs/test-hierarchy.md`](docs/test-hierarchy.md) for the full per-class listing, base class details, taxonomy, and test profile notes.
 
 ## Plans
 
@@ -211,18 +170,7 @@ The version is defined once: `<version>x.y.z</version>` at the top of `pom.xml` 
 
 ## Agent skills
 
-### HTML files with Mermaid diagrams
-
-When writing an HTML file that contains a `<pre class="mermaid">` block, add `<!-- htmlhint-disable -->` as a comment immediately after the opening `<body>` tag. This prevents htmlhint from flagging Mermaid diagram syntax as HTML errors.
-
-### Issue tracker
-
-Issues live as local markdown files under `.scratch/`. See `docs/agents/issue-tracker.md`.
-
-### Triage labels
-
-Uses the default five-role vocabulary (needs-triage, needs-info, ready-for-agent, ready-for-human, wontfix). See `docs/agents/triage-labels.md`.
-
-### Domain docs
-
-Single-context layout: one `CONTEXT.md` + `docs/adr/` at the repo root. See `docs/agents/domain.md`.
+- **Mermaid HTML files**: add `<!-- htmlhint-disable -->` after `<body>` to suppress htmlhint errors on Mermaid diagram syntax.
+- **Issue tracker**: issues live under `.scratch/` — see [`docs/agents/issue-tracker.md`](docs/agents/issue-tracker.md)
+- **Triage labels**: five-role vocabulary (needs-triage, needs-info, ready-for-agent, ready-for-human, wontfix) — see [`docs/agents/triage-labels.md`](docs/agents/triage-labels.md)
+- **Domain docs**: single-context layout (`CONTEXT.md` + `docs/adr/`) — see [`docs/agents/domain.md`](docs/agents/domain.md)
