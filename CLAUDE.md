@@ -39,8 +39,12 @@ The update should land in the same commit as the code change.
 # Test
 ./mvnw test                                    # Run all tests
 ./mvnw test -Punit-tests                       # Run only unit tests (no Spring context, fast)
-./mvnw test -Pintegration-tests               # Run only integration tests (@SpringBootTest)
+./mvnw test -Pintegration-tests               # Run only integration tests (@SpringBootTest), excludes browser/
+./mvnw test -Pbrowser-tests                  # Run browser tests only (requires Chromium — see below)
+./mvnw test -Pall-integration-tests          # Run all integration tests including browser (requires Chromium)
 ./mvnw test -Pvalidation-tests               # Run only validation tests (slow, requires truth files)
+# One-time Chromium install for browser tests:
+./mvnw exec:java -e -D exec.classpathScope=test -D exec.mainClass=com.microsoft.playwright.CLI -D exec.args="install chromium"
 ./mvnw -Dtest=ClassNameTest test              # Run a single test class
 ./mvnw -Dtest=ClassNameTest#methodName test   # Run a single test method
 
@@ -129,7 +133,10 @@ Tests live under three roots, each with a corresponding Maven profile:
 |---|---|---|---|
 | `src/test/java/edu/dedupendnote/unit/` | `unit-tests` | No | Every commit |
 | `src/test/java/edu/dedupendnote/integration/` | `integration-tests` | `@SpringBootTest` | Every commit |
+| `src/test/java/edu/dedupendnote/integration/browser/` | `browser-tests` / `all-integration-tests` | `@SpringBootTest(RANDOM_PORT)`, real WebSocket | On demand (Chromium required) |
 | `src/test/java/edu/dedupendnote/validation/` | `validation-tests` | `@SpringBootTest` | On demand |
+
+Note: `-Pintegration-tests` excludes `integration/browser/`; `-Pall-integration-tests` includes it.
 
 **Integration tests** assert on the string returned by `deduplicateOneFile` (or record counts) on small known inputs — they are regression guards that fail if behaviour changes.
 
@@ -158,7 +165,9 @@ Two base classes exist; the choice depends on whether the test needs real HTTP (
 - Integration test classes extending `AbstractIntegrationTest`: `DeduplicationServiceTests` (one-file and two-file deduplication smoke tests), `MissedDuplicatesTests`, `RecordCountCapTests`
 
 - **`integration/AbstractRandomPortIntegrationTest`** — real HTTP via `RestTemplate` on `RANDOM_PORT`; exercises the controller's routing, HTTP status codes, and error branches. Use only when the test specifically needs real HTTP or a property override that affects Spring Boot startup behaviour.
-- Integration test classes extending `AbstractRandomPortIntegrationTest`: `ConcurrentRunsTests` (semaphore cap → 429), `PathTraversalTests` (upload/getResultFile path traversal → 400; happy-path smoke test), `DeduplicationTimeoutTests` (timeout → 503), `RateLimitTests` (upload rate limit → 429)
+- Integration test classes extending `AbstractRandomPortIntegrationTest`: `ConcurrentRunsTests` (semaphore cap → 429), `PathTraversalTests` (upload/getResultFile path traversal → 400; happy-path smoke test), `DeduplicationTimeoutTests` (timeout → 503), `RateLimitTests` (upload rate limit → 429), `CancellationTests` (cancel with no running task → 404; cancel mid-run → ERROR response)
+
+- Integration test classes in `integration/browser/` (no common Spring-context parent; do NOT add `@MockitoBean SimpMessagingTemplate` — real WebSocket required so the browser receives progress messages): `BrowserCancellationTests` (Playwright end-to-end: Cancel button visibility, `#results` WebSocket updates, reading-phase and comparison-phase cancellation). `@ActiveProfiles("test")` declared directly on the class. Run with `-Pbrowser-tests` or `-Pall-integration-tests`; requires Chromium binary.
 
 **Validation (`edu.dedupendnote.validation.*`)**
 - **`validation/ValidationTests`** — measures sensitivity/specificity of the production deduplication engine across 14 validated real-world datasets; not a regression guard but a performance monitor. Requires truth files in `~/dedupendnote_input_files` (not in git). Run with `-Pvalidation-tests`.
@@ -169,13 +178,13 @@ Two base classes exist; the choice depends on whether the test needs real HTTP (
 
 Test files follow a three-category taxonomy per field: **Normalization** (`*NormalizationServiceTest` for concrete service classes; `NormalizationService*Test` for base-class topics like DOI, ISSN, text) / **Comparison** (`Default*ComparisonServiceTest`, boolean result from `compare()` or equivalent static helpers) / **JWSimilarity** (`JWSimilarity*Test`, raw JWS score vs threshold). Files are further split by Spring-context requirement and now mirror the production subfolder structure (`services/comparison/`, `services/normalization/`).
 
-The split is enforced by folder. The Maven profiles in `pom.xml` use path-based filters: `unit-tests` (excludes `**/integration/**` and `**/validation/**`), `integration-tests` (includes only `**/integration/**/*Tests.java`), `validation-tests` (includes only `**/validation/**/*Tests.java`). Selecting the folder in VS Code's Test Explorer automatically runs only that category.
+The split is enforced by folder. The Maven profiles in `pom.xml` use path-based filters: `unit-tests` (excludes `**/integration/**` and `**/validation/**`), `integration-tests` (includes `**/integration/**/*Tests.java`, excludes `**/integration/browser/**`), `browser-tests` (includes only `**/integration/browser/**/*Tests.java`), `all-integration-tests` (includes all of `**/integration/**/*Tests.java`), `validation-tests` (includes only `**/validation/**/*Tests.java`). Selecting the folder in VS Code's Test Explorer automatically runs only that category.
 
 There are a number of tests with expected errors. These tests are NOT disabled, but use an int EXPECTED_NUMBER_OF_ERRORS which is used in an assertion.
 
 ### Test profile
 
-`@ActiveProfiles("test")` activates the `test` profile for all integration and validation tests, loading `src/main/resources/application-test.properties`. It is declared on `AbstractIntegrationTest` (inherited by subclasses) and repeated on each `AbstractRandomPortIntegrationTest` subclass (which has no common Spring-context parent). Unit tests don't start Spring and get `baseDir` directly from `BaseTest` via `System.getProperty("user.home")`.
+`@ActiveProfiles("test")` activates the `test` profile for all integration and validation tests, loading `src/main/resources/application-test.properties`. It is declared on `AbstractIntegrationTest` (inherited by subclasses), repeated on each `AbstractRandomPortIntegrationTest` subclass (which has no common Spring-context parent), and declared directly on `BrowserCancellationTests` (which extends no base class). Unit tests don't start Spring and get `baseDir` directly from `BaseTest` via `System.getProperty("user.home")`.
 
 ## Plans
 

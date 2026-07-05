@@ -37,7 +37,7 @@ cancel" requires.
 1. Add the Playwright for Java dependency to `pom.xml`.
 2. Install the Chromium browser binary (once per machine — not CI yet):
    ```
-   ./mvnw exec:java -e -D exec.mainClass=com.microsoft.playwright.CLI -D exec.args="install chromium"
+   ./mvnw exec:java -e -D exec.classpathScope=test -D exec.mainClass=com.microsoft.playwright.CLI -D exec.args="install chromium"
    ```
 
 ---
@@ -220,8 +220,7 @@ class BrowserCancellationTests {
         // Upload file — triggers AJAX upload via the onChange handler
         page.setInputFiles("#fileUpload1", TEST_FILE);
         // Wait for the Start button to become enabled (upload acknowledged)
-        page.locator("#buttonStartDeduplication").waitFor(
-            new Locator.WaitForOptions().setState(WaitForSelectorState.ENABLED));
+        assertThat(page.locator("#buttonStartDeduplication")).isEnabled();
 
         page.click("#buttonStartDeduplication");
 
@@ -229,14 +228,17 @@ class BrowserCancellationTests {
         page.locator("#buttonCancelDeduplication").waitFor(
             new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE));
 
-        // Wait for the reading-complete progress message — indicates comparison has started
-        assertThat(page.locator("#results")).containsText("bibliographic items");
+        // Wait for a live in-progress STOMP message (reading or comparison phase).
+        // assertThat().containsText("bibliographic items") also matches the DONE message;
+        // by then the button is already hidden and page.click() would wait forever.
+        // waitForFunction with !startsWith('DONE') catches "Working on Y for N..." instead.
+        page.waitForFunction(
+            "() => { const t = document.getElementById('results').textContent;"
+            + " return t.includes('bibliographic items') && !t.startsWith('DONE'); }");
 
         page.click("#buttonCancelDeduplication");
 
-        // Terminal message contains "ERROR"
         assertThat(page.locator("#results")).containsText("ERROR");
-        // Cancel button is hidden again after terminal message
         assertThat(page.locator("#buttonCancelDeduplication")).isHidden();
     }
 
@@ -246,8 +248,7 @@ class BrowserCancellationTests {
         // McKeown_2021.txt is large enough that reading takes > 1 s — long enough
         // for Playwright to click Cancel before the reading phase finishes.
         page.setInputFiles("#fileUpload1", MCKEOWN_FILE);
-        page.locator("#buttonStartDeduplication").waitFor(
-            new Locator.WaitForOptions().setState(WaitForSelectorState.ENABLED));
+        assertThat(page.locator("#buttonStartDeduplication")).isEnabled();
 
         page.click("#buttonStartDeduplication");
 
@@ -291,7 +292,7 @@ Add new commands to the Commands section:
 ./mvnw test -Pbrowser-tests          # Run browser tests only (requires Chromium — see below)
 ./mvnw test -Pall-integration-tests  # Run all integration tests including browser (requires Chromium)
 # One-time Chromium install:
-./mvnw exec:java -e -D exec.mainClass=com.microsoft.playwright.CLI -D exec.args="install chromium"
+./mvnw exec:java -e -D exec.classpathScope=test -D exec.mainClass=com.microsoft.playwright.CLI -D exec.args="install chromium"
 ```
 
 ---
@@ -317,7 +318,7 @@ verification (Cancel button visibility, `#results` updates, `dedupFinished` latc
 
 1. Install browser binary (once):
    ```
-   ./mvnw exec:java -e -D exec.mainClass=com.microsoft.playwright.CLI -D exec.args="install chromium"
+   ./mvnw exec:java -e -D exec.classpathScope=test -D exec.mainClass=com.microsoft.playwright.CLI -D exec.args="install chromium"
    ```
 
 2. Ensure both test files exist:
@@ -361,3 +362,23 @@ verification (Cancel button visibility, `#results` updates, `dedupFinished` latc
 
 - **`unit-tests` profile**: No change needed — it already excludes `**/integration/**`,
   which covers `integration/browser/` automatically.
+
+- **`WaitForSelectorState.ENABLED` does not exist** in Playwright Java 1.47.0. Use
+  `assertThat(locator).isEnabled()` instead — it auto-waits just like the `waitFor` form.
+
+- **`assertThat().containsText("bibliographic items")` matches too late** in the comparison
+  test. The DONE message ("DONE: DedupEndNote has written N bibliographic items...") also
+  contains "bibliographic items". By the time Playwright catches the DONE text, the jQuery
+  `complete` handler has already hidden the Cancel button, so `page.click()` hangs. Use
+  `page.waitForFunction("() => t.includes('bibliographic items') && !t.startsWith('DONE')")` 
+  to catch only the in-progress "Working on Y for N bibliographic items" messages.
+
+- **Multipart size in `application-test.properties`**: Spring Boot's default multipart
+  limit is 1 MB. `test805.txt` is 1.38 MB. Add `spring.servlet.multipart.max-file-size =
+  150MB` and `spring.servlet.multipart.max-request-size = 150MB` to
+  `application-test.properties` (not just `application.properties`) so browser tests pick
+  up the setting.
+
+- **`exec:java` for Playwright CLI requires `classpathScope=test`**: playwright is
+  `test`-scoped and won't be on the default classpath. Use:
+  `./mvnw exec:java -e -D exec.classpathScope=test -D exec.mainClass=com.microsoft.playwright.CLI -D exec.args="install chromium"`

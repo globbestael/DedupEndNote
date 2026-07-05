@@ -1,12 +1,19 @@
 # ADR-0010 Controller-level integration tests preferred over browser tests
 
-**Status:** Decided — 2026-07-04  
+**Status:** Decided — 2026-07-04; browser tests subsequently added — 2026-07-05  
 **Context:** The integration test folder contains two structurally different base classes that serve
 different purposes. A gap in controller-level test coverage was discovered when a
 `java.util.concurrent.CancellationException` (thrown by `future.get()` after `future.cancel(true)`)
 went unhandled in `DedupEndNoteController.runDedup` and was only found by running the browser — not
 by any automated test. This raised two questions: (1) should the two base classes be made explicit,
 and (2) should browser-level tests be added to prevent this class of gap?
+
+**Update (2026-07-05):** Browser tests were subsequently added in
+`integration/browser/BrowserCancellationTests` using Playwright for Java (run with
+`-Pbrowser-tests` or `-Pall-integration-tests`). The controller-over-browser decision
+still applies for new server-side exception paths; browser tests are now used
+specifically for UI-layer verification (Cancel button visibility, `#results` WebSocket
+updates, `dedupFinished` latch behaviour).
 
 ## Decision
 
