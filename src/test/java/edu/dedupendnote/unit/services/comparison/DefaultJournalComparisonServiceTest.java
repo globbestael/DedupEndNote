@@ -211,8 +211,10 @@ class DefaultJournalComparisonServiceTest extends BaseTest {
 	static Stream<Arguments> fullNegativeArgumentProvider() {
 		// @formatter:off
 		return Stream.of(
-				// Fixed: Patterns for journals used ".*(\\b|)", but this was changed to ".*\\b".
-				// This made up example was positive: Starts with "B" and has a "B" and "A" (all case insensitive)
+				/*
+				 * Fixed: Patterns for journals used ".*(\\b|)", but this was changed to ".*\\b".
+				 * This made up example was positive: Starts with "B" and has a "B" and "A" (all case insensitive)
+				 */
 				arguments(
 					"BBA Clinical",
 					"Biochimica et biophysica peracta nonclinical"),
@@ -249,6 +251,19 @@ class DefaultJournalComparisonServiceTest extends BaseTest {
 				arguments( // with and without "London"
 						"Philos Trans R Soc Lond B Biol Sci",
 						"Philosophical Transactions of the Royal Society B: Biological Sciences"),
+				arguments( 
+					/* DefaultJournalComparisonService::compareJournals_FirstWithStartingInitialism made a pattern 
+					 * because "2016" == "2016".toUpperCase
+					 */
+					"2016 38th Annual International Conference of the Ieee Engineering in Medicine and Biology Society", 
+					"2016October"),
+				arguments(
+					/*
+					 * The "."'s should be recognized as abbreviation markers, NOT as end of (main) title 
+					 * (which would split it also into 3 extra titles "Brit", "J" and "Surg") 
+					 */
+					"Brit. J. Surg.",
+					"Brit. J. Haematol."),
 				arguments(
 					"No other examples yet",
 					"The same"),

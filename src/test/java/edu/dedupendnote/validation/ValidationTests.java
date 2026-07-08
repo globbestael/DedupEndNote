@@ -1,10 +1,15 @@
 package edu.dedupendnote.validation;
 
+import java.io.BufferedWriter;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -12,6 +17,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -32,6 +38,7 @@ import edu.dedupendnote.domain.DeduplicationMode;
 import edu.dedupendnote.services.DeduplicationService;
 import edu.dedupendnote.services.BibliographicItemReader;
 import edu.dedupendnote.services.UtilitiesService;
+import edu.dedupendnote.services.comparison.DefaultJournalComparisonService;
 import edu.dedupendnote.validation.services.ValidationIOService;
 import edu.dedupendnote.domain.BibliographicItem;
 import edu.dedupendnote.domain.BibliographicItemDB;
@@ -195,10 +202,60 @@ class ValidationTests extends AbstractIntegrationTest {
 			}
 			System.err.println("title: " + entry.getKey() + " --> " + entry.getValue());
 		}
-		// temporarily changed for Roo Code refactoring
-		assertThat(changed).isTrue();
-		// assertThat(changed).isFalse();
+
+		saveJournalCachedPatterns();
+		assertThat(changed).isFalse();
 	}
+
+	/*
+	 * Saves a TAB delimited file of journal name and the 3 cached Patterns used in DefaultJournalComparisonService.
+	 *
+	 * For the validation sets in checkAllTruthFiles this is ca 740 journals.
+	 * This is a small set of all journals
+	 * 
+	 * The following list of questions and thinking about prefilling these caches when then journal names are normlaized, seems superfluous:
+	 * - do we know how many patterns are available in the caches?
+	 * - do we know how many cache hits there are?
+	 * - are the caches filled for all runs (i.e. cleared only once a month?)
+	 * - Claude should look at the length criteria?
+	 * - should every journal get its patterns when everything is normalized?
+	 * - the different caches have duplicate patterns?
+	 * - should a journal get a list of UNIQUE patterns
+	 * - the length criteria could be part of the caches: if a journal name > 10 then the compareJournals_FirstAsInitialism pattern 
+	 *   should not be added,   and the call for the bibliographicItem comparison j1 <-> j2 could call all available patterns 
+	 *   short circuiting on the first true
+	 * 
+	 * Superfluous given the small number of patterns:
+	 * The 3 comparison subfunctions which use these cached patterns are only called if the journals of the 2 bibliographicItems 
+	 * start with the same letter.
+	 */
+	private void saveJournalCachedPatterns() {
+		Set<String> journalList = new HashSet<>();
+
+		journalList.addAll(DefaultJournalComparisonService.ABBREVIATION_CACHE.keySet());
+		journalList.addAll(DefaultJournalComparisonService.INITIALISM_CACHE.keySet());
+		journalList.addAll(DefaultJournalComparisonService.STARTING_INITIALISM_CACHE.keySet());
+
+		List<PatternRecord> patternList = new ArrayList<>();
+		journalList.stream().sorted().forEach(journal -> {
+			patternList.add(new PatternRecord(journal, DefaultJournalComparisonService.ABBREVIATION_CACHE.get(journal),
+					DefaultJournalComparisonService.INITIALISM_CACHE.get(journal),
+					DefaultJournalComparisonService.STARTING_INITIALISM_CACHE.get(journal)));
+		});
+		Path path = Paths.get(".scratch/JournalPatterns.txt");
+		try (BufferedWriter writer = Files.newBufferedWriter(path, Charset.defaultCharset())) {
+			for (PatternRecord p : patternList) {
+				String s = "%s\t%s\t%s\t%s\n".formatted(p.journal(), p.abbreviation(), p.initialism(),
+						p.startingInitialism());
+				writer.write(s, 0, s.length());
+			}
+		} catch (IOException x) {
+			System.err.format("IOException: %s%n", x);
+		}
+	}
+
+	public record PatternRecord(String journal, Pattern abbreviation, Pattern initialism, Pattern startingInitialism) {
+	};
 
 	private void printValidationResult(String setName, ValidationResult newV, @Nullable ValidationResult oldV) {
 		System.out.println(

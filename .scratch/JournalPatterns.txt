@@ -1,0 +1,732 @@
+11 11	\b11.*\b11.*	\b1.*\b1.*\b .*\b1.*\b1.*	null
+19	\b19.*	\b1.*\b9.*	\b1.*\b9.*
+2016 38th Annual International Conference of the Ieee Engineering in Medicine and Biology Society	\b2016.*\b38th.*\bAnnual.*\bInternational.*\bConference.*\bof.*\bthe.*\bIeee.*\bEngineering.*\bin.*\bMedicine.*\band.*\bBiology.*\bSociety.*	null	null
+2016 October	\b2016.*\bOctober.*	null	null
+2016October	\b2016October.*	null	null
+ACP	null	null	\bA.*\bC.*\bP.*
+ACP Journal Club	\bACP.*\bJournal.*\bClub.*	null	null
+AIDS	\bAIDS.*	null	null
+AIDS London England	\bAIDS.*\bLondon.*\bEngland.*	null	null
+AJR	null	null	\bA.*\bJ.*\bR.*
+AJR Am J Roentgenol	\bAJR.*\bAm.*\bJ.*\bRoentgenol.*	null	null
+ALTEX Alternativen zu Tierexperimenten	\bALTEX.*\bAlternativen.*\bzu.*\bTierexperimenten.*	null	null
+AMIA	null	null	\bA.*\bM.*\bI.*\bA.*
+AMIA Annu Symp Proc	\bAMIA.*\bAnnu.*\bSymp.*\bProc.*	null	null
+AMIA Annual Symposium proceedings AMIA Symposium	\bAMIA.*\bAnnual.*\bSymposium.*\bproceedings.*\bAMIA.*\bSymposium.*	null	null
+AMIA Joint Summits on Translational Science	\bAMIA.*\bJoint.*\bSummits.*\bon.*\bTranslational.*\bScience.*	null	null
+AMIA Joint Summits on Translational Science proceedings	\bAMIA.*\bJoint.*\bSummits.*\bon.*\bTranslational.*\bScience.*\bproceedings.*	null	null
+AMIA Joint Summits on Translational Science proceedings AMIA Joint Summits on Translational Science	\bAMIA.*\bJoint.*\bSummits.*\bon.*\bTranslational.*\bScience.*\bproceedings.*\bAMIA.*\bJoint.*\bSummits.*\bon.*\bTranslational.*\bScience.*	null	null
+AMIA Summits Transl Sci Proc	\bAMIA.*\bSummits.*\bTransl.*\bSci.*\bProc.*	null	null
+ANZ	null	null	\bA.*\bN.*\bZ.*
+ANZ J Surg	\bANZ.*\bJ.*\bSurg.*	null	null
+ANZ journal of surgery	\bANZ.*\bjournal.*\bof.*\bsurgery.*	null	null
+APMIS	\bAPMIS.*	\bA.*\bP.*\bM.*\bI.*\bS.*	\bA.*\bP.*\bM.*\bI.*\bS.*
+Aaierj Dio Dis	\bAaierj.*\bDio.*\bDis.*	null	null
+Acta Biol Hung	\bActa.*\bBiol.*\bHung.*	null	null
+Acta Biologica Hungarica	\bActa.*\bBiologica.*\bHungarica.*	null	null
+Acta Chir Scand	\bActa.*\bChir.*\bScand.*	null	null
+Acta Chirurgica Scandinavica	\bActa.*\bChirurgica.*\bScandinavica.*	null	null
+Acta Gastro Enterologica Belgica	\bActa.*\bGastro.*\bEnterologica.*\bBelgica.*	null	null
+Acta Gastroenterol Belg	\bActa.*\bGastroenterol.*\bBelg.*	null	null
+Acta Oncologica	\bActa.*\bOncologica.*	null	null
+Acta Otorhinolaryngologica Italica	\bActa.*\bOtorhinolaryngologica.*\bItalica.*	null	null
+Acta Paediatrica	\bActa.*\bPaediatrica.*	null	null
+Acta Paediatrica International Journal of Paediatrics	\bActa.*\bPaediatrica.*\bInternational.*\bJournal.*\bof.*\bPaediatrics.*	null	null
+Acta Path microbiol scand sect a	\bActa.*\bPath.*\bmicrobiol.*\bscand.*\bsect.*\ba.*	null	null
+Acta Pathologica Microbiologica Scandinavica Section A Pathology	\bActa.*\bPathologica.*\bMicrobiologica.*\bScandinavica.*\bSection.*\bA.*\bPathology.*	null	null
+Acta Pediatrica	\bActa.*\bPediatrica.*	null	null
+Acta gastro enterologica belgica	\bActa.*\bgastro.*\benterologica.*\bbelgica.*	null	null
+Acta oncologica Stockholm Sweden	\bActa.*\boncologica.*\bStockholm.*\bSweden.*	null	null
+Altern Ther Health Med	\bAltern.*\bTher.*\bHealth.*\bMed.*	null	null
+Alternative Therapies In Health And Medicine	\bAlternative.*\bTherapies.*\bIn.*\bHealth.*\bAnd.*\bMedicine.*	null	null
+Alternatives to laboratory animals	\bAlternatives.*\bto.*\blaboratory.*\banimals.*	null	null
+Altex	\bAltex.*	null	null
+Altexalternativen Zu Tierexperimenten	\bAltexalternativen.*\bZu.*\bTierexperimenten.*	null	null
+Altexalternatives To Animal Experimentation	\bAltexalternatives.*\bTo.*\bAnimal.*\bExperimentation.*	null	null
+Am J Clin Nutr	\bAm.*\bJ.*\bClin.*\bNutr.*	null	null
+Am J Dig Dis	\bAm.*\bJ.*\bDig.*\bDis.*	null	null
+Am J Gastroenterol	\bAm.*\bJ.*\bGastroenterol.*	null	null
+Am J Med Sci 307	\bAm.*\bJ.*\bMed.*\bSci.*\b307.*	null	null
+Am J Med Sci 307 Suppl	\bAm.*\bJ.*\bMed.*\bSci.*\b307.*\bSuppl.*	null	null
+Am J Pathol	\bAm.*\bJ.*\bPathol.*	null	null
+Am J Physiol	\bAm.*\bJ.*\bPhysiol.*	null	null
+Am J Physiol Renal Physiol	\bAm.*\bJ.*\bPhysiol.*\bRenal.*\bPhysiol.*	null	null
+Am J Roentgenol	\bAm.*\bJ.*\bRoentgenol.*	null	null
+Am J Transl Res	\bAm.*\bJ.*\bTransl.*\bRes.*	null	null
+Am Soc Clin Oncol Educ Book	\bAm.*\bSoc.*\bClin.*\bOncol.*\bEduc.*\bBook.*	null	null
+Am Surg	\bAm.*\bSurg.*	null	null
+Amer J	\bAmer.*\bJ.*	null	null
+Amer J Dig Dis	\bAmer.*\bJ.*\bDig.*\bDis.*	null	null
+American Journal Of Clinical Nutrition	\bAmerican.*\bJournal.*\bOf.*\bClinical.*\bNutrition.*	null	null
+American Journal Of Critical Care	\bAmerican.*\bJournal.*\bOf.*\bCritical.*\bCare.*	null	null
+American Journal Of Pathology	\bAmerican.*\bJournal.*\bOf.*\bPathology.*	null	null
+American Journal Of The Medical Sciences	\bAmerican.*\bJournal.*\bOf.*\bThe.*\bMedical.*\bSciences.*	null	null
+American Journal Of Translational Research	\bAmerican.*\bJournal.*\bOf.*\bTranslational.*\bResearch.*	null	null
+American Journal of Digestive Diseases	\bAmerican.*\bJournal.*\bof.*\bDigestive.*\bDiseases.*	null	null
+American Journal of Optometry Archives of American Academy of Optometry	\bAmerican.*\bJournal.*\bof.*\bOptometry.*\bArchives.*\bof.*\bAmerican.*\bAcademy.*\bof.*\bOptometry.*	null	null
+American Journal of Pathology	\bAmerican.*\bJournal.*\bof.*\bPathology.*	null	null
+American Journal of Physical Medicine Rehabilitation	\bAmerican.*\bJournal.*\bof.*\bPhysical.*\bMedicine.*\bRehabilitation.*	null	null
+American Journal of Physiology Heart and Circulatory Physiology	\bAmerican.*\bJournal.*\bof.*\bPhysiology.*\bHeart.*\band.*\bCirculatory.*\bPhysiology.*	null	null
+American Journal of Physiology Renal Physiology	\bAmerican.*\bJournal.*\bof.*\bPhysiology.*\bRenal.*\bPhysiology.*	null	null
+American Journal of Respiratory and Critical Care Medicine	\bAmerican.*\bJournal.*\bof.*\bRespiratory.*\band.*\bCritical.*\bCare.*\bMedicine.*	null	null
+American Society of Clinical Oncology educational book American Society of Clinical Oncology Annual Meeting	\bAmerican.*\bSociety.*\bof.*\bClinical.*\bOncology.*\beducational.*\bbook.*\bAmerican.*\bSociety.*\bof.*\bClinical.*\bOncology.*\bAnnual.*\bMeeting.*	null	null
+American Surgeon	\bAmerican.*\bSurgeon.*	null	null
+American journal of gastroenterology	\bAmerican.*\bjournal.*\bof.*\bgastroenterology.*	null	null
+American journal of optometry and archives of American Academy of Optometry	\bAmerican.*\bjournal.*\bof.*\boptometry.*\band.*\barchives.*\bof.*\bAmerican.*\bAcademy.*\bof.*\bOptometry.*	null	null
+American journal of pathology	\bAmerican.*\bjournal.*\bof.*\bpathology.*	null	null
+American journal of roentgenology	\bAmerican.*\bjournal.*\bof.*\broentgenology.*	null	null
+Amerj Optom	\bAmerj.*\bOptom.*	null	null
+Amia	\bAmia.*	null	null
+Anal Quant Cytopathol Histopathol	\bAnal.*\bQuant.*\bCytopathol.*\bHistopathol.*	null	null
+Analytical and quantitative cytopathology and histopathology	\bAnalytical.*\band.*\bquantitative.*\bcytopathology.*\band.*\bhistopathology.*	null	null
+Anevryshe arterio ueineux splenique operi	\bAnevryshe.*\barterio.*\bueineux.*\bsplenique.*\boperi.*	null	null
+Ann Agric Environ Med	\bAnn.*\bAgric.*\bEnviron.*\bMed.*	null	null
+Ann Biol Clin	\bAnn.*\bBiol.*\bClin.*	null	null
+Ann Hepatol	\bAnn.*\bHepatol.*	null	null
+Ann Ital Chir	\bAnn.*\bItal.*\bChir.*	null	null
+Ann N Y Acad Sci	\bAnn.*\bN.*\bY.*\bAcad.*\bSci.*	null	null
+Ann New York Acad Sci	\bAnn.*\bNew.*\bYork.*\bAcad.*\bSci.*	null	null
+Ann Occup Hyg	\bAnn.*\bOccup.*\bHyg.*	null	null
+Ann Radiol	\bAnn.*\bRadiol.*	null	null
+Ann Thorac Med	\bAnn.*\bThorac.*\bMed.*	null	null
+Annales De Biologie Clinique	\bAnnales.*\bDe.*\bBiologie.*\bClinique.*	null	null
+Annales de Medecine Interne	\bAnnales.*\bde.*\bMedecine.*\bInterne.*	null	null
+Annales de Radiologie	\bAnnales.*\bde.*\bRadiologie.*	null	null
+Annales de Radiologie Medecine Nucleaire	\bAnnales.*\bde.*\bRadiologie.*\bMedecine.*\bNucleaire.*	null	null
+Annali italiani di chirurgia	\bAnnali.*\bitaliani.*\bdi.*\bchirurgia.*	null	null
+Annals Academy Of Medicine Singapore	\bAnnals.*\bAcademy.*\bOf.*\bMedicine.*\bSingapore.*	null	null
+Annals Of Agricultural And Environmental Medicine	\bAnnals.*\bOf.*\bAgricultural.*\bAnd.*\bEnvironmental.*\bMedicine.*	null	null
+Annals Of Hepatology	\bAnnals.*\bOf.*\bHepatology.*	null	null
+Annals Of Occupational Hygiene	\bAnnals.*\bOf.*\bOccupational.*\bHygiene.*	null	null
+Annals Of The New York Academy Of Sciences	\bAnnals.*\bOf.*\bThe.*\bNew.*\bYork.*\bAcademy.*\bOf.*\bSciences.*	null	null
+Annals of Hepatology	\bAnnals.*\bof.*\bHepatology.*	null	null
+Annals of Internal Medicine	\bAnnals.*\bof.*\bInternal.*\bMedicine.*	null	null
+Annals of the New York Academy of Sciences	\bAnnals.*\bof.*\bthe.*\bNew.*\bYork.*\bAcademy.*\bof.*\bSciences.*	null	null
+Annjudiol	\bAnnjudiol.*	null	null
+Anz Journal Of Surgery	\bAnz.*\bJournal.*\bOf.*\bSurgery.*	null	null
+Arch Argent Pediatr	\bArch.*\bArgent.*\bPediatr.*	null	null
+Arch Int Pharmacodyn	\bArch.*\bInt.*\bPharmacodyn.*	null	null
+Arch Intern Med	\bArch.*\bIntern.*\bMed.*	null	null
+ArchInternMed	\bArchInternMed.*	null	null
+Archives of Internal Medicine	\bArchives.*\bof.*\bInternal.*\bMedicine.*	null	null
+Archives of Physical Medicine and Rehabilitation	\bArchives.*\bof.*\bPhysical.*\bMedicine.*\band.*\bRehabilitation.*	null	null
+Archivos Argentinos de Pediatria	\bArchivos.*\bArgentinos.*\bde.*\bPediatria.*	null	null
+Arzneimittel Forschung	\bArzneimittel.*\bForschung.*	null	null
+Arzneimittelforschungdrug Research	\bArzneimittelforschungdrug.*\bResearch.*	null	null
+Asia Pac J Clin Nutr	\bAsia.*\bPac.*\bJ.*\bClin.*\bNutr.*	null	null
+Asia Pacific Journal Of Clinical Nutrition	\bAsia.*\bPacific.*\bJournal.*\bOf.*\bClinical.*\bNutrition.*	null	null
+Asian Pac J Cancer Prev	\bAsian.*\bPac.*\bJ.*\bCancer.*\bPrev.*	null	null
+Asian Pacific journal of cancer prevention	\bAsian.*\bPacific.*\bjournal.*\bof.*\bcancer.*\bprevention.*	null	null
+Association of Academic Physiatrists	\bAssociation.*\bof.*\bAcademic.*\bPhysiatrists.*	null	null
+Atla alternatives To Laboratory Animals	\bAtla.*\balternatives.*\bTo.*\bLaboratory.*\bAnimals.*	null	null
+Aviat Space Environ Med	\bAviat.*\bSpace.*\bEnviron.*\bMed.*	null	null
+Aviation Space And Environmental Medicine	\bAviation.*\bSpace.*\bAnd.*\bEnvironmental.*\bMedicine.*	null	null
+BJOG	null	null	\bB.*\bJ.*\bO.*\bG.*
+BJOG An International Journal of Obstetrics Gynaecology	\bBJOG.*\bAn.*\bInternational.*\bJournal.*\bof.*\bObstetrics.*\bGynaecology.*	null	null
+BMJ	\bBMJ.*	\bB.*\bM.*\bJ.*	null
+Bbit J Surg	\bBbit.*\bJ.*\bSurg.*	null	null
+Best Practice Research in Clinical Obstetrics Gynaecology	\bBest.*\bPractice.*\bResearch.*\bin.*\bClinical.*\bObstetrics.*\bGynaecology.*	null	null
+Best Practice and Research	\bBest.*\bPractice.*\band.*\bResearch.*	null	null
+Biopolymers	\bBiopolymers.*	null	null
+Bmj	\bBmj.*	null	\bB.*\bm.*\bj.*
+Bmj British Medical Journal	\bBmj.*\bBritish.*\bMedical.*\bJournal.*	null	null
+Br Heart J	\bBr.*\bHeart.*\bJ.*	null	null
+Br J Anaesth	\bBr.*\bJ.*\bAnaesth.*	null	null
+Br J Cancer	\bBr.*\bJ.*\bCancer.*	null	null
+Br J Surg	\bBr.*\bJ.*\bSurg.*	null	null
+Bratisl Lek Listy	\bBratisl.*\bLek.*\bListy.*	null	null
+Bratislava Medical Journal Bratislavske Lekarske Listy	\bBratislava.*\bMedical.*\bJournal.*\bBratislavske.*\bLekarske.*\bListy.*	null	null
+Bratislava Medical Journalbratislavske Lekarske Listy	\bBratislava.*\bMedical.*\bJournalbratislavske.*\bLekarske.*\bListy.*	null	null
+Bratislavske lekarske listy	\bBratislavske.*\blekarske.*\blisty.*	null	null
+Brit Heart J	\bBrit.*\bHeart.*\bJ.*	null	null
+British Journal of Cancer	\bBritish.*\bJournal.*\bof.*\bCancer.*	null	null
+British Journal of Obstetrics and Gynaecology	\bBritish.*\bJournal.*\bof.*\bObstetrics.*\band.*\bGynaecology.*	null	null
+British Journal of Surgery	\bBritish.*\bJournal.*\bof.*\bSurgery.*	null	null
+British Medical Journal	\bBritish.*\bMedical.*\bJournal.*	null	null
+British journal of anaesthesia	\bBritish.*\bjournal.*\bof.*\banaesthesia.*	null	null
+Bull Acad National Med	\bBull.*\bAcad.*\bNational.*\bMed.*	null	null
+Bulletin De L Academie Nationale De Medecine	\bBulletin.*\bDe.*\bL.*\bAcademie.*\bNationale.*\bDe.*\bMedecine.*	null	null
+C	\bC.*	null	null
+CA Cancer Journal for Clinicians	\bCA.*\bCancer.*\bJournal.*\bfor.*\bClinicians.*	null	null
+CA a Cancer Journal for Clinicians	\bCA.*\ba.*\bCancer.*\bJournal.*\bfor.*\bClinicians.*	null	null
+CMAJ Canadian Medical Association Journal	\bCMAJ.*\bCanadian.*\bMedical.*\bAssociation.*\bJournal.*	null	null
+CNS	null	null	\bC.*\bN.*\bS.*
+CNS Neurol Disord Drug Targets	\bCNS.*\bNeurol.*\bDisord.*\bDrug.*\bTargets.*	null	null
+Can Fam Physician	\bCan.*\bFam.*\bPhysician.*	null	null
+Can J Cardiol	\bCan.*\bJ.*\bCardiol.*	null	null
+Can J Public Health	\bCan.*\bJ.*\bPublic.*\bHealth.*	null	null
+Can Vet J	\bCan.*\bVet.*\bJ.*	null	null
+Canadian Association of Radiologists Journal	\bCanadian.*\bAssociation.*\bof.*\bRadiologists.*\bJournal.*	null	null
+Canadian Association of Radiologists JournalJournal De L Association Canadienne Des Radiologistes	\bCanadian.*\bAssociation.*\bof.*\bRadiologists.*\bJournalJournal.*\bDe.*\bL.*\bAssociation.*\bCanadienne.*\bDes.*\bRadiologistes.*	null	null
+Canadian Family Physician	\bCanadian.*\bFamily.*\bPhysician.*	null	null
+Canadian Journal Of Emergency Medicine	\bCanadian.*\bJournal.*\bOf.*\bEmergency.*\bMedicine.*	null	null
+Canadian Journal Of Public Healthrevue Canadienne De Sante Publique	\bCanadian.*\bJournal.*\bOf.*\bPublic.*\bHealthrevue.*\bCanadienne.*\bDe.*\bSante.*\bPublique.*	null	null
+Canadian Journal Of Veterinary Research Revue Canadienne De Recherche Veterinaire	\bCanadian.*\bJournal.*\bOf.*\bVeterinary.*\bResearch.*\bRevue.*\bCanadienne.*\bDe.*\bRecherche.*\bVeterinaire.*	null	null
+Canadian Journal of Cardiology	\bCanadian.*\bJournal.*\bof.*\bCardiology.*	null	null
+Canadian Journal of Public Health	\bCanadian.*\bJournal.*\bof.*\bPublic.*\bHealth.*	null	null
+Canadian Journal of Veterinary Research	\bCanadian.*\bJournal.*\bof.*\bVeterinary.*\bResearch.*	null	null
+Canadian Medical Association Journal	\bCanadian.*\bMedical.*\bAssociation.*\bJournal.*	null	null
+Canadian Respiratory Journal	\bCanadian.*\bRespiratory.*\bJournal.*	null	null
+Canadian Veterinary Journal	\bCanadian.*\bVeterinary.*\bJournal.*	null	null
+Canadian Veterinary Journalrevue Veterinaire Canadienne	\bCanadian.*\bVeterinary.*\bJournalrevue.*\bVeterinaire.*\bCanadienne.*	null	null
+Cancer Chemother Pharmacol	\bCancer.*\bChemother.*\bPharmacol.*	null	null
+Cancer Chemotherapy and Pharmacology Supplement	\bCancer.*\bChemotherapy.*\band.*\bPharmacology.*\bSupplement.*	null	null
+Cancer Prevention Research	\bCancer.*\bPrevention.*\bResearch.*	null	null
+Cancer Vaccines	\bCancer.*\bVaccines.*	null	null
+Chin J Schistosomiasis Control	\bChin.*\bJ.*\bSchistosomiasis.*\bControl.*	null	null
+Chin Med J	\bChin.*\bMed.*\bJ.*	null	null
+Chinese Medical Journal	\bChinese.*\bMedical.*\bJournal.*	null	null
+Chinese journal of reparative and reconstructive surgery	\bChinese.*\bjournal.*\bof.*\breparative.*\band.*\breconstructive.*\bsurgery.*	null	null
+Chinese journal of tuberculosis and respiratory diseases	\bChinese.*\bjournal.*\bof.*\btuberculosis.*\band.*\brespiratory.*\bdiseases.*	null	null
+Chir Mem Acad Chir	\bChir.*\bMem.*\bAcad.*\bChir.*	null	null
+Chirurg	\bChirurg.*	null	null
+Chirurg Zeitschrift f r alle Gebiete der operativen Medizen	\bChirurg.*\bZeitschrift.*\bf.*\br.*\balle.*\bGebiete.*\bder.*\boperativen.*\bMedizen.*	null	null
+Chirurgie	\bChirurgie.*	null	null
+Chirurgie Memoires de l Academie de Chirurgie	\bChirurgie.*\bMemoires.*\bde.*\bl.*\bAcademie.*\bde.*\bChirurgie.*	null	null
+Chung Hua Chieh Ho Ho Hu Hsi Tsa Chih Chinese Journal of Tuberculosis Respiratory Diseases	\bChung.*\bHua.*\bChieh.*\bHo.*\bHo.*\bHu.*\bHsi.*\bTsa.*\bChih.*\bChinese.*\bJournal.*\bof.*\bTuberculosis.*\bRespiratory.*\bDiseases.*	null	null
+Chung Kuo Hsiu Fu Chung Chien Wai Ko Tsa Chih	\bChung.*\bKuo.*\bHsiu.*\bFu.*\bChung.*\bChien.*\bWai.*\bKo.*\bTsa.*\bChih.*	null	null
+Chung Kuo Hsiu Fu Chung Chien Wai Ko Tsa Chih Chinese Journal of Reparative Reconstructive Surgery	\bChung.*\bKuo.*\bHsiu.*\bFu.*\bChung.*\bChien.*\bWai.*\bKo.*\bTsa.*\bChih.*\bChinese.*\bJournal.*\bof.*\bReparative.*\bReconstructive.*\bSurgery.*	null	null
+ChungHua Chieh Ho Ho Hu Hsi Tsa Chih Chinese Journal of Tuberculosis Respiratory Diseases	\bChungHua.*\bChieh.*\bHo.*\bHo.*\bHu.*\bHsi.*\bTsa.*\bChih.*\bChinese.*\bJournal.*\bof.*\bTuberculosis.*\bRespiratory.*\bDiseases.*	null	null
+ChungKuo Hsiu Fu Chung Chien Wai Ko Tsa Chih Chinese Journal of Reparative Reconstructive Surgery	\bChungKuo.*\bHsiu.*\bFu.*\bChung.*\bChien.*\bWai.*\bKo.*\bTsa.*\bChih.*\bChinese.*\bJournal.*\bof.*\bReparative.*\bReconstructive.*\bSurgery.*	null	null
+Cir Cir	\bCir.*\bCir.*	null	null
+Circulation	\bCirculation.*	null	null
+Cirugia y Cirujanos	\bCirugia.*\by.*\bCirujanos.*	null	null
+Cjem	\bCjem.*	null	\bC.*\bj.*\be.*\bm.*
+Clin Chem	\bClin.*\bChem.*	null	null
+Clin Epidemiol	\bClin.*\bEpidemiol.*	null	null
+Clin Gastroenterol Hepatol	\bClin.*\bGastroenterol.*\bHepatol.*	null	null
+Clin Lung Cancer	\bClin.*\bLung.*\bCancer.*	null	null
+Clin Lymphoma	\bClin.*\bLymphoma.*	null	null
+Clin Med Insights Circ Respir Pulm Med	\bClin.*\bMed.*\bInsights.*\bCirc.*\bRespir.*\bPulm.*\bMed.*	null	null
+Clin Orthop Rel Res	\bClin.*\bOrthop.*\bRel.*\bRes.*	null	null
+Clin Transplant	\bClin.*\bTransplant.*	null	null
+Clinical Cancer Research	\bClinical.*\bCancer.*\bResearch.*	null	null
+Clinical Chemistry	\bClinical.*\bChemistry.*	null	null
+Clinical Epigenetics	\bClinical.*\bEpigenetics.*	null	null
+Clinical Epigenetics 9 1	\bClinical.*\bEpigenetics.*\b9.*\b1.*	null	null
+Clinical Gastroenterology and Hepatology	\bClinical.*\bGastroenterology.*\band.*\bHepatology.*	null	null
+Clinical Lymphoma and Myeloma	\bClinical.*\bLymphoma.*\band.*\bMyeloma.*	null	null
+Clinical Transplantation	\bClinical.*\bTransplantation.*	null	null
+Clinical cancer research an official journal of the American Association for Cancer Research	\bClinical.*\bcancer.*\bresearch.*\ban.*\bofficial.*\bjournal.*\bof.*\bthe.*\bAmerican.*\bAssociation.*\bfor.*\bCancer.*\bResearch.*	null	null
+Cmaj	\bCmaj.*	null	\bC.*\bm.*\ba.*\bj.*
+Cns Neurological Disordersdrug Targets	\bCns.*\bNeurological.*\bDisordersdrug.*\bTargets.*	null	null
+Comp Med	\bComp.*\bMed.*	null	null
+Comparative Medicine	\bComparative.*\bMedicine.*	null	null
+Confain	\bConfain.*	null	null
+Confain Psychiat	\bConfain.*\bPsychiat.*	null	null
+Confinia Psychiatrica	\bConfinia.*\bPsychiatrica.*	null	null
+Confinia psychiatrica	\bConfinia.*\bpsychiatrica.*	null	null
+Confinia psychiatrica Borderland of psychiatry Grenzgebiete der Psychiatrie Les Confins de la psychiatrie	\bConfinia.*\bpsychiatrica.*\bBorderland.*\bof.*\bpsychiatry.*\bGrenzgebiete.*\bder.*\bPsychiatrie.*\bLes.*\bConfins.*\bde.*\bla.*\bpsychiatrie.*	null	null
+Confins de la psychiatrie	\bConfins.*\bde.*\bla.*\bpsychiatrie.*	null	null
+Contrib Nephrol	\bContrib.*\bNephrol.*	null	null
+Contributions to Nephrology	\bContributions.*\bto.*\bNephrology.*	null	null
+Curr Drug Targets	\bCurr.*\bDrug.*\bTargets.*	null	null
+Curr Med Chem	\bCurr.*\bMed.*\bChem.*	null	null
+Curr Neuropharmacol	\bCurr.*\bNeuropharmacol.*	null	null
+Curr Oncol	\bCurr.*\bOncol.*	null	null
+Curr Opin Drug Discov Devel	\bCurr.*\bOpin.*\bDrug.*\bDiscov.*\bDevel.*	null	null
+Curr Opin Mol Ther	\bCurr.*\bOpin.*\bMol.*\bTher.*	null	null
+Curr Opin Pulm Med	\bCurr.*\bOpin.*\bPulm.*\bMed.*	null	null
+Curr Opin Rheumatol	\bCurr.*\bOpin.*\bRheumatol.*	null	null
+Curr Top Med Chem	\bCurr.*\bTop.*\bMed.*\bChem.*	null	null
+Curr Top Microbiol Immunol	\bCurr.*\bTop.*\bMicrobiol.*\bImmunol.*	null	null
+Curr Vasc Pharmacol	\bCurr.*\bVasc.*\bPharmacol.*	null	null
+Current Drug Targets	\bCurrent.*\bDrug.*\bTargets.*	null	null
+Current Medicinal Chemistry	\bCurrent.*\bMedicinal.*\bChemistry.*	null	null
+Current Opinion In Drug Discovery Development	\bCurrent.*\bOpinion.*\bIn.*\bDrug.*\bDiscovery.*\bDevelopment.*	null	null
+Current Opinion In Molecular Therapeutics	\bCurrent.*\bOpinion.*\bIn.*\bMolecular.*\bTherapeutics.*	null	null
+Current Opinion In Rheumatology	\bCurrent.*\bOpinion.*\bIn.*\bRheumatology.*	null	null
+Current Opinion in Pulmonary Medicine	\bCurrent.*\bOpinion.*\bin.*\bPulmonary.*\bMedicine.*	null	null
+Current Topics In Medicinal Chemistry	\bCurrent.*\bTopics.*\bIn.*\bMedicinal.*\bChemistry.*	null	null
+Current Vascular Pharmacology	\bCurrent.*\bVascular.*\bPharmacology.*	null	null
+Current neuropharmacology	\bCurrent.*\bneuropharmacology.*	null	null
+Current oncology	\bCurrent.*\boncology.*	null	null
+Current topics in microbiology and immunology	\bCurrent.*\btopics.*\bin.*\bmicrobiology.*\band.*\bimmunology.*	null	null
+Cytometry	\bCytometry.*	null	null
+Dan Med J	\bDan.*\bMed.*\bJ.*	null	null
+Danish Medical Journal	\bDanish.*\bMedical.*\bJournal.*	null	null
+Deutsch Arztebl Int	\bDeutsch.*\bArztebl.*\bInt.*	null	null
+Deutsch Med Wochenschr	\bDeutsch.*\bMed.*\bWochenschr.*	null	null
+DeutschMedWochenschr	\bDeutschMedWochenschr.*	null	null
+Deutsche Medizinische Wochenschrift	\bDeutsche.*\bMedizinische.*\bWochenschrift.*	null	null
+Deutsche medizinische Wochenschrift	\bDeutsche.*\bmedizinische.*\bWochenschrift.*	null	null
+Diagn Imaging	\bDiagn.*\bImaging.*	null	null
+Diagn Imaging Clin Med	\bDiagn.*\bImaging.*\bClin.*\bMed.*	null	null
+Diagnostic Imaging	\bDiagnostic.*\bImaging.*	null	null
+Diagnostic Imaging in Clinical Medicine	\bDiagnostic.*\bImaging.*\bin.*\bClinical.*\bMedicine.*	null	null
+Discov Med	\bDiscov.*\bMed.*	null	null
+Discovery medicine	\bDiscovery.*\bmedicine.*	null	null
+Eastern Mediterranean Health Journal	\bEastern.*\bMediterranean.*\bHealth.*\bJournal.*	null	null
+Eastern Mediterranean health journal La revue de sant de la M diterran e orientale alMajallah al i yah lisharq almutawassi	\bEastern.*\bMediterranean.*\bhealth.*\bjournal.*\bLa.*\brevue.*\bde.*\bsant.*\bde.*\bla.*\bM.*\bditerran.*\be.*\borientale.*\balMajallah.*\bal.*\bi.*\byah.*\blisharq.*\balmutawassi.*	null	null
+Electhoenceph Clin Neukophysiol	\bElecthoenceph.*\bClin.*\bNeukophysiol.*	null	null
+Electroenceph	\bElectroenceph.*	null	null
+Electroencephalography Clinical Neurophysiology	\bElectroencephalography.*\bClinical.*\bNeurophysiology.*	null	null
+Electroencephalography and clinical neurophysiology	\bElectroencephalography.*\band.*\bclinical.*\bneurophysiology.*	null	null
+Encephale	\bEncephale.*	null	null
+Encephalerevue De Psychiatrie Clinique Biologique Et Therapeutique	\bEncephalerevue.*\bDe.*\bPsychiatrie.*\bClinique.*\bBiologique.*\bEt.*\bTherapeutique.*	null	null
+Environ Health Perspect	\bEnviron.*\bHealth.*\bPerspect.*	null	null
+Environmental Health Perspectives	\bEnvironmental.*\bHealth.*\bPerspectives.*	null	null
+Etude des effets ei ectrophysiologiques de la psilocybine chez un cercopithecinae papio papio	\bEtude.*\bdes.*\beffets.*\bei.*\bectrophysiologiques.*\bde.*\bla.*\bpsilocybine.*\bchez.*\bun.*\bcercopithecinae.*\bpapio.*\bpapio.*	null	null
+Etude des effets ei ectrophysiologiques de la psilocybine chez un cercopithecine papio papio	\bEtude.*\bdes.*\beffets.*\bei.*\bectrophysiologiques.*\bde.*\bla.*\bpsilocybine.*\bchez.*\bun.*\bcercopithecine.*\bpapio.*\bpapio.*	null	null
+Etude des effets electrophysiologiques de la psilocybine chez un cercopithecinae papio papio	\bEtude.*\bdes.*\beffets.*\belectrophysiologiques.*\bde.*\bla.*\bpsilocybine.*\bchez.*\bun.*\bcercopithecinae.*\bpapio.*\bpapio.*	null	null
+Etude des effets electrophysiologiques de la psilocybine chez un cercopithecine papio papio	\bEtude.*\bdes.*\beffets.*\belectrophysiologiques.*\bde.*\bla.*\bpsilocybine.*\bchez.*\bun.*\bcercopithecine.*\bpapio.*\bpapio.*	null	null
+Eur Cell Mater	\bEur.*\bCell.*\bMater.*	null	null
+Eur J Cancer	\bEur.*\bJ.*\bCancer.*	null	null
+Eur J Cancer Care	\bEur.*\bJ.*\bCancer.*\bCare.*	null	null
+Eur J Cardiothorac Surg	\bEur.*\bJ.*\bCardiothorac.*\bSurg.*	null	null
+Eur J Gastroenterol Hepatol	\bEur.*\bJ.*\bGastroenterol.*\bHepatol.*	null	null
+Eur J Oral Implantol	\bEur.*\bJ.*\bOral.*\bImplantol.*	null	null
+Eur J Paediatr Dent	\bEur.*\bJ.*\bPaediatr.*\bDent.*	null	null
+Eur J Pediatr	\bEur.*\bJ.*\bPediatr.*	null	null
+Eur J Respir Dis	\bEur.*\bJ.*\bRespir.*\bDis.*	null	null
+Eur Rev Med Pharmacol Sci	\bEur.*\bRev.*\bMed.*\bPharmacol.*\bSci.*	null	null
+EurJRespirDis	\bEurJRespirDis.*	null	null
+European Cells Materials	\bEuropean.*\bCells.*\bMaterials.*	null	null
+European Journal Of Oral Implantology	\bEuropean.*\bJournal.*\bOf.*\bOral.*\bImplantology.*	null	null
+European Journal Of Paediatric Dentistry	\bEuropean.*\bJournal.*\bOf.*\bPaediatric.*\bDentistry.*	null	null
+European Journal of Cancer	\bEuropean.*\bJournal.*\bof.*\bCancer.*	null	null
+European Journal of Cancer Part A General Topics	\bEuropean.*\bJournal.*\bof.*\bCancer.*\bPart.*\bA.*\bGeneral.*\bTopics.*	null	null
+European Journal of Pediatric Surgery	\bEuropean.*\bJournal.*\bof.*\bPediatric.*\bSurgery.*	null	null
+European Journal of Pediatrics	\bEuropean.*\bJournal.*\bof.*\bPediatrics.*	null	null
+European Journal of Respiratory Diseases	\bEuropean.*\bJournal.*\bof.*\bRespiratory.*\bDiseases.*	null	null
+European Review For Medical And Pharmacological Sciences	\bEuropean.*\bReview.*\bFor.*\bMedical.*\bAnd.*\bPharmacological.*\bSciences.*	null	null
+European journal of cancer care	\bEuropean.*\bjournal.*\bof.*\bcancer.*\bcare.*	null	null
+European journal of gastroenterology hepatology	\bEuropean.*\bjournal.*\bof.*\bgastroenterology.*\bhepatology.*	null	null
+European journal of pediatric surgery official journal of Austrian Association of Pediatric Surgery	\bEuropean.*\bjournal.*\bof.*\bpediatric.*\bsurgery.*\bofficial.*\bjournal.*\bof.*\bAustrian.*\bAssociation.*\bof.*\bPediatric.*\bSurgery.*	null	null
+European journal of pharmacology	\bEuropean.*\bjournal.*\bof.*\bpharmacology.*	null	null
+Europjpharmacol	\bEuropjpharmacol.*	null	null
+Folia Primatologica	\bFolia.*\bPrimatologica.*	null	null
+Food And Chemical Toxicology	\bFood.*\bAnd.*\bChemical.*\bToxicology.*	null	null
+Frontiers In Biosciencelandmark	\bFrontiers.*\bIn.*\bBiosciencelandmark.*	null	null
+Frontiers in bioscience a journal and virtual library	\bFrontiers.*\bin.*\bbioscience.*\ba.*\bjournal.*\band.*\bvirtual.*\blibrary.*	null	null
+Gastroenterol Clin Biol	\bGastroenterol.*\bClin.*\bBiol.*	null	null
+Gastroenterologie clinique ET biologique	\bGastroenterologie.*\bclinique.*\bET.*\bbiologique.*	null	null
+Ginekol Pol	\bGinekol.*\bPol.*	null	null
+Ginekologia Polska	\bGinekologia.*\bPolska.*	null	null
+Glas Srp Akad Nauka Med	\bGlas.*\bSrp.*\bAkad.*\bNauka.*\bMed.*	null	null
+Glas Srpska akademija nauka i umetnosti Odeljenje medicinskih nauka	\bGlas.*\bSrpska.*\bakademija.*\bnauka.*\bi.*\bumetnosti.*\bOdeljenje.*\bmedicinskih.*\bnauka.*	null	null
+Hell J Nucl Med	\bHell.*\bJ.*\bNucl.*\bMed.*	null	null
+Hellenic Journal of Nuclear Medicine	\bHellenic.*\bJournal.*\bof.*\bNuclear.*\bMedicine.*	null	null
+Hemostasis	\bHemostasis.*	null	null
+Hepatology	\bHepatology.*	null	null
+Hum Exp Toxicol	\bHum.*\bExp.*\bToxicol.*	null	null
+Human Psychopharmacology	\bHuman.*\bPsychopharmacology.*	null	null
+Human Psychopharmacology Clinical And Experimental	\bHuman.*\bPsychopharmacology.*\bClinical.*\bAnd.*\bExperimental.*	null	null
+Human and Experimental Toxicology	\bHuman.*\band.*\bExperimental.*\bToxicology.*	null	null
+Indian J Exp Biol	\bIndian.*\bJ.*\bExp.*\bBiol.*	null	null
+Indian J Gastroenterol	\bIndian.*\bJ.*\bGastroenterol.*	null	null
+Indian J Med Res	\bIndian.*\bJ.*\bMed.*\bRes.*	null	null
+Indian J Surg	\bIndian.*\bJ.*\bSurg.*	null	null
+Indian Journal Of Experimental Biology	\bIndian.*\bJournal.*\bOf.*\bExperimental.*\bBiology.*	null	null
+Indian Journal Of Medical Research	\bIndian.*\bJournal.*\bOf.*\bMedical.*\bResearch.*	null	null
+Indian Journal of Medical Research	\bIndian.*\bJournal.*\bof.*\bMedical.*\bResearch.*	null	null
+Indian journal of gastroenterology	\bIndian.*\bjournal.*\bof.*\bgastroenterology.*	null	null
+Indian journal of surgery	\bIndian.*\bjournal.*\bof.*\bsurgery.*	null	null
+Infectious Agents Cancer Electronic Resource	\bInfectious.*\bAgents.*\bCancer.*\bElectronic.*\bResource.*	null	null
+Infectious Agents and Cancer	\bInfectious.*\bAgents.*\band.*\bCancer.*	null	null
+Injury	\bInjury.*	null	null
+Injury International Journal Of The Care Of The Injured	\bInjury.*\bInternational.*\bJournal.*\bOf.*\bThe.*\bCare.*\bOf.*\bThe.*\bInjured.*	null	null
+Inorg Chem	\bInorg.*\bChem.*	null	null
+Inorganic chemistry	\bInorganic.*\bchemistry.*	null	null
+Int J Clin Exp Med	\bInt.*\bJ.*\bClin.*\bExp.*\bMed.*	null	null
+Int J Clin Exp Pathol	\bInt.*\bJ.*\bClin.*\bExp.*\bPathol.*	null	null
+Int J Fertil Steril	\bInt.*\bJ.*\bFertil.*\bSteril.*	null	null
+Int J Gastrointest Cancer	\bInt.*\bJ.*\bGastrointest.*\bCancer.*	null	null
+Int J Mol Med	\bInt.*\bJ.*\bMol.*\bMed.*	null	null
+Int J Oncol	\bInt.*\bJ.*\bOncol.*	null	null
+Int J Ophthalmol	\bInt.*\bJ.*\bOphthalmol.*	null	null
+Int J Oral Maxillofac Implants	\bInt.*\bJ.*\bOral.*\bMaxillofac.*\bImplants.*	null	null
+Int J Pancreatol	\bInt.*\bJ.*\bPancreatol.*	null	null
+Int J Pancreatology	\bInt.*\bJ.*\bPancreatology.*	null	null
+Int J Radiat Biol	\bInt.*\bJ.*\bRadiat.*\bBiol.*	null	null
+Int J Radiat Biol Relat Stud Phys Chem Med	\bInt.*\bJ.*\bRadiat.*\bBiol.*\bRelat.*\bStud.*\bPhys.*\bChem.*\bMed.*	null	null
+Int J Reprod Biomed	\bInt.*\bJ.*\bReprod.*\bBiomed.*	null	null
+Interact Cardiovasc Thorac Surg	\bInteract.*\bCardiovasc.*\bThorac.*\bSurg.*	null	null
+International Journal Of Clinical And Experimental Medicine	\bInternational.*\bJournal.*\bOf.*\bClinical.*\bAnd.*\bExperimental.*\bMedicine.*	null	null
+International Journal Of Clinical And Experimental Pathology	\bInternational.*\bJournal.*\bOf.*\bClinical.*\bAnd.*\bExperimental.*\bPathology.*	null	null
+International Journal Of Fertility Sterility	\bInternational.*\bJournal.*\bOf.*\bFertility.*\bSterility.*	null	null
+International Journal Of Molecular Medicine	\bInternational.*\bJournal.*\bOf.*\bMolecular.*\bMedicine.*	null	null
+International Journal Of Oncology	\bInternational.*\bJournal.*\bOf.*\bOncology.*	null	null
+International Journal Of Ophthalmology	\bInternational.*\bJournal.*\bOf.*\bOphthalmology.*	null	null
+International Journal Of Oral Maxillofacial Implants	\bInternational.*\bJournal.*\bOf.*\bOral.*\bMaxillofacial.*\bImplants.*	null	null
+International Journal Of Reproductive Biomedicine	\bInternational.*\bJournal.*\bOf.*\bReproductive.*\bBiomedicine.*	null	null
+International Journal Of Stroke	\bInternational.*\bJournal.*\bOf.*\bStroke.*	null	null
+International Journal of Cancer	\bInternational.*\bJournal.*\bof.*\bCancer.*	null	null
+International Journal of Oncology	\bInternational.*\bJournal.*\bof.*\bOncology.*	null	null
+International Journal of Pancreatology	\bInternational.*\bJournal.*\bof.*\bPancreatology.*	null	null
+International Journal of Radiation Biology	\bInternational.*\bJournal.*\bof.*\bRadiation.*\bBiology.*	null	null
+International journal of cancer Journal international du cancer	\bInternational.*\bjournal.*\bof.*\bcancer.*\bJournal.*\binternational.*\bdu.*\bcancer.*	null	null
+Invest Clin	\bInvest.*\bClin.*	null	null
+Investigacion Clinica	\bInvestigacion.*\bClinica.*	null	null
+Iran J Cancer Prev	\bIran.*\bJ.*\bCancer.*\bPrev.*	null	null
+Iran J Reprod Med	\bIran.*\bJ.*\bReprod.*\bMed.*	null	null
+Iranian Journal Of Reproductive Medicine	\bIranian.*\bJournal.*\bOf.*\bReproductive.*\bMedicine.*	null	null
+Iranian Journal of Cancer Prevention	\bIranian.*\bJournal.*\bof.*\bCancer.*\bPrevention.*	null	null
+J Am Med Assoc	\bJ.*\bAm.*\bMed.*\bAssoc.*	null	null
+J Am Soc Nephrol	\bJ.*\bAm.*\bSoc.*\bNephrol.*	null	null
+J Am Vet Med Assoc	\bJ.*\bAm.*\bVet.*\bMed.*\bAssoc.*	null	null
+J Amer Med Ass	\bJ.*\bAmer.*\bMed.*\bAss.*	null	null
+J Appl Physiol	\bJ.*\bAppl.*\bPhysiol.*	null	null
+J Belge Radiol	\bJ.*\bBelge.*\bRadiol.*	null	null
+J Biol Regul Homeostatic Agents	\bJ.*\bBiol.*\bRegul.*\bHomeostatic.*\bAgents.*	null	null
+J Biomed Opt	\bJ.*\bBiomed.*\bOpt.*	null	null
+J Cancer Res Ther	\bJ.*\bCancer.*\bRes.*\bTher.*	null	null
+J Cardiovasc Surg	\bJ.*\bCardiovasc.*\bSurg.*	null	null
+J Chir Viscerale	\bJ.*\bChir.*\bViscerale.*	null	null
+J Craniofac Surg	\bJ.*\bCraniofac.*\bSurg.*	null	null
+J Dent Educ	\bJ.*\bDent.*\bEduc.*	null	null
+J Exp Biol	\bJ.*\bExp.*\bBiol.*	null	null
+J Exp Clin Cancer Res	\bJ.*\bExp.*\bClin.*\bCancer.*\bRes.*	null	null
+J Gastroenterol Hepatol	\bJ.*\bGastroenterol.*\bHepatol.*	null	null
+J Gastrointest Cancer	\bJ.*\bGastrointest.*\bCancer.*	null	null
+J Hepatol	\bJ.*\bHepatol.*	null	null
+J Huazhong Univ Sci Technolog Med Sci	\bJ.*\bHuazhong.*\bUniv.*\bSci.*\bTechnolog.*\bMed.*\bSci.*	null	null
+J Hum Hypertens	\bJ.*\bHum.*\bHypertens.*	null	null
+J Immunother	\bJ.*\bImmunother.*	null	null
+J Indian Assoc Pediatr Surg	\bJ.*\bIndian.*\bAssoc.*\bPediatr.*\bSurg.*	null	null
+J Indian Med Assoc	\bJ.*\bIndian.*\bMed.*\bAssoc.*	null	null
+J Infect Chemother	\bJ.*\bInfect.*\bChemother.*	null	null
+J Intervent Radiol	\bJ.*\bIntervent.*\bRadiol.*	null	null
+J Microbiol Immunol Infect	\bJ.*\bMicrobiol.*\bImmunol.*\bInfect.*	null	null
+J National Compr Canc Netw	\bJ.*\bNational.*\bCompr.*\bCanc.*\bNetw.*	null	null
+J Nucl Med	\bJ.*\bNucl.*\bMed.*	null	null
+J Nutr	\bJ.*\bNutr.*	null	null
+J Pediatr Gastroenterol Nutr	\bJ.*\bPediatr.*\bGastroenterol.*\bNutr.*	null	null
+J Pediatr Surg	\bJ.*\bPediatr.*\bSurg.*	null	null
+J Periodontol	\bJ.*\bPeriodontol.*	null	null
+J Pers Soc Psychol	\bJ.*\bPers.*\bSoc.*\bPsychol.*	null	null
+J Pharmacol Exp	\bJ.*\bPharmacol.*\bExp.*	null	null
+J Psychiatr Pract	\bJ.*\bPsychiatr.*\bPract.*	null	null
+J Radiol	\bJ.*\bRadiol.*	null	null
+J Radiol Electrol Med Nucl	\bJ.*\bRadiol.*\bElectrol.*\bMed.*\bNucl.*	null	null
+J S C Med Assoc	\bJ.*\bS.*\bC.*\bMed.*\bAssoc.*	null	null
+J Sleep Res	\bJ.*\bSleep.*\bRes.*	null	null
+J Sports Sci Med	\bJ.*\bSports.*\bSci.*\bMed.*	null	null
+J Thorac Oncol	\bJ.*\bThorac.*\bOncol.*	null	null
+J Thromb Haemost	\bJ.*\bThromb.*\bHaemost.*	null	null
+J Thromb Hemost	\bJ.*\bThromb.*\bHemost.*	null	null
+J TraumaInjury Infect Crit Care	\bJ.*\bTraumaInjury.*\bInfect.*\bCrit.*\bCare.*	null	null
+J Urol	\bJ.*\bUrol.*	null	null
+J Visc Surg	\bJ.*\bVisc.*\bSurg.*	null	null
+J Xray Sci Technol	\bJ.*\bXray.*\bSci.*\bTechnol.*	null	null
+J miss state Med ass	\bJ.*\bmiss.*\bstate.*\bMed.*\bass.*	null	null
+JAMA	\bJAMA.*	\bJ.*\bA.*\bM.*\bA.*	null
+JAMA Journal of the American Medical Association	\bJAMA.*\bJournal.*\bof.*\bthe.*\bAmerican.*\bMedical.*\bAssociation.*	null	null
+JBR	null	null	\bJ.*\bB.*\bR.*
+JBR BTR	\bJBR.*\bBTR.*	\bJ.*\bB.*\bR.*\b .*\bB.*\bT.*\bR.*	null
+JNCCN Journal of the National Comprehensive Cancer Network	\bJNCCN.*\bJournal.*\bof.*\bthe.*\bNational.*\bComprehensive.*\bCancer.*\bNetwork.*	null	null
+Jama	\bJama.*	null	null
+Jama journal Of The American Medical Association	\bJama.*\bjournal.*\bOf.*\bThe.*\bAmerican.*\bMedical.*\bAssociation.*	null	null
+Japanese Journal of Thoracic Cardiovascular Surgery	\bJapanese.*\bJournal.*\bof.*\bThoracic.*\bCardiovascular.*\bSurgery.*	null	null
+Japanese journal of thoracic and cardiovascular surgery official publication of the Japanese Association for Thoracic Surgery	\bJapanese.*\bjournal.*\bof.*\bthoracic.*\band.*\bcardiovascular.*\bsurgery.*\bofficial.*\bpublication.*\bof.*\bthe.*\bJapanese.*\bAssociation.*\bfor.*\bThoracic.*\bSurgery.*	null	null
+Javma Journal Of The American Veterinary Medical Association	\bJavma.*\bJournal.*\bOf.*\bThe.*\bAmerican.*\bVeterinary.*\bMedical.*\bAssociation.*	null	null
+Jbr Btr	\bJbr.*\bBtr.*	null	null
+Jbr btr	\bJbr.*\bbtr.*	null	null
+JbrBtr	\bJbrBtr.*	null	null
+Jbrbtr	\bJbrbtr.*	null	null
+Journal	\bJournal.*	null	null
+Journal Belge De Radiologie	\bJournal.*\bBelge.*\bDe.*\bRadiologie.*	null	null
+Journal Belge de Radiologie	\bJournal.*\bBelge.*\bde.*\bRadiologie.*	null	null
+Journal De Radiologie D Electrologie Et De Medecine Nucleaire	\bJournal.*\bDe.*\bRadiologie.*\bD.*\bElectrologie.*\bEt.*\bDe.*\bMedecine.*\bNucleaire.*	null	null
+Journal Of Applied Physiology	\bJournal.*\bOf.*\bApplied.*\bPhysiology.*	null	null
+Journal Of Buon	\bJournal.*\bOf.*\bBuon.*	null	null
+Journal Of Cardiovascular Surgery	\bJournal.*\bOf.*\bCardiovascular.*\bSurgery.*	null	null
+Journal Of Cerebral Blood Flow And Metabolism	\bJournal.*\bOf.*\bCerebral.*\bBlood.*\bFlow.*\bAnd.*\bMetabolism.*	null	null
+Journal Of Clinical Periodontology	\bJournal.*\bOf.*\bClinical.*\bPeriodontology.*	null	null
+Journal Of Craniofacial Surgery	\bJournal.*\bOf.*\bCraniofacial.*\bSurgery.*	null	null
+Journal Of Dental Education	\bJournal.*\bOf.*\bDental.*\bEducation.*	null	null
+Journal Of Experimental Biology	\bJournal.*\bOf.*\bExperimental.*\bBiology.*	null	null
+Journal Of Human Hypertension	\bJournal.*\bOf.*\bHuman.*\bHypertension.*	null	null
+Journal Of Nuclear Medicine	\bJournal.*\bOf.*\bNuclear.*\bMedicine.*	null	null
+Journal Of Nutrition	\bJournal.*\bOf.*\bNutrition.*	null	null
+Journal Of Obstetrics And Gynaecology Canada	\bJournal.*\bOf.*\bObstetrics.*\bAnd.*\bGynaecology.*\bCanada.*	null	null
+Journal Of Otolaryngology Head Neck Surgery	\bJournal.*\bOf.*\bOtolaryngology.*\bHead.*\bNeck.*\bSurgery.*	null	null
+Journal Of Pediatric Gastroenterology And Nutrition	\bJournal.*\bOf.*\bPediatric.*\bGastroenterology.*\bAnd.*\bNutrition.*	null	null
+Journal Of Personality And Social Psychology	\bJournal.*\bOf.*\bPersonality.*\bAnd.*\bSocial.*\bPsychology.*	null	null
+Journal Of Pharmacy And Pharmaceutical Sciences	\bJournal.*\bOf.*\bPharmacy.*\bAnd.*\bPharmaceutical.*\bSciences.*	null	null
+Journal Of Psychiatric Practice	\bJournal.*\bOf.*\bPsychiatric.*\bPractice.*	null	null
+Journal Of Reproductive Medicine	\bJournal.*\bOf.*\bReproductive.*\bMedicine.*	null	null
+Journal Of Sports Science And Medicine	\bJournal.*\bOf.*\bSports.*\bScience.*\bAnd.*\bMedicine.*	null	null
+Journal Of The American Society Of Nephrology	\bJournal.*\bOf.*\bThe.*\bAmerican.*\bSociety.*\bOf.*\bNephrology.*	null	null
+Journal Of The American Veterinary Medical Association	\bJournal.*\bOf.*\bThe.*\bAmerican.*\bVeterinary.*\bMedical.*\bAssociation.*	null	null
+Journal Of The Canadian Dental Association	\bJournal.*\bOf.*\bThe.*\bCanadian.*\bDental.*\bAssociation.*	null	null
+Journal Of Urology	\bJournal.*\bOf.*\bUrology.*	null	null
+Journal belge de radiologie	\bJournal.*\bbelge.*\bde.*\bradiologie.*	null	null
+Journal d obstetrique et gynecologie du Canada	\bJournal.*\bd.*\bobstetrique.*\bet.*\bgynecologie.*\bdu.*\bCanada.*	null	null
+Journal d obstetrique et gynecologie du Canada JOGC	\bJournal.*\bd.*\bobstetrique.*\bet.*\bgynecologie.*\bdu.*\bCanada.*\bJOGC.*	null	null
+Journal d oto rhino laryngologie et de chirurgie cervico faciale	\bJournal.*\bd.*\boto.*\brhino.*\blaryngologie.*\bet.*\bde.*\bchirurgie.*\bcervico.*\bfaciale.*	null	null
+Journal d otorhinolaryngologie et de chirurgie cervicofaciale	\bJournal.*\bd.*\botorhinolaryngologie.*\bet.*\bde.*\bchirurgie.*\bcervicofaciale.*	null	null
+Journal de Chirurgie Viscerale	\bJournal.*\bde.*\bChirurgie.*\bViscerale.*	null	null
+Journal de Radiologie	\bJournal.*\bde.*\bRadiologie.*	null	null
+Journal de radiologie d electrologie et de medecine nucleaire	\bJournal.*\bde.*\bradiologie.*\bd.*\belectrologie.*\bet.*\bde.*\bmedecine.*\bnucleaire.*	null	null
+Journal de radiologie et d electrologie	\bJournal.*\bde.*\bradiologie.*\bet.*\bd.*\belectrologie.*	null	null
+Journal of B U ON official journal of the Balkan Union of Oncology	\bJournal.*\bof.*\bB.*\bU.*\bON.*\bofficial.*\bjournal.*\bof.*\bthe.*\bBalkan.*\bUnion.*\bof.*\bOncology.*	null	null
+Journal of Cancer Research and Therapeutics	\bJournal.*\bof.*\bCancer.*\bResearch.*\band.*\bTherapeutics.*	null	null
+Journal of Chromatography B	\bJournal.*\bof.*\bChromatography.*\bB.*	null	null
+Journal of Clinical Experimental Neuropsychology Official Journal of the International Neuropsychological Society	\bJournal.*\bof.*\bClinical.*\bExperimental.*\bNeuropsychology.*\bOfficial.*\bJournal.*\bof.*\bthe.*\bInternational.*\bNeuropsychological.*\bSociety.*	null	null
+Journal of Clinical Oncology	\bJournal.*\bof.*\bClinical.*\bOncology.*	null	null
+Journal of Clinical Virology	\bJournal.*\bof.*\bClinical.*\bVirology.*	null	null
+Journal of Gastrointestinal Cancer	\bJournal.*\bof.*\bGastrointestinal.*\bCancer.*	null	null
+Journal of Huazhong University of Science and Technology Medical Science	\bJournal.*\bof.*\bHuazhong.*\bUniversity.*\bof.*\bScience.*\band.*\bTechnology.*\bMedical.*\bScience.*	null	null
+Journal of Immunotherapy	\bJournal.*\bof.*\bImmunotherapy.*	null	null
+Journal of Microbiology Immunology and Infection	\bJournal.*\bof.*\bMicrobiology.*\bImmunology.*\band.*\bInfection.*	null	null
+Journal of Nuclear Medicine	\bJournal.*\bof.*\bNuclear.*\bMedicine.*	null	null
+Journal of Nutrition	\bJournal.*\bof.*\bNutrition.*	null	null
+Journal of Otolaryngology Head and Neck Surgery	\bJournal.*\bof.*\bOtolaryngology.*\bHead.*\band.*\bNeck.*\bSurgery.*	null	null
+Journal of Psychiatric Practice	\bJournal.*\bof.*\bPsychiatric.*\bPractice.*	null	null
+Journal of Psychopathology	\bJournal.*\bof.*\bPsychopathology.*	null	null
+Journal of PsychopathologyGiornale Di Psicopatologia	\bJournal.*\bof.*\bPsychopathologyGiornale.*\bDi.*\bPsicopatologia.*	null	null
+Journal of Sleep Research	\bJournal.*\bof.*\bSleep.*\bResearch.*	null	null
+Journal of Thoracic Cardiovascular Surgery	\bJournal.*\bof.*\bThoracic.*\bCardiovascular.*\bSurgery.*	null	null
+Journal of Thrombosis and Haemostasis Conference 23rd Congress of the International Society on Thrombosis and Haemostasis 57th Annual SSC Meeting Kyoto Japan	\bJournal.*\bof.*\bThrombosis.*\band.*\bHaemostasis.*\bConference.*\b23rd.*\bCongress.*\bof.*\bthe.*\bInternational.*\bSociety.*\bon.*\bThrombosis.*\band.*\bHaemostasis.*\b57th.*\bAnnual.*\bSSC.*\bMeeting.*\bKyoto.*\bJapan.*	null	null
+Journal of Trauma	\bJournal.*\bof.*\bTrauma.*	null	null
+Journal of Trauma Injury Infection and Critical Care	\bJournal.*\bof.*\bTrauma.*\bInjury.*\bInfection.*\band.*\bCritical.*\bCare.*	null	null
+Journal of Vascular and Interventional Radiology	\bJournal.*\bof.*\bVascular.*\band.*\bInterventional.*\bRadiology.*	null	null
+Journal of Visceral Surgery	\bJournal.*\bof.*\bVisceral.*\bSurgery.*	null	null
+Journal of X ray science and technology	\bJournal.*\bof.*\bX.*\bray.*\bscience.*\band.*\btechnology.*	null	null
+Journal of Xray science and technology	\bJournal.*\bof.*\bXray.*\bscience.*\band.*\btechnology.*	null	null
+Journal of biological regulators and homeostatic agents	\bJournal.*\bof.*\bbiological.*\bregulators.*\band.*\bhomeostatic.*\bagents.*	null	null
+Journal of biomedical optics	\bJournal.*\bof.*\bbiomedical.*\boptics.*	null	null
+Journal of clinical and experimental neuropsychology	\bJournal.*\bof.*\bclinical.*\band.*\bexperimental.*\bneuropsychology.*	null	null
+Journal of clinical periodontology	\bJournal.*\bof.*\bclinical.*\bperiodontology.*	null	null
+Journal of craniofacial surgery	\bJournal.*\bof.*\bcraniofacial.*\bsurgery.*	null	null
+Journal of gastroenterology and hepatology	\bJournal.*\bof.*\bgastroenterology.*\band.*\bhepatology.*	null	null
+Journal of hepatology	\bJournal.*\bof.*\bhepatology.*	null	null
+Journal of indian association of pediatric surgeons	\bJournal.*\bof.*\bindian.*\bassociation.*\bof.*\bpediatric.*\bsurgeons.*	null	null
+Journal of interventional radiology	\bJournal.*\bof.*\binterventional.*\bradiology.*	null	null
+Journal of nuclear medicine	\bJournal.*\bof.*\bnuclear.*\bmedicine.*	null	null
+Journal of nuclear medicine official publication Society of Nuclear Medicine	\bJournal.*\bof.*\bnuclear.*\bmedicine.*\bofficial.*\bpublication.*\bSociety.*\bof.*\bNuclear.*\bMedicine.*	null	null
+Journal of nutrition	\bJournal.*\bof.*\bnutrition.*	null	null
+Journal of otolaryngology head neck surgery Le Journal d oto rhino laryngologie et de chirurgie cervico faciale	\bJournal.*\bof.*\botolaryngology.*\bhead.*\bneck.*\bsurgery.*\bLe.*\bJournal.*\bd.*\boto.*\brhino.*\blaryngologie.*\bet.*\bde.*\bchirurgie.*\bcervico.*\bfaciale.*	null	null
+Journal of pharmacy pharmaceutical sciences a publication of the Canadian Society for Pharmaceutical Sciences Societe canadienne des sciences pharmaceutiques	\bJournal.*\bof.*\bpharmacy.*\bpharmaceutical.*\bsciences.*\ba.*\bpublication.*\bof.*\bthe.*\bCanadian.*\bSociety.*\bfor.*\bPharmaceutical.*\bSciences.*\bSociete.*\bcanadienne.*\bdes.*\bsciences.*\bpharmaceutiques.*	null	null
+Journal of psychiatric practice	\bJournal.*\bof.*\bpsychiatric.*\bpractice.*	null	null
+Journal of the American Medical Association	\bJournal.*\bof.*\bthe.*\bAmerican.*\bMedical.*\bAssociation.*	null	null
+Journal of the American Veterinary Medical Association	\bJournal.*\bof.*\bthe.*\bAmerican.*\bVeterinary.*\bMedical.*\bAssociation.*	null	null
+Journal of the National Comprehensive Cancer Network	\bJournal.*\bof.*\bthe.*\bNational.*\bComprehensive.*\bCancer.*\bNetwork.*	null	null
+Journal of the National Comprehensive Cancer Network JNCCN	\bJournal.*\bof.*\bthe.*\bNational.*\bComprehensive.*\bCancer.*\bNetwork.*\bJNCCN.*	null	null
+Journal of the S C Med Association	\bJournal.*\bof.*\bthe.*\bS.*\bC.*\bMed.*\bAssociation.*	null	null
+Journal of the South Carolina Medical Association	\bJournal.*\bof.*\bthe.*\bSouth.*\bCarolina.*\bMedical.*\bAssociation.*	null	null
+Journal of thoracic and cardiovascular surgery	\bJournal.*\bof.*\bthoracic.*\band.*\bcardiovascular.*\bsurgery.*	null	null
+Journal of trauma	\bJournal.*\bof.*\btrauma.*	null	null
+Journal of visualized experiments	\bJournal.*\bof.*\bvisualized.*\bexperiments.*	null	null
+Journal of visualized experiments JoVE	\bJournal.*\bof.*\bvisualized.*\bexperiments.*\bJoVE.*	null	null
+Jove journal Of Visualized Experiments	\bJove.*\bjournal.*\bOf.*\bVisualized.*\bExperiments.*	null	null
+Jovejournal Of Visualized Experiments	\bJovejournal.*\bOf.*\bVisualized.*\bExperiments.*	null	null
+Jthoraccardiovascsurg	\bJthoraccardiovascsurg.*	null	null
+Kidney Int	\bKidney.*\bInt.*	null	null
+Kidney International	\bKidney.*\bInternational.*	null	null
+Klin Khir	\bKlin.*\bKhir.*	null	null
+Langenbecks Archiv Fur Chirurgie Supplement	\bLangenbecks.*\bArchiv.*\bFur.*\bChirurgie.*\bSupplement.*	null	null
+Lung Cancer	\bLung.*\bCancer.*	null	null
+Lung cancer Amsterdam Netherlands	\bLung.*\bcancer.*\bAmsterdam.*\bNetherlands.*	null	null
+Macedonian Academy of Sciences and Arts Section of Biological and Medical Sciences	\bMacedonian.*\bAcademy.*\bof.*\bSciences.*\band.*\bArts.*\bSection.*\bof.*\bBiological.*\band.*\bMedical.*\bSciences.*	null	null
+Makedonska Akademija na Naukite i Umetnostite Oddelenie Za Bioloshki i Meditsinski Nauki Prilozi	\bMakedonska.*\bAkademija.*\bna.*\bNaukite.*\bi.*\bUmetnostite.*\bOddelenie.*\bZa.*\bBioloshki.*\bi.*\bMeditsinski.*\bNauki.*\bPrilozi.*	null	null
+Med Lav	\bMed.*\bLav.*	null	null
+Med Oral Patol Oral Cir Bucal	\bMed.*\bOral.*\bPatol.*\bOral.*\bCir.*\bBucal.*	null	null
+Medicina Del Lavoro	\bMedicina.*\bDel.*\bLavoro.*	null	null
+Medicina Oral Patologia Oral Y Cirugia Bucal	\bMedicina.*\bOral.*\bPatologia.*\bOral.*\bY.*\bCirugia.*\bBucal.*	null	null
+Medicinal Chemistry	\bMedicinal.*\bChemistry.*	null	null
+Medicinski Glasnik	\bMedicinski.*\bGlasnik.*	null	null
+Medicinski Glasnik Ljekarske Komore Zenickodobojskog Kantona	\bMedicinski.*\bGlasnik.*\bLjekarske.*\bKomore.*\bZenickodobojskog.*\bKantona.*	null	null
+Medicinski glasnik	\bMedicinski.*\bglasnik.*	null	null
+Method Find Exp Clin	\bMethod.*\bFind.*\bExp.*\bClin.*	null	null
+Methods Find Exp Clin Pharmacol	\bMethods.*\bFind.*\bExp.*\bClin.*\bPharmacol.*	null	null
+Methods and findings in experimental and clinical pharmacology	\bMethods.*\band.*\bfindings.*\bin.*\bexperimental.*\band.*\bclinical.*\bpharmacology.*	null	null
+Mol Psychiatry	\bMol.*\bPsychiatry.*	null	null
+Mol Ther	\bMol.*\bTher.*	null	null
+Mol Vis	\bMol.*\bVis.*	null	null
+Molecular Vision	\bMolecular.*\bVision.*	null	null
+Molecular psychiatry	\bMolecular.*\bpsychiatry.*	null	null
+Muscle Nerve	\bMuscle.*\bNerve.*	null	null
+Muscle nerve	\bMuscle.*\bnerve.*	null	null
+Mutat Res	\bMutat.*\bRes.*	null	null
+Mutation Research DNA Repair	\bMutation.*\bResearch.*\bDNA.*\bRepair.*	null	null
+Mutation Research Dna Repair	\bMutation.*\bResearch.*\bDna.*\bRepair.*	null	null
+N Engl J Med	\bN.*\bEngl.*\bJ.*\bMed.*	null	null
+N Z Med J	\bN.*\bZ.*\bMed.*\bJ.*	null	null
+National Med J India	\bNational.*\bMed.*\bJ.*\bIndia.*	null	null
+National medical journal of india	\bNational.*\bmedical.*\bjournal.*\bof.*\bindia.*	null	null
+Naunynschmied arch pharm	\bNaunynschmied.*\barch.*\bpharm.*	null	null
+Nephron	\bNephron.*	null	null
+Nephron Clinical Practice	\bNephron.*\bClinical.*\bPractice.*	null	null
+Nestle Nutr Workshop Ser Pediatr Program	\bNestle.*\bNutr.*\bWorkshop.*\bSer.*\bPediatr.*\bProgram.*	null	null
+Nestle Nutrition Institute Workshop Series	\bNestle.*\bNutrition.*\bInstitute.*\bWorkshop.*\bSeries.*	null	null
+Nestle Nutrition workshop series Paediatric programme	\bNestle.*\bNutrition.*\bworkshop.*\bseries.*\bPaediatric.*\bprogramme.*	null	null
+Nestle Nutrition workshop series Pediatric programme	\bNestle.*\bNutrition.*\bworkshop.*\bseries.*\bPediatric.*\bprogramme.*	null	null
+Neth J Surg	\bNeth.*\bJ.*\bSurg.*	null	null
+Netherlands Journal of Surgery	\bNetherlands.*\bJournal.*\bof.*\bSurgery.*	null	null
+New Engl J Med	\bNew.*\bEngl.*\bJ.*\bMed.*	null	null
+New England Journal of Medicine	\bNew.*\bEngland.*\bJournal.*\bof.*\bMedicine.*	null	null
+New Zealand Med J	\bNew.*\bZealand.*\bMed.*\bJ.*	null	null
+Nihon Ky bu Geka Gakkai	\bNihon.*\bKy.*\bbu.*\bGeka.*\bGakkai.*	null	null
+Nippon Kyobu Geka Gakkai Zasshi Journal of the Japanese Association for Thoracic Surgery	\bNippon.*\bKyobu.*\bGeka.*\bGakkai.*\bZasshi.*\bJournal.*\bof.*\bthe.*\bJapanese.*\bAssociation.*\bfor.*\bThoracic.*\bSurgery.*	null	null
+Nouv Presse Med	\bNouv.*\bPresse.*\bMed.*	null	null
+Nouv Rev Fr Hematol	\bNouv.*\bRev.*\bFr.*\bHematol.*	null	null
+Nouvelle Presse Medicale	\bNouvelle.*\bPresse.*\bMedicale.*	null	null
+Nouvelle Revue Francaise d Hematologie	\bNouvelle.*\bRevue.*\bFrancaise.*\bd.*\bHematologie.*	null	null
+Nutr Res Rev	\bNutr.*\bRes.*\bRev.*	null	null
+Nutrition Research Reviews	\bNutrition.*\bResearch.*\bReviews.*	null	null
+Obstet Gynecol Surv	\bObstet.*\bGynecol.*\bSurv.*	null	null
+Obstetrical Gynecological Survey	\bObstetrical.*\bGynecological.*\bSurvey.*	null	null
+Oncology	\bOncology.*	null	null
+Oncology Williston Park N Y	\bOncology.*\bWilliston.*\bPark.*\bN.*\bY.*	null	null
+Orphanet J Rare Dis	\bOrphanet.*\bJ.*\bRare.*\bDis.*	null	null
+Otology Neurotology	\bOtology.*\bNeurotology.*	null	null
+P T	\bP.*\bT.*	null	null
+P and t	\bP.*\band.*\bt.*	null	null
+Parasit Vectors	\bParasit.*\bVectors.*	null	null
+Parasites vectors	\bParasites.*\bvectors.*	null	null
+Pathol Biol	\bPathol.*\bBiol.*	null	null
+Pathologie Biologie	\bPathologie.*\bBiologie.*	null	null
+Pathologie biologie	\bPathologie.*\bbiologie.*	null	null
+Pediatr Neurol	\bPediatr.*\bNeurol.*	null	null
+Pediatric Nephrology	\bPediatric.*\bNephrology.*	null	null
+Pediatric Nephrology Conference 44th Annual Scientific Meeting of the European Society for Paediatric Nephrology Cavtat Dubrovnik Croatia	\bPediatric.*\bNephrology.*\bConference.*\b44th.*\bAnnual.*\bScientific.*\bMeeting.*\bof.*\bthe.*\bEuropean.*\bSociety.*\bfor.*\bPaediatric.*\bNephrology.*\bCavtat.*\bDubrovnik.*\bCroatia.*	null	null
+Pediatric neurology	\bPediatric.*\bneurology.*	null	null
+Perfectionnement en Pediatrie	\bPerfectionnement.*\ben.*\bPediatrie.*	null	null
+Phys Med	\bPhys.*\bMed.*	null	null
+Physica Medica	\bPhysica.*\bMedica.*	null	null
+Physica Medica European Journal Of Medical Physics	\bPhysica.*\bMedica.*\bEuropean.*\bJournal.*\bOf.*\bMedical.*\bPhysics.*	null	null
+Pm R	\bPm.*\bR.*	null	null
+Pneumologie	\bPneumologie.*	null	null
+Pneumologie Stuttgart Germany	\bPneumologie.*\bStuttgart.*\bGermany.*	null	null
+Pol Arch Med Wewn	\bPol.*\bArch.*\bMed.*\bWewn.*	null	null
+Polskie Archiwum Medycyny Wewnetrznej	\bPolskie.*\bArchiwum.*\bMedycyny.*\bWewnetrznej.*	null	null
+Prev Vet Med	\bPrev.*\bVet.*\bMed.*	null	null
+Preventive Veterinary Medicine	\bPreventive.*\bVeterinary.*\bMedicine.*	null	null
+Preventive veterinary medicine	\bPreventive.*\bveterinary.*\bmedicine.*	null	null
+Proc Soc Exp Biol Med	\bProc.*\bSoc.*\bExp.*\bBiol.*\bMed.*	null	null
+Proceedings	\bProceedings.*	null	null
+Proceedings Of The Royal Society B Biological Sciences	\bProceedings.*\bOf.*\bThe.*\bRoyal.*\bSociety.*\bB.*\bBiological.*\bSciences.*	null	null
+Proceedings Of The Society For Experimental Biology And Medicine	\bProceedings.*\bOf.*\bThe.*\bSociety.*\bFor.*\bExperimental.*\bBiology.*\bAnd.*\bMedicine.*	null	null
+Psychiat	\bPsychiat.*	null	null
+Psychogeriatrics	\bPsychogeriatrics.*	null	null
+Psychogeriatrics The Official Journal of the Japanese Psychogeriatric Society	\bPsychogeriatrics.*\bThe.*\bOfficial.*\bJournal.*\bof.*\bthe.*\bJapanese.*\bPsychogeriatric.*\bSociety.*	null	null
+Q J Med	\bQ.*\bJ.*\bMed.*	null	null
+Q J Nucl Med	\bQ.*\bJ.*\bNucl.*\bMed.*	null	null
+QJM	\bQJM.*	\bQ.*\bJ.*\bM.*	null
+Qjm	\bQjm.*	null	\bQ.*\bj.*\bm.*
+Quarterly Journal of Medicine	\bQuarterly.*\bJournal.*\bof.*\bMedicine.*	null	null
+Quarterly Journal of Nuclear Medicine	\bQuarterly.*\bJournal.*\bof.*\bNuclear.*\bMedicine.*	null	null
+Radiol Clin	\bRadiol.*\bClin.*	null	null
+Radiologica Clinica	\bRadiologica.*\bClinica.*	null	null
+Radiotherapy Oncology	\bRadiotherapy.*\bOncology.*	null	null
+Radiotherapy and oncology journal of the European Society for Therapeutic Radiology and Oncology	\bRadiotherapy.*\band.*\boncology.*\bjournal.*\bof.*\bthe.*\bEuropean.*\bSociety.*\bfor.*\bTherapeutic.*\bRadiology.*\band.*\bOncology.*	null	null
+Recent Results in Cancer Research	\bRecent.*\bResults.*\bin.*\bCancer.*\bResearch.*	null	null
+Reprod Toxicol	\bReprod.*\bToxicol.*	null	null
+Reproductive Toxicology	\bReproductive.*\bToxicology.*	null	null
+Res commun chem path pharmacol	\bRes.*\bcommun.*\bchem.*\bpath.*\bpharmacol.*	null	null
+Respirology	\bRespirology.*	null	null
+Respirology Carlton Vic	\bRespirology.*\bCarlton.*\bVic.*	null	null
+Restor Neurol Neurosci	\bRestor.*\bNeurol.*\bNeurosci.*	null	null
+Restorative Neurology And Neuroscience	\bRestorative.*\bNeurology.*\bAnd.*\bNeuroscience.*	null	null
+Retina	\bRetina.*	null	null
+Retina The Journal Of Retinal And Vitreous Diseases	\bRetina.*\bThe.*\bJournal.*\bOf.*\bRetinal.*\bAnd.*\bVitreous.*\bDiseases.*	null	null
+Rev	\bRev.*	null	null
+Rev Esp Cardiol	\bRev.*\bEsp.*\bCardiol.*	null	null
+Rev Esp Enferm Apar Dig Nutr	\bRev.*\bEsp.*\bEnferm.*\bApar.*\bDig.*\bNutr.*	null	null
+Rev Esp Enferm Dig	\bRev.*\bEsp.*\bEnferm.*\bDig.*	null	null
+Rev Int Hepatol	\bRev.*\bInt.*\bHepatol.*	null	null
+Rev Invest Clin	\bRev.*\bInvest.*\bClin.*	null	null
+Rev Med Chil	\bRev.*\bMed.*\bChil.*	null	null
+Rev Neurol	\bRev.*\bNeurol.*	null	null
+Rev Neurosci	\bRev.*\bNeurosci.*	null	null
+Revelacion de la trombosis porta por purpuras y angiopatias diversas exploradas por la portografia intra y extraesplenica	\bRevelacion.*\bde.*\bla.*\btrombosis.*\bporta.*\bpor.*\bpurpuras.*\by.*\bangiopatias.*\bdiversas.*\bexploradas.*\bpor.*\bla.*\bportografia.*\bintra.*\by.*\bextraesplenica.*	null	null
+Revelacion de la trombosis porta por purpuras y angiopatias diversas exploradas por la portografia intra y extresplenica	\bRevelacion.*\bde.*\bla.*\btrombosis.*\bporta.*\bpor.*\bpurpuras.*\by.*\bangiopatias.*\bdiversas.*\bexploradas.*\bpor.*\bla.*\bportografia.*\bintra.*\by.*\bextresplenica.*	null	null
+Reviews In The Neurosciences	\bReviews.*\bIn.*\bThe.*\bNeurosciences.*	null	null
+Revista De Investigacion Clinica Clinical and Translational Investigation	\bRevista.*\bDe.*\bInvestigacion.*\bClinica.*\bClinical.*\band.*\bTranslational.*\bInvestigation.*	null	null
+Revista De Neurologia	\bRevista.*\bDe.*\bNeurologia.*	null	null
+Revista Espanola De Cardiologia	\bRevista.*\bEspanola.*\bDe.*\bCardiologia.*	null	null
+Revista Espanola De Enfermedades Digestivas	\bRevista.*\bEspanola.*\bDe.*\bEnfermedades.*\bDigestivas.*	null	null
+Revista Espanola de las Enfermedades del Aparato Digestivo	\bRevista.*\bEspanola.*\bde.*\blas.*\bEnfermedades.*\bdel.*\bAparato.*\bDigestivo.*	null	null
+Revista Medica De Chile	\bRevista.*\bMedica.*\bDe.*\bChile.*	null	null
+Revista Panamericana De Salud Publica pan American Journal Of Public Health	\bRevista.*\bPanamericana.*\bDe.*\bSalud.*\bPublica.*\bpan.*\bAmerican.*\bJournal.*\bOf.*\bPublic.*\bHealth.*	null	null
+Revista de Investigacion Clinica	\bRevista.*\bde.*\bInvestigacion.*\bClinica.*	null	null
+Revista de investigacion clinica organo del Hospital de Enfermedades de la Nutricion	\bRevista.*\bde.*\binvestigacion.*\bclinica.*\borgano.*\bdel.*\bHospital.*\bde.*\bEnfermedades.*\bde.*\bla.*\bNutricion.*	null	null
+Revista panamericana de salud publica	\bRevista.*\bpanamericana.*\bde.*\bsalud.*\bpublica.*	null	null
+Rivista Italiana Di Pediatria Italian Journal of Pediatrics	\bRivista.*\bItaliana.*\bDi.*\bPediatria.*\bItalian.*\bJournal.*\bof.*\bPediatrics.*	null	null
+Rivista Italiana di Pediatria	\bRivista.*\bItaliana.*\bdi.*\bPediatria.*	null	null
+Rivista sperimentale di freniatria	\bRivista.*\bsperimentale.*\bdi.*\bfreniatria.*	null	null
+Rofo	\bRofo.*	null	null
+Rofo Fortschr Geb Rontgenstr Neuen Bildgebenden Verfahren	\bRofo.*\bFortschr.*\bGeb.*\bRontgenstr.*\bNeuen.*\bBildgebenden.*\bVerfahren.*	null	null
+Rofo Fortschr Geb Rontgenstrahlen Bildgeb Verfahr	\bRofo.*\bFortschr.*\bGeb.*\bRontgenstrahlen.*\bBildgeb.*\bVerfahr.*	null	null
+Rofo Fortschritte auf dem Gebiet der Rontgenstrahlen und der Bildgebenden Verfahren	\bRofo.*\bFortschritte.*\bauf.*\bdem.*\bGebiet.*\bder.*\bRontgenstrahlen.*\bund.*\bder.*\bBildgebenden.*\bVerfahren.*	null	null
+Rofo Fortschritte auf dem Gebiete der Rontgenstrahlen und der Neuen Bildgebenden Verfahren	\bRofo.*\bFortschritte.*\bauf.*\bdem.*\bGebiete.*\bder.*\bRontgenstrahlen.*\bund.*\bder.*\bNeuen.*\bBildgebenden.*\bVerfahren.*	null	null
+Rofo Fortschritte auf dem Gebiete der Rontgenstrahlen und der Nuklearmedizin	\bRofo.*\bFortschritte.*\bauf.*\bdem.*\bGebiete.*\bder.*\bRontgenstrahlen.*\bund.*\bder.*\bNuklearmedizin.*	null	null
+Rofo Und Der Nuklearmedizin	\bRofo.*\bUnd.*\bDer.*\bNuklearmedizin.*	null	null
+Rofo und der Nuklearmedizin	\bRofo.*\bund.*\bder.*\bNuklearmedizin.*	null	null
+Rontgenpraxis	\bRontgenpraxis.*	null	null
+Rontgenpraxis zeitschrift fur radiologische technik	\bRontgenpraxis.*\bzeitschrift.*\bfur.*\bradiologische.*\btechnik.*	null	null
+S Afr Med J	\bS.*\bAfr.*\bMed.*\bJ.*	null	null
+Saudi Journal Of Kidney Diseases And Transplantation	\bSaudi.*\bJournal.*\bOf.*\bKidney.*\bDiseases.*\bAnd.*\bTransplantation.*	null	null
+Schweizerische Rundschau Fur Medizin	\bSchweizerische.*\bRundschau.*\bFur.*\bMedizin.*	null	null
+Sem Hop	\bSem.*\bHop.*	null	null
+Sem Hop Paris	\bSem.*\bHop.*\bParis.*	null	null
+Semaine des Hopitaux	\bSemaine.*\bdes.*\bHopitaux.*	null	null
+Semin Thromb Hemost	\bSemin.*\bThromb.*\bHemost.*	null	null
+Seminars In Thrombosis And Hemostasis	\bSeminars.*\bIn.*\bThrombosis.*\bAnd.*\bHemostasis.*	null	null
+South African Medical Journal	\bSouth.*\bAfrican.*\bMedical.*\bJournal.*	null	null
+Sov Med	\bSov.*\bMed.*	null	null
+Sovetskaia meditsina	\bSovetskaia.*\bmeditsina.*	null	null
+Stroke	\bStroke.*	null	null
+Stroke a journal of cerebral circulation	\bStroke.*\ba.*\bjournal.*\bof.*\bcerebral.*\bcirculation.*	null	null
+Substance Abuse	\bSubstance.*\bAbuse.*	null	null
+Surg Endosc	\bSurg.*\bEndosc.*	null	null
+Surg Laparosc Endosc Percutan Tech	\bSurg.*\bLaparosc.*\bEndosc.*\bPercutan.*\bTech.*	null	null
+Surg Today	\bSurg.*\bToday.*	null	null
+Surgical Endoscopy and Other Interventional Techniques	\bSurgical.*\bEndoscopy.*\band.*\bOther.*\bInterventional.*\bTechniques.*	null	null
+Surgical Laparoscopy Endoscopy Percutaneous Techniques	\bSurgical.*\bLaparoscopy.*\bEndoscopy.*\bPercutaneous.*\bTechniques.*	null	null
+Surgical endoscopy	\bSurgical.*\bendoscopy.*	null	null
+Swiss Med	\bSwiss.*\bMed.*	null	null
+Tex Med	\bTex.*\bMed.*	null	null
+Texas Medicine	\bTexas.*\bMedicine.*	null	null
+Texas medicine	\bTexas.*\bmedicine.*	null	null
+Thorac Cardiovasc Surg	\bThorac.*\bCardiovasc.*\bSurg.*	null	null
+Thoracic and Cardiovascular Surgeon	\bThoracic.*\band.*\bCardiovascular.*\bSurgeon.*	null	null
+Thoraxchir Vask Chir	\bThoraxchir.*\bVask.*\bChir.*	null	null
+Tieraerztliche Praxis Ausgabe Kleintiere Heimtiere	\bTieraerztliche.*\bPraxis.*\bAusgabe.*\bKleintiere.*\bHeimtiere.*	null	null
+Tierarztl Prax Ausg K Kleintiere Heimtiere	\bTierarztl.*\bPrax.*\bAusg.*\bK.*\bKleintiere.*\bHeimtiere.*	null	null
+Tierarztliche Praxis Ausgabe K	\bTierarztliche.*\bPraxis.*\bAusgabe.*\bK.*	null	null
+Tierarztliche Praxis Ausgabe K Kleintiere	\bTierarztliche.*\bPraxis.*\bAusgabe.*\bK.*\bKleintiere.*	null	null
+Transplantation	\bTransplantation.*	null	null
+Ulus Travma Acil Cerrahi Derg	\bUlus.*\bTravma.*\bAcil.*\bCerrahi.*\bDerg.*	null	null
+Ulusal Travma ve Acil Cerrahi Dergisi	\bUlusal.*\bTravma.*\bve.*\bAcil.*\bCerrahi.*\bDergisi.*	null	null
+Ulusal travma ve acil cerrahi dergisi Turkish journal of trauma emergency surgery	\bUlusal.*\btravma.*\bve.*\bacil.*\bcerrahi.*\bdergisi.*\bTurkish.*\bjournal.*\bof.*\btrauma.*\bemergency.*\bsurgery.*	null	null
+Un med canada	\bUn.*\bmed.*\bcanada.*	null	null
+Union Med Can	\bUnion.*\bMed.*\bCan.*	null	null
+Urol J	\bUrol.*\bJ.*	null	null
+Vasc Endovasc Surg	\bVasc.*\bEndovasc.*\bSurg.*	null	null
+Vascular Surgery	\bVascular.*\bSurgery.*	null	null
+Vascular and Endovascular Surgery	\bVascular.*\band.*\bEndovascular.*\bSurgery.*	null	null
+Vet Ital	\bVet.*\bItal.*	null	null
+Veterinaria Italiana	\bVeterinaria.*\bItaliana.*	null	null
+World J Gastroenterol	\bWorld.*\bJ.*\bGastroenterol.*	null	null
+World journal of gastroenterology	\bWorld.*\bjournal.*\bof.*\bgastroenterology.*	null	null
+Z Gastroenterol	\bZ.*\bGastroenterol.*	null	null
+Z Gesamte Exp Med	\bZ.*\bGesamte.*\bExp.*\bMed.*	null	null
+Z Tropenmed Parasit	\bZ.*\bTropenmed.*\bParasit.*	null	null
+Zbl	\bZbl.*	null	\bZ.*\bb.*\bl.*
+Zdrav Prac	\bZdrav.*\bPrac.*	null	null
+Zdravotnicka pracovnice	\bZdravotnicka.*\bpracovnice.*	null	null
+Zeitschrift Fur Gastroenterologie	\bZeitschrift.*\bFur.*\bGastroenterologie.*	null	null
+Zeitschrift fur Die Gesamte Experimentelle Medizin	\bZeitschrift.*\bfur.*\bDie.*\bGesamte.*\bExperimentelle.*\bMedizin.*	null	null
+Zeitschrift fur Tropenmedizin und Parasitologie	\bZeitschrift.*\bfur.*\bTropenmedizin.*\bund.*\bParasitologie.*	null	null
+Zentralbl Allg Path Path Anat	\bZentralbl.*\bAllg.*\bPath.*\bPath.*\bAnat.*	null	null
+Zentralbl Allg Pathol	\bZentralbl.*\bAllg.*\bPathol.*	null	null
+Zentralbl Chir	\bZentralbl.*\bChir.*	null	null
+Zentralbl Gynakol	\bZentralbl.*\bGynakol.*	null	null
+Zentralblatt fur Chirurgie	\bZentralblatt.*\bfur.*\bChirurgie.*	null	null
+Zentralblatt fur allgemeine Pathologie u pathologische Anatomie	\bZentralblatt.*\bfur.*\ballgemeine.*\bPathologie.*\bu.*\bpathologische.*\bAnatomie.*	null	null
+Zh Obshch Biol	\bZh.*\bObshch.*\bBiol.*	null	null
+Zhong Nan Da Xue Xue Bao Yi Xue Ban	\bZhong.*\bNan.*\bDa.*\bXue.*\bXue.*\bBao.*\bYi.*\bXue.*\bBan.*	null	null
+Zhong nan da xue xue bao Yi xue ban Journal of Central South University Medical sciences	\bZhong.*\bnan.*\bda.*\bxue.*\bxue.*\bbao.*\bYi.*\bxue.*\bban.*\bJournal.*\bof.*\bCentral.*\bSouth.*\bUniversity.*\bMedical.*\bsciences.*	null	null
+Zhongguo Zhong Xi Yi Jie He Xue Hui Zhongguo Zhong Yi Yan Jiu Yuan Zhu Ban	\bZhongguo.*\bZhong.*\bXi.*\bYi.*\bJie.*\bHe.*\bXue.*\bHui.*\bZhongguo.*\bZhong.*\bYi.*\bYan.*\bJiu.*\bYuan.*\bZhu.*\bBan.*	null	null
+Zhongguo Zhong Xi Yi Jie He Za Zhi Chinese Journal of Integrated Traditional and Western Medicine	\bZhongguo.*\bZhong.*\bXi.*\bYi.*\bJie.*\bHe.*\bZa.*\bZhi.*\bChinese.*\bJournal.*\bof.*\bIntegrated.*\bTraditional.*\band.*\bWestern.*\bMedicine.*	null	null
+Zhongguo Zhong Xi Yi Jie He Za Zhi Zhongguo Zhongxiyi Jiehe Zazhi	\bZhongguo.*\bZhong.*\bXi.*\bYi.*\bJie.*\bHe.*\bZa.*\bZhi.*\bZhongguo.*\bZhongxiyi.*\bJiehe.*\bZazhi.*	null	null
+Zhongguo Zhong Xi Yi Jie He Za Zhi Zhongguo Zhongxiyi Jiehe Zazhi Chinese Journal of Integrated Traditional Western Medicine Zhongguo Zhong Xi Yi Jie He Xue Hui Zhongguo Zhong Yi Yan Jiu Yuan Zhu Ban	\bZhongguo.*\bZhong.*\bXi.*\bYi.*\bJie.*\bHe.*\bZa.*\bZhi.*\bZhongguo.*\bZhongxiyi.*\bJiehe.*\bZazhi.*\bChinese.*\bJournal.*\bof.*\bIntegrated.*\bTraditional.*\bWestern.*\bMedicine.*\bZhongguo.*\bZhong.*\bXi.*\bYi.*\bJie.*\bHe.*\bXue.*\bHui.*\bZhongguo.*\bZhong.*\bYi.*\bYan.*\bJiu.*\bYuan.*\bZhu.*\bBan.*	null	null
+Zhonghua Wai Ke Za Zhi	\bZhonghua.*\bWai.*\bKe.*\bZa.*\bZhi.*	null	null
+Zhonghua wai ke za zhi chinese journal of surgery	\bZhonghua.*\bwai.*\bke.*\bza.*\bzhi.*\bchinese.*\bjournal.*\bof.*\bsurgery.*	null	null
+Zhurnal Obshchei Biologii	\bZhurnal.*\bObshchei.*\bBiologii.*	null	null
+Zur Pathologie und Genese alter Pfortaderthrombosen	\bZur.*\bPathologie.*\bund.*\bGenese.*\balter.*\bPfortaderthrombosen.*	null	null
+chinese journal of schistosomiasis control	\bchinese.*\bjournal.*\bof.*\bschistosomiasis.*\bcontrol.*	null	null
+semaine des hopitaux organe fonde par l Association d enseignement medical des hopitaux de Paris	\bsemaine.*\bdes.*\bhopitaux.*\borgane.*\bfonde.*\bpar.*\bl.*\bAssociation.*\bd.*\benseignement.*\bmedical.*\bdes.*\bhopitaux.*\bde.*\bParis.*	null	null

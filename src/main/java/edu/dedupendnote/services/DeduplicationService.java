@@ -212,7 +212,7 @@ l						 * 		V 		W 		X
 	}
 
 	private boolean containsDuplicateIds(List<BibliographicItem> bibliographicItems) {
-		return !bibliographicItems.stream().map(BibliographicItem::getId).allMatch(new HashSet<>()::add);
+		return !bibliographicItems.stream().map(b -> b.getId()).allMatch(new HashSet<>()::add);
 	}
 
 	public String deduplicateOneFile(Path inputPath, DeduplicationMode mode, Consumer<String> progressReporter) {
