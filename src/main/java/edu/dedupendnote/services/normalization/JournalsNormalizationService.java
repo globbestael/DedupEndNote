@@ -56,7 +56,8 @@ public class JournalsNormalizationService {
 	/**
 	 * "Jbr-btr" (case insensitive): will be replaced by "JBR BTR". Cheater!
 	 */
-	private static final Pattern JOURNAL_ABBREVIATION_JBR_PATTERN = Pattern.compile("Jbr-btr", Pattern.CASE_INSENSITIVE);
+	private static final Pattern JOURNAL_ABBREVIATION_JBR_PATTERN = Pattern.compile("Jbr-btr",
+			Pattern.CASE_INSENSITIVE);
 
 	/**
 	 * "Jpn": will be replaced by "Japanese"
@@ -186,18 +187,31 @@ public class JournalsNormalizationService {
 		 */
 		Set<String> journalSet = new HashSet<>();
 		String[] parts = null;
+		List<String> journalParts = null;
 		/*
 		 * Don't use "." as split character for J2 content because field often has content as "Clin. Med.J. R. Coll. Phys. Lond."
 		 */
 		if ("J2".equals(fieldName)) {
 			parts = journal.split("[\\[\\]]|[=|/]");
+			journalParts = Arrays.asList(parts);
 		} else {
 			parts = journal.split("[\\[\\]]|[=|/]|([.] )");
+			journalParts = Arrays.asList(parts);
+			if (journalParts.contains("J") || journalParts.contains("Amer") || journalParts.contains("Brit")) {
+				journalParts = null;
+				journalSet.add(journal);
+			}
 		}
-		journalSet.addAll(Arrays.asList(parts));
-		if (parts.length > 1) {
-			journalSet.add(journal);
+		if (journalParts != null) {
+			journalSet.addAll(journalParts);
+			if (journalParts.size() > 1) {
+				journalSet.add(journal);
+			}
 		}
+		// journalSet.addAll(Arrays.asList(parts));
+		// if (parts.length > 1) {
+		// 	journalSet.add(journal);
+		// }
 		/*
 		 * Journals with a ":" will get 2 variants. e.g
 		 * "BJOG: An International Journal of Obstetrics and Gynaecology" or
