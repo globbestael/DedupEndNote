@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Update CLAUDE.md (same commit as the code change) when any of the following change:
 
-- Test class renamed, added, deleted, or reclassified → also update `docs/test-hierarchy.md`
+- Test class renamed, added, deleted, or reclassified → also update `docs/testing-guide.md`
 - New service introduced or existing service's responsibility changed → also update `docs/architecture.html`
 - Algorithm step, threshold, or special-type handling changed → also update `docs/algorithm.md`
 - Domain term or mode definition changed → also update `CONTEXT.md`
@@ -24,7 +24,7 @@ Update CLAUDE.md (same commit as the code change) when any of the following chan
 | Domain term meanings (Bibliographic Item, Duplicate Set, Modes, item types, validation) | [CONTEXT.md](CONTEXT.md) |
 | Pipeline diagram, service responsibilities, sequence diagram | [docs/architecture.html](docs/architecture.html) |
 | Algorithm steps, threshold values, INSUFFICIENT_DATA, special types, enrichment | [docs/algorithm.md](docs/algorithm.md) |
-| Test class listing, base class details, taxonomy, test profile | [docs/test-hierarchy.md](docs/test-hierarchy.md) |
+| Test class listing, base class details, taxonomy, test profile, how to run tests | [docs/testing-guide.md](docs/testing-guide.md) |
 | Commands, coding rules, test structure, config, release | This file (CLAUDE.md) |
 | Architecture decisions (why X, rejected alternatives) | [docs/adr/](docs/adr/) |
 
@@ -135,15 +135,15 @@ Tests live under four roots, each with a corresponding Maven profile:
 | `src/test/java/edu/dedupendnote/integration/browser/` | `browser-tests` / `all-integration-tests` | `@SpringBootTest(RANDOM_PORT)`, real WebSocket | On demand (Chromium required) |
 | `src/test/java/edu/dedupendnote/validation/` | `validation-tests` | `@SpringBootTest` | On demand |
 
-Note: `-Pintegration-tests` excludes `integration/browser/`; `-Pall-integration-tests` includes it.
+Note: `-Pintegration-tests` excludes `integration/browser/`; `-Pall-integration-tests` includes it. The exact glob path-filters for every profile are documented once, in [`docs/testing-guide.md`](docs/testing-guide.md) — don't restate them here.
 
 **Integration tests** assert on the string returned by `deduplicateOneFile` (or record counts) on small known inputs — they are regression guards that fail if behaviour changes.
 
 **Validation tests** measure sensitivity/specificity against manually validated truth files in `~/dedupendnote_input_files` (not in git). They are slow and intended to be run before releases or after structural changes, not on every commit.
 
-### Test class hierarchy
+### Full testing guide
 
-See [`docs/test-hierarchy.md`](docs/test-hierarchy.md) for the full per-class listing, base class details, taxonomy, and test profile notes.
+**[`docs/testing-guide.md`](docs/testing-guide.md) is the canonical testing reference** — start there for the per-class listing, base-class hierarchy, taxonomy, profile path-filters, and test utilities. It also carries the "new developer, read in this order" entry point.
 
 ## Plans
 

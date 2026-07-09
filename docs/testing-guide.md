@@ -1,4 +1,12 @@
-# Test class hierarchy
+# Testing guide
+
+This is the canonical reference for how tests are organized in DedupEndNote. **New here? Read in this order:**
+
+1. **[CLAUDE.md](../CLAUDE.md) → Commands / Testing** — how to run tests and which Maven profile does what (quick operational lookup).
+2. **This file** — what tests exist, the base-class hierarchy, the three-category taxonomy, profile activation, and test utilities.
+3. **[CONTEXT.md](../CONTEXT.md) → Validation** — the domain vocabulary the validation tests measure (sensitivity, specificity, TP/FP/FN/TN).
+
+The exact Maven profile path-filters live here (see [Test taxonomy](#test-taxonomy)); CLAUDE.md keeps only the summary table and defers to this file for the glob detail.
 
 ## Unit (`edu.dedupendnote.unit.*`)
 
@@ -40,6 +48,10 @@ Helpers, not test classes (no `@Test` methods), so they are not covered by the M
 
 - **`integration/utils/MemoryAppender`** — a Logback `ListAppender<ILoggingEvent>` that buffers log events in memory and exposes query helpers (`contains`, `search`, `filterByPattern(s)`, `showMessages`, …) for asserting on or extracting logged trace.
 - **`integration/utils/TraceLogCapture`** — `AutoCloseable` fixture that owns the deduplication-trace capture lifecycle: `attach()` raises the canonical set of comparison loggers (`TRACE_LOGGER_NAMES`) to `TRACE` and wires up a `MemoryAppender`; `close()` restores each logger's original level (per-logger) and detaches the appender. Holds the single source of truth for the logger list and the trace-line `TRACE_PATTERNS` (step 0 = year pre-check, steps 1-4 = the comparison algorithm). Used by `MissedDuplicatesTests` (via `@BeforeEach`/`@AfterEach`) and `ValidationService#writeFNandFPresults` (via try-with-resources).
+
+- **`integration/utils/TraceLogCapture`** — `AutoCloseable` fixture that owns the deduplication-trace capture lifecycle: `attach()` raises the canonical set of comparison loggers (`TRACE_LOGGER_NAMES`) to `TRACE` and wires up a `MemoryAppender`; `close()` restores each logger's original level (per-logger) and detaches the appender. Holds the single source of truth for the logger list and the trace-line `TRACE_PATTERNS` (step 0 = year pre-check, steps 1-4 = the comparison algorithm). Used by `MissedDuplicatesTests` (via `@BeforeEach`/`@AfterEach`) and `ValidationService#writeFNandFPresults` (via try-with-resources).
+
+The TraceLogCapture shows the outcome of the positive and negative steps in the algorithm. In 'MissedDuplicatesTests' in the log output on screen and 'logs/dedupendnote_tests.log', in 'ValidationTests::checkAllTruthFiles()' there is a test outputfile for all False Positives and for all False Negatives with this trace output.
 
 ## Test taxonomy
 
