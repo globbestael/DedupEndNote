@@ -531,3 +531,21 @@ but this needs an authentication token: see https://docs.github.com/en/apps/crea
 
 see also: REST API endpoints for repository traffic https://docs.github.com/en/rest/metrics/traffic?utm_source=ld246.com&apiVersion=2026-03-10
 
+==================
+- do we know what the influence of the first letter in a JWS comparison
+  on l 76 (after JWS comparison) we disallow this case-insensitive difference
+- size of Patterns, esp with backtracking (".*")
+  - count the number of spaces if the split is on words
+  - count of uppercase letters if the split is on letters
+- what to do in the case in cases where are too many spaces/letters? 
+  - check for every comparison between j1 and j2 if there too many: rather NOT
+  - fill in a pattern which cannot match, e.g. randomUUID?
+  - ask Claude
+- there are cases (but not many) where pattern 2 and pattern 3 are both filled in: can this be avoided
+- does "ACP Journal Club	\bACP.*\bJournal.*\bClub.*	null	null" have no third pattern?
+- why is "N Y State J Med	\bN.*\bY.*\bState.*\bJ.*\bMed.*	null	null" skipped in latest version
+- idem for: "BJOG An International Journal of Obstetrics Gynaecology	\bBJOG.*\bAn.*\bInternational.*\bJournal.*\bof.*\bObstetrics.*\bGynaecology.*	null	null"
+- what is the normalized title for "OP  - 嵌合抗原受体t细胞疗法在乳腺癌中的应用进展." (TIL ID 1142)
+- 2026-07-09T12:51:12.108+02:00 ERROR 3580 --- [main] e.d.validation.ValidationTests           : - Validating BIG_SET
+2026-07-09T12:51:23.380+02:00 ERROR 3580 --- [main] e.d.s.c.DefaultTitleComparisonService    : For publ 22193 or 10772 the titles are too short: '1' or 'portal vein thrombosis with superior mesenteric venous thrombosis a case report and review of the literature'
+
