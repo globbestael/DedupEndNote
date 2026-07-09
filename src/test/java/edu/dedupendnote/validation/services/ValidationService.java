@@ -12,10 +12,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.function.Function;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -24,12 +22,9 @@ import tools.jackson.databind.MappingIterator;
 import tools.jackson.dataformat.csv.CsvMapper;
 import tools.jackson.dataformat.csv.CsvSchema;
 
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.Logger;
-import ch.qos.logback.classic.LoggerContext;
 import edu.dedupendnote.domain.BibliographicItem;
 import edu.dedupendnote.domain.BibliographicItemDB;
-import edu.dedupendnote.integration.utils.MemoryAppender;
+import edu.dedupendnote.integration.utils.TraceLogCapture;
 import edu.dedupendnote.services.DeduplicationService;
 import edu.dedupendnote.services.UtilitiesService;
 import edu.dedupendnote.validation.domain.ValidationResult;
@@ -41,9 +36,6 @@ public class ValidationService {
 
 	@Autowired
 	RecordDBService recordDBService;
-
-	List<Pattern> tracePatterns = List.of(Pattern.compile("- (0|1|2|3|4). .+"),
-			Pattern.compile("\\d+ - \\d+ ARE (NOT )?DUPLICATES"));
 
 	public ValidationResult checkResults(String setName, Path inputPath, Path outputPath, Path truthPath,
 			List<BibliographicItem> bibliographicItems, long durationMs, boolean withTracing,
@@ -186,26 +178,8 @@ public class ValidationService {
 	// @formatter:off
 	private void writeFNandFPresults(Map<Integer, List<List<BibliographicItem>>> pairsList, Path outputPath,
 			DeduplicationService deduplicationService) {
-		List<Logger> loggers = new ArrayList<>();
-		List<String> loggerNames = List.of(
-			"edu.dedupendnote.services.DeduplicationService",
-			"edu.dedupendnote.services.DefaultAuthorsComparisonService",
-			"edu.dedupendnote.services.ValidationTests" // add this file because of trace on bibliographicItem year
-		);
-		Level oldLevel = null;
-
-		try (BufferedWriter bw = Files.newBufferedWriter(outputPath)) {
-			MemoryAppender memoryAppender = new MemoryAppender();
-			for (String loggerName : loggerNames) {
-				Logger logger = (Logger) LoggerFactory.getLogger(loggerName);
-				oldLevel = logger.getLevel();
-				logger.setLevel(Level.TRACE);
-				logger.addAppender(memoryAppender);
-				loggers.add(logger);
-			}
-			memoryAppender.setContext((LoggerContext) LoggerFactory.getILoggerFactory());
-			memoryAppender.start();
-
+		try (BufferedWriter bw = Files.newBufferedWriter(outputPath);
+				TraceLogCapture capture = TraceLogCapture.attach()) {
 			for (List<List<BibliographicItem>> pairs : pairsList.values()) {
 				for (List<BibliographicItem> pair : pairs) {
 					bw.write(pair.get(0).toString());
@@ -231,20 +205,16 @@ public class ValidationService {
 					}
 
 					bw.write("\nANALYSIS:\n");
-					for (String s : memoryAppender.filterByPatterns(tracePatterns, Level.TRACE)) {
+					for (String s : capture.tracedMessages()) {
 						bw.write(s + "\n");
 					}
 					bw.write("\n=======================\n");
 
-					memoryAppender.reset();
+					capture.reset();
 				}
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
-		} finally {
-			for (Logger logger : loggers) {
-				logger.setLevel(oldLevel);
-			}
 		}
 	}
 	// @formatter:on

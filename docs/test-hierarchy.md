@@ -34,6 +34,13 @@ Two base classes exist; the choice depends on whether the test needs real HTTP (
 - **`validation/services/RecordDBService`** — test-only Spring `@Service` for reading/writing the tab-delimited DB export format.
 - **`validation/domain/ValidationResult`** — POJO holding per-dataset scores (sensitivity, specificity, precision, accuracy, F1, FN/FP pair maps).
 
+## Test utilities (`edu.dedupendnote.integration.utils.*`)
+
+Helpers, not test classes (no `@Test` methods), so they are not covered by the Maven profile path filters directly — they are compiled and used by the classes that reference them.
+
+- **`integration/utils/MemoryAppender`** — a Logback `ListAppender<ILoggingEvent>` that buffers log events in memory and exposes query helpers (`contains`, `search`, `filterByPattern(s)`, `showMessages`, …) for asserting on or extracting logged trace.
+- **`integration/utils/TraceLogCapture`** — `AutoCloseable` fixture that owns the deduplication-trace capture lifecycle: `attach()` raises the canonical set of comparison loggers (`TRACE_LOGGER_NAMES`) to `TRACE` and wires up a `MemoryAppender`; `close()` restores each logger's original level (per-logger) and detaches the appender. Holds the single source of truth for the logger list and the trace-line `TRACE_PATTERNS` (step 0 = year pre-check, steps 1-4 = the comparison algorithm). Used by `MissedDuplicatesTests` (via `@BeforeEach`/`@AfterEach`) and `ValidationService#writeFNandFPresults` (via try-with-resources).
+
 ## Test taxonomy
 
 Test files follow a three-category taxonomy per field: **Normalization** (`*NormalizationServiceTest` for concrete service classes; `NormalizationService*Test` for base-class topics like DOI, ISSN, text) / **Comparison** (`Default*ComparisonServiceTest`, boolean result from `compare()` or equivalent static helpers) / **JWSimilarity** (`JWSimilarity*Test`, raw JWS score vs threshold). Files are further split by Spring-context requirement and mirror the production subfolder structure (`services/comparison/`, `services/normalization/`).

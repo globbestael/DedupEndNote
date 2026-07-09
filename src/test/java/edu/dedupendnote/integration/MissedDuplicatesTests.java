@@ -3,22 +3,16 @@ package edu.dedupendnote.integration;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.regex.Pattern;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.Logger;
-import ch.qos.logback.classic.LoggerContext;
 import edu.dedupendnote.services.DeduplicationService;
 import edu.dedupendnote.domain.DeduplicationMode;
-import edu.dedupendnote.integration.utils.MemoryAppender;
+import edu.dedupendnote.integration.utils.TraceLogCapture;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -26,41 +20,21 @@ class MissedDuplicatesTests extends AbstractIntegrationTest {
 	@Autowired
 	DeduplicationService deduplicationService;
 
-	private final MemoryAppender memoryAppender = new MemoryAppender();
+	private TraceLogCapture capture;
 
-	//	static Logger logger = null;
-
-	List<Pattern> tracePatterns = List.of(Pattern.compile("- (1|2|3|4). .+"),
-			Pattern.compile("\\d+ - \\d+ ARE (NOT )?DUPLICATES"));
-
-	/*
-	 * For each source in the @ParameterizedTest a new memoryAppender is added.
-	 *
-	 * Trying to reuse the memoryAppender (even by giving it a name) doesn't work.
-	 *
-	 * FIXME: There is a big overlap with ValidationTests::writeFNandFPresults in initialization of the memoryAppender
-	 */
 	@BeforeEach
 	void initTestDir() {
 		testDir = baseDir.resolve("integration/missed_duplicates");
 	}
 
 	@BeforeEach
-	void addMemoryAppender() {
-		List<Logger> loggers = new ArrayList<>();
-		List<String> loggerNames = List.of("edu.dedupendnote.services.DeduplicationService",
-				"edu.dedupendnote.services.DefaultAuthorsComparisonService");
-		// Level oldLevel = null;
+	void addLogCapture() {
+		capture = TraceLogCapture.attach();
+	}
 
-		for (String loggerName : loggerNames) {
-			Logger logger = (Logger) LoggerFactory.getLogger(loggerName);
-			// oldLevel = logger.getLevel();
-			logger.setLevel(Level.TRACE);
-			logger.addAppender(memoryAppender);
-			loggers.add(logger);
-		}
-		memoryAppender.setContext((LoggerContext) LoggerFactory.getILoggerFactory());
-		memoryAppender.start();
+	@AfterEach
+	void detachLogCapture() {
+		capture.close();
 	}
 
 	// @formatter:off
@@ -131,8 +105,8 @@ class MissedDuplicatesTests extends AbstractIntegrationTest {
 		String resultString = deduplicationService.deduplicateOneFile(inputPath, mode, message -> {
 		});
 
-		System.err.println("Messages: " + memoryAppender.filterByPatterns(tracePatterns, Level.TRACE));
-		assertThat(memoryAppender.filterByPatterns(tracePatterns, Level.TRACE).size()).isGreaterThan(0);
+		System.err.println("Messages: " + capture.tracedMessages());
+		assertThat(capture.tracedMessages().size()).isGreaterThan(0);
 		assertThat(resultString).isEqualTo(deduplicationService.formatResultString(total, totalWritten));
 	}
 
