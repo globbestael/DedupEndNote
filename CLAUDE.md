@@ -65,7 +65,7 @@ See [`docs/architecture.html`](docs/architecture.html) for the pipeline diagram,
 ### Key packages
 - `controllers/` — HTTP endpoints; file upload and dedup triggers; delegates run lifecycle (concurrency cap, timeout, cancel) to `BoundedDedupRunner`; per-IP upload rate limiting (`RateLimitInterceptor`); baseline security response headers (`SecurityHeadersFilter`); WebSocket progress routing
 - `domain/` — `BibliographicItem` (core model), `BibliographicItemDB` (in-memory store), `DeduplicationMode` (enum: `REMOVE` / `MARK`)
-- `services/` — `DeduplicationService`, `BibliographicItemReader`, `BibliographicItemWriter`, `EnrichmentService`, `UtilitiesService`, `BoundedDedupRunner` (run orchestration: bounded concurrency permit + per-run timeout + cancel-by-session; guarantees permit release on every outcome)
+- `services/` — `DeduplicationService`, `BibliographicItemReader`, `BibliographicItemWriter`, `EnrichmentService`, `UtilitiesService`, `BoundedDedupRunner` (run orchestration: bounded concurrency permit + per-run timeout + cancel-by-session; guarantees permit release on every outcome), `SessionDirectoryReaper` (opt-in scheduled cleanup of stale session upload dirs; see Configuration)
 - `services/comparison/` — four `*ComparisonService` interfaces, four `Default*ComparisonService` implementations, three `*Thresholds` value objects, `FieldComparators` record, `BoundedPatternCache` (size-bounded LRU of compiled journal-name patterns)
 - `services/normalization/` — `NormalizationService` plus four `*NormalizationService` classes
 
@@ -157,6 +157,7 @@ Filename format: `YYYY-MM-DD-HHMM-<slug>.md`, where the date/time is the commit 
 - `server.port=9777`
 - `spring.servlet.multipart.max-file-size=150MB`
 - `dedup.upload-dir` — directory for uploaded/output files
+- `dedup.session-reaper.enabled` (default `false`) — opt-in `@Scheduled` cleanup of stale per-session upload dirs, an in-process alternative to the cron stop/restart cleanup. When `false` the `SessionReaperConfiguration` is skipped entirely (no bean, no scheduling). Tunables: `dedup.session-reaper.max-age-hours` (24), `dedup.session-reaper.interval-ms` (3600000). Evaluated at startup only.
 
 ### Version number
 
