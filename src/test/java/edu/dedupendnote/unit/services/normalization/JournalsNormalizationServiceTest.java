@@ -20,6 +20,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 class JournalsNormalizationServiceTest {
 
+	private final BibliographicItemReader reader = new BibliographicItemReader();
+
 	@ParameterizedTest(name = "{index}: normalizeJournal({0})={1}")
 	@MethodSource("journalArgumentProvider")
 	void normalizeJournalTest(String input, String expected) {
@@ -34,7 +36,7 @@ class JournalsNormalizationServiceTest {
 	@MethodSource("slashArgumentProvider")
 	void slashTest(String input1, List<String> list) {
 		BibliographicItem p1 = new BibliographicItem();
-		BibliographicItemReader.addNormalizedJournal(input1, p1, "T2");
+		reader.addNormalizedJournal(input1, p1, "T2");
 
 		for (String j : p1.getJournals()) {
 			log.error("For input '{}': {}", input1, j);
@@ -45,7 +47,7 @@ class JournalsNormalizationServiceTest {
 	@Test
 	void journalWithSquareBracketsAtEnd() {
 		BibliographicItem p1 = new BibliographicItem();
-		BibliographicItemReader.addNormalizedJournal("Zhonghua wai ke za zhi [Chinese journal of surgery]", p1, "T2");
+		reader.addNormalizedJournal("Zhonghua wai ke za zhi [Chinese journal of surgery]", p1, "T2");
 
 		assertThat(p1.getJournals()).hasSize(3);
 		assertThat(p1.getJournals()).containsAll(Set.of("Zhonghua wai ke za zhi", "Chinese journal of surgery",
@@ -56,12 +58,24 @@ class JournalsNormalizationServiceTest {
 	void journalWithSquareBracketsAtStart() {
 		BibliographicItem p1 = new BibliographicItem();
 
-		BibliographicItemReader.addNormalizedJournal("[Rinsho ketsueki] The Japanese journal of clinical hematology", p1, "T2");
+		reader.addNormalizedJournal("[Rinsho ketsueki] The Japanese journal of clinical hematology", p1, "T2");
 
 		assertThat(p1.getJournals()).hasSize(3);
 		// The variant with both parts has NOT removed the leading article of second part
 		assertThat(p1.getJournals()).containsAll(Set.of("Rinsho ketsueki", "Japanese journal of clinical hematology",
 				"Rinsho ketsueki The Japanese journal of clinical hematology"));
+	}
+
+	@Test
+	void normalizeJournal_capsLengthAt150_andStaysStripped() {
+		// 300 chars; a 150-char cut lands on a space boundary, so this also guards the
+		// truncate-before-strip ordering (a strip-then-truncate bug would leave trailing space).
+		String overlength = "ab ".repeat(100);
+
+		String result = JournalsNormalizationService.normalizeJournal(overlength);
+
+		assertThat(result.length()).isLessThanOrEqualTo(150);
+		assertThat(result).isEqualTo(result.strip()); // no leading/trailing whitespace
 	}
 
 	static Stream<Arguments> journalArgumentProvider() {

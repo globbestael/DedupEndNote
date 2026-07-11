@@ -44,16 +44,17 @@ public class BibliographicItem {
 	private Set<String> journals = new HashSet<>();
 
 	/*
-	 * The label field is used internally to mark the duplicate lists: the label of all duplicate bibliographicItems in a set receive the ID
-	 * of the first bibliographicItem of this list. If a bibliographicItem has no duplicates, the label is not set. 
-	 * It is NOT the content of the Label (EndNote field LB) of the EndNote input file. 
-	 * If markMode is set, this field is exported. The original content of the Label field in the EndNote export file is overwritten in this case!
+	 * The label field is used internally to mark the duplicate lists: all duplicate bibliographicItems in a set receive
+	 * the ID of the duplicate set's representative bibliographicItem. If a bibliographicItem has no duplicates, the label is null.
+	 * A negative label means the representative comes from the old file (two-file comparison).
+	 * It is NOT the content of the Label (EndNote field LB) of the EndNote input file.
+	 * In DeduplicationMode.MARK this field is exported. The original content of the Label field in the EndNote export file is overwritten in this case!
 	 */
 	@Nullable
-	private String label;
+	private Integer label;
 
 	/*
-	 * Used for replacing the input pages field in the output file (except for markMode).
+	 * Used for replacing the input pages field in the output file (except for DeduplicationMode.MARK).
 	 * - if null: use the input pages
 	 * - if empty string: do not output any pages field
 	 * - else: use this field instead (typically the long form "102-118" instead of "102-18")
@@ -92,7 +93,6 @@ public class BibliographicItem {
 	private boolean isCochrane = false;
 	private boolean isKeptBibliographicItem = true;
 	private boolean isPhase = false;
-	private boolean isPresentInOldFile = false; // used when comparing 2 files
 
 	/*
 	 * Publications which are replies need special treatment. See the Pattern in the {@link BibliographicItemReader#REPLY_PATTERN}

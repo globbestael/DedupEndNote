@@ -52,6 +52,18 @@ directly. Net change: more code, same semantics, no bug prevented.
 `isPresentInOldFile` is only relevant in Two-file runs. Moving these to a shared `DeduplicationEntry`
 mixes concerns from different modes without making either mode's logic clearer.
 
+## Amendments
+
+**2026-06-29 — `isPresentInOldFile` removed.** Found to be redundant with `id < 0`: both
+fields were set simultaneously when a two-file comparison negated old-file IDs, and all reads
+of the boolean were equivalent to `getId() < 0`. The field was deleted; callers use `getId() < 0`
+/ `getId() > 0` directly.
+
+**2026-06-29 — `isKeptBibliographicItem` reframed (see ADR-0008).** This field is output-phase
+bookkeeping (which item carries the synthesised representation during a REMOVE-mode write pass),
+not comparison-phase domain state. The comparison services still never read or write it — the
+correctness condition above remains satisfied.
+
 ## What to watch for (conditions that would reopen this)
 
 - A comparison service is found to read or mutate `label` or `isKeptBibliographicItem` — that

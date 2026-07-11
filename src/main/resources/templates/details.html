@@ -2336,8 +2336,12 @@
                                 <li>CLAUDE.md</li>
                                 <li>docs/architecture.html</li>
                                 <li>docs/algorithm.md</li>
+                                <li>docs/testing-guide.md</li>
                             </ul>
-                            <p>The docs/adr folder contains ADR's</p>
+                            <p>The docs/adr folder contains Architectural Decision Records (ADR).</p>
+                            <p>MissedDuplicatesTests shows TRACE output for the different comparison steps.
+                                ValidationTests produces text output files with TRACE output for the False Positives and
+                                the False Negatives.</p>
                         </div>
 
                         <div id="validation" style="margin-top: 15px;">
@@ -2346,12 +2350,11 @@
                                 The RDBM used was MS Access (MS Office 2016):</p>
                             <ul>
                                 <li>Because MS Access uses 2 types of Text field (short text: max. 255 characters,
-                                    searchable
-                                    and sortable; long text (formerly known as Memo field): unlimited, not sortable, not
+                                    searchable and sortable; long text (formerly known as Memo field): unlimited, not
+                                    sortable, not
                                     searchable) there are 2 fields for both title and authors</li>
                                 <li>In MS Access the format for all boolean fields was changed to "True/False" (design
-                                    view,
-                                    General tab for these fields)</li>
+                                    view, General tab for these fields)</li>
                             </ul>
 
                             <p>The table for a validation set contains the fields:</p>
@@ -2377,10 +2380,7 @@
                                         <td>INTEGER</td>
                                         <td>NULL</td>
                                         <td>Content of the Label field in Mark mode, i.e. the ID of the first
-                                            bibliographic item in
-                                            a
-                                            duplicate
-                                            set</td>
+                                            bibliographic item in a duplicate set</td>
                                     </tr>
                                     <tr>
                                         <td>correction</td>
@@ -2401,8 +2401,7 @@
                                         <td>BOOLEAN</td>
                                         <td>FALSE</td>
                                         <td>Manually set to TRUE if bibliographic item is indeed a duplicate of the
-                                            bibliographic item with
-                                            DedupID</td>
+                                            bibliographic item with DedupID</td>
                                     </tr>
                                     <tr>
                                         <td>tn</td>
@@ -2415,27 +2414,19 @@
                                         <td>BOOLEAN</td>
                                         <td>FALSE</td>
                                         <td>Manually set to TRUE if DedupEndNote has wrongly identified the
-                                            bibliographic item as a
-                                            duplicate of
-                                            bibliographic item with DedupID.<br />
+                                            bibliographic item as a duplicate of bibliographic item with DedupID.<br />
                                             If the bibliographic item has no duplicates, Correction contains the ID,
-                                            otherwise the
-                                            ID of the
-                                            true duplicate.</td>
+                                            otherwise the ID of the true duplicate.</td>
                                     </tr>
                                     <tr>
                                         <td>fn</td>
                                         <td>BOOLEAN</td>
                                         <td>FALSE</td>
                                         <td>Manually set to TRUE if DedupEndNote has not identified the bibliographic
-                                            item as a
-                                            duplicate.<br />
+                                            item as a duplicate.<br />
                                             The ID of the missed duplicate is stored in Correction.<br />
                                             If the bibliographic item is a False Positive but also has duplicates, it is
-                                            only marked
-                                            as
-                                            False
-                                            Positive: otherwise TP + TN + FP + FN would be greater
+                                            only marked as False Positive: otherwise TP + TN + FP + FN would be greater
                                             than the size of the validation set.
                                         </td>
                                     </tr>
@@ -2452,8 +2443,7 @@
                                         <td>
                                             Authors joined with '; ', truncated at 254 characters<br />
                                             In an MS Access DB: SHORT TEXT (i.e. max. 255 characters), to make the field
-                                            sortable
-                                            and searchable.
+                                            sortable and searchable.
                                         </td>
                                     </tr>
                                     <tr>
@@ -2478,8 +2468,7 @@
                                         <td>
                                             Title, truncated at 254 characters<br />
                                             In an MS Access DB: SHORT TEXT (i.e. max. 255 characters), to make the field
-                                            sortable
-                                            and searchable.
+                                            sortable and searchable.
                                         </td>
                                     </tr>
                                     <tr>
@@ -2553,25 +2542,22 @@
                             <ul>
                                 <li>import the file into the RDBM<br />
                                     <div class="alert alert-danger">When importing this file into MS Access (tab
-                                        delimited, no
-                                        text delimiter) also open the advanced button (and change the encoding to
-                                        UTF-8).
-                                        Without using the advanced button, the "Long text" get truncated, some fields
-                                        are
-                                        considered unparseable, ... Is this the encoding or just the fact that the
-                                        Advanced
-                                        button is used?</div>
+                                        delimited, no text delimiter) also open the advanced button (and change the
+                                        encoding to UTF-8). Without using the advanced button, the "Long text" get
+                                        truncated, some fields are considered unparseable, ... Is this the encoding or
+                                        just the fact that the Advanced button is used?</div>
                                 </li>
                                 <li>validate a number of bibliographic items</li>
                                 <li>select the validated bibliographic items and export them as a tab delimited file.
-                                    (In MS Access:
-                                    select
-                                    the whole set of validated bibliographic items, copy, paste in a text editor, save)
+                                    (In MS Access: select the whole set of validated bibliographic items, copy, paste in
+                                    a text editor, save)
                                 </li>
                             </ul>
                             <div>"ValidationTests.java" has tests for comparing the results of a new version of
-                                DedupEndNote
-                                with the validated set (exported as a tab delimited file).</div>
+                                DedupEndNote with the validated set (exported as a tab delimited file).
+                                For each in individual test set the test produces a text file with all False Positive
+                                results
+                                and a text file with all False Negative results and TRACE level output.</div>
                         </div>
                         <div id="logging" style="margin-top: 15px;">
                             <h3>3. Logging and log levels</h3>
@@ -2599,9 +2585,9 @@
                                     </div>
                                 </li>
                             </ul>
-                            <p>Do not set the level to TRACE. The log file will be flooded, and the program may come to
-                                a halt.<br />
-                                The test file MissedDuplicatesTests.java uses the level TRACE.
+                            <p>Do not set the level to TRACE in the production profile. The log file will be flooded,
+                                and the program may come to a halt.<br />
+                                The test files MissedDuplicatesTests.java and ValidationTests use the level TRACE.
                             </p>
                         </div>
                     </div>

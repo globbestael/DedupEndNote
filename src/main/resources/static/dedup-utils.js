@@ -1,4 +1,5 @@
 var stompClient = null;
+var dedupFinished = false;
 
 function hideDiv(id) {
 	$(id).removeClass('d-block');
@@ -59,14 +60,17 @@ function connect() {
 	stompClient.debug = null;
 	stompClient.connect({}, function (frame) {
 		stompClient.subscribe('/topic/messages-' + wssessionId, function (stompMessage) {
+			if (dedupFinished) return;
 			let message = JSON.parse(stompMessage.body).name
 			if (message.match("^DONE")) {
+				dedupFinished = true;
 				showProgress(0);
 				$('#results').text(message);
 				enableButton('#buttonResultFile');
 				markAsDone('#step2');
 				markAsActive('#step3');
 			} else if (message.match("^ERROR")) {
+				dedupFinished = true;
 				$('#results').removeClass('alert-warning');
 				$('#results').addClass('alert-danger');
 				$('#results').text(message);

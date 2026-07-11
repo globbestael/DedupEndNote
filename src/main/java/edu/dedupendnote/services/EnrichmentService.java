@@ -17,18 +17,23 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class EnrichmentService {
 
+	/*
+	 * Synthesises the representation of each duplicate set from its members:
+	 * marks which items are not the representative (isKeptBibliographicItem = false),
+	 * then enriches the representative with data from the others (DOIs, year, pages, title).
+	 * Called only in REMOVE mode.
+	 */
 	public void enrich(List<BibliographicItem> bibliographicItems) {
 		log.debug("Start enrich");
-		// First the bibliographicItems with duplicates
-		Map<String, List<BibliographicItem>> labelMap = bibliographicItems.stream()
-				// when comparing 2 files, duplicates from the old file start with "-"
-				.filter(r -> r.getLabel() != null && !r.getLabel().startsWith("-"))
+		Map<Integer, List<BibliographicItem>> labelMap = bibliographicItems.stream()
+				// when comparing 2 files, duplicates of old-file items have a negative label
+				.filter(r -> r.getLabel() != null && r.getLabel() >= 0)
 				.collect(Collectors.groupingBy(BibliographicItem::getLabel));
 		log.debug("Number of duplicate lists {}, and IDs of kept bibliographicItems: {}", labelMap.size(),
 				labelMap.keySet());
 		List<BibliographicItem> bibliographicItemList;
 		if (!labelMap.isEmpty()) {
-			for (Map.Entry<String, List<BibliographicItem>> entry : labelMap.entrySet()) {
+			for (Map.Entry<Integer, List<BibliographicItem>> entry : labelMap.entrySet()) {
 				bibliographicItemList = entry.getValue();
 				BibliographicItem bibliographicItemToKeep = bibliographicItemList.remove(0);
 				log.debug("Kept: {}: {}", bibliographicItemToKeep.getId(),
@@ -38,10 +43,8 @@ public class EnrichmentService {
 					It may look a bit strange to call setKeptBibliographicItem on the BibliographicItems in this
 					enrich function, but calling it in the compareSet function is wrong: it is a no-op in MARK mode,
 					and enrich is only called in REMOVE mode.
-				
-					This could be called before the call to enrich(), but the creation of the 
-						Map<String, List<BibliographicItem>> labelMaplabelMap
-					would then be duplicated.
+					This field originally had a role in the deduplication phase,
+					now it only has a role in the output phase.
 				
 					An older comment also said:
 					Don't set keptPublication in compareSet(): trouble when multiple duplicates and no bibliographicItem year
@@ -99,11 +102,6 @@ public class EnrichmentService {
 							.ifPresent(r -> bibliographicItemToKeep.setPublicationYear(r.getPublicationYear()));
 				}
 
-				if (bibliographicItemToKeep.isCochrane() && bibliographicItemToKeep.getPagesOutput() != null) {
-					// replaceCochranePageStart(bibliographicItemToKeep, bibliographicItemList);
-					bibliographicItemToKeep.setPagesOutput(bibliographicItemToKeep.getPagesOutput().toUpperCase());
-				}
-
 				// Add missing pagesOutput
 				if (bibliographicItemToKeep.getPagesOutput() == null
 						|| bibliographicItemToKeep.getPagesOutput().isEmpty()) {
@@ -125,21 +123,33 @@ public class EnrichmentService {
 			}
 		}
 
-		// Then the Cochrane bibliographicItems without duplicates
-		for (BibliographicItem r : bibliographicItems) {
-			if (r.isCochrane() && r.getLabel() == null && r.getPagesOutput() != null) {
-				// replaceCochranePageStart(r, Collections.emptyList());
-				r.setPagesOutput(r.getPagesOutput().toUpperCase());
-			}
-		}
+		// In two-file mode: new-file items that are duplicates of old-file items have label < 0.
+		// They were not processed by the loop above (which only handles label >= 0 sets).
+		// Mark them as not-kept so the writer skips them.
+		bibliographicItems.stream().filter(r -> r.getId() > 0 && r.getLabel() != null && r.getLabel() < 0)
+				.forEach(r -> r.setKeptBibliographicItem(false));
 
 		log.debug("Finished enrich");
 	}
 
 	/*
+	 * Uppercases pagesOutput for all kept Cochrane items (both those in duplicate sets
+	 * and singletons). Must be called after enrich() so isKeptBibliographicItem is set.
+	 * Called only in REMOVE mode.
+	 */
+	public void enrichCochrane(List<BibliographicItem> bibliographicItems) {
+		for (BibliographicItem r : bibliographicItems) {
+			if (r.isKeptBibliographicItem() && r.isCochrane() && r.getPagesOutput() != null) {
+				r.setPagesOutput(r.getPagesOutput().toUpperCase());
+			}
+		}
+	}
+
+	/*
 	 * Applies enriched BibliographicItem data to the raw RIS field map assembled by BibliographicItemWriter
 	 * from the original input file. Called once per Kept Bibliographic Item during Remove Mode writing.
-	 * Complements enrich(): that method populates the domain object; this one projects those values —
+	 * Complements enrich(): that method enriches the bibliographicItem that was kept with data from the other
+	 * bibliographicItems in the same DuplicateSet.  This method projects values from the kept bibliographicItem —
 	 * plus RIS-map-specific enrichments (T2 from J2, ClinicalTrials.gov URL, author cleanup) — onto the map.
 	 */
 	public void enrichMap(Map<String, String> map, BibliographicItem bibliographicItem) {

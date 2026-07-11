@@ -15,12 +15,20 @@ RuntimeException
   └─ DeduplicationException          (base; carries getErrorMessage())
        ├─ InvalidRisFileException    (reparented; was extends RuntimeException)
        ├─ RecordCapExceededException (new; thrown by checkRecordCap / two-file cap block)
-       └─ DuplicateIdsException      (new; thrown by doSanityChecks)
+       ├─ DuplicateIdsException      (new; thrown by doSanityChecks)
+       └─ CancelledException         (new; thrown by compareSet / readBibliographicItems
+                                      when Thread.currentThread().isInterrupted())
 ```
 
 **Service contract:** `deduplicateOneFile` and `deduplicateTwoFiles` now throw a `DeduplicationException` subclass on any hard failure and return only a `"DONE: …"` string on success. `doSanityChecks` is `void`; `checkRecordCap` is `void`.
 
-**Controller boundary:** `runDedup` catches `ExecutionException` from `future.get(…)`. If the cause is a `DeduplicationException`, it sends `getErrorMessage()` to the WebSocket progress reporter and returns `ResponseEntity.ok(new ApiResponse(message))` — preserving the existing HTTP contract (200 with an error string in the body, displayed by the client JS). Any other `ExecutionException` is rethrown.
+**Controller boundary:** `runDedup` catches exceptions from `future.get(…)` at three levels:
+
+1. `java.util.concurrent.CancellationException` — thrown by `future.get()` when `future.cancel(true)` has been called (the primary user-cancel path). The partial output file is deleted before responding.
+2. `ExecutionException` where cause is `CancelledException` — safety-net path if the task thread throws before `future.get()` detects the cancellation. Also deletes the partial output file.
+3. `ExecutionException` where cause is any other `DeduplicationException` — sends `getErrorMessage()` to the WebSocket progress reporter and returns `ResponseEntity.ok(new ApiResponse(message))`.
+
+Any other `ExecutionException` is rethrown. All error messages use the `"ERROR: …"` prefix so the browser's terminal-message latch (`dedupFinished` flag) recognises them uniformly alongside `"DONE: …"`. See ADR-0009 for the full cancel design.
 
 **Field initializer:** `maxRecords = 100000` is set as a Java field initializer in addition to the `@Value` annotation, so hand-built instances get the correct default and `@Value` can still override it for Spring-managed beans.
 
@@ -49,4 +57,5 @@ A single `RecordCapExceededException`, caught at the controller. The other hard 
 ## What to watch for (conditions that would reopen this)
 
 - A future hard failure is added to the service. It must throw a `DeduplicationException` subclass — not return a string. This is the only pattern now.
-- The HTTP contract is revisited (e.g. returning a non-200 status for deduplication errors). At that point the `ResponseEntity.ok(…)` in the `catch (ExecutionException)` block should be updated; the exception hierarchy itself is unaffected.
+- The HTTP contract is revisited (e.g. returning a non-200 status for deduplication errors). At that point the `ResponseEntity.ok(…)` in the catch blocks should be updated; the exception hierarchy itself is unaffected.
+- A new cancellable blocking operation is added to the pipeline. Add an `isInterrupted()` check inside its loop (see ADR-0009 for why file I/O requires an explicit check rather than relying on virtual-thread interrupt delivery).

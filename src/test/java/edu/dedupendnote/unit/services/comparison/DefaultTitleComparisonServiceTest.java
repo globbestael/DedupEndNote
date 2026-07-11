@@ -15,6 +15,8 @@ import edu.dedupendnote.services.comparison.DefaultTitleComparisonService;
 
 class DefaultTitleComparisonServiceTest {
 
+	private final BibliographicItemReader reader = new BibliographicItemReader();
+
 	/*
 	 * full comparison for normalized titles: positive
 	 */
@@ -23,8 +25,8 @@ class DefaultTitleComparisonServiceTest {
 	void fullPositiveTest(String input1, String input2) {
 		BibliographicItem p1 = new BibliographicItem();
 		BibliographicItem p2 = new BibliographicItem();
-		BibliographicItemReader.addNormalizedTitle(input1, p1);
-		BibliographicItemReader.addNormalizedTitle(input2, p2);
+		reader.addNormalizedTitle(input1, p1);
+		reader.addNormalizedTitle(input2, p2);
 
 		assertThat(new DefaultTitleComparisonService().compare(p1, p2))
 				.as("Titles are NOT similar: '%s' and '%s'", input1, input2).isTrue();
@@ -38,8 +40,8 @@ class DefaultTitleComparisonServiceTest {
 	void fullNegativeTest(String input1, String input2) {
 		BibliographicItem p1 = new BibliographicItem();
 		BibliographicItem p2 = new BibliographicItem();
-		BibliographicItemReader.addNormalizedTitle(input1, p1);
-		BibliographicItemReader.addNormalizedTitle(input2, p2);
+		reader.addNormalizedTitle(input1, p1);
+		reader.addNormalizedTitle(input2, p2);
 
 		assertThat(new DefaultTitleComparisonService().compare(p1, p2))
 				.as("Titles are similar: '%s' and '%s'", input1, input2).isFalse();

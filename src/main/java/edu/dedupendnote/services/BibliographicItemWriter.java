@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
@@ -30,14 +31,22 @@ public class BibliographicItemWriter {
 	}
 
 	// Fields are read into a TreeMap (continuation lines merged), written with TY first and ID/ER last.
-	// In Remove Mode, EnrichmentService.enrichMap() applies enriched data before the fields are written.
-	// In Remove Mode, C7 (Article Number) is skipped.
+	// In Remove Mode, enrich() synthesises the duplicate-set representation, enrichCochrane() and
+	// enrichMap() apply further corrections before the fields are written. C7 (Article Number) is skipped.
 	public int writeBibliographicItems(List<BibliographicItem> bibliographicItems, Path inputPath, Path outputPath,
-			DeduplicationMode mode) {
+			DeduplicationMode mode, Consumer<String> progressReporter) {
 		log.debug("Start writing to file {}", outputPath);
+		if (mode == DeduplicationMode.REMOVE) {
+			progressReporter.accept("Enriching the " + bibliographicItems.size() + " deduplicated results");
+			enrichmentService.enrich(bibliographicItems);
+			enrichmentService.enrichCochrane(bibliographicItems);
+		}
 		List<BibliographicItem> bibliographicItemsToKeep = bibliographicItems.stream()
 				.filter(BibliographicItem::isKeptBibliographicItem).toList();
 		log.debug("Publications to be kept: {}", bibliographicItemsToKeep.size());
+		if (mode == DeduplicationMode.REMOVE) {
+			progressReporter.accept("Saving the " + bibliographicItemsToKeep.size() + " deduplicated results");
+		}
 
 		Map<Integer, BibliographicItem> recordIdMap = bibliographicItems.stream().filter(p -> p.getId() > 0)
 				.collect(Collectors.toMap(BibliographicItem::getId, Function.identity()));
@@ -82,7 +91,7 @@ public class BibliographicItemWriter {
 						if (bibliographicItem != null && bibliographicItem.isKeptBibliographicItem()) {
 							map.put(fieldName, fieldContent);
 							if (mode == DeduplicationMode.MARK && bibliographicItem.getLabel() != null) {
-								map.put("LB", bibliographicItem.getLabel());
+								map.put("LB", String.valueOf(bibliographicItem.getLabel()));
 							}
 							writeBibliographicItem(map, bibliographicItem, bw, mode);
 							numberWritten++;

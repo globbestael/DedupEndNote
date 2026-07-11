@@ -23,6 +23,8 @@ import edu.dedupendnote.domain.TitleRecord;
 
 class TitlesNormalizationServiceTest {
 
+	private final BibliographicItemReader reader = new BibliographicItemReader();
+
 	@ParameterizedTest(name = "[{index}] Input: \"{0}\" -> No Title")
 	@ValueSource(strings = { "not available", "[not available]", "untitled" })
 	void normalizeInputTitles_whenNoTitle_shouldReturnEmpty(String input) {
@@ -117,7 +119,21 @@ class TitlesNormalizationServiceTest {
 					"restructuring consciousness the psychedelic state in light of integrated information theory",
 					"restructuring consciousness",
 					"psychedelic state in light of integrated information theory"
-				))
+				)),
+			arguments( // TI for Chinese OP title: New approaches in chimeric antigen receptor T-cell therapy for breast cancer
+				// the Chinese "t" is translated as "T-cell ..."
+				"嵌合抗原受体t细胞疗法在乳腺癌中的应用进展.", 
+				List.of("t")),
+			arguments( // TI for this Chinese OP title: Portal vein thrombosis with superior mesenteric venous thrombosis: A case report and review of the literature
+				// the Chinese "1" is translated in "A case ..."
+				"门静脉-肠系膜上静脉广泛栓塞1例并文献复习", 
+				List.of("1")),
+			arguments( // a full CJK title returns null, not an empty String
+				"门静脉-肠系膜上静脉广泛栓塞例并文献复习", 
+				List.of()),
+			arguments( // both characters are swallowed
+				"-1", 
+				List.of())
 		);
 		// @formatter:on
 	}
@@ -161,35 +177,35 @@ class TitlesNormalizationServiceTest {
 		BibliographicItem bibliographicItem = new BibliographicItem();
 		String t1 = "Severe deficiency of the specific von Willebrand factor-cleaving protease";
 		String t2 = "ADAMTS 13 activity in a subgroup of children with atypical hemolytic uremic syndrome";
-		BibliographicItemReader.addNormalizedTitle(t1 + ": " + t2, bibliographicItem);
+		reader.addNormalizedTitle(t1 + ": " + t2, bibliographicItem);
 		SequencedSet<String> titles = bibliographicItem.getTitles();
 
 		System.err.println(titles);
 		assertThat(titles).hasSize(3);
 
 		bibliographicItem.getTitles().clear();
-		BibliographicItemReader.addNormalizedTitle(t1.substring(0, 10) + ": " + t2, bibliographicItem);
+		reader.addNormalizedTitle(t1.substring(0, 10) + ": " + t2, bibliographicItem);
 		titles = bibliographicItem.getTitles();
 
 		System.err.println(titles);
 		assertThat(titles).as("First part smaller than 50, no split").hasSize(1);
 
 		bibliographicItem.getTitles().clear();
-		BibliographicItemReader.addNormalizedTitle(t1 + ": " + t2.substring(0, 10), bibliographicItem);
+		reader.addNormalizedTitle(t1 + ": " + t2.substring(0, 10), bibliographicItem);
 		titles = bibliographicItem.getTitles();
 
 		System.err.println(titles);
 		assertThat(titles).as("Second part smaller than 50, no split").hasSize(1);
 
 		bibliographicItem.getTitles().clear();
-		BibliographicItemReader.addNormalizedTitle(t1.substring(0, 10) + ": " + t2.substring(0, 10), bibliographicItem);
+		reader.addNormalizedTitle(t1.substring(0, 10) + ": " + t2.substring(0, 10), bibliographicItem);
 		titles = bibliographicItem.getTitles();
 
 		System.err.println(titles);
 		assertThat(titles).as("Both parts smaller than 50, no split").hasSize(1);
 
 		bibliographicItem.getTitles().clear();
-		BibliographicItemReader.addNormalizedTitle(t1 + ": " + t2.substring(0, 10) + ": " + t2.substring(11), bibliographicItem);
+		reader.addNormalizedTitle(t1 + ": " + t2.substring(0, 10) + ": " + t2.substring(11), bibliographicItem);
 		titles = bibliographicItem.getTitles();
 
 		System.err.println(titles);

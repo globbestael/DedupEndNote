@@ -67,7 +67,7 @@ class AuthorExperimentsTests extends AbstractIntegrationTest {
 				new DefaultPagesComparisonService());
 		EnrichmentService enrichmentService = new EnrichmentService();
 		DeduplicationService expService = new DeduplicationService(cs, new BibliographicItemReader(),
-				new BibliographicItemWriter(enrichmentService), enrichmentService);
+				new BibliographicItemWriter(enrichmentService));
 
 		long start = System.currentTimeMillis();
 		expService.deduplicateOneFile(inputPath, DeduplicationMode.MARK, message -> {

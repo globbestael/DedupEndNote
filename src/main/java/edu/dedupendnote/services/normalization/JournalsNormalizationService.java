@@ -56,7 +56,8 @@ public class JournalsNormalizationService {
 	/**
 	 * "Jbr-btr" (case insensitive): will be replaced by "JBR BTR". Cheater!
 	 */
-	private static final Pattern JOURNAL_ABBREVIATION_JBR_PATTERN = Pattern.compile("Jbr-btr", Pattern.CASE_INSENSITIVE);
+	private static final Pattern JOURNAL_ABBREVIATION_JBR_PATTERN = Pattern.compile("Jbr-btr",
+			Pattern.CASE_INSENSITIVE);
 
 	/**
 	 * "Jpn": will be replaced by "Japanese"
@@ -86,7 +87,7 @@ public class JournalsNormalizationService {
 	 *
 	 */
 	private static final Pattern JOURNAL_ABBREVIATION_ROFO_PATTERN = Pattern
-			.compile("^(Rofo|Fortschritte .* Gebiet.* R.ntgenstrahlen)", Pattern.CASE_INSENSITIVE);
+			.compile("^(Rofo|Fortschritte .* Gebiet.* R.ntgenstrahlen).*$", Pattern.CASE_INSENSITIVE);
 
 	/**
 	 * Initial "Zbl(.?) " (case insensitive): will be replaced by "Zentralblatt"
@@ -150,6 +151,14 @@ public class JournalsNormalizationService {
 	private static final Pattern NON_ASCII_PATTERN = Pattern.compile("[^a-z0-9]", Pattern.CASE_INSENSITIVE);
 
 	/**
+	 * Maximum length of a normalized journal name. Names longer than this are truncated so the
+	 * abbreviation/initialism regex target in {@code DefaultJournalComparisonService} cannot be
+	 * scaled by crafted input (ReDoS hardening, security issue 03). Real journal names are far
+	 * shorter, so this never affects genuine data.
+	 */
+	private static final int MAX_JOURNAL_LENGTH = 150;
+
+	/**
 	 * All other apostrophes (compare genitiveApostrophePattern): will be replaced by SPACE. E.g. "Annales d'Urologie",
 	 * "Journal of Xi'an Jiaotong University (Medical Sciences)". Must be called AFTER genitiveApostrophePattern
 	 */
@@ -186,18 +195,31 @@ public class JournalsNormalizationService {
 		 */
 		Set<String> journalSet = new HashSet<>();
 		String[] parts = null;
+		List<String> journalParts = null;
 		/*
 		 * Don't use "." as split character for J2 content because field often has content as "Clin. Med.J. R. Coll. Phys. Lond."
 		 */
 		if ("J2".equals(fieldName)) {
 			parts = journal.split("[\\[\\]]|[=|/]");
+			journalParts = Arrays.asList(parts);
 		} else {
 			parts = journal.split("[\\[\\]]|[=|/]|([.] )");
+			journalParts = Arrays.asList(parts);
+			if (journalParts.contains("J") || journalParts.contains("Amer") || journalParts.contains("Brit")) {
+				journalParts = null;
+				journalSet.add(journal);
+			}
 		}
-		journalSet.addAll(Arrays.asList(parts));
-		if (parts.length > 1) {
-			journalSet.add(journal);
+		if (journalParts != null) {
+			journalSet.addAll(journalParts);
+			if (journalParts.size() > 1) {
+				journalSet.add(journal);
+			}
 		}
+		// journalSet.addAll(Arrays.asList(parts));
+		// if (parts.length > 1) {
+		// 	journalSet.add(journal);
+		// }
 		/*
 		 * Journals with a ":" will get 2 variants. e.g
 		 * "BJOG: An International Journal of Obstetrics and Gynaecology" or
@@ -302,7 +324,10 @@ public class JournalsNormalizationService {
 			r = NON_ASCII_PATTERN.matcher(r).replaceAll(" ");
 		}
 		r = MULTIPLE_WHITE_SPACE_PATTERN.matcher(r).replaceAll(" ");
-		return r.strip(); // DO NOT lowercase (http titles are the exception)
+		// Cap length (ReDoS hardening, issue 03). Truncate BEFORE strip so a cut on a space
+		// boundary cannot leave trailing whitespace — every normalized journal stays stripped.
+		// DO NOT lowercase (http titles are the exception).
+		return (r.length() > MAX_JOURNAL_LENGTH ? r.substring(0, MAX_JOURNAL_LENGTH) : r).strip();
 	}
 
 	// static public String normalizeJournalJava9Plus(String s) {

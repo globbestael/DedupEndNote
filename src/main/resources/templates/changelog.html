@@ -25,10 +25,11 @@
             <div class="col-8" data-bs-spy="scroll" data-bs-target="#navmenu">
                 <h1>DedupEndNote: Changelog</h1>
 
-                <h2 class="bg-success-subtle">1.1.7 (2026-06-03)</h2>
+                <h2 class="bg-success-subtle">1.1.7 (2026-07-11)</h2>
                 <ul>
                     <li>Bug fix: the Details page showed a hardcoded earliest publication year instead of
                         the actual value used by the application</li>
+                    <li>The user can cancel a running deduplication</li>
                     <li>Added a Glossary to the Details page</li>
                     <li>The result file always gets the extension "txt"</li>
                     <li>Secured the application against OWASP TOP 10 risks. Changes which are relevant to users:
@@ -63,6 +64,8 @@
                             <li>Added "For developers / Documentation" in details.html</li>
                             <li>Reorganized technical documentation</li>
                             <li>Delete stale test output files before each writing test</li>
+                            <li>Added the TraceLogCapture: now better trace logs for
+                                ValidationTests and MissedDuplicatesTests</li>
                         </ul>
                     </li>
                 </ul>

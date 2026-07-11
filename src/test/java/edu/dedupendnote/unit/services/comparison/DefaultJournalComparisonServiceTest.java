@@ -9,10 +9,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -26,6 +28,8 @@ import lombok.extern.slf4j.Slf4j;
 // TODO: compareIssns() tests on DefaultJournalComparisonService are in DefaultJournalComparisonServiceIssnTest.
 @Slf4j
 class DefaultJournalComparisonServiceTest extends BaseTest {
+
+	private final BibliographicItemReader reader = new BibliographicItemReader();
 
 	@BeforeEach
 	void initTestDir() {
@@ -42,8 +46,8 @@ class DefaultJournalComparisonServiceTest extends BaseTest {
 		BibliographicItem p2 = new BibliographicItem();
 		log.debug("==================================================================");
 
-		BibliographicItemReader.addNormalizedJournal(input1, p1, "T2");
-		BibliographicItemReader.addNormalizedJournal(input2, p2, "T2");
+		reader.addNormalizedJournal(input1, p1, "T2");
+		reader.addNormalizedJournal(input2, p2, "T2");
 
 		assertThat(new DefaultJournalComparisonService().compare(p1, p2, false))
 				.as("Journals are NOT similar: " + p1.getJournals() + " versus " + p2.getJournals()).isTrue();
@@ -57,11 +61,33 @@ class DefaultJournalComparisonServiceTest extends BaseTest {
 	void fullNegativeTest(String input1, String input2) {
 		BibliographicItem p1 = new BibliographicItem();
 		BibliographicItem p2 = new BibliographicItem();
-		BibliographicItemReader.addNormalizedJournal(input1, p1, "T2");
-		BibliographicItemReader.addNormalizedJournal(input2, p2, "T2");
+		reader.addNormalizedJournal(input1, p1, "T2");
+		reader.addNormalizedJournal(input2, p2, "T2");
 
 		assertThat(new DefaultJournalComparisonService().compare(p1, p2, false))
 				.as("Journals are similar: %s versus %s", p1.getJournals(), p2.getJournals()).isFalse();
+	}
+
+	/*
+	 * Issue 03: over-length journal names are truncated (MAX_JOURNAL_LENGTH = 150) during
+	 * normalization, so the abbreviation/initialism regex target cannot be scaled by crafted
+	 * input. The stored journals must be capped and the comparison must finish promptly.
+	 */
+	@Test
+	@Timeout(value = 5, unit = TimeUnit.SECONDS)
+	void compare_overlengthJournals_isCappedAndCompletesQuickly() {
+		String longJournal1 = "a a a a a a a a a a " + "verylongtoken ".repeat(20);
+		String longJournal2 = "a b c d e f g h i j " + "anotherlongtoken ".repeat(20);
+		BibliographicItem p1 = new BibliographicItem();
+		BibliographicItem p2 = new BibliographicItem();
+		reader.addNormalizedJournal(longJournal1, p1, "T2");
+		reader.addNormalizedJournal(longJournal2, p2, "T2");
+
+		assertThat(p1.getJournals()).allSatisfy(j -> assertThat(j.length()).isLessThanOrEqualTo(150));
+		assertThat(p2.getJournals()).allSatisfy(j -> assertThat(j.length()).isLessThanOrEqualTo(150));
+
+		// Must return (either result) well within the @Timeout — no catastrophic backtracking.
+		new DefaultJournalComparisonService().compare(p1, p2, false);
 	}
 
 	static Stream<Arguments> fullPositiveArgumentProvider() {
@@ -209,8 +235,10 @@ class DefaultJournalComparisonServiceTest extends BaseTest {
 	static Stream<Arguments> fullNegativeArgumentProvider() {
 		// @formatter:off
 		return Stream.of(
-				// Fixed: Patterns for journals used ".*(\\b|)", but this was changed to ".*\\b".
-				// This made up example was positive: Starts with "B" and has a "B" and "A" (all case insensitive)
+				/*
+				 * Fixed: Patterns for journals used ".*(\\b|)", but this was changed to ".*\\b".
+				 * This made up example was positive: Starts with "B" and has a "B" and "A" (all case insensitive)
+				 */
 				arguments(
 					"BBA Clinical",
 					"Biochimica et biophysica peracta nonclinical"),
@@ -247,6 +275,19 @@ class DefaultJournalComparisonServiceTest extends BaseTest {
 				arguments( // with and without "London"
 						"Philos Trans R Soc Lond B Biol Sci",
 						"Philosophical Transactions of the Royal Society B: Biological Sciences"),
+				arguments( 
+					/* DefaultJournalComparisonService::compareJournals_FirstWithStartingInitialism made a pattern 
+					 * because "2016" == "2016".toUpperCase
+					 */
+					"2016 38th Annual International Conference of the Ieee Engineering in Medicine and Biology Society", 
+					"2016October"),
+				arguments(
+					/*
+					 * The "."'s should be recognized as abbreviation markers, NOT as end of (main) title 
+					 * (which would split it also into 3 extra titles "Brit", "J" and "Surg") 
+					 */
+					"Brit. J. Surg.",
+					"Brit. J. Haematol."),
 				arguments(
 					"No other examples yet",
 					"The same"),
@@ -341,9 +382,9 @@ WHERE t1.title2 <> t2.title2
 		for (int i = 0; i < triples.size(); i++) {
 			Triple triple = triples.get(i);
 			BibliographicItem p1 = new BibliographicItem();
-			BibliographicItemReader.addNormalizedJournal(triple.journal1(), p1, "T2");
+			reader.addNormalizedJournal(triple.journal1(), p1, "T2");
 			BibliographicItem p2 = new BibliographicItem();
-			BibliographicItemReader.addNormalizedJournal(triple.journal2(), p2, "T2");
+			reader.addNormalizedJournal(triple.journal2(), p2, "T2");
 
 			triples.set(i, triple.withSimilar(new DefaultJournalComparisonService().compare(p1, p2, false)));
 		}

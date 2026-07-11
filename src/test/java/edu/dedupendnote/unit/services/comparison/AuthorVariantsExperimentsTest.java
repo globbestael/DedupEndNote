@@ -13,7 +13,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import edu.dedupendnote.services.comparison.AuthorThresholds;
-import edu.dedupendnote.services.BibliographicItemReader;
 import edu.dedupendnote.domain.BibliographicItem;
 import edu.dedupendnote.unit.domain.BibliographicItemExperiment;
 import lombok.extern.slf4j.Slf4j;
@@ -277,7 +276,7 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 		BibliographicItemExperiment r = new BibliographicItemExperiment();
 		List<String> authorList1 = Arrays.asList(authors.split("; "));
 		authorList1.stream().forEach(a -> r.addAuthorsWithoutPreprocessing(a));
-		BibliographicItemReader.fillAllAuthors(r);
+		reader.fillAllAuthors(r);
 		return r;
 	}
 
@@ -285,7 +284,7 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 		BibliographicItemExperiment r = new BibliographicItemExperiment();
 		List<String> authorList1 = Arrays.asList(authors.split("; "));
 		authorList1.stream().forEach(a -> r.addAuthorsLimitedToFirstLetters(a));
-		BibliographicItemReader.fillAllAuthors(r);
+		reader.fillAllAuthors(r);
 		// System.err.println(r.getAllAuthors().get(0) + " => " + authors);
 		return r;
 	}
@@ -294,7 +293,7 @@ class AuthorVariantsExperimentsTest extends AuthorsBaseTest {
 		BibliographicItemExperiment r = new BibliographicItemExperiment();
 		List<String> authorList1 = Arrays.asList(authors.split("; "));
 		authorList1.stream().forEach(a -> r.addAuthorsLimitedToFirstLetters_2(a));
-		BibliographicItemReader.fillAllAuthors(r);
+		reader.fillAllAuthors(r);
 		// System.err.println(r.getAllAuthors().get(0) + " => " + authors);
 		return r;
 	}
