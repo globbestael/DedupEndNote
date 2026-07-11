@@ -232,30 +232,38 @@ Fix      : None required now. If the record cap or field-length assumptions chan
 | No authentication / CSRF | Intentional public tool; no privileged session to forge |
 | `setAllowedOriginPatterns("*")` on the STOMP endpoint | Intentional; documented WebSocketConfig.java:20 |
 | Actuator exposure | `health,info` (dev); `health` by default otherwise |
-| Concurrent-run cap | `Semaphore(maxConcurrentRuns=4)` — **but see H1: a wedged run never releases its permit** |
+| Concurrent-run cap | `Semaphore(maxConcurrentRuns=4)` — permit release now guaranteed on every outcome by `BoundedDedupRunner` (H1 fixed, issue 01) |
 | Record-count cap | `checkRecordCap(maxRecords=100000)` before read — effective for the load-time memory bound |
-| Run timeout | `future.get(timeoutMinutes=20)` — **but see H1: not abortive against a hung CPU-bound step** |
+| Run timeout | `future.get(timeoutMinutes=20)` — now abortive: permit released without awaiting the worker, and `compareSet` checks interruption per-pair (H1 fixed, issues 01+02) |
 
 ---
 
 ## Summary Table
 
-| Severity | Count | Titles |
-|---|---|---|
-| Critical | 0 | — |
-| High | 1 | Non-abortive run-timeout → non-self-healing DoS (journal ReDoS trigger reduced by 095deea but residual; Layer A untouched) |
-| Medium | 1 | Unbounded static pattern caches (per-JVM memory-exhaustion vector) |
-| Low | 3 | Rate-limit bypass (Medium in context); session-dir accumulation (Medium in context); missing security headers |
-| Info | 2 | TLS deployment undocumented; parse-time field regex shape |
+**Remediation complete.** All actionable findings were fixed on branch `design`; see
+`.scratch/security-hardening-2026-07/` (PRD + issues 01–07).
 
-### Priority recommendation
-1. **H1 Layer A** is the single most important fix — decouple `semaphore.release()`
-   from `executor.close()` and add a per-pair interrupt/deadline check. This alone
-   converts every "permanent wedge" into a recoverable timeout, regardless of trigger.
-2. **H1 Layer B** — bound the match-target length (or switch to linear tokenized
-   matching) to finish closing the ReDoS the 095deea word-cap only narrowed.
-3. **M (caches)** — swap the three static maps for size-bounded caches; cheap, removes
-   a slow-burn OOM vector.
-4. Low/Info items as capacity allows; the rate-limit key change also strengthens H1's
-   front line.
+| Severity | Finding | Status |
+|---|---|---|
+| Critical | — | — |
+| High | Non-abortive run-timeout → non-self-healing DoS (+ journal ReDoS trigger) | ✅ Resolved — issue 01 permit release (`697446c`), 02 per-pair cancel (`a0fe190`), 03 journal length cap (`87e12c6`) |
+| Medium | Unbounded static pattern caches (per-JVM memory-exhaustion vector) | ✅ Resolved — issue 04 bounded LRU cache (`cdda431`) |
+| Low | Rate-limit bypass via client-chosen key | ✅ Resolved — issue 05 IP-primary keying (`0a0a72a`) |
+| Low | Session-dir accumulation with no reaper | ✅ Resolved — issue 06 opt-in `@Scheduled` reaper (`59048b1`) |
+| Low | Missing HTTP security response headers | ✅ Resolved — issue 07 `SecurityHeadersFilter` (`cd102b1`) |
+| Info | TLS deployment expectation undocumented | Open — documentation only |
+| Info | Parse-time field regex shape | Open — accepted; re-audit only if the record-cap assumptions change |
+
+### Remediation notes
+- **H1 fully closed by 01 + 02 + 03.** Issue 01 guarantees the concurrency permit is
+  released on every outcome (no permanent wedge); 02 makes a run observe cancellation within
+  one comparison; 03 caps the journal-match ReDoS target at 150 chars so a single comparison
+  cannot be scaled by crafted input. The three together turn any slow/hung comparison into a
+  bounded, recoverable timeout that frees its slot.
+- **M closed by 04** — the three unbounded static maps are now a size-bounded (5000) LRU.
+- **Low items** closed by 05 (IP-primary rate-limit key), 06 (opt-in reaper, disabled by
+  default; complements/replaces the cron restart), 07 (nosniff / X-Frame-Options /
+  Referrer-Policy on every response).
+- **Two Info items remain open by choice:** the TLS note is documentation-only, and the
+  parse-time regexes run single-pass over one field (negligible amplification).
 ```
