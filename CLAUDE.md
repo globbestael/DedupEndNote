@@ -63,9 +63,9 @@ DedupEndNote is a Spring Boot 4.1 / Java 21 web app that deduplicates bibliograp
 See [`docs/architecture.html`](docs/architecture.html) for the pipeline diagram, full service map, and runtime sequence diagram.
 
 ### Key packages
-- `controllers/` — HTTP endpoints; file upload and dedup triggers; virtual-thread concurrency; WebSocket progress routing
+- `controllers/` — HTTP endpoints; file upload and dedup triggers; delegates run lifecycle (concurrency cap, timeout, cancel) to `BoundedDedupRunner`; WebSocket progress routing
 - `domain/` — `BibliographicItem` (core model), `BibliographicItemDB` (in-memory store), `DeduplicationMode` (enum: `REMOVE` / `MARK`)
-- `services/` — `DeduplicationService`, `BibliographicItemReader`, `BibliographicItemWriter`, `EnrichmentService`, `UtilitiesService`
+- `services/` — `DeduplicationService`, `BibliographicItemReader`, `BibliographicItemWriter`, `EnrichmentService`, `UtilitiesService`, `BoundedDedupRunner` (run orchestration: bounded concurrency permit + per-run timeout + cancel-by-session; guarantees permit release on every outcome)
 - `services/comparison/` — four `*ComparisonService` interfaces, four `Default*ComparisonService` implementations, three `*Thresholds` value objects, `FieldComparators` record
 - `services/normalization/` — `NormalizationService` plus four `*NormalizationService` classes
 

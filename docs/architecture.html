@@ -133,6 +133,22 @@ flowchart TD
           </div>
         </div>
 
+        <!-- Run orchestration -->
+        <div>
+          <p class="text-xs uppercase tracking-wider text-slate-400 mb-2">Run orchestration (controller-facing)</p>
+          <div class="grid grid-cols-3 gap-3">
+            <div class="deep-box rounded-lg p-4 text-white">
+              <p class="text-xs font-mono font-semibold text-slate-300">BoundedDedupRunner</p>
+              <p class="text-xs text-slate-400 mt-1">Owns the concurrency permit (bounded <code
+                  class="text-slate-300">Semaphore</code>), the shared virtual-thread executor, the per-run timeout, and
+                the cancel-by-session registry. <code class="text-slate-300">runWithLimit()</code> returns a <code
+                  class="text-slate-300">RunOutcome</code> (COMPLETED / BUSY / TIMED_OUT / CANCELLED / FAILED) and
+                <strong>always releases the permit</strong>, even if a worker ignores interruption. The controller maps
+                the outcome to HTTP status, output-file cleanup, and progress messages.</p>
+            </div>
+          </div>
+        </div>
+
         <!-- Enrichment -->
         <div>
           <p class="text-xs uppercase tracking-wider text-slate-400 mb-2">Enrichment (Remove Mode only) — called from BibliographicItemWriter</p>
@@ -240,6 +256,7 @@ sequenceDiagram
     actor Browser
     participant RL as RateLimitInterceptor
     participant Ctrl as DedupEndNoteController
+    participant Runner as BoundedDedupRunner
     participant WS as WebSocket<br/>/topic/messages-{id}
     participant DS as DeduplicationService
     participant Reader as BibliographicItemReader
@@ -256,9 +273,12 @@ sequenceDiagram
     Ctrl-->>Browser: 200 OK (file stored in upload-dir/{wssessionId}/)
 
     Browser->>Ctrl: POST /startOneFile (wssessionId · fileName · mode)
-    Note over Ctrl: semaphore limits concurrent runs<br/>registers Future in runningFutures map<br/>creates progressReporter (suppressed when thread interrupted)<br/>that forwards messages to the WebSocket topic
+    Note over Ctrl: creates progressReporter (suppressed when thread interrupted)<br/>that forwards messages to the WebSocket topic
 
-    Ctrl->>DS: deduplicateOneFile(inputPath, mode, progressReporter)
+    Ctrl->>Runner: runWithLimit(wssessionId, task)
+    activate Runner
+    Note over Runner: bounded Semaphore caps concurrent runs<br/>registers Future in cancel-by-session registry<br/>enforces per-run timeout, always releases the permit
+    Runner->>DS: deduplicateOneFile(inputPath, mode, progressReporter)
     activate DS
 
     DS->>Reader: readBibliographicItems(inputPath, progressReporter)
@@ -288,6 +308,8 @@ sequenceDiagram
     deactivate Writer
     DS-->>WS: progressReporter.accept("DONE: N duplicates found …")
     deactivate DS
+    Runner-->>Ctrl: RunOutcome(COMPLETED, result)
+    deactivate Runner
     WS-->>Browser: DONE: N duplicates found …
 
     Note over Browser: "Get result" button enabled
@@ -297,8 +319,9 @@ sequenceDiagram
 
     Note over Browser,Ctrl: ── Cancel path (alternative to waiting for DONE) ──
     Browser->>Ctrl: POST /cancelDedup (wssessionId)
-    Ctrl->>Ctrl: future.cancel(true) → interrupts virtual thread
-    Note over Ctrl: future.get() throws CancellationException<br/>partial output file deleted
+    Ctrl->>Runner: cancel(wssessionId)
+    Runner->>Runner: future.cancel(true) → interrupts worker thread
+    Note over Ctrl,Runner: runWithLimit() returns CANCELLED — permit released<br/>controller deletes partial output file
     Ctrl-->>WS: progressReporter.accept("ERROR: Deduplication was cancelled …")
     WS-->>Browser: ERROR: Deduplication was cancelled …
     Note over Browser: dedupFinished latch set — ignores any<br/>late messages still in flight from the task thread

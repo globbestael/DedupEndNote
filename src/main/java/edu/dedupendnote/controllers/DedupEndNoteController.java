@@ -4,19 +4,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.Callable;
-import java.util.concurrent.CancellationException;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
-
-import jakarta.annotation.PostConstruct;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -34,8 +25,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import edu.dedupendnote.domain.DeduplicationMode;
 import edu.dedupendnote.domain.StompMessage;
-import edu.dedupendnote.services.CancelledException;
-import edu.dedupendnote.services.DeduplicationException;
+import edu.dedupendnote.services.BoundedDedupRunner;
+import edu.dedupendnote.services.BoundedDedupRunner.RunOutcome;
 import edu.dedupendnote.services.DeduplicationService;
 import edu.dedupendnote.services.UtilitiesService;
 import jakarta.servlet.http.HttpServletResponse;
@@ -49,29 +40,19 @@ public class DedupEndNoteController {
 	@Value("${upload-dir}")
 	private String uploadDir;
 
-	@Value("${dedup.max-concurrent-runs:4}")
-	private int maxConcurrentRuns;
-
+	// Display only: BoundedDedupRunner enforces the timeout; this composes the user-facing message.
 	@Value("${dedup.timeout-minutes:20}")
 	private int timeoutMinutes;
 
-	@SuppressWarnings("NullAway.Init")
-	private Semaphore concurrentRunsSemaphore;
-
-	private final ConcurrentHashMap<UUID, Future<?>> runningFutures = new ConcurrentHashMap<>();
-
-	@PostConstruct
-	void initSemaphore() {
-		concurrentRunsSemaphore = new Semaphore(maxConcurrentRuns);
-	}
-
 	private final DeduplicationService deduplicationService;
 	private final SimpMessagingTemplate simpMessagingTemplate;
+	private final BoundedDedupRunner dedupRunner;
 
 	public DedupEndNoteController(DeduplicationService deduplicationService,
-			SimpMessagingTemplate simpMessagingTemplate) {
+			SimpMessagingTemplate simpMessagingTemplate, BoundedDedupRunner dedupRunner) {
 		this.deduplicationService = deduplicationService;
 		this.simpMessagingTemplate = simpMessagingTemplate;
+		this.dedupRunner = dedupRunner;
 	}
 
 	// @formatter:off
@@ -141,8 +122,7 @@ public class DedupEndNoteController {
 	 */
 	@PostMapping(value = "/startOneFile", produces = "application/json")
 	public ResponseEntity<ApiResponse> startOneFile(@RequestParam("fileName_1") String inputFileName,
-			@RequestParam(defaultValue = "REMOVE") DeduplicationMode deduplicationMode, @RequestParam UUID wssessionId)
-			throws InterruptedException, ExecutionException {
+			@RequestParam(defaultValue = "REMOVE") DeduplicationMode deduplicationMode, @RequestParam UUID wssessionId) {
 		try {
 			Path inputPath = UtilitiesService.resolveInSessionDir(uploadDir, wssessionId, inputFileName);
 			Consumer<String> progressReporter = message -> {
@@ -162,8 +142,7 @@ public class DedupEndNoteController {
 
 	@PostMapping(value = "/startTwoFiles", produces = "application/json")
 	public ResponseEntity<ApiResponse> startTwoFiles(@RequestParam String oldFile, @RequestParam String newFile,
-			@RequestParam(defaultValue = "REMOVE") DeduplicationMode deduplicationMode, @RequestParam UUID wssessionId)
-			throws InterruptedException, ExecutionException {
+			@RequestParam(defaultValue = "REMOVE") DeduplicationMode deduplicationMode, @RequestParam UUID wssessionId) {
 		try {
 			Path newInputPath = UtilitiesService.resolveInSessionDir(uploadDir, wssessionId, newFile);
 			Path oldInputPath = UtilitiesService.resolveInSessionDir(uploadDir, wssessionId, oldFile);
@@ -184,68 +163,54 @@ public class DedupEndNoteController {
 	}
 
 	private ResponseEntity<ApiResponse> runDedup(String logPrefix, Path outputPath, Callable<String> dedupTask,
-			Consumer<String> progressReporter, UUID wssessionId) throws InterruptedException, ExecutionException {
-		if (!concurrentRunsSemaphore.tryAcquire()) {
-			return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+			Consumer<String> progressReporter, UUID wssessionId) {
+		RequestAttributes requestAttributes = RequestContextHolder.currentRequestAttributes();
+		RunOutcome outcome = dedupRunner.runWithLimit(wssessionId, () -> {
+			// The dedup runs on a worker thread; re-attach the request scope so @RequestScope beans resolve.
+			RequestContextHolder.setRequestAttributes(requestAttributes);
+			return dedupTask.call();
+		});
+		return switch (outcome.status()) {
+			case BUSY -> ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
 					.body(new ApiResponse("ERROR: Server is busy. Please try again in a moment."));
-		}
-		try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
-			RequestAttributes requestAttributes = RequestContextHolder.currentRequestAttributes();
-			Future<String> future = executor.submit(() -> {
-				RequestContextHolder.setRequestAttributes(requestAttributes);
-				return dedupTask.call();
-			});
-			runningFutures.put(wssessionId, future);
-			try {
-				String result = future.get(timeoutMinutes, TimeUnit.MINUTES);
+			case COMPLETED -> {
+				String result = Objects.requireNonNull(outcome.result());
 				log.info("Writing to result: {}: {}", logPrefix, result);
-				return ResponseEntity.ok(new ApiResponse(result));
-			} catch (TimeoutException e) {
-				future.cancel(true);
-				try {
-					Files.deleteIfExists(outputPath);
-				} catch (IOException ignored) {
-				}
+				yield ResponseEntity.ok(new ApiResponse(result));
+			}
+			case TIMED_OUT -> {
+				deleteQuietly(outputPath);
 				String msg = "ERROR: Deduplication timed out after " + timeoutMinutes + " minutes.";
 				progressReporter.accept(msg);
-				return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(new ApiResponse(msg));
-			} catch (CancellationException e) {
-				try {
-					Files.deleteIfExists(outputPath);
-				} catch (IOException ignored) {
-				}
-				String msg = "ERROR: Deduplication was cancelled by the user.";
-				progressReporter.accept(msg);
-				return ResponseEntity.ok(new ApiResponse(msg));
-			} catch (ExecutionException e) {
-				if (e.getCause() instanceof CancelledException ce) {
-					try {
-						Files.deleteIfExists(outputPath);
-					} catch (IOException ignored) {
-					}
-					progressReporter.accept(ce.getErrorMessage());
-					return ResponseEntity.ok(new ApiResponse(ce.getErrorMessage()));
-				}
-				if (e.getCause() instanceof DeduplicationException de) {
-					progressReporter.accept(de.getErrorMessage());
-					return ResponseEntity.ok(new ApiResponse(de.getErrorMessage()));
-				}
-				throw e;
+				yield ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(new ApiResponse(msg));
 			}
-		} finally {
-			runningFutures.remove(wssessionId);
-			concurrentRunsSemaphore.release();
+			case CANCELLED -> {
+				deleteQuietly(outputPath);
+				String msg = Objects.requireNonNull(outcome.errorMessage());
+				progressReporter.accept(msg);
+				yield ResponseEntity.ok(new ApiResponse(msg));
+			}
+			case FAILED -> {
+				String msg = Objects.requireNonNull(outcome.errorMessage());
+				progressReporter.accept(msg);
+				yield ResponseEntity.ok(new ApiResponse(msg));
+			}
+		};
+	}
+
+	private static void deleteQuietly(Path path) {
+		try {
+			Files.deleteIfExists(path);
+		} catch (IOException ignored) {
 		}
 	}
 
 	@PostMapping(value = "/cancelDedup", produces = "application/json")
 	public ResponseEntity<ApiResponse> cancelDedup(@RequestParam UUID wssessionId) {
-		Future<?> future = runningFutures.get(wssessionId);
-		if (future == null) {
+		if (!dedupRunner.cancel(wssessionId)) {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND)
 					.body(new ApiResponse("No running deduplication found."));
 		}
-		future.cancel(true);
 		return ResponseEntity.ok(new ApiResponse("Cancellation requested."));
 	}
 
