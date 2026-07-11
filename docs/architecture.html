@@ -268,7 +268,7 @@ sequenceDiagram
     Note over Browser: subscribes to /topic/messages-{wssessionId}
 
     Browser->>RL: POST /uploadFile (wssessionId · RIS file)
-    Note over RL: checks per-session upload count within cooldown window
+    Note over RL: checks per-IP upload count within cooldown window (X-Forwarded-For first hop, else remoteAddr)
     RL->>Ctrl: (passes through if within burst limit)
     Ctrl-->>Browser: 200 OK (file stored in upload-dir/{wssessionId}/)
 

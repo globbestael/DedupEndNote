@@ -35,8 +35,8 @@ public class RateLimitInterceptor implements HandlerInterceptor {
 	@Override
 	public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
 			throws IOException {
-		// Track per session so that the two-file flow (two rapid uploads in one page
-		// load) is not blocked. Falls back to IP if wssessionId is absent.
+		// Track per client IP; burst limit >= 2 keeps the two-file flow (two rapid
+		// uploads in one page load, same IP) from being blocked.
 		String key = extractKey(request);
 		long now = System.currentTimeMillis();
 		long cooldownMillis = cooldownSeconds * 1000L;
@@ -79,14 +79,13 @@ public class RateLimitInterceptor implements HandlerInterceptor {
 		}
 	}
 
-	// Uses wssessionId (unique per page load) as the tracking key so that the
-	// two-file flow's two uploads share a single counter independent of other
-	// sessions from the same IP. Falls back to IP for requests without a session.
+	// Keys on the client IP, NOT on the client-supplied wssessionId, so a client cannot
+	// reset its quota by minting a fresh session per request. The two-file flow's two
+	// uploads share one counter because they come from the same IP (burst limit >= 2).
+	// X-Forwarded-For is trusted only when the app runs behind a reverse proxy that sets
+	// it (the documented deployment): its first hop is the real client IP. When the app
+	// is directly exposed there is no proxy hop, so remoteAddr is used.
 	private static String extractKey(HttpServletRequest request) {
-		String sessionId = request.getParameter("wssessionId");
-		if (sessionId != null && !sessionId.isBlank()) {
-			return sessionId;
-		}
 		String forwarded = request.getHeader("X-Forwarded-For");
 		if (forwarded != null && !forwarded.isBlank()) {
 			return forwarded.split(",")[0].strip();
