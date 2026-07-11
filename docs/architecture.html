@@ -231,7 +231,13 @@ flowchart TD
 
     <!-- ── 3. Runtime sequence — single-file ────────────────────────────── -->
     <section>
-      <h2 class="text-xl font-serif font-semibold mb-1">3. Runtime sequence — single-file deduplication</h2>
+      <div class="flex items-center justify-between mb-1">
+        <h2 class="text-xl font-serif font-semibold">3. Runtime sequence — single-file deduplication</h2>
+        <button type="button" data-zoom-open
+          class="shrink-0 inline-flex items-center gap-1 rounded-md border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium text-slate-600 shadow-sm hover:bg-slate-50 hover:text-slate-900">
+          <span aria-hidden="true">⤢</span> View full screen
+        </button>
+      </div>
       <p class="text-sm text-slate-500 mb-4">
         Full request/response cycle showing progress pushed to the browser over WebSocket while deduplication runs in a
         virtual thread.
@@ -251,7 +257,7 @@ flowchart TD
       </p>
 
       <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <pre class="mermaid">
+        <pre class="mermaid" id="sequence-diagram">
 sequenceDiagram
     actor Browser
     participant RL as RateLimitInterceptor
@@ -354,6 +360,121 @@ sequenceDiagram
     </footer>
 
   </main>
+
+  <!-- ── Full-screen zoom overlay for the runtime sequence diagram ─────────── -->
+  <div id="zoom-overlay"
+    class="fixed inset-0 z-50 hidden flex-col bg-slate-900/95 backdrop-blur-sm">
+    <div class="flex items-center justify-between px-4 py-2 text-slate-200">
+      <span class="text-sm font-medium">Runtime sequence — single-file deduplication</span>
+      <div class="flex items-center gap-1">
+        <button type="button" data-zoom="out" title="Zoom out"
+          class="h-8 w-8 rounded-md border border-slate-600 hover:bg-slate-700">−</button>
+        <button type="button" data-zoom="reset" title="Reset"
+          class="h-8 px-3 rounded-md border border-slate-600 text-xs hover:bg-slate-700">Fit</button>
+        <button type="button" data-zoom="in" title="Zoom in"
+          class="h-8 w-8 rounded-md border border-slate-600 hover:bg-slate-700">+</button>
+        <button type="button" data-zoom-close title="Close (Esc)"
+          class="ml-2 h-8 w-8 rounded-md border border-slate-600 hover:bg-slate-700">✕</button>
+      </div>
+    </div>
+    <div id="zoom-stage" class="relative flex-1 overflow-hidden cursor-grab select-none">
+      <div id="zoom-content" class="absolute left-0 top-0 origin-top-left"></div>
+    </div>
+    <p class="px-4 py-1.5 text-center text-xs text-slate-400">
+      Scroll to zoom · drag to pan · Esc to close
+    </p>
+  </div>
+
+  <script>
+    (function () {
+      const overlay = document.getElementById("zoom-overlay");
+      const stage = document.getElementById("zoom-stage");
+      const content = document.getElementById("zoom-content");
+      const source = document.getElementById("sequence-diagram");
+      if (!overlay || !source) return;
+
+      let scale = 1, tx = 0, ty = 0;
+
+      function apply() {
+        content.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
+      }
+
+      // Fit the diagram's natural width to the stage, centred horizontally.
+      function fit() {
+        const svg = content.querySelector("svg");
+        if (!svg) { scale = 1; tx = 0; ty = 0; apply(); return; }
+        const natural = svg.getBoundingClientRect();
+        // getBoundingClientRect already includes current scale, so undo it.
+        const w = natural.width / scale;
+        const stageW = stage.clientWidth;
+        scale = Math.min(2, Math.max(0.5, (stageW - 40) / w));
+        tx = Math.max(0, (stageW - w * scale) / 2);
+        ty = 20;
+        apply();
+      }
+
+      function open() {
+        const svg = source.querySelector("svg");
+        if (!svg) return; // mermaid not rendered yet
+        content.innerHTML = "";
+        const clone = svg.cloneNode(true);
+        clone.removeAttribute("style");        // drop max-width:100% so it shows at full size
+        clone.style.maxWidth = "none";
+        clone.style.height = "auto";
+        content.appendChild(clone);
+        overlay.classList.remove("hidden");
+        overlay.classList.add("flex");
+        requestAnimationFrame(fit);
+      }
+
+      function close() {
+        overlay.classList.add("hidden");
+        overlay.classList.remove("flex");
+      }
+
+      function zoomBy(factor, cx, cy) {
+        const rect = stage.getBoundingClientRect();
+        const px = (cx ?? rect.width / 2) - tx;
+        const py = (cy ?? rect.height / 2) - ty;
+        const next = Math.min(6, Math.max(0.25, scale * factor));
+        const ratio = next / scale;
+        tx -= px * (ratio - 1);
+        ty -= py * (ratio - 1);
+        scale = next;
+        apply();
+      }
+
+      document.querySelectorAll("[data-zoom-open]").forEach(b => b.addEventListener("click", open));
+      overlay.querySelector("[data-zoom-close]").addEventListener("click", close);
+      overlay.querySelector('[data-zoom="in"]').addEventListener("click", () => zoomBy(1.25));
+      overlay.querySelector('[data-zoom="out"]').addEventListener("click", () => zoomBy(0.8));
+      overlay.querySelector('[data-zoom="reset"]').addEventListener("click", fit);
+
+      document.addEventListener("keydown", e => {
+        if (e.key === "Escape" && !overlay.classList.contains("hidden")) close();
+      });
+
+      stage.addEventListener("wheel", e => {
+        e.preventDefault();
+        const rect = stage.getBoundingClientRect();
+        zoomBy(e.deltaY < 0 ? 1.1 : 0.9, e.clientX - rect.left, e.clientY - rect.top);
+      }, { passive: false });
+
+      // Drag to pan.
+      let dragging = false, sx = 0, sy = 0;
+      stage.addEventListener("pointerdown", e => {
+        dragging = true; sx = e.clientX - tx; sy = e.clientY - ty;
+        stage.style.cursor = "grabbing"; stage.setPointerCapture(e.pointerId);
+      });
+      stage.addEventListener("pointermove", e => {
+        if (!dragging) return;
+        tx = e.clientX - sx; ty = e.clientY - sy; apply();
+      });
+      stage.addEventListener("pointerup", e => {
+        dragging = false; stage.style.cursor = "grab"; stage.releasePointerCapture(e.pointerId);
+      });
+    })();
+  </script>
 </body>
 
 </html>
