@@ -1,5 +1,6 @@
 package edu.dedupendnote.services.comparison;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
@@ -18,11 +19,21 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class DefaultJournalComparisonService implements JournalComparisonService {
-
+	/*
+		Terminology:
+		- Initialism: The journal name variant with all capitals which are the initials of all important the words of the full journal name
+		  e.g.: : "JAMA" for "Journal of the American Medical Assocation"
+		- Abbreviation: other journal name variants with short forms of the important words of tyhe full journal name
+		  e.g. "Br J Surg", "J Am J Assoc"
+	 */
 	private static final JaroWinklerSimilarity JWS = new JaroWinklerSimilarity();
 	public static final Map<String, Pattern> ABBREVIATION_CACHE = new ConcurrentHashMap<>();
 	public static final Map<String, Pattern> INITIALISM_CACHE = new ConcurrentHashMap<>();
 	public static final Map<String, Pattern> STARTING_INITIALISM_CACHE = new ConcurrentHashMap<>();
+
+	private static final int MINIMUM_LENGTH_INITIALISM = 2;
+	private static final int MAXIMUM_LENGTH_INITIALISM = 6;
+	private static final int MAXIMUM_NUMBER_WORDS_JOURNAL_PATTERN = 10;
 
 	private final JournalThresholds thresholds;
 
@@ -85,13 +96,13 @@ public class DefaultJournalComparisonService implements JournalComparisonService
 					log.trace("- 4. compareJournals_FirstAsAbbreviation(2,2) is true");
 					return true;
 				}
-				if (s1.length() < 10 && s1.toUpperCase(Locale.ROOT).equals(s1)
-						&& compareJournals_FirstAsInitialism(s1, s2)) {
+				if (s1.length() >= MINIMUM_LENGTH_INITIALISM && s1.length() <= MAXIMUM_LENGTH_INITIALISM
+						&& s1.toUpperCase(Locale.ROOT).equals(s1) && compareJournals_FirstAsInitialism(s1, s2)) {
 					log.trace("- 4. compareJournals_FirstAsInitialism(1,2) is true");
 					return true;
 				}
-				if (s2.length() < 10 && s2.toUpperCase(Locale.ROOT).equals(s2)
-						&& compareJournals_FirstAsInitialism(s2, s1)) {
+				if (s2.length() >= MINIMUM_LENGTH_INITIALISM && s2.length() <= MAXIMUM_LENGTH_INITIALISM
+						&& s2.toUpperCase(Locale.ROOT).equals(s2) && compareJournals_FirstAsInitialism(s2, s1)) {
 					log.trace("- 4. compareJournals_FirstAsInitialism(2,1) is true");
 					return true;
 				}
@@ -115,10 +126,18 @@ public class DefaultJournalComparisonService implements JournalComparisonService
 		Title: Br J Surg					pattern: \bBr.*\bJ.*\bSurg.*
 		Title: JAMA							pattern: \bJAMA.*
 		Title: Japanese J Clin Oncol		pattern: \bJapanese.*\bJ.*\bClin.*\bOncol.*	
+	
+		Limited to the first MAXIMUM_NUMBER_WORDS_JOURNAL_PATTERN words (=10). The limit is to prevent pathologic cases. From a OWASP 10 security review:
+		"... the k code-inserted ".*\b" groups over an attacker-chosen multi-token target give
+	 	 polynomial backtracking (quadratic-to-worse in target length, growing with
+	 	 token count k, which the attacker controls via T3/journal content)"
 	 */
 	private static boolean compareJournals_FirstAsAbbreviation(String s1, String s2) {
 		Pattern patternShort1 = ABBREVIATION_CACHE.computeIfAbsent(s1, k -> {
-			String patternString = "\\b" + k.replaceAll("\\s", ".*\\\\b") + ".*";
+			String[] words = k.split("\\s");
+			String patternString = Arrays.asList(words).stream().limit(MAXIMUM_NUMBER_WORDS_JOURNAL_PATTERN)
+					.collect(Collectors.joining(".*\\b", "\\b", ".*"));
+			// log.error("For '{}' pattern '{}'", k, patternString);
 			return Pattern.compile(patternString, Pattern.CASE_INSENSITIVE);
 		});
 		Matcher matcher = patternShort1.matcher(s2);
@@ -150,24 +169,31 @@ public class DefaultJournalComparisonService implements JournalComparisonService
 	 */
 	private static boolean compareJournals_FirstWithStartingInitialism(String s1, String s2) {
 		String[] words = s1.split("\\s");
-		if ("Samj".equals(words[0])) {
-			words[0] = "SAMJ";
+		String w1 = words[0];
+		if ("Samj".equals(w1)) {
+			w1 = "SAMJ";
+		} else if ("AJNR".equals(w1)) {
+			w1 = "AJN";
 		}
 		// words[0] may not be a number! "2016 Conference ..."
-		if (words[0].length() > 2 && words[0].equals(words[0].toUpperCase(Locale.ROOT)) && words[0].matches("^\\D+$")
-				|| words.length == 1 && words[0].length() < 6) {
-			if ("AJNR".equals(words[0])) {
-				words[0] = "AJN";
-			}
-			Pattern patternShort3 = STARTING_INITIALISM_CACHE.computeIfAbsent(words[0], k -> {
-				String patternString = k.chars().mapToObj(c -> String.valueOf((char) c))
+		// The key in the cache should be the journal name (input s1), but the computation if absent should be on the first word
+		if (w1.length() >= MINIMUM_LENGTH_INITIALISM && w1.length() <= MAXIMUM_LENGTH_INITIALISM
+				&& w1.equals(w1.toUpperCase(Locale.ROOT)) && w1.matches("^\\D+$")
+				|| words.length == 1 && w1.length() <= MAXIMUM_LENGTH_INITIALISM) {
+			Pattern patternShort3 = STARTING_INITIALISM_CACHE.get(s1);
+			if (patternShort3 == null) {
+				String patternString = w1.chars().mapToObj(c -> String.valueOf((char) c))
 						.collect(Collectors.joining(".*\\b", "\\b", ".*"));
-				return Pattern.compile(patternString, Pattern.CASE_INSENSITIVE);
-			});
-			Matcher matcher = patternShort3.matcher(s2);
-			// log.error("The Cache STARTING_INITIALISM_CACHE {}", STARTING_INITIALISM_CACHE);
-			//			log.error("For s1 '{}' and s2 '{}' with pattern {}", s1, s2, patternShort3);
-			return matcher.find();
+				patternShort3 = Pattern.compile(patternString, Pattern.CASE_INSENSITIVE);
+				STARTING_INITIALISM_CACHE.put(s1, patternShort3);
+			}
+
+			if (patternShort3 != null) {
+				Matcher matcher = patternShort3.matcher(s2);
+				// log.error("The Cache STARTING_INITIALISM_CACHE {}", STARTING_INITIALISM_CACHE);
+				// log.error("For s1 '{}' and s2 '{}' with pattern {}", s1, s2, patternShort3);
+				return matcher.find();
+			}
 		}
 		return false;
 	}

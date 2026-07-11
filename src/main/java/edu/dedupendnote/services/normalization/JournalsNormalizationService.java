@@ -87,7 +87,7 @@ public class JournalsNormalizationService {
 	 *
 	 */
 	private static final Pattern JOURNAL_ABBREVIATION_ROFO_PATTERN = Pattern
-			.compile("^(Rofo|Fortschritte .* Gebiet.* R.ntgenstrahlen)", Pattern.CASE_INSENSITIVE);
+			.compile("^(Rofo|Fortschritte .* Gebiet.* R.ntgenstrahlen).*$", Pattern.CASE_INSENSITIVE);
 
 	/**
 	 * Initial "Zbl(.?) " (case insensitive): will be replaced by "Zentralblatt"
