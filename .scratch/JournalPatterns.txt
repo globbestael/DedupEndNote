@@ -436,7 +436,6 @@ Journal Of Obstetrics And Gynaecology Canada	\bJournal.*\bOf.*\bObstetrics.*\bAn
 Journal Of Otolaryngology Head Neck Surgery	\bJournal.*\bOf.*\bOtolaryngology.*\bHead.*\bNeck.*\bSurgery.*	null	null
 Journal Of Pediatric Gastroenterology And Nutrition	\bJournal.*\bOf.*\bPediatric.*\bGastroenterology.*\bAnd.*\bNutrition.*	null	null
 Journal Of Personality And Social Psychology	\bJournal.*\bOf.*\bPersonality.*\bAnd.*\bSocial.*\bPsychology.*	null	null
-Journal Of Pharmacy And Pharmaceutical Sciences	\bJournal.*\bOf.*\bPharmacy.*\bAnd.*\bPharmaceutical.*\bSciences.*	null	null
 Journal Of Psychiatric Practice	\bJournal.*\bOf.*\bPsychiatric.*\bPractice.*	null	null
 Journal Of Reproductive Medicine	\bJournal.*\bOf.*\bReproductive.*\bMedicine.*	null	null
 Journal Of Sports Science And Medicine	\bJournal.*\bOf.*\bSports.*\bScience.*\bAnd.*\bMedicine.*	null	null
@@ -471,7 +470,7 @@ Journal of Psychopathology	\bJournal.*\bof.*\bPsychopathology.*	null	null
 Journal of PsychopathologyGiornale Di Psicopatologia	\bJournal.*\bof.*\bPsychopathologyGiornale.*\bDi.*\bPsicopatologia.*	null	null
 Journal of Sleep Research	\bJournal.*\bof.*\bSleep.*\bResearch.*	null	null
 Journal of Thoracic Cardiovascular Surgery	\bJournal.*\bof.*\bThoracic.*\bCardiovascular.*\bSurgery.*	null	null
-Journal of Thrombosis and Haemostasis Conference 23rd Congress of the International Society on Thrombosis and Haemostasis 57th Annual SSC Meeting Kyoto Japan	\bJournal.*\bof.*\bThrombosis.*\band.*\bHaemostasis.*\bConference.*\b23rd.*\bCongress.*\bof.*\bthe.*	null	null
+Journal of Thrombosis and Hemostasis Conference	\bJournal.*\bof.*\bThrombosis.*\band.*\bHemostasis.*\bConference.*	null	null
 Journal of Trauma	\bJournal.*\bof.*\bTrauma.*	null	null
 Journal of Trauma Injury Infection and Critical Care	\bJournal.*\bof.*\bTrauma.*\bInjury.*\bInfection.*\band.*\bCritical.*\bCare.*	null	null
 Journal of Vascular and Interventional Radiology	\bJournal.*\bof.*\bVascular.*\band.*\bInterventional.*\bRadiology.*	null	null
@@ -491,7 +490,6 @@ Journal of nuclear medicine	\bJournal.*\bof.*\bnuclear.*\bmedicine.*	null	null
 Journal of nuclear medicine official publication Society of Nuclear Medicine	\bJournal.*\bof.*\bnuclear.*\bmedicine.*\bofficial.*\bpublication.*\bSociety.*\bof.*\bNuclear.*\bMedicine.*	null	null
 Journal of nutrition	\bJournal.*\bof.*\bnutrition.*	null	null
 Journal of otolaryngology head neck surgery Le Journal d oto rhino laryngologie et de chirurgie cervico faciale	\bJournal.*\bof.*\botolaryngology.*\bhead.*\bneck.*\bsurgery.*\bLe.*\bJournal.*\bd.*\boto.*	null	null
-Journal of pharmacy pharmaceutical sciences a publication of the Canadian Society for Pharmaceutical Sciences Societe canadienne des sciences pharmaceutiques	\bJournal.*\bof.*\bpharmacy.*\bpharmaceutical.*\bsciences.*\ba.*\bpublication.*\bof.*\bthe.*\bCanadian.*	null	null
 Journal of psychiatric practice	\bJournal.*\bof.*\bpsychiatric.*\bpractice.*	null	null
 Journal of the American Medical Association	\bJournal.*\bof.*\bthe.*\bAmerican.*\bMedical.*\bAssociation.*	null	null
 Journal of the American Veterinary Medical Association	\bJournal.*\bof.*\bthe.*\bAmerican.*\bVeterinary.*\bMedical.*\bAssociation.*	null	null
@@ -580,6 +578,7 @@ Perfectionnement en Pediatrie	\bPerfectionnement.*\ben.*\bPediatrie.*	null	null
 Phys Med	\bPhys.*\bMed.*	null	null
 Physica Medica	\bPhysica.*\bMedica.*	null	null
 Physica Medica European Journal Of Medical Physics	\bPhysica.*\bMedica.*\bEuropean.*\bJournal.*\bOf.*\bMedical.*\bPhysics.*	null	null
+Physica medica PM an international journal devoted to the applications of physics to medicine and biology official journal of the Italian Association	\bPhysica.*\bmedica.*\bPM.*\ban.*\binternational.*\bjournal.*\bdevoted.*\bto.*\bthe.*\bapplications.*	null	null
 Pm R	\bPm.*\bR.*	null	null
 Pneumologie	\bPneumologie.*	null	null
 Pneumologie Stuttgart Germany	\bPneumologie.*\bStuttgart.*\bGermany.*	null	null
@@ -705,7 +704,9 @@ Zentralblatt fur allgemeine Pathologie u pathologische Anatomie	\bZentralblatt.*
 Zh Obshch Biol	\bZh.*\bObshch.*\bBiol.*	null	null
 Zhong Nan Da Xue Xue Bao Yi Xue Ban	\bZhong.*\bNan.*\bDa.*\bXue.*\bXue.*\bBao.*\bYi.*\bXue.*\bBan.*	null	null
 Zhong nan da xue xue bao Yi xue ban Journal of Central South University Medical sciences	\bZhong.*\bnan.*\bda.*\bxue.*\bxue.*\bbao.*\bYi.*\bxue.*\bban.*\bJournal.*	null	null
+Zhongguo Zhong Xi Yi Jie He Xue Hui Zhongguo Zhong Yi Yan Jiu Yuan Zhu Ban	\bZhongguo.*\bZhong.*\bXi.*\bYi.*\bJie.*\bHe.*\bXue.*\bHui.*\bZhongguo.*\bZhong.*	null	null
 Zhongguo Zhong Xi Yi Jie He Za Zhi Chinese Journal of Integrated Traditional and Western Medicine	\bZhongguo.*\bZhong.*\bXi.*\bYi.*\bJie.*\bHe.*\bZa.*\bZhi.*\bChinese.*\bJournal.*	null	null
+Zhongguo Zhong Xi Yi Jie He Za Zhi Zhongguo Zhongxiyi Jiehe Zazhi	\bZhongguo.*\bZhong.*\bXi.*\bYi.*\bJie.*\bHe.*\bZa.*\bZhi.*\bZhongguo.*\bZhongxiyi.*	null	null
 Zhonghua Wai Ke Za Zhi	\bZhonghua.*\bWai.*\bKe.*\bZa.*\bZhi.*	null	null
 Zhonghua wai ke za zhi chinese journal of surgery	\bZhonghua.*\bwai.*\bke.*\bza.*\bzhi.*\bchinese.*\bjournal.*\bof.*\bsurgery.*	null	null
 Zhurnal Obshchei Biologii	\bZhurnal.*\bObshchei.*\bBiologii.*	null	null
