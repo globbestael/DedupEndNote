@@ -42,3 +42,6 @@ buildNumber.properties
 /README_with_ASySD_scores.md
 logs/Screenshot20260411.png
 src/test/resources/scratchbook.html
+.scratch/~$Journal_Patterns.xlsx
+.scratch/Journal_Patterns.xlsx
+.scratch/Journal*.txt
