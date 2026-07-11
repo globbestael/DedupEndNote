@@ -66,6 +66,18 @@ class JournalsNormalizationServiceTest {
 				"Rinsho ketsueki The Japanese journal of clinical hematology"));
 	}
 
+	@Test
+	void normalizeJournal_capsLengthAt150_andStaysStripped() {
+		// 300 chars; a 150-char cut lands on a space boundary, so this also guards the
+		// truncate-before-strip ordering (a strip-then-truncate bug would leave trailing space).
+		String overlength = "ab ".repeat(100);
+
+		String result = JournalsNormalizationService.normalizeJournal(overlength);
+
+		assertThat(result.length()).isLessThanOrEqualTo(150);
+		assertThat(result).isEqualTo(result.strip()); // no leading/trailing whitespace
+	}
+
 	static Stream<Arguments> journalArgumentProvider() {
 		// @formatter:off
 		return Stream.of(

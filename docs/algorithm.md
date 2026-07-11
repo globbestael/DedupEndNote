@@ -95,6 +95,8 @@ This is an **OR gate** — only one of the following must pass:
    - **Abbreviation detection:** e.g. `"Ann Intern Med"` → `"Annals of Internal Medicine"`.
    - **Initialism detection:** e.g. `"AJP"` → `"American Journal of Psychiatry"`.
 
+Normalized journal names are truncated to 150 characters (`JournalsNormalizationService.MAX_JOURNAL_LENGTH`) so the abbreviation/initialism regex target cannot be scaled by crafted input. Real journal names are far shorter, so this does not affect matching for genuine data.
+
 `DefaultJournalComparisonService` hosts the static helper `compareIssns`.
 
 Thresholds are injectable via the `JournalThresholds` record.

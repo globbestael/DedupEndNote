@@ -151,6 +151,14 @@ public class JournalsNormalizationService {
 	private static final Pattern NON_ASCII_PATTERN = Pattern.compile("[^a-z0-9]", Pattern.CASE_INSENSITIVE);
 
 	/**
+	 * Maximum length of a normalized journal name. Names longer than this are truncated so the
+	 * abbreviation/initialism regex target in {@code DefaultJournalComparisonService} cannot be
+	 * scaled by crafted input (ReDoS hardening, security issue 03). Real journal names are far
+	 * shorter, so this never affects genuine data.
+	 */
+	private static final int MAX_JOURNAL_LENGTH = 150;
+
+	/**
 	 * All other apostrophes (compare genitiveApostrophePattern): will be replaced by SPACE. E.g. "Annales d'Urologie",
 	 * "Journal of Xi'an Jiaotong University (Medical Sciences)". Must be called AFTER genitiveApostrophePattern
 	 */
@@ -316,7 +324,10 @@ public class JournalsNormalizationService {
 			r = NON_ASCII_PATTERN.matcher(r).replaceAll(" ");
 		}
 		r = MULTIPLE_WHITE_SPACE_PATTERN.matcher(r).replaceAll(" ");
-		return r.strip(); // DO NOT lowercase (http titles are the exception)
+		// Cap length (ReDoS hardening, issue 03). Truncate BEFORE strip so a cut on a space
+		// boundary cannot leave trailing whitespace — every normalized journal stays stripped.
+		// DO NOT lowercase (http titles are the exception).
+		return (r.length() > MAX_JOURNAL_LENGTH ? r.substring(0, MAX_JOURNAL_LENGTH) : r).strip();
 	}
 
 	// static public String normalizeJournalJava9Plus(String s) {

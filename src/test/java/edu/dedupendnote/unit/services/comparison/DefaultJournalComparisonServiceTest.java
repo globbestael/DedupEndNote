@@ -9,10 +9,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -64,6 +66,28 @@ class DefaultJournalComparisonServiceTest extends BaseTest {
 
 		assertThat(new DefaultJournalComparisonService().compare(p1, p2, false))
 				.as("Journals are similar: %s versus %s", p1.getJournals(), p2.getJournals()).isFalse();
+	}
+
+	/*
+	 * Issue 03: over-length journal names are truncated (MAX_JOURNAL_LENGTH = 150) during
+	 * normalization, so the abbreviation/initialism regex target cannot be scaled by crafted
+	 * input. The stored journals must be capped and the comparison must finish promptly.
+	 */
+	@Test
+	@Timeout(value = 5, unit = TimeUnit.SECONDS)
+	void compare_overlengthJournals_isCappedAndCompletesQuickly() {
+		String longJournal1 = "a a a a a a a a a a " + "verylongtoken ".repeat(20);
+		String longJournal2 = "a b c d e f g h i j " + "anotherlongtoken ".repeat(20);
+		BibliographicItem p1 = new BibliographicItem();
+		BibliographicItem p2 = new BibliographicItem();
+		reader.addNormalizedJournal(longJournal1, p1, "T2");
+		reader.addNormalizedJournal(longJournal2, p2, "T2");
+
+		assertThat(p1.getJournals()).allSatisfy(j -> assertThat(j.length()).isLessThanOrEqualTo(150));
+		assertThat(p2.getJournals()).allSatisfy(j -> assertThat(j.length()).isLessThanOrEqualTo(150));
+
+		// Must return (either result) well within the @Timeout — no catastrophic backtracking.
+		new DefaultJournalComparisonService().compare(p1, p2, false);
 	}
 
 	static Stream<Arguments> fullPositiveArgumentProvider() {
