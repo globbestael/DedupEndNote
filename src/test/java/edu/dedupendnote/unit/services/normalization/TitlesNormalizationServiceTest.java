@@ -119,7 +119,21 @@ class TitlesNormalizationServiceTest {
 					"restructuring consciousness the psychedelic state in light of integrated information theory",
 					"restructuring consciousness",
 					"psychedelic state in light of integrated information theory"
-				))
+				)),
+			arguments( // TI for Chinese OP title: New approaches in chimeric antigen receptor T-cell therapy for breast cancer
+				// the Chinese "t" is translated as "T-cell ..."
+				"嵌合抗原受体t细胞疗法在乳腺癌中的应用进展.", 
+				List.of("t")),
+			arguments( // TI for this Chinese OP title: Portal vein thrombosis with superior mesenteric venous thrombosis: A case report and review of the literature
+				// the Chinese "1" is translated in "A case ..."
+				"门静脉-肠系膜上静脉广泛栓塞1例并文献复习", 
+				List.of("1")),
+			arguments( // a full CJK title returns null, not an empty String
+				"门静脉-肠系膜上静脉广泛栓塞例并文献复习", 
+				List.of()),
+			arguments( // both characters are swallowed
+				"-1", 
+				List.of())
 		);
 		// @formatter:on
 	}
