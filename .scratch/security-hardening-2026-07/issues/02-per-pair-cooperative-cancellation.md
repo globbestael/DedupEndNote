@@ -1,6 +1,6 @@
 # Per-pair cooperative cancellation in the comparison loop
 
-Status: ready-for-agent
+Status: implemented (tests green; pending commit & human review)
 
 ## Parent
 
@@ -24,16 +24,39 @@ actually stop promptly.
 
 ## Acceptance criteria
 
-- [ ] The inner comparison loop observes interruption/deadline per pair, not only per pivot.
-- [ ] A mid-run cancel stops the comparison phase within a bounded number of comparisons
+- [x] The inner comparison loop observes interruption/deadline per pair, not only per pivot.
+- [x] A mid-run cancel stops the comparison phase within a bounded number of comparisons
       (demonstrated by a test), rather than only at the next pivot boundary.
-- [ ] The check adds no allocation on the hot path; normal-run behaviour and results are
+- [x] The check adds no allocation on the hot path; normal-run behaviour and results are
       unchanged.
-- [ ] Deduplication output for existing integration fixtures is byte-for-byte unchanged
+- [x] Deduplication output for existing integration fixtures is byte-for-byte unchanged
       (no accidental behaviour change from the added check).
-- [ ] A test asserts prompt cancellation during the comparison phase (extend
+- [x] A test asserts prompt cancellation during the comparison phase (extend
       `CancellationTests` / `MissedDuplicatesTests` prior art).
 
 ## Blocked by
 
 None - can start immediately. (Best demonstrated together with slice 01, but independent.)
+
+## Comments
+
+**Implemented.** In `DeduplicationService.compareSet`, cached the worker thread once
+(`Thread current = Thread.currentThread()`) and added a per-pair check at the top of the
+inner loop: `if (current.isInterrupted()) throw new CancelledException(...)`. The existing
+per-pivot check now reuses `current`. Interrupt conveys **both** triggers — user Cancel
+and run timeout both interrupt via `future.cancel(true)` in `BoundedDedupRunner` — so no
+separate deadline is passed down and the comparison engine stays decoupled from the runner.
+
+Verification:
+- New unit test `DeduplicationServiceCancellationTest` proves per-pair granularity: a fake
+  `FieldComparators` interrupts the thread on the first `pages()` call; with 1 pivot + 3
+  inner items the loop throws `CancelledException` after **exactly one** comparison
+  (per-pivot-only would have run all three → count 3). No Spring context.
+- Output parity: `DeduplicationServiceTests` + `MissedDuplicatesTests` (assert exact result
+  strings) unchanged → the check is inert on normal runs.
+- Phase-level / e2e cancellation still green: `CancellationTests` (2),
+  `BrowserCancellationTests` (2, real WebSocket).
+
+No `docs/algorithm.md` change: per-pair cancellation is runtime plumbing, not an algorithm
+step/threshold/special-type change, and results are identical. The cancel path is already
+documented at the right altitude in `architecture.html` (issue 01).

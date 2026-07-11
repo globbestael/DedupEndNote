@@ -73,6 +73,9 @@ public class DeduplicationService {
 			Consumer<String> progressReporter) {
 		int noOfBibliographicItems = bibliographicItems.size();
 		int noOfDuplicates = 0;
+		// compareSet runs entirely on one worker thread; cache it so the cancellation
+		// checks below are a single volatile read (allocation-free on the O(n²) hot path).
+		Thread current = Thread.currentThread();
 		/*
 		 * This Map holds temporary results of the comparison between 2 bibliographicItems.
 		 * At present there is only 1 key (isSameDois). If we need more keys, a POJO would be better?
@@ -88,7 +91,7 @@ public class DeduplicationService {
 		// Map<String, Boolean> map = new HashMap<>(Map.of("isSameDois", null));
 
 		while (bibliographicItems.size() > 1) {
-			if (Thread.currentThread().isInterrupted()) {
+			if (current.isInterrupted()) {
 				throw new CancelledException("ERROR: Deduplication was cancelled by the user.");
 			}
 			BibliographicItem pivot = bibliographicItems.remove(0);
@@ -103,6 +106,11 @@ public class DeduplicationService {
 			}
 
 			for (BibliographicItem p : bibliographicItems) {
+				// Per-pair cancellation: observe the interrupt (user cancel or run timeout)
+				// within one comparison rather than only between pivots.
+				if (current.isInterrupted()) {
+					throw new CancelledException("ERROR: Deduplication was cancelled by the user.");
+				}
 				map.put("isSameDois", null);
 				// log.atDebug().setMessage("Clear results previous comparison {}")
 				// .addArgument(() -> pivot.getLogLines().removeAll(bibliographicItem.getLogLines())).log();
