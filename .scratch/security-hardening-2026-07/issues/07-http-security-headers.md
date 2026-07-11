@@ -1,6 +1,6 @@
 # HTTP security response headers
 
-Status: ready-for-agent
+Status: implemented (tests green; pending commit & human review)
 
 ## Parent
 
@@ -19,12 +19,33 @@ At minimum, on every response:
 
 ## Acceptance criteria
 
-- [ ] Every response (pages, uploads, result downloads, error responses) carries the
+- [x] Every response (pages, uploads, result downloads, error responses) carries the
       three headers above.
-- [ ] The result-file download still functions correctly with the headers present.
-- [ ] A test asserts the headers are present on a representative endpoint.
-- [ ] No dependency on Spring Security is introduced.
+- [x] The result-file download still functions correctly with the headers present.
+- [x] A test asserts the headers are present on a representative endpoint.
+- [x] No dependency on Spring Security is introduced.
 
 ## Blocked by
 
 None - can start immediately.
+
+## Comments
+
+**Implemented.** `SecurityHeadersFilter` (`@Component`, `OncePerRequestFilter` in the
+`controllers` package) sets `X-Content-Type-Options: nosniff`, `X-Frame-Options: SAMEORIGIN`
+and `Referrer-Policy: strict-origin-when-cross-origin` before `chain.doFilter`, so they are
+present on every response before commit — dynamic pages, uploads, the streamed result
+download, static resources and error dispatches. Spring Boot auto-registers the filter bean
+for all URLs; no Spring Security.
+
+**CSP deliberately omitted:** the issue lists CSP only as an alternative to
+`X-Frame-Options`. A real Content-Security-Policy risks breaking the Thymeleaf UI (inline
+scripts/styles, webjars/CDN) and needs dedicated UI testing — noted as possible future
+hardening.
+
+Verification:
+- `SecurityHeadersTests` (RandomPort): a page (`GET /` → 200) and an error response
+  (`GET /no-such-resource` → 404) both carry all three headers — the 404 case proves error
+  responses are covered.
+- Regression: full integration suite 27 (incl. the `PathTraversalTests` result-download
+  happy path) — download still functions with headers present.
