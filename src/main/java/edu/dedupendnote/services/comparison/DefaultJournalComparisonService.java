@@ -3,9 +3,7 @@ package edu.dedupendnote.services.comparison;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -27,9 +25,12 @@ public class DefaultJournalComparisonService implements JournalComparisonService
 		  e.g. "Br J Surg", "J Am J Assoc"
 	 */
 	private static final JaroWinklerSimilarity JWS = new JaroWinklerSimilarity();
-	public static final Map<String, Pattern> ABBREVIATION_CACHE = new ConcurrentHashMap<>();
-	public static final Map<String, Pattern> INITIALISM_CACHE = new ConcurrentHashMap<>();
-	public static final Map<String, Pattern> STARTING_INITIALISM_CACHE = new ConcurrentHashMap<>();
+	// Bounded so distinct (possibly attacker-supplied) journal names cannot grow the heap
+	// without limit. Eviction only forces a pattern to be recompiled on the next miss.
+	private static final int MAX_CACHE_SIZE = 5000;
+	public static final BoundedPatternCache ABBREVIATION_CACHE = new BoundedPatternCache(MAX_CACHE_SIZE);
+	public static final BoundedPatternCache INITIALISM_CACHE = new BoundedPatternCache(MAX_CACHE_SIZE);
+	public static final BoundedPatternCache STARTING_INITIALISM_CACHE = new BoundedPatternCache(MAX_CACHE_SIZE);
 
 	private static final int MINIMUM_LENGTH_INITIALISM = 2;
 	private static final int MAXIMUM_LENGTH_INITIALISM = 6;
@@ -133,7 +134,7 @@ public class DefaultJournalComparisonService implements JournalComparisonService
 	 	 token count k, which the attacker controls via T3/journal content)"
 	 */
 	private static boolean compareJournals_FirstAsAbbreviation(String s1, String s2) {
-		Pattern patternShort1 = ABBREVIATION_CACHE.computeIfAbsent(s1, k -> {
+		Pattern patternShort1 = ABBREVIATION_CACHE.get(s1, k -> {
 			String[] words = k.split("\\s");
 			String patternString = Arrays.asList(words).stream().limit(MAXIMUM_NUMBER_WORDS_JOURNAL_PATTERN)
 					.collect(Collectors.joining(".*\\b", "\\b", ".*"));
@@ -150,7 +151,7 @@ public class DefaultJournalComparisonService implements JournalComparisonService
 		Title: BMJ 			pattern: \bB.*\bM.*\bJ.*
 	 */
 	private static boolean compareJournals_FirstAsInitialism(String s1, String s2) {
-		Pattern patternShort2 = INITIALISM_CACHE.computeIfAbsent(s1, k -> {
+		Pattern patternShort2 = INITIALISM_CACHE.get(s1, k -> {
 			String patternString = k.chars().mapToObj(c -> String.valueOf((char) c))
 					.collect(Collectors.joining(".*\\b", "\\b", ".*"));
 			return Pattern.compile(patternString, Pattern.CASE_INSENSITIVE);
@@ -176,24 +177,18 @@ public class DefaultJournalComparisonService implements JournalComparisonService
 			w1 = "AJN";
 		}
 		// words[0] may not be a number! "2016 Conference ..."
-		// The key in the cache should be the journal name (input s1), but the computation if absent should be on the first word
-		if (w1.length() >= MINIMUM_LENGTH_INITIALISM && w1.length() <= MAXIMUM_LENGTH_INITIALISM
-				&& w1.equals(w1.toUpperCase(Locale.ROOT)) && w1.matches("^\\D+$")
-				|| words.length == 1 && w1.length() <= MAXIMUM_LENGTH_INITIALISM) {
-			Pattern patternShort3 = STARTING_INITIALISM_CACHE.get(s1);
-			if (patternShort3 == null) {
-				String patternString = w1.chars().mapToObj(c -> String.valueOf((char) c))
+		final String firstWord = w1;
+		if (firstWord.length() >= MINIMUM_LENGTH_INITIALISM && firstWord.length() <= MAXIMUM_LENGTH_INITIALISM
+				&& firstWord.equals(firstWord.toUpperCase(Locale.ROOT)) && firstWord.matches("^\\D+$")
+				|| words.length == 1 && firstWord.length() <= MAXIMUM_LENGTH_INITIALISM) {
+			// Cache key is the journal name (s1); the pattern is computed from the first word.
+			Pattern patternShort3 = STARTING_INITIALISM_CACHE.get(s1, k -> {
+				String patternString = firstWord.chars().mapToObj(c -> String.valueOf((char) c))
 						.collect(Collectors.joining(".*\\b", "\\b", ".*"));
-				patternShort3 = Pattern.compile(patternString, Pattern.CASE_INSENSITIVE);
-				STARTING_INITIALISM_CACHE.put(s1, patternShort3);
-			}
-
-			if (patternShort3 != null) {
-				Matcher matcher = patternShort3.matcher(s2);
-				// log.error("The Cache STARTING_INITIALISM_CACHE {}", STARTING_INITIALISM_CACHE);
-				// log.error("For s1 '{}' and s2 '{}' with pattern {}", s1, s2, patternShort3);
-				return matcher.find();
-			}
+				return Pattern.compile(patternString, Pattern.CASE_INSENSITIVE);
+			});
+			Matcher matcher = patternShort3.matcher(s2);
+			return matcher.find();
 		}
 		return false;
 	}

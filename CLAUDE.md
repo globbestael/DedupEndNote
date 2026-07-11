@@ -66,7 +66,7 @@ See [`docs/architecture.html`](docs/architecture.html) for the pipeline diagram,
 - `controllers/` — HTTP endpoints; file upload and dedup triggers; delegates run lifecycle (concurrency cap, timeout, cancel) to `BoundedDedupRunner`; WebSocket progress routing
 - `domain/` — `BibliographicItem` (core model), `BibliographicItemDB` (in-memory store), `DeduplicationMode` (enum: `REMOVE` / `MARK`)
 - `services/` — `DeduplicationService`, `BibliographicItemReader`, `BibliographicItemWriter`, `EnrichmentService`, `UtilitiesService`, `BoundedDedupRunner` (run orchestration: bounded concurrency permit + per-run timeout + cancel-by-session; guarantees permit release on every outcome)
-- `services/comparison/` — four `*ComparisonService` interfaces, four `Default*ComparisonService` implementations, three `*Thresholds` value objects, `FieldComparators` record
+- `services/comparison/` — four `*ComparisonService` interfaces, four `Default*ComparisonService` implementations, three `*Thresholds` value objects, `FieldComparators` record, `BoundedPatternCache` (size-bounded LRU of compiled journal-name patterns)
 - `services/normalization/` — `NormalizationService` plus four `*NormalizationService` classes
 
 ### Modes
