@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DedupEndNote — Security Review (2026-07-11)</title>
+<style>
+  :root {
+    --crit:#7c1420; --high:#b23b1e; --med:#b8860b; --low:#2f6f3e; --info:#37618e;
+    --ink:#1c2430; --muted:#5a6472; --line:#dde2e8; --bg:#ffffff; --soft:#f6f8fa;
+  }
+  * { box-sizing:border-box; }
+  body {
+    font:15px/1.55 -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+    color:var(--ink); background:var(--bg); margin:0; padding:0;
+  }
+  .wrap { max-width:900px; margin:0 auto; padding:48px 32px 80px; }
+  header.doc { border-bottom:3px solid var(--ink); padding-bottom:18px; margin-bottom:8px; }
+  h1 { font-size:27px; margin:0 0 6px; letter-spacing:-0.2px; }
+  h2 { font-size:20px; margin:40px 0 12px; padding-bottom:6px; border-bottom:1px solid var(--line); }
+  h3 { font-size:16px; margin:26px 0 6px; }
+  .sub { color:var(--muted); font-size:14px; }
+  .meta { display:flex; flex-wrap:wrap; gap:6px 28px; margin:14px 0 0; font-size:13.5px; color:var(--muted); }
+  .meta b { color:var(--ink); font-weight:600; }
+  p { margin:10px 0; }
+  code { font-family:ui-monospace,SFMono-Regular,Consolas,monospace; font-size:13px;
+    background:var(--soft); border:1px solid var(--line); border-radius:4px; padding:1px 5px; }
+  .callout { background:var(--soft); border:1px solid var(--line); border-left:4px solid var(--info);
+    border-radius:6px; padding:14px 18px; margin:18px 0; }
+  .callout.ok { border-left-color:var(--low); }
+  table { border-collapse:collapse; width:100%; margin:14px 0; font-size:13.5px; }
+  th,td { text-align:left; padding:8px 10px; border-bottom:1px solid var(--line); vertical-align:top; }
+  th { background:var(--soft); font-weight:600; border-bottom:2px solid var(--line); }
+  .pill { display:inline-block; font-size:11px; font-weight:700; letter-spacing:.4px;
+    text-transform:uppercase; color:#fff; padding:2px 8px; border-radius:20px; white-space:nowrap; }
+  .p-crit{background:var(--crit)} .p-high{background:var(--high)} .p-med{background:var(--med)}
+  .p-low{background:var(--low)} .p-info{background:var(--info)}
+  .status-ok { color:var(--low); font-weight:700; }
+  .status-open { color:var(--med); font-weight:700; }
+  .finding { border:1px solid var(--line); border-radius:8px; padding:4px 20px 16px; margin:20px 0; }
+  .finding .head { display:flex; align-items:center; gap:12px; margin:14px 0 4px; }
+  .finding .head .t { font-weight:600; font-size:15.5px; }
+  .kv { margin:8px 0; }
+  .kv .k { font-weight:600; color:var(--muted); font-size:12.5px; text-transform:uppercase; letter-spacing:.4px; }
+  ul.tight { margin:8px 0; padding-left:22px; }
+  ul.tight li { margin:4px 0; }
+  footer { margin-top:56px; padding-top:16px; border-top:1px solid var(--line);
+    color:var(--muted); font-size:12.5px; }
+  .legend { font-size:12.5px; color:var(--muted); margin-top:8px; }
+  @media print { .wrap{max-width:none;padding:0 12mm} a{color:inherit;text-decoration:none} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="doc">
+  <h1>DedupEndNote — Application Security Review</h1>
+  <div class="sub">OWASP Top 10 &amp; denial-of-service / resource-exhaustion assessment</div>
+  <div class="meta">
+    <span><b>Application:</b> DedupEndNote v1.1.7</span>
+    <span><b>Stack:</b> Spring Boot 4.1.0 / Java 21</span>
+    <span><b>Review date:</b> 2026-07-11</span>
+    <span><b>Branch / commit:</b> <code>design</code> @ <code>f38de63</code></span>
+    <span><b>Method:</b> Full source review (from scratch)</span>
+  </div>
+</header>
+
+<h2>1. Executive summary</h2>
+<p>
+  DedupEndNote is a public, no-login web tool that deduplicates bibliographic records in RIS
+  format. Because every endpoint is reachable anonymously, the review focuses on
+  input-handling and resource-exhaustion (DoS) risks rather than access control.
+</p>
+<div class="callout ok">
+  <strong>Result: no open Critical, High, Medium or Low findings.</strong>
+  Every actionable finding from the prior review cycle has been remediated and independently
+  re-verified against the current source. Two <span class="pill p-info">Info</span> items remain
+  open by deliberate choice (a TLS-deployment documentation note and a negligible parse-time
+  regex observation), and one operational note applies to the session-directory reaper
+  (shipped but disabled by default). None represents an exploitable defect in the code as
+  written.
+</div>
+
+<h3>Findings at a glance</h3>
+<table>
+  <thead><tr><th>Severity</th><th>Open</th><th>Resolved this cycle</th></tr></thead>
+  <tbody>
+    <tr><td><span class="pill p-crit">Critical</span></td><td>0</td><td>0</td></tr>
+    <tr><td><span class="pill p-high">High</span></td><td>0</td><td>1</td></tr>
+    <tr><td><span class="pill p-med">Medium</span></td><td>0</td><td>1</td></tr>
+    <tr><td><span class="pill p-low">Low</span></td><td>0</td><td>3</td></tr>
+    <tr><td><span class="pill p-info">Info</span></td><td>2</td><td>—</td></tr>
+  </tbody>
+</table>
+
+<h2>2. Scope &amp; methodology</h2>
+<p>
+  The review covered the full application source on branch <code>design</code>: HTTP controllers,
+  the deduplication / comparison / normalization services, the RIS reader and writer, web and
+  WebSocket configuration, the upload rate limiter, exception handling, application properties,
+  and declared dependency versions. Findings were derived by direct code reading; each
+  remediation claimed in the prior cycle was checked against the current code rather than taken
+  on trust.
+</p>
+<p>The assessment framework was the OWASP Top 10, extended with a project-specific emphasis on
+  denial-of-service and resource exhaustion (the primary risk surface for an unauthenticated,
+  compute-intensive tool). Dependency CVE scanning via
+  <code>mvnw dependency-check:check</code> remains the authoritative pre-release gate and is
+  noted where relevant.</p>
+
+<h2>3. Resolved findings (verified closed)</h2>
+
+<div class="finding">
+  <div class="head"><span class="pill p-high">High</span>
+    <span class="t">Non-abortive run-timeout could permanently exhaust concurrency (self-DoS), with journal matching as the cheapest trigger</span></div>
+  <div class="kv"><span class="k">Risk (before fix)</span> — A single CPU-bound comparison could ignore the timeout, block executor shutdown, and permanently hold a concurrency permit; repeated a few times this wedged the service with no restart-free recovery. Crafted journal strings gave an attacker a cheap way to make one comparison run long (polynomial regex backtracking).</div>
+  <div class="kv"><span class="k">Status</span> <span class="status-ok">RESOLVED &amp; VERIFIED</span></div>
+  <div class="kv"><span class="k">How it is now handled</span></div>
+  <ul class="tight">
+    <li><strong>Guaranteed permit release.</strong> <code>BoundedDedupRunner</code> runs each job on a long-lived shared virtual-thread executor and acquires a bounded <code>Semaphore</code>. On timeout it calls <code>future.cancel(true)</code> and returns <em>immediately</em> without awaiting the worker; the permit is released in a <code>finally</code> that runs on every outcome (complete, busy, timeout, cancel, error). A stuck task can no longer block release. <code>BoundedDedupRunner.java:124–158</code></li>
+    <li><strong>Cancellation observed mid-comparison.</strong> <code>DeduplicationService.compareSet</code> now checks the interrupt flag inside the inner pair loop, not only between pivots, so a long run reacts to timeout/cancel within a single comparison. <code>DeduplicationService.java:108–113</code></li>
+    <li><strong>ReDoS trigger bounded.</strong> The abbreviation pattern is capped at the first 10 words (<code>MAXIMUM_NUMBER_WORDS_JOURNAL_PATTERN</code>), initialisms at 2–6 chars, and — critically — the match <em>target</em> is capped at 150 characters at normalization time (<code>MAX_JOURNAL_LENGTH</code>), so no crafted input can scale a single comparison. <code>DefaultJournalComparisonService.java:35–37,137–191</code>; <code>JournalsNormalizationService.java:159,330</code></li>
+  </ul>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="pill p-med">Medium</span>
+    <span class="t">Unbounded static pattern caches (per-JVM memory-exhaustion vector)</span></div>
+  <div class="kv"><span class="k">Risk (before fix)</span> — Three process-global maps of compiled patterns, keyed on full (attacker-influenced) journal strings, were never evicted. Sustained uploads of many distinct journal names grew the heap without bound across runs.</div>
+  <div class="kv"><span class="k">Status</span> <span class="status-ok">RESOLVED &amp; VERIFIED</span></div>
+  <div class="kv"><span class="k">How it is now handled</span> — Replaced by <code>BoundedPatternCache</code>, a thread-safe LRU capped at 5,000 entries per cache. Eviction only forces recompilation on a later miss; it never changes a comparison result. <code>BoundedPatternCache.java</code>; <code>DefaultJournalComparisonService.java:30–33</code></div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="pill p-low">Low</span>
+    <span class="t">Upload rate limiter bypassable via a client-chosen key</span></div>
+  <div class="kv"><span class="k">Risk (before fix)</span> — The limiter keyed on the client-supplied session id, so an automated uploader could mint a fresh id per request for a clean quota every time.</div>
+  <div class="kv"><span class="k">Status</span> <span class="status-ok">RESOLVED &amp; VERIFIED</span></div>
+  <div class="kv"><span class="k">How it is now handled</span> — <code>RateLimitInterceptor</code> keys on the client IP (first <code>X-Forwarded-For</code> hop when behind the documented reverse proxy, otherwise <code>remoteAddr</code>), not on the session id. A burst limit ≥ 2 preserves the two-file flow, and the cooldown slot is only consumed on a successful (HTTP&nbsp;200) upload. <code>RateLimitInterceptor.java:35–94</code></div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="pill p-low">Low</span>
+    <span class="t">Per-session upload directories could accumulate on disk</span></div>
+  <div class="kv"><span class="k">Risk (before fix)</span> — Each page load mints a session directory holding uploads and outputs; nothing in-process deleted them, so sustained use could fill the upload partition.</div>
+  <div class="kv"><span class="k">Status</span> <span class="status-ok">RESOLVED &amp; VERIFIED</span> <span class="sub">(see operational note below)</span></div>
+  <div class="kv"><span class="k">How it is now handled</span> — <code>SessionDirectoryReaper</code> adds an opt-in <code>@Scheduled</code> sweep that deletes session directories older than a configurable age (default 24h). Staleness is judged by last-modified time, so in-flight runs are naturally spared. <code>SessionDirectoryReaper.java</code></div>
+  <div class="kv"><span class="k">Operational note</span> — The reaper is <strong>disabled by default</strong> (<code>dedup.session-reaper.enabled=false</code>); the intended default cleanup is an external cron stop/restart. Operators who do not use that cron should enable the in-process reaper, otherwise disk can still fill over time. This is a deployment choice, not a code defect.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="pill p-low">Low</span>
+    <span class="t">Missing HTTP security response headers</span></div>
+  <div class="kv"><span class="k">Risk (before fix)</span> — No anti-clickjacking or MIME-sniffing headers on any response.</div>
+  <div class="kv"><span class="k">Status</span> <span class="status-ok">RESOLVED &amp; VERIFIED</span></div>
+  <div class="kv"><span class="k">How it is now handled</span> — <code>SecurityHeadersFilter</code> (a servlet filter, so it also covers the streamed download and error dispatches) sets <code>X-Content-Type-Options: nosniff</code>, <code>X-Frame-Options: SAMEORIGIN</code>, and <code>Referrer-Policy: strict-origin-when-cross-origin</code> on every response. <code>SecurityHeadersFilter.java</code></div>
+</div>
+
+<h2>4. Open findings (accepted / informational)</h2>
+
+<div class="finding">
+  <div class="head"><span class="pill p-info">Info</span>
+    <span class="t">TLS deployment expectation is undocumented</span></div>
+  <div class="kv"><span class="k">Observation</span> — The application serves plain HTTP on port 9777. Uploads and downloads travel unencrypted unless a reverse proxy terminates TLS in front of it. This is only a real risk if the port is exposed beyond loopback without such a proxy.</div>
+  <div class="kv"><span class="k">Recommendation</span> — Document the expected topology (proxy terminates TLS; the app binds loopback) in <code>application.properties</code> or the README. Documentation-only; no code change.</div>
+</div>
+
+<div class="finding">
+  <div class="head"><span class="pill p-info">Info</span>
+    <span class="t">Parse-time field regexes have a mild backtracking shape</span></div>
+  <div class="kv"><span class="k">Observation</span> — A few title/field patterns in the RIS reader use leading/trailing <code>.*</code>/<code>.+</code>. They run once per field (linear in record count, <em>not</em> on the O(n²) comparison path) against single field strings, with no nested quantifiers over overlapping input. Current amplification is negligible.</div>
+  <div class="kv"><span class="k">Recommendation</span> — No action required now. Re-audit only if the record cap or field-length assumptions change. <code>BibliographicItemReader.java:119–125</code></div>
+</div>
+
+<h2>5. Controls verified effective (non-findings)</h2>
+<p>The following were examined and confirmed to be adequately handled in the current code:</p>
+<table>
+  <thead><tr><th>Area</th><th>Verification</th></tr></thead>
+  <tbody>
+    <tr><td>Path traversal</td><td><code>resolveInSessionDir</code> rejects null/empty names, CR/LF (log forging), absolute paths, multi-segment names, and <code>.</code>/<code>..</code>, then re-checks containment after normalization. Applied at every controller entry point.</td></tr>
+    <tr><td>Memory / OOM from large upload</td><td><code>checkRecordCap</code> (limit 100,000 records) runs <em>before</em> the file is loaded; <code>countRecords</code> streams the file with O(1) memory. Two-file mode sums both counts first.</td></tr>
+    <tr><td>File namespace collisions</td><td>Each session gets a <code>UUID.randomUUID()</code> subdirectory, so identically-named concurrent uploads cannot collide.</td></tr>
+    <tr><td>WebSocket eavesdropping</td><td>The per-page id is a 122-bit CSPRNG UUID carried only in POST params / hidden fields (never in a URL or Referer), so topic subscriptions are not practically guessable.</td></tr>
+    <tr><td>Injection (SQL / command / LDAP)</td><td>No database, no <code>ProcessBuilder</code>/<code>Runtime.exec</code>, no LDAP. Confirmed absent.</td></tr>
+    <tr><td>SSRF</td><td>No outbound HTTP client anywhere in the codebase. Confirmed absent.</td></tr>
+    <tr><td>Error / stack-trace exposure</td><td><code>GlobalExceptionHandler</code> returns generic bodies and logs server-side only; favicon-style probes return a quiet 404; the <code>Content-Disposition</code> filename is sanitised.</td></tr>
+    <tr><td>Vulnerable components (A06)</td><td>Spring Boot 4.1.0 / Java 21; <code>commons-text</code> 1.14.0 (well past the 1.10.0 fix for CVE-2022-42889 "Text4Shell"); no snapshot dependencies. A full dependency-check scan remains the release gate.</td></tr>
+    <tr><td>Actuator exposure (A05)</td><td>Default web exposure is <code>health</code> only; the dev profile pins <code>health,info</code>. No management endpoint over-exposed.</td></tr>
+  </tbody>
+</table>
+
+<h2>6. Risks accepted by design</h2>
+<table>
+  <thead><tr><th>Item</th><th>Rationale</th></tr></thead>
+  <tbody>
+    <tr><td>No authentication / no CSRF defense</td><td>Intentional public tool; there is no privileged session or cookie to forge.</td></tr>
+    <tr><td>WebSocket origin wildcard (<code>setAllowedOriginPatterns("*")</code>)</td><td>Intentional for a public no-login tool; documented in <code>WebSocketConfig</code>. Only non-sensitive progress strings are broadcast on unguessable topics.</td></tr>
+    <tr><td>Concurrent-run cap = 4</td><td>Bounded <code>Semaphore</code>; permit release is now guaranteed on every outcome.</td></tr>
+    <tr><td>Record cap = 100,000</td><td>Enforced before load; bounds the load-time memory footprint.</td></tr>
+    <tr><td>Run timeout = 20 min</td><td>Now genuinely abortive: the permit is freed without awaiting the worker, and comparisons observe cancellation per pair.</td></tr>
+  </tbody>
+</table>
+
+<h2>7. Conclusion</h2>
+<p>
+  The remediation cycle addressed the full set of actionable findings — one High, one Medium and
+  three Low — and each fix was independently confirmed in the current source. The residual items
+  are two informational notes and one deployment choice (enable the session reaper or keep the
+  external cron cleanup). The application's DoS posture, historically its weakest area, is now
+  backed by a defense-in-depth combination: a record cap, a bounded concurrency permit with
+  guaranteed release, an abortive timeout with mid-comparison cancellation, a bounded pattern
+  cache, and a capped regex target that removes the pathological backtracking case.
+</p>
+<p>
+  As standard release hygiene we recommend running <code>mvnw dependency-check:check</code>
+  before each release to catch newly disclosed CVEs in transitive dependencies, and documenting
+  the expected TLS-terminating reverse-proxy topology.
+</p>
+
+<footer>
+  <div class="legend">
+    Severity scale: <span class="pill p-crit">Critical</span> <span class="pill p-high">High</span>
+    <span class="pill p-med">Medium</span> <span class="pill p-low">Low</span>
+    <span class="pill p-info">Info</span>
+  </div>
+  <p>Prepared 2026-07-11 against DedupEndNote v1.1.7, branch <code>design</code> (<code>f38de63</code>).
+     This report reflects a point-in-time source review; subsequent code or dependency changes are
+     out of scope. Full source-level detail is available in the project's <code>.scratch/</code> review history.</p>
+</footer>
+
+</div>
+</body>
+</html>
