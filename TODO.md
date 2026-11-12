@@ -240,12 +240,6 @@ https://www.baeldung.com/spring-streaming-multipart-data
 
 # Version 1.1.8
 - doctor
-  - remove superpowers
-  - remove WordPress
-  - (claude?) autoUpdates is off
-  - set auto-mode as defaultMode
-- mattpocock-skills:setup-matt-pcocock-skills: 
-  - to put issue-tracker in github?
 - look into the bin/merge-pr.sh of the soop_web_wp project
   - but first setup matt's code-review?
 - mattpocock-skills:improve-codebase-architecture
