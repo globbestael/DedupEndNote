@@ -14,7 +14,7 @@ Adopt a **four-file layout with explicit single ownership** per information type
 
 | Information type | Authoritative owner |
 |---|---|
-| Domain term definitions (concepts, modes, item types, validation) | `CONTEXT.md` |
+| Domain term definitions (concepts, modes, item types, validation) | `GLOSSARY.md` |
 | Service responsibilities, pipeline and sequence diagrams | `docs/architecture.html` |
 | Algorithm details (steps, thresholds, INSUFFICIENT_DATA, special types, enrichment) | `docs/algorithm.md` |
 | Commands, coding rules, test structure, configuration, release workflow | `CLAUDE.md` |

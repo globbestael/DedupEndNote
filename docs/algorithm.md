@@ -2,7 +2,7 @@
 
 This document describes the 5-step comparison algorithm, threshold values, special-publication-type handling, year-based grouping, and enrichment logic.
 
-- For domain term definitions (Bibliographic Item, Duplicate Set, Reply, Cochrane Review, Mark/Remove Mode, etc.) see [CONTEXT.md](../CONTEXT.md).
+- For domain term definitions (Bibliographic Item, Duplicate Set, Reply, Cochrane Review, Mark/Remove Mode, etc.) see [GLOSSARY.md](../GLOSSARY.md).
 - For the pipeline overview, service map, and sequence diagram see [docs/architecture.html](architecture.html).
 
 ---
