@@ -9,7 +9,7 @@ Update CLAUDE.md (same commit as the code change) when any of the following chan
 - Test class renamed, added, deleted, or reclassified → also update `docs/testing-guide.md`
 - New service introduced or existing service's responsibility changed → also update `docs/architecture.html`
 - Algorithm step, threshold, or special-type handling changed → also update `docs/algorithm.md`
-- Domain term or mode definition changed → also update `CONTEXT.md`
+- Domain term or mode definition changed → also update `GLOSSARY.md`
 - Build command, Maven profile, or port changed (commands / configuration sections)
 - Architectural pattern added or removed (naming conventions, path helpers)
 - Code quality plugin version bumped or new plugin added
@@ -21,12 +21,13 @@ Update CLAUDE.md (same commit as the code change) when any of the following chan
 
 | What you need | Where to find it |
 |---|---|
-| Domain term meanings (Bibliographic Item, Duplicate Set, Modes, item types, validation) | [CONTEXT.md](CONTEXT.md) |
+| Domain term meanings (Bibliographic Item, Duplicate Set, Modes, item types, validation) | [GLOSSARY.md](GLOSSARY.md) |
 | Pipeline diagram, service responsibilities, sequence diagram | [docs/architecture.html](docs/architecture.html) |
 | Algorithm steps, threshold values, INSUFFICIENT_DATA, special types, enrichment | [docs/algorithm.md](docs/algorithm.md) |
 | Test class listing, base class details, taxonomy, test profile, how to run tests | [docs/testing-guide.md](docs/testing-guide.md) |
 | Commands, coding rules, test structure, config, release | This file (CLAUDE.md) |
 | Architecture decisions (why X, rejected alternatives) | [docs/adr/](docs/adr/) |
+| Architecture review snapshot 2026-11-12 (deepening candidates, not yet decided) | [docs/architecture-review-2026-11-12.html](docs/architecture-review-2026-11-12.html) |
 
 ## Commands
 
@@ -71,7 +72,7 @@ See [`docs/architecture.html`](docs/architecture.html) for the pipeline diagram,
 
 ### Modes
 
-`DeduplicationMode.REMOVE` (default) removes duplicates and enriches the Kept Bibliographic Item; `DeduplicationMode.MARK` keeps all items and labels duplicates. See [CONTEXT.md](CONTEXT.md) for definitions.
+`DeduplicationMode.REMOVE` (default) removes duplicates and enriches the Kept Bibliographic Item; `DeduplicationMode.MARK` keeps all items and labels duplicates. See [GLOSSARY.md](GLOSSARY.md) for definitions.
 
 ### 5-step comparison algorithm (all steps must pass)
 
@@ -172,6 +173,6 @@ The version is defined once: `<version>x.y.z</version>` at the top of `pom.xml` 
 ## Agent skills
 
 - **Mermaid HTML files**: add `<!-- htmlhint-disable -->` after `<body>` to suppress htmlhint errors on Mermaid diagram syntax.
-- **Issue tracker**: issues live under `.scratch/` — see [`docs/agents/issue-tracker.md`](docs/agents/issue-tracker.md)
+- **Issue tracker**: GitHub Issues via `gh` (older ones remain under `.scratch/`) — see [`docs/agents/issue-tracker.md`](docs/agents/issue-tracker.md)
 - **Triage labels**: five-role vocabulary (needs-triage, needs-info, ready-for-agent, ready-for-human, wontfix) — see [`docs/agents/triage-labels.md`](docs/agents/triage-labels.md)
-- **Domain docs**: single-context layout (`CONTEXT.md` + `docs/adr/`) — see [`docs/agents/domain.md`](docs/agents/domain.md)
+- **Domain docs**: single-context layout (`GLOSSARY.md` + `docs/adr/`) — see [`docs/agents/domain.md`](docs/agents/domain.md)

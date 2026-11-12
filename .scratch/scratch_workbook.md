@@ -544,3 +544,5 @@ see also: REST API endpoints for repository traffic https://docs.github.com/en/r
   - fill in a pattern which cannot match, e.g. randomUUID?
   - ask Claude
 
+- why do some tests use RestTemplate instead of (the soon to be deprecated) TestRestTemplate or the newly introduced RestTestClient?
+  see also: https://rieckpil.de/whats-new-for-testing-in-spring-boot-4-0-and-spring-framework-7/

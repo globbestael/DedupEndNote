@@ -187,6 +187,22 @@ subject (portal vein thrombosis) was chosen after reading https://journals.plos.
 - results: https://github.com/CoLRev-Environment/bib-dedupe/blob/main/output/current_results.md
 - Authors are compared based on first letters (a.o. Chinese authors) 
 
+### deduplicate.it
+Program: https://deduplicate.it/ 
+Publication: https://journals.sagepub.com/doi/10.1177/18911803261484937
+GitHub: https://github.com/dpurkarthofer/deduplicate.it
+Zenodo: https://github.com/dpurkarthofer/deduplicate.it
+
+The algorithm is based on DOI and title and doesn't look that interesting, but:
+- several formats of input files
+- several formats of output file? See Github README
+- can deduplicate more than 2 files? (but alphabetical order, so careful with old + new records)
+- reporting which records were merged or not merged (same DOI but different titles)
+- PRISMA
+- web program (PHP) and Python script: are these independent?
+
+
+
 ## Make a command line version
 
 ## Depression
@@ -221,3 +237,10 @@ You can use in the logback-spring.xml:
 
 ## Multipart data upload and download
 https://www.baeldung.com/spring-streaming-multipart-data
+
+# Version 1.1.8
+- doctor
+- look into the bin/merge-pr.sh of the soop_web_wp project
+  - but first setup matt's code-review?
+- mattpocock-skills:improve-codebase-architecture
+ 

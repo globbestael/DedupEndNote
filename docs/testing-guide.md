@@ -4,7 +4,7 @@ This is the canonical reference for how tests are organized in DedupEndNote. **N
 
 1. **[CLAUDE.md](../CLAUDE.md) → Commands / Testing** — how to run tests and which Maven profile does what (quick operational lookup).
 2. **This file** — what tests exist, the base-class hierarchy, the three-category taxonomy, profile activation, and test utilities.
-3. **[CONTEXT.md](../CONTEXT.md) → Validation** — the domain vocabulary the validation tests measure (sensitivity, specificity, TP/FP/FN/TN).
+3. **[GLOSSARY.md](../GLOSSARY.md) → Validation** — the domain vocabulary the validation tests measure (sensitivity, specificity, TP/FP/FN/TN).
 
 The exact Maven profile path-filters live here (see [Test taxonomy](#test-taxonomy)); CLAUDE.md keeps only the summary table and defers to this file for the glob detail.
 

@@ -39,6 +39,21 @@
       "name": "dedup.timeout-minutes",
       "type": "java.lang.String",
       "description": "A description for 'dedup.timeout-minutes'"
+    },
+    {
+      "name": "dedup.session-reaper.enabled",
+      "type": "java.lang.String",
+      "description": "A description for 'dedup.session-reaper.enabled'"
+    },
+    {
+      "name": "dedup.session-reaper.max-age-hours",
+      "type": "java.lang.String",
+      "description": "A description for 'dedup.session-reaper.max-age-hours'"
+    },
+    {
+      "name": "dedup.session-reaper.interval-ms",
+      "type": "java.lang.String",
+      "description": "A description for 'dedup.session-reaper.interval-ms'"
     }
   ]
 }
