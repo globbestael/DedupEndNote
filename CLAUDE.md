@@ -27,6 +27,7 @@ Update CLAUDE.md (same commit as the code change) when any of the following chan
 | Test class listing, base class details, taxonomy, test profile, how to run tests | [docs/testing-guide.md](docs/testing-guide.md) |
 | Commands, coding rules, test structure, config, release | This file (CLAUDE.md) |
 | Architecture decisions (why X, rejected alternatives) | [docs/adr/](docs/adr/) |
+| Architecture review snapshot 2026-11-12 (deepening candidates, not yet decided) | [docs/architecture-review-2026-11-12.html](docs/architecture-review-2026-11-12.html) |
 
 ## Commands
 

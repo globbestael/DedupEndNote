@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Architecture review for DedupEndNote</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({ startOnLoad: true, theme: "neutral", securityLevel: "loose" });
+</script>
+<style>
+  .seam { border-style: dashed; }
+  .deepbox { background: linear-gradient(135deg, #0f172a, #1e293b); color: #fff; }
+  .faded { opacity: .55; }
+  .mod { border: 1.5px solid #475569; background: #fff; }
+  .leakbox { border: 1.5px solid #dc2626; background: #fef2f2; color: #991b1b; }
+</style>
+</head>
+<body class="bg-stone-50 text-slate-900 font-sans">
+<main class="max-w-5xl mx-auto px-6 py-12 space-y-12">
+
+<header class="space-y-3">
+  <h1 class="font-serif text-3xl">Architecture review: DedupEndNote</h1>
+  <p class="text-sm text-slate-500">2026-11-12 · branch <span class="font-mono">design</span> · hot spots: DeduplicationService, NormalizationService, Controller, Reader, UtilitiesService</p>
+  <div class="flex flex-wrap gap-4 text-xs uppercase tracking-wider text-slate-600">
+    <span class="mod px-2 py-1">solid box = module</span>
+    <span class="mod seam px-2 py-1">dashed = seam</span>
+    <span class="leakbox px-2 py-1">red = leakage</span>
+    <span class="deepbox px-2 py-1">dark = deep module</span>
+  </div>
+</header>
+
+<section id="candidates" class="space-y-10">
+
+<!-- 1 -->
+<article id="c1" class="rounded-lg border border-slate-200 bg-white p-6 space-y-4">
+  <h2 class="font-serif text-2xl">1. Extract one RIS tokenizer module shared by Reader and Writer</h2>
+  <div class="flex gap-2 text-xs"><span class="rounded bg-emerald-100 text-emerald-800 px-2 py-1">Strong</span><span class="rounded bg-slate-100 px-2 py-1">in-process</span><span class="rounded bg-slate-100 px-2 py-1">local-substitutable</span></div>
+  <p class="font-mono text-sm">services/BibliographicItemReader.java (640) · services/BibliographicItemWriter.java (62-122) · services/UtilitiesService.detectBom</p>
+  <div class="grid md:grid-cols-2 gap-4">
+    <div>
+      <div class="text-xs uppercase tracking-wider text-slate-500 mb-1">Before</div>
+      <div class="rounded-lg border border-slate-200 bg-white p-4"><pre class="mermaid">
+flowchart TB
+  R[Reader: BOM + lines + continuation + switch + normalize + rules]
+  W[Writer: BOM + lines + continuation + RIS_LINE_PATTERN]
+  R -.borrows pattern.-> W
+  W -.re-implements loop.-> R
+  classDef leak stroke:#dc2626,stroke-width:2px;
+  class R,W leak
+      </pre></div>
+    </div>
+    <div>
+      <div class="text-xs uppercase tracking-wider text-slate-500 mb-1">After</div>
+      <div class="rounded-lg border border-slate-200 bg-white p-4"><pre class="mermaid">
+flowchart TB
+  T[[RIS tokenizer: BOM, lines, continuation, fields]]
+  R[Reader: field switch + rules]
+  W[Writer: map to output]
+  R --> T
+  W --> T
+  classDef deep fill:#0f172a,color:#fff;
+  class T deep
+      </pre></div>
+    </div>
+  </div>
+  <p><b>Problem:</b> Reader's <span class="font-mono">readBibliographicItems</span> is one ~340-line method; the line/continuation loop is duplicated in the Writer, and the <span class="font-mono">addNormalized*</span> methods are exposed only so tests can reach them (no locality).</p>
+  <p><b>Solution:</b> One tokenizer module owns BOM, line classification and continuation state; Reader and Writer sit on top of it.</p>
+  <ul class="list-disc ml-6 text-sm"><li>locality: BOM/continuation bugs fixed once</li><li>leverage: two callers, one interface</li><li>tests hit the tokenizer without temp-file setup of full items</li><li>catch-all <span class="font-mono">RuntimeException</span> swallow becomes visible</li></ul>
+</article>
+
+<!-- 2 -->
+<article id="c2" class="rounded-lg border border-slate-200 bg-white p-6 space-y-4">
+  <h2 class="font-serif text-2xl">2. One "are these two items Duplicates?" module</h2>
+  <div class="flex gap-2 text-xs"><span class="rounded bg-emerald-100 text-emerald-800 px-2 py-1">Strong</span><span class="rounded bg-slate-100 px-2 py-1">in-process</span></div>
+  <p class="font-mono text-sm">DeduplicationService.compareSet (≈110-130) · services/comparison/* (4 interfaces, FieldComparators) · DefaultPagesComparisonService.compareSameDois · DefaultJournalComparisonService.compareIssns</p>
+  <div class="grid md:grid-cols-2 gap-4">
+    <div>
+      <div class="text-xs uppercase tracking-wider text-slate-500 mb-1">Before</div>
+      <div class="rounded-lg border border-slate-200 bg-white p-4"><pre class="mermaid">
+flowchart LR
+  D[DeduplicationService.compareSet]
+  F{{FieldComparators: 4 interfaces}}
+  P[DefaultPagesComparison]
+  J[DefaultJournalComparison]
+  D --> F --> P
+  F --> J
+  D -.static call.-> P
+  D -.static call.-> J
+  P -.map isSameDois.-> J
+  classDef leak stroke:#dc2626,stroke-width:2px;
+  class D,P,J leak
+      </pre></div>
+    </div>
+    <div>
+      <div class="text-xs uppercase tracking-wider text-slate-500 mb-1">After</div>
+      <div class="rounded-lg border border-slate-200 bg-white p-4"><pre class="mermaid">
+flowchart LR
+  D[DeduplicationService.compareSet]
+  M[[Duplicate matcher: 5-step rule order + DOI state]]
+  D --> M
+  classDef deep fill:#0f172a,color:#fff;
+  class M deep
+      </pre></div>
+    </div>
+  </div>
+  <p><b>Problem:</b> The 5-step rule is split across interface calls, two static calls that bypass the interfaces, an inline <span class="font-mono">&&/||</span>, and an untyped <span class="font-mono">"isSameDois"</span> map key threaded through <span class="font-mono">compare(r1, r2, map)</span>.</p>
+  <p><b>Solution:</b> Deepen the comparison cluster: one interface owns rule order and the DOI state; per-field comparators become internal.</p>
+  <ul class="list-disc ml-6 text-sm"><li>locality: algorithm.md steps live in one place</li><li>interface shrinks; 4 single-adapter seams removed</li><li>tests cross one seam: pair in, verdict out</li><li>DOI rule leaves the Pages comparator</li></ul>
+  <div class="rounded border border-amber-300 bg-amber-50 text-amber-900 text-sm p-2">Note: the four interfaces each have one adapter (hypothetical seams). Deleting them alone only moves complexity; the win is the merged rule module.</div>
+</article>
+
+<!-- 3 -->
+<article id="c3" class="rounded-lg border border-slate-200 bg-white p-6 space-y-4">
+  <h2 class="font-serif text-2xl">3. Make the year window and the id-sign protocol explicit</h2>
+  <div class="flex gap-2 text-xs"><span class="rounded bg-amber-100 text-amber-800 px-2 py-1">Worth exploring</span><span class="rounded bg-slate-100 px-2 py-1">in-process</span></div>
+  <p class="font-mono text-sm">DeduplicationService: searchYearOneFile / searchYearTwoFiles (348-400) · deduplicateOneFile / deduplicateTwoFiles (226-317) · BibliographicItemWriter recordIdMap</p>
+  <div class="grid md:grid-cols-2 gap-4">
+    <div>
+      <div class="text-xs uppercase tracking-wider text-slate-500 mb-1">Before: cross-section</div>
+      <div class="space-y-1 text-xs uppercase tracking-wider">
+        <div class="mod px-3 py-2">deduplicateOneFile: cap check, sanity, result string</div>
+        <div class="mod px-3 py-2">deduplicateTwoFiles: cap check, sanity, result string (copy)</div>
+        <div class="mod px-3 py-2">searchYearOneFile ↑ / searchYearTwoFiles ↓ (near-duplicates)</div>
+        <div class="leakbox px-3 py-2">compareSet: break condition reads the <code>descending</code> flag</div>
+        <div class="leakbox px-3 py-2">Writer: id &gt; 0 / label &lt; 0 must agree with negated old-file ids</div>
+      </div>
+    </div>
+    <div>
+      <div class="text-xs uppercase tracking-wider text-slate-500 mb-1">After</div>
+      <div class="deepbox rounded-lg px-4 py-6 text-xs uppercase tracking-wider space-y-2">
+        <div>Year-window schedule (one-file / two-file as a mode)</div>
+        <div class="faded">cap check · sanity · result string · id-sign convention (Old vs New Bibliographic Items)</div>
+      </div>
+    </div>
+  </div>
+  <p><b>Problem:</b> Year-window semantics span three methods; the negated-id convention for Old Bibliographic Items is a protocol held only in comments; MARK counts differ between one-file and two-file paths.</p>
+  <p><b>Solution:</b> One module owns the window schedule and the Old/New id convention; entry points shrink.</p>
+  <ul class="list-disc ml-6 text-sm"><li>locality: sign convention in one module</li><li>duplicate result-string logic disappears</li><li>MARK count inconsistency becomes one fix</li></ul>
+  <div class="rounded border border-amber-300 bg-amber-50 text-amber-900 text-sm p-2">ADR-0009: interrupt checks in compareSet must be preserved (they may move).</div>
+</article>
+
+<!-- 4 -->
+<article id="c4" class="rounded-lg border border-slate-200 bg-white p-6 space-y-4">
+  <h2 class="font-serif text-2xl">4. Pull dedup-job orchestration out of the controller</h2>
+  <div class="flex gap-2 text-xs"><span class="rounded bg-amber-100 text-amber-800 px-2 py-1">Worth exploring</span><span class="rounded bg-slate-100 px-2 py-1">ports &amp; adapters</span></div>
+  <p class="font-mono text-sm">controllers/DedupEndNoteController.java (startOneFile/startTwoFiles ≈120-165, runDedup ≈168-205) · services/BoundedDedupRunner.java</p>
+  <div class="grid md:grid-cols-2 gap-4">
+    <div>
+      <div class="text-xs uppercase tracking-wider text-slate-500 mb-1">Before</div>
+      <div class="rounded-lg border border-slate-200 bg-white p-4"><pre class="mermaid">
+flowchart TB
+  C[Controller: paths, progress lambda x2, outcome switch, cleanup]
+  B[BoundedDedupRunner]
+  S[DeduplicationService]
+  C --> B --> S
+  C -.knows output path.-> S
+  classDef leak stroke:#dc2626,stroke-width:2px;
+  class C leak
+      </pre></div>
+    </div>
+    <div>
+      <div class="text-xs uppercase tracking-wider text-slate-500 mb-1">After</div>
+      <div class="rounded-lg border border-slate-200 bg-white p-4"><pre class="mermaid">
+flowchart TB
+  C[Controller: HTTP + STOMP adapter]
+  J[[Dedup job for a session: paths, progress, outcome, cleanup]]
+  S[DeduplicationService]
+  C --> J --> S
+  classDef deep fill:#0f172a,color:#fff;
+  class J deep
+      </pre></div>
+    </div>
+  </div>
+  <p><b>Problem:</b> The controller repeats the progress lambda and path resolution, and derives <span class="font-mono">outputPath</span> only to delete it on timeout/cancel, leaking where the service writes.</p>
+  <p><b>Solution:</b> A job module owns output paths, progress routing and outcome cleanup; the controller only adapts HTTP and WebSocket.</p>
+  <ul class="list-disc ml-6 text-sm"><li>locality: output-path rule in one place</li><li>tests skip MockMvc and WebSocket</li><li>controller shrinks to adapter</li></ul>
+  <div class="rounded border border-amber-300 bg-amber-50 text-amber-900 text-sm p-2">ADR-0009 and ADR-0010 (controller tests over browser tests) apply: cancel/timeout cleanup must stay observable at the controller seam.</div>
+</article>
+
+<!-- 5 -->
+<article id="c5" class="rounded-lg border border-slate-200 bg-white p-6 space-y-4">
+  <h2 class="font-serif text-2xl">5. Dissolve UtilitiesService into its real owners</h2>
+  <div class="flex gap-2 text-xs"><span class="rounded bg-slate-200 text-slate-700 px-2 py-1">Speculative</span><span class="rounded bg-slate-100 px-2 py-1">local-substitutable</span></div>
+  <p class="font-mono text-sm">services/UtilitiesService.java (149): getSessionDir, resolveInSessionDir, createPath · detectBom · romanToArabic · setsContainSameString</p>
+  <div class="grid md:grid-cols-2 gap-4">
+    <div>
+      <div class="text-xs uppercase tracking-wider text-slate-500 mb-1">Mass: before</div>
+      <div class="flex gap-2 items-end h-40">
+        <div class="mod w-24 h-36 text-xs p-1">interface: 8 statics</div>
+        <div class="mod w-24 h-40 text-xs p-1 bg-slate-100">implementation: thin</div>
+        <div class="text-xs w-40">session security + BOM + roman numerals + set compare, unrelated</div>
+      </div>
+    </div>
+    <div>
+      <div class="text-xs uppercase tracking-wider text-slate-500 mb-1">After</div>
+      <div class="grid grid-cols-3 gap-2 text-xs uppercase tracking-wider">
+        <div class="deepbox rounded p-3">session storage: dir, path rules</div>
+        <div class="deepbox rounded p-3">RIS tokenizer: BOM (see #1)</div>
+        <div class="deepbox rounded p-3">normalization: roman, set helpers</div>
+      </div>
+    </div>
+  </div>
+  <p><b>Problem:</b> Annotated as a Spring service yet entirely static, with three unrelated concerns; the security-critical <span class="font-mono">resolveInSessionDir</span> is reached from handlers that each duplicate its exception handling.</p>
+  <p><b>Solution:</b> Move each helper behind the module that owns the concern; delete the class.</p>
+  <ul class="list-disc ml-6 text-sm"><li>deletion test: complexity scatters to owners</li><li>locality: path-security rules with session storage</li><li>pairs naturally with candidate 1</li></ul>
+</article>
+
+</section>
+
+<section class="rounded-lg border border-slate-200 bg-white p-4 text-sm text-slate-600">
+  <b>Not listed:</b> the Reader/EnrichmentService/Writer call-order coupling. It sits squarely in ADR-0008 territory and is not re-opened. Also unmentioned: ADR-0001 (single mutable POJO) is respected by every candidate.
+</section>
+
+<section id="top-recommendation" class="rounded-lg deepbox p-8 space-y-3">
+  <h2 class="font-serif text-2xl">Top recommendation</h2>
+  <p><a class="underline" href="#c2">Candidate 2: one Duplicate matcher module.</a> It is the heart of the domain (the 5-step algorithm), the rule is currently scattered across four seams that have one adapter each, and a single pair-in/verdict-out interface gives the biggest gain in locality and test leverage. Candidate 1 is the close second as the largest testability win.</p>
+</section>
+
+</main>
+</body>
+</html>
