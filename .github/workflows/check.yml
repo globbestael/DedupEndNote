@@ -18,10 +18,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # JDK 25 like local development: NullAway in JSpecify mode (pom.xml) needs JDK 22+ to run.
+      # The code still compiles for Java 21 (<release>21</release> in pom.xml).
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '21'
+          java-version: '25'
           cache: maven
 
       - name: Build and static analysis
