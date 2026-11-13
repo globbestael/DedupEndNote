@@ -1,7 +1,5 @@
 package edu.dedupendnote.services.comparison;
 
-import org.springframework.stereotype.Component;
-
 import edu.dedupendnote.domain.BibliographicItem;
 import edu.dedupendnote.services.UtilitiesService;
 import lombok.extern.slf4j.Slf4j;
@@ -22,7 +20,6 @@ import lombok.extern.slf4j.Slf4j;
  * <p>
  * A pure predicate: it never changes the items. The per-field comparators are internal seams.
  */
-@Component
 @Slf4j
 public class DuplicateMatcher {
 
