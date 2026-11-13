@@ -62,7 +62,7 @@ bin/merge-pr.sh <PR number>
 
 ## Architecture
 
-DedupEndNote is a Spring Boot 4.1 / Java 21 web app that deduplicates bibliographic records in RIS format (exported from EndNote, Zotero, PubMed, EMBASE, etc.). Runs on port 9777, deployed as a fat JAR.
+DedupEndNote is a Spring Boot 4.1 / Java 21 web app that deduplicates bibliographic records in RIS format (exported from EndNote, Zotero, PubMed, EMBASE, etc.). Runs on port 9777, deployed as a fat JAR. Java 21 is the release target (`<release>21</release>`); building needs JDK 22 or newer (CI uses 25) because NullAway's JSpecify mode does not run on JDK 21.
 
 See [`docs/architecture.html`](docs/architecture.html) for the pipeline diagram, full service map, and runtime sequence diagram.
 
