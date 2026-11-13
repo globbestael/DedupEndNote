@@ -1,5 +1,6 @@
-# The cheap checks, on every PR and every push to main.
-# Validation tests (need truth files) and browser tests (need Chromium) are not run here.
+# Build and static analysis (Error Prone, NullAway, SpotBugs + Find Security Bugs) on every PR
+# and every push to main. The tests are not run here yet: unit and integration tests read input
+# files from ~/dedupendnote_input_files, which is not in git (issue #85).
 name: Check
 
 on:
@@ -7,9 +8,13 @@ on:
   push:
     branches: [main]
 
+permissions:
+  contents: read
+
 jobs:
   check:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
 
@@ -19,8 +24,5 @@ jobs:
           java-version: '21'
           cache: maven
 
-      - name: Unit tests
-        run: ./mvnw -B test -Punit-tests
-
-      - name: Integration tests
-        run: ./mvnw -B test -Pintegration-tests
+      - name: Build and static analysis
+        run: ./mvnw -B verify -DskipTests
