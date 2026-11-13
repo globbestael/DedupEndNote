@@ -244,3 +244,49 @@ https://www.baeldung.com/spring-streaming-multipart-data
   - but first setup matt's code-review?
 - mattpocock-skills:improve-codebase-architecture
  
+======================
+What the repo looks like today
+- There is no CI: .github/ has only ISSUE_TEMPLATE and no workflows/.
+- There is no PR template.
+- main isn't protected, and "delete branch on merge" is off.
+- All three merge types are allowed: merge commit, squash and rebase.
+
+Steps to make PRs the default
+1. Write the workflow into CLAUDE.md. A short "Workflow" section would say:
+ - one branch per issue, created from main;
+ - no direct commits to main;
+ - the PR description contains Closes #n;
+ - /mattpocock-skills:code-review runs on the PR before it's merged;
+ - merging happens on GitHub;
+ - I never commit or push unless asked, which your memory already says.
+2. Pick a branch name format. Your branches so far are feature names such as design and zotero. I'd suggest <issue-number>-<slug>, for example 81-duplicate-matcher. You'd
+ stop using design as a long-lived branch.
+3. Pick a merge type. This is the decision with side effects, see below.
+4. GitHub settings, which only you can change in the UI:
+ - turn on "Automatically delete head branches";
+ - optionally turn on branch protection for main that requires a PR. It's off today, so nothing stops a direct push, even by mistake.
+ - Without CI there are no required checks to add, so a PR only gives you review and history. A small workflow running ./mvnw test -Punit-tests would make PRs much more
+   useful. That is a separate issue.
+5. Add .github/pull_request_template.md. It would have Closes #, a verification section and a docs-updated checklist. The mattpocock-skills:pr skill writes PR bodies, and I
+ can use it with that template.
+6. Optionally add a short docs/agents/ note on PRs. issue-tracker.md has "PRs as a triage surface: no". That is about external PRs becoming feature requests, so I'd leave
+ it as no.
+
+Related things to watch
+- Plan files: CLAUDE.md names .plans/ files by the commit time of the plan's execution. With squash merges, that time is the merge time and not the original commit time. If
+you squash, change the naming rule to the PR merge time. With merge commits, the rule still works.
+- CITATION.cff is regenerated on every build. Its date-released changes each day, and it's tracked. It blocked git checkout main earlier today. In a PR workflow that dirty
+file lands in every PR. Options are to commit it only at release time, or to stop tracking it. Also, CLAUDE.md says the file is citation.cff in lowercase, but git tracks
+CITATION.cff. That case mismatch may bite on Windows.
+- .claude/settings.local.json is tracked. It shows as modified in every session. A local settings file normally belongs in .gitignore. Your shared .claude/settings.json is
+still untracked.
+- Release workflow: CLAUDE.md says to bump pom.xml, build, commit pom.xml and CITATION.cff, then add the changelog.html entry manually. Decide whether the bump happens in a
+feature PR or in a separate release PR, and when the changelog.html entry is written. Your memory says the CL.txt changelog draft goes to a GitHub issue and never to
+git. That fits a PR flow, and I'd keep it.
+- Attribution: PR descriptions would end with the 🤖 Generated with Claude Code line, per the attribution rule in this session.
+
+I'd decide the merge type and branch name format first, since the others follow from them. For a solo repo with a readable history I'd suggest a merge commit (--no-ff),
+because it matches your history today and doesn't change the plan-file naming rule. Squash gives a shorter history but loses the per-step commits.
+
+Do you want me to draft the CLAUDE.md Workflow section and the PR template? I'd show them to you before writing, and I wouldn't commit them. And which merge type do you
+prefer?

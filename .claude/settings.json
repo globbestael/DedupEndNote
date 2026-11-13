@@ -1,0 +1,28 @@
+{
+    "permissions": {
+        "allow": [
+            "Bash(bin/merge-pr.sh:*)"
+        ],
+        "deny": [
+            "Bash(gh pr merge:*)"
+        ]
+    },
+    "extraKnownMarketplaces": {
+        "mattpocock": {
+            "source": {
+                "source": "github",
+                "repo": "mattpocock/skills"
+            }
+        },
+        "geert-selected-skills": {
+            "source": {
+                "source": "github",
+                "repo": "globbestael/selected-skills"
+            }
+        }
+    },
+    "enabledPlugins": {
+        "mattpocock-skills@mattpocock": true,
+        "selected-skills@geert-selected-skills": true
+    }
+}
