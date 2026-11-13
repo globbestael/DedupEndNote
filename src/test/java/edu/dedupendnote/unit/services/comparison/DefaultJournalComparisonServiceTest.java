@@ -49,7 +49,7 @@ class DefaultJournalComparisonServiceTest extends BaseTest {
 		reader.addNormalizedJournal(input1, p1, "T2");
 		reader.addNormalizedJournal(input2, p2, "T2");
 
-		assertThat(new DefaultJournalComparisonService().compare(p1, p2, false))
+		assertThat(new DefaultJournalComparisonService().compare(p1, p2))
 				.as("Journals are NOT similar: " + p1.getJournals() + " versus " + p2.getJournals()).isTrue();
 	}
 
@@ -64,7 +64,7 @@ class DefaultJournalComparisonServiceTest extends BaseTest {
 		reader.addNormalizedJournal(input1, p1, "T2");
 		reader.addNormalizedJournal(input2, p2, "T2");
 
-		assertThat(new DefaultJournalComparisonService().compare(p1, p2, false))
+		assertThat(new DefaultJournalComparisonService().compare(p1, p2))
 				.as("Journals are similar: %s versus %s", p1.getJournals(), p2.getJournals()).isFalse();
 	}
 
@@ -87,7 +87,7 @@ class DefaultJournalComparisonServiceTest extends BaseTest {
 		assertThat(p2.getJournals()).allSatisfy(j -> assertThat(j.length()).isLessThanOrEqualTo(150));
 
 		// Must return (either result) well within the @Timeout — no catastrophic backtracking.
-		new DefaultJournalComparisonService().compare(p1, p2, false);
+		new DefaultJournalComparisonService().compare(p1, p2);
 	}
 
 	static Stream<Arguments> fullPositiveArgumentProvider() {
@@ -386,7 +386,7 @@ WHERE t1.title2 <> t2.title2
 			BibliographicItem p2 = new BibliographicItem();
 			reader.addNormalizedJournal(triple.journal2(), p2, "T2");
 
-			triples.set(i, triple.withSimilar(new DefaultJournalComparisonService().compare(p1, p2, false)));
+			triples.set(i, triple.withSimilar(new DefaultJournalComparisonService().compare(p1, p2)));
 		}
 
 		// triples.stream().filter(t -> t.similar() == false).forEach(System.err::println);

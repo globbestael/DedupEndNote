@@ -22,6 +22,7 @@ import edu.dedupendnote.services.DeduplicationService;
 import edu.dedupendnote.services.BibliographicItemReader;
 import edu.dedupendnote.services.BibliographicItemWriter;
 import edu.dedupendnote.services.EnrichmentService;
+import edu.dedupendnote.services.comparison.DuplicateMatcher;
 import edu.dedupendnote.services.comparison.FieldComparators;
 import edu.dedupendnote.services.UtilitiesService;
 import edu.dedupendnote.validation.domain.ValidationResult;
@@ -66,7 +67,7 @@ class AuthorExperimentsTests extends AbstractIntegrationTest {
 				new DefaultTitleComparisonService(), new DefaultJournalComparisonService(),
 				new DefaultPagesComparisonService());
 		EnrichmentService enrichmentService = new EnrichmentService();
-		DeduplicationService expService = new DeduplicationService(cs, new BibliographicItemReader(),
+		DeduplicationService expService = new DeduplicationService(new DuplicateMatcher(cs), new BibliographicItemReader(),
 				new BibliographicItemWriter(enrichmentService));
 
 		long start = System.currentTimeMillis();

@@ -67,7 +67,7 @@ See [`docs/architecture.html`](docs/architecture.html) for the pipeline diagram,
 - `controllers/` — HTTP endpoints; file upload and dedup triggers; delegates run lifecycle (concurrency cap, timeout, cancel) to `BoundedDedupRunner`; per-IP upload rate limiting (`RateLimitInterceptor`); baseline security response headers (`SecurityHeadersFilter`); WebSocket progress routing
 - `domain/` — `BibliographicItem` (core model), `BibliographicItemDB` (in-memory store), `DeduplicationMode` (enum: `REMOVE` / `MARK`)
 - `services/` — `DeduplicationService`, `BibliographicItemReader`, `BibliographicItemWriter`, `EnrichmentService`, `UtilitiesService`, `BoundedDedupRunner` (run orchestration: bounded concurrency permit + per-run timeout + cancel-by-session; guarantees permit release on every outcome), `SessionDirectoryReaper` (opt-in scheduled cleanup of stale session upload dirs; see Configuration)
-- `services/comparison/` — four `*ComparisonService` interfaces, four `Default*ComparisonService` implementations, three `*Thresholds` value objects, `FieldComparators` record, `BoundedPatternCache` (size-bounded LRU of compiled journal-name patterns)
+- `services/comparison/` — four `*ComparisonService` interfaces, four `Default*ComparisonService` implementations, three `*Thresholds` value objects, `FieldComparators` record, `DuplicateMatcher` (owns the 5-step rule order and the shared-DOI shortcut; pure predicate called by `DeduplicationService.compareSet`), `BoundedPatternCache` (size-bounded LRU of compiled journal-name patterns)
 - `services/normalization/` — `NormalizationService` plus four `*NormalizationService` classes
 
 ### Modes
@@ -151,6 +151,20 @@ Note: `-Pintegration-tests` excludes `integration/browser/`; `-Pall-integration-
 Executed implementation plans are saved in `.plans/` at the repo root. Each file is a Markdown document describing context, changes made, files modified, and how to verify.
 
 Filename format: `YYYY-MM-DD-HHMM-<slug>.md`, where the date/time is the commit time of the plan's execution (local time, minute precision). This makes the folder strictly sortable by filename alone — no `git log` needed to disambiguate plans committed on the same day.
+
+## Workflow
+
+Work is tracked as GitHub issues and delivered as pull requests. `main` only changes through merged PRs.
+
+1. **Issue first.** Non-trivial work starts from a GitHub issue. After a grilling session that ends in a non-trivial design, ask whether to file an issue before implementing.
+2. **Branch per issue**, created from an up-to-date `main`, named `<issue-number>-<slug>` (e.g. `81-duplicate-matcher`). No long-lived feature branches.
+3. **Implement** on that branch. Agents make code changes only: never commit or push unless explicitly asked.
+4. **Verify** before opening the PR: `./mvnw test -Punit-tests` and `./mvnw test -Pintegration-tests`; run `-Pvalidation-tests` for changes to the algorithm. Update the docs listed in "Keeping this file current".
+5. **Open a PR** to `main` using `.github/pull_request_template.md`. The description contains `Closes #<issue>`, a short **human-written** opener (agents leave the template's IMPORTANT block for the developer to replace and never write the opener themselves), and the long write-up inside the template's `<details>` block.
+6. **Review** the PR with `/mattpocock-skills:code-review <PR#>` (Standards + Spec, with the issue as the spec). Fix findings on the same branch.
+7. **Merge** on GitHub with a **merge commit** (not squash or rebase), so per-step commits stay visible and plan-file timestamps (see "Plans") stay valid. Head branches are deleted on merge.
+
+`CITATION.cff` is regenerated on every build (the `date-released` field changes daily): don't commit it except as part of a release.
 
 ## Configuration
 

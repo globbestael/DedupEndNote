@@ -11,7 +11,7 @@ This document describes the 5-step comparison algorithm, threshold values, speci
 
 All five steps must pass for two Bibliographic Items to be declared Duplicates. The comparison short-circuits on the first mismatch — cheap checks (year, page/DOI) run before expensive Jaro-Winkler similarity steps.
 
-The four field-comparison services (`DefaultPagesComparisonService`, `DefaultAuthorsComparisonService`, `DefaultTitleComparisonService`, `DefaultJournalComparisonService`) are bundled in the `FieldComparators` record, which is passed to `DeduplicationService` for easy test substitution.
+`DuplicateMatcher.areDuplicates(a, b)` owns the order of the steps and the shared-DOI shortcut of step 5. It is a pure predicate (it never changes the items) and `DeduplicationService.compareSet` is its only caller. Step 1 (publication year) is enforced by the year buckets in `DeduplicationService`, not by the matcher. The matcher delegates to four field-comparison services (`DefaultPagesComparisonService`, `DefaultAuthorsComparisonService`, `DefaultTitleComparisonService`, `DefaultJournalComparisonService`), which are bundled in the `FieldComparators` record passed to its constructor for easy test substitution.
 
 ---
 
@@ -39,7 +39,7 @@ Implemented in `DefaultPagesComparisonService`.
 - DOIs are compared before starting pages (opposite of the normal order).
 - If neither DOI nor page matches, the result is Fail (no INSUFFICIENT_DATA leniency).
 
-`DefaultPagesComparisonService` hosts the static helper `compareSameDois`.
+The shared-DOI check used by step 5 lives in `DuplicateMatcher` (true only when both items have DOIs and share one; then ISSNs and journal names are not compared).
 
 ---
 
@@ -97,7 +97,7 @@ This is an **OR gate** — only one of the following must pass:
 
 Normalized journal names are truncated to 150 characters (`JournalsNormalizationService.MAX_JOURNAL_LENGTH`) so the abbreviation/initialism regex target cannot be scaled by crafted input. Real journal names are far shorter, so this does not affect matching for genuine data.
 
-`DefaultJournalComparisonService` hosts the static helper `compareIssns`.
+`JournalComparisonService.compareIssns` (ISBNs if both items have them, else ISSNs) is an instance method next to `compare` (journal names only); `DuplicateMatcher` calls both.
 
 Thresholds are injectable via the `JournalThresholds` record.
 
