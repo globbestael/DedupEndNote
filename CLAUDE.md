@@ -52,6 +52,9 @@ Update CLAUDE.md (same commit as the code change) when any of the following chan
 ./mvnw verify -DskipTests                      # Run SpotBugs + Find Security Bugs (skip tests for speed)
 ./mvnw dependency-check:check                  # Run OWASP dependency CVE scan (slow, needs NVD download)
 
+# Merge a reviewed PR (see Workflow): checks the Reviewed: SHA and CI, merge commit, cleans up branches
+bin/merge-pr.sh <PR number>
+
 # Coverage
 # JaCoCo report is written to target/site/jacoco/ after any test run except -Pvalidation-tests
 # VS Code: Coverage Gutters extension reads target/site/jacoco/jacoco.xml → Display Coverage
@@ -160,9 +163,9 @@ Work is tracked as GitHub issues and delivered as pull requests. `main` only cha
 2. **Branch per issue**, created from an up-to-date `main`, named `<issue-number>-<slug>` (e.g. `81-duplicate-matcher`). No long-lived feature branches.
 3. **Implement** on that branch. Agents make code changes only: never commit or push unless explicitly asked.
 4. **Verify** before opening the PR: `./mvnw test -Punit-tests` and `./mvnw test -Pintegration-tests`; run `-Pvalidation-tests` for changes to the algorithm. Update the docs listed in "Keeping this file current".
-5. **Open a PR** to `main` using `.github/pull_request_template.md`. The description contains `Closes #<issue>`, a short **human-written** opener (agents leave the template's IMPORTANT block for the developer to replace and never write the opener themselves), and the long write-up inside the template's `<details>` block.
-6. **Review** the PR with `/mattpocock-skills:code-review <PR#>` (Standards + Spec, with the issue as the spec). Fix findings on the same branch.
-7. **Merge** on GitHub with a **merge commit** (not squash or rebase), so per-step commits stay visible and plan-file timestamps (see "Plans") stay valid. Head branches are deleted on merge.
+5. **Open a PR** to `main` using `.github/pull_request_template.md`. The agent writes the whole description: `Closes #<issue>`, a short Summary, and the checklists.
+6. **Review** the PR's head commit with `/mattpocock-skills:code-review <PR#>` (Standards + Spec, with the issue as the spec). Put each review's findings in the PR: the first in the description when opening it, a later one as a comment. Each starts with a line `Reviewed: <full 40-character SHA>` naming the head commit it reviewed, then what was fixed and what was left. Review again after every change to the diff since the last review, a fix from the review itself included.
+7. **Merge** only with `bin/merge-pr.sh <PR#>`, and only when the user asks. It merges only when the newest `Reviewed:` SHA is the PR's head and CI passed. It uses a **merge commit** (not squash or rebase), so per-step commits stay visible and plan-file timestamps (see "Plans") stay valid, deletes the branch on GitHub and locally, and returns to an up-to-date `main`. Never use `gh pr merge` directly: `.claude/settings.json` denies it.
 
 `CITATION.cff` is regenerated on every build (the `date-released` field changes daily): don't commit it except as part of a release.
 
