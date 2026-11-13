@@ -15,3 +15,8 @@ updates:
       spring:
         patterns:
           - "org.springframework*"
+      # rewrite-maven-plugin and its rewrite-spring recipe dependency must move together:
+      # a newer rewrite-spring with an older plugin makes the recipe delete every file (#93)
+      openrewrite:
+        patterns:
+          - "org.openrewrite*"
