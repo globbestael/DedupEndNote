@@ -242,7 +242,7 @@ https://www.baeldung.com/spring-streaming-multipart-data
 - look into the bin/merge-pr.sh of the soop_web_wp project
   - but first setup matt's code-review?
 - mattpocock-skills:improve-codebase-architecture
- 
+ 
 ======================
 What the repo looks like today
 - There is no CI: .github/ has only ISSUE_TEMPLATE and no workflows/.
