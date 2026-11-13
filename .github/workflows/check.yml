@@ -1,0 +1,30 @@
+# Build and static analysis (Error Prone, NullAway, SpotBugs + Find Security Bugs) on every PR
+# and every push to main. The tests are not run here yet: unit and integration tests read input
+# files from ~/dedupendnote_input_files, which is not in git (issue #85).
+name: Check
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      # JDK 25 like local development: NullAway in JSpecify mode (pom.xml) needs JDK 22+ to run.
+      # The code still compiles for Java 21 (<release>21</release> in pom.xml).
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+
+      - name: Build and static analysis
+        run: ./mvnw -B verify -DskipTests

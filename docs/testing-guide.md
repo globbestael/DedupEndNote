@@ -64,3 +64,7 @@ Tests with expected errors are NOT disabled — they use an `int EXPECTED_NUMBER
 ## Test profile
 
 `@ActiveProfiles("test")` activates the `test` profile for all integration and validation tests, loading `src/main/resources/application-test.properties`. It is declared on `AbstractIntegrationTest` (inherited by subclasses), repeated on each `AbstractRandomPortIntegrationTest` subclass (which has no common Spring-context parent), and declared directly on `BrowserCancellationTests` (which extends no base class). Unit tests don't start Spring and get `baseDir` directly from `BaseTest` via `System.getProperty("user.home")`.
+
+## Continuous integration
+
+`.github/workflows/check.yml` runs on every pull request and every push to `main`. It runs `./mvnw -B verify -DskipTests` (compile with Error Prone and NullAway, plus SpotBugs + Find Security Bugs) and **no tests**: the unit and integration tests read input files from `~/dedupendnote_input_files`, which is not in git, so on a clean runner 15 unit tests error out and the integration tests have no input. Making the suite runnable in CI is tracked in issue #85. `bin/merge-pr.sh` waits for this workflow to pass before it merges.
