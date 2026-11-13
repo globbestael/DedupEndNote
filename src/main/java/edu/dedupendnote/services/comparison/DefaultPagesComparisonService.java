@@ -1,9 +1,6 @@
 package edu.dedupendnote.services.comparison;
 
-import java.util.Map;
 import java.util.Set;
-
-import org.jspecify.annotations.Nullable;
 
 import edu.dedupendnote.domain.BibliographicItem;
 import edu.dedupendnote.services.UtilitiesService;
@@ -13,17 +10,13 @@ import lombok.extern.slf4j.Slf4j;
 public class DefaultPagesComparisonService implements PagesComparisonService {
 
     @Override
-    public boolean compare(BibliographicItem r1, BibliographicItem r2, Map<String, @Nullable Boolean> map) {
+    public boolean compare(BibliographicItem r1, BibliographicItem r2) {
         Set<String> dois1 = r1.getDois();
         Set<String> dois2 = r2.getDois();
         boolean bothCochrane = r1.isCochrane() && r2.isCochrane();
         boolean sufficientStartPages = r1.getPageStart() != null && r2.getPageStart() != null;
         boolean sufficientDois = !dois1.isEmpty() && !dois2.isEmpty();
         boolean atLeastOneSeveralPages = r1.isSeveralPages() || r2.isSeveralPages();
-
-        if (sufficientDois) { // this test to keep the initial null value when not both have DOIs
-            map.put("isSameDois", UtilitiesService.setsContainSameString(dois1, dois2));
-        }
 
         if (bothCochrane) {
             if (r1.getPublicationYear() == r2.getPublicationYear()) {
@@ -79,19 +72,6 @@ public class DefaultPagesComparisonService implements PagesComparisonService {
             return true;
         }
         log.trace("- 1. DOIs and starting pages are NOT the same");
-        return false;
-    }
-
-    public static boolean compareSameDois(BibliographicItem r1, BibliographicItem r2, @Nullable Boolean isSameDois) {
-        if (Boolean.TRUE.equals(isSameDois)) {
-            if (log.isTraceEnabled()) {
-                log.trace("- 4. DOIs are the same (ISSNs and Journals are NOT compared)");
-            }
-            return true;
-        }
-        if (log.isTraceEnabled()) {
-            log.trace("- 4. DOIs are NOT the same: {} and {}", r1.getDois(), r2.getDois());
-        }
         return false;
     }
 }

@@ -57,7 +57,7 @@ flowchart TD
 
     subgraph compare["② Compare — DeduplicationService.compareSet()  (O(n²) per year bucket)"]
         direction LR
-        FC["FieldComparators"]
+        FC["DuplicateMatcher → FieldComparators"]
         S1["① publication year  ±1"]
         S2["② start page or DOI"]
         S3["③ authors  Jaro-Winkler > 0.67"]
@@ -171,7 +171,8 @@ flowchart TD
 
         <!-- Comparison -->
         <div>
-          <p class="text-xs uppercase tracking-wider text-slate-400 mb-2">Comparison — wired via <code
+          <p class="text-xs uppercase tracking-wider text-slate-400 mb-2">Comparison — <code
+              class="font-mono text-slate-600 text-xs">DuplicateMatcher</code> (rule order + shared-DOI shortcut) over the <code
               class="font-mono text-slate-600 text-xs">FieldComparators</code> record</p>
           <div class="grid grid-cols-4 gap-3">
             <div class="rounded-lg border border-slate-200 bg-white p-4">
@@ -186,13 +187,12 @@ flowchart TD
             </div>
             <div class="rounded-lg border border-slate-200 bg-white p-4">
               <p class="text-xs font-mono font-semibold text-slate-700">DefaultJournalComparisonService</p>
-              <p class="text-xs text-slate-500 mt-1">Journal matching with abbreviation/initialism heuristics. Hosts
-                static <code>compareIssns</code>.</p>
+              <p class="text-xs text-slate-500 mt-1">Journal matching with abbreviation/initialism heuristics. Exposes
+                <code>compareIssns</code> (ISBN/ISSN) next to <code>compare</code>.</p>
             </div>
             <div class="rounded-lg border border-slate-200 bg-white p-4">
               <p class="text-xs font-mono font-semibold text-slate-700">DefaultPagesComparisonService</p>
-              <p class="text-xs text-slate-500 mt-1">Exact-equality pages-or-DOI step. Hosts static
-                <code>compareSameDois</code>.</p>
+              <p class="text-xs text-slate-500 mt-1">Exact-equality pages-or-DOI step.</p>
             </div>
           </div>
         </div>
@@ -297,7 +297,7 @@ sequenceDiagram
     Reader-->>DS: List&lt;BibliographicItem&gt;
     deactivate Reader
 
-    Note over DS: compareSet() — O(n²) per year bucket<br/>via FieldComparators → 4 comparison services
+    Note over DS: compareSet() — O(n²) per year bucket<br/>via DuplicateMatcher → 4 comparison services
     loop one message per year bucket
         DS-->>WS: progressReporter.accept("PROGRESS: N")
         WS-->>Browser: PROGRESS: N

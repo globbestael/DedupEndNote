@@ -13,7 +13,7 @@ import edu.dedupendnote.domain.BibliographicItem;
 import edu.dedupendnote.services.comparison.DefaultJournalComparisonService;
 import edu.dedupendnote.services.normalization.NormalizationService;
 
-// TODO: compareIssns() is a static helper on DefaultJournalComparisonService; see DefaultJournalComparisonServiceTest for the companion compare() tests.
+// TODO: compareIssns() is an instance method of DefaultJournalComparisonService; see DefaultJournalComparisonServiceTest for the companion compare() tests.
 class DefaultJournalComparisonServiceIssnTest {
 
 	/*
@@ -27,7 +27,7 @@ class DefaultJournalComparisonServiceIssnTest {
 		p1.getIssns().addAll(NormalizationService.normalizeInputIssns(issn1).issns());
 		p2.getIssns().addAll(NormalizationService.normalizeInputIssns(issn2).issns());
 
-		assertThat(DefaultJournalComparisonService.compareIssns(p1, p2, false))
+		assertThat(new DefaultJournalComparisonService().compareIssns(p1, p2))
 				.as("ISSNs are NOT matching: '%s' and '%s'", issn1, issn2).isTrue();
 	}
 
@@ -42,7 +42,7 @@ class DefaultJournalComparisonServiceIssnTest {
 		p1.getIssns().addAll(NormalizationService.normalizeInputIssns(issn1).issns());
 		p2.getIssns().addAll(NormalizationService.normalizeInputIssns(issn2).issns());
 
-		assertThat(DefaultJournalComparisonService.compareIssns(p1, p2, false))
+		assertThat(new DefaultJournalComparisonService().compareIssns(p1, p2))
 				.as("ISSNs are matching: '%s' and '%s'", issn1, issn2).isFalse();
 	}
 

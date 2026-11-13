@@ -118,14 +118,14 @@ class ValidationTests extends AbstractIntegrationTest {
 			new ValidationResult("ASySD_Diabetes", 1811, 11, 21, 2, 1_000L, 563),
 			new ValidationResult("ASySD_Neuroimaging", 2181, 11, 1244, 2, 1_350L, 896),
 			new ValidationResult("ASySD_SRSR_Human", 27945, 36, 25016, 4, 100_000L,11130),
-			new ValidationResult("BIG_SET", 3952, 92, 1030, 8, 66_000L,1444),
+			new ValidationResult("BIG_SET", 3951, 92, 1031, 8, 66_000L,1444),
 			new ValidationResult("Clinical_trials", 219, 0, 0, 0, 190L, 87),
 			new ValidationResult("McKeown_2021", 2023, 33, 1074, 0, 800L, 820),
 			new ValidationResult("SRA2_Cytology_screening", 1361, 33, 462, 0, 400L, 623),
 			new ValidationResult("SRA2_Haematology", 222, 6, 1186, 1, 300L, 106),
 			new ValidationResult("SRA2_Respiratory", 768, 18, 1202, 0, 800L, 356),
 			new ValidationResult("SRA2_Stroke", 497, 8, 787, 0, 320L, 190),
-			new ValidationResult("TIL", 696, 4, 392, 0, 9_000L, 262),
+			new ValidationResult("TIL", 698, 3, 391, 0, 9_000L, 263),
 			new ValidationResult("TIL_Zotero", 695, 5, 392, 0, 9_000L, 262))
 		.stream().collect(Collectors.toMap(ValidationResult::getFileName, Function.identity(), (o1, o2) -> o1, TreeMap::new));
 	// @formatter:on

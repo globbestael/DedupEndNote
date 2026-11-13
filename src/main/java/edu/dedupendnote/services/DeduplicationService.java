@@ -3,7 +3,6 @@ package edu.dedupendnote.services;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -14,16 +13,13 @@ import java.util.stream.Collectors;
 
 import java.util.function.Consumer;
 
-import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.annotation.RequestScope;
 
 import edu.dedupendnote.domain.BibliographicItem;
 import edu.dedupendnote.domain.DeduplicationMode;
-import edu.dedupendnote.services.comparison.DefaultJournalComparisonService;
-import edu.dedupendnote.services.comparison.DefaultPagesComparisonService;
-import edu.dedupendnote.services.comparison.FieldComparators;
+import edu.dedupendnote.services.comparison.DuplicateMatcher;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
@@ -31,7 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class DeduplicationService {
 
-	private final FieldComparators fieldComparators;
+	private final DuplicateMatcher duplicateMatcher;
 	private final BibliographicItemReader bibliographicItemReader;
 	private final BibliographicItemWriter bibliographicItemWriter;
 
@@ -62,11 +58,11 @@ public class DeduplicationService {
 	 */
 	// @formatter:on
 
-	public DeduplicationService(FieldComparators fieldComparators, BibliographicItemReader bibliographicItemReader,
+	public DeduplicationService(DuplicateMatcher duplicateMatcher, BibliographicItemReader bibliographicItemReader,
 			BibliographicItemWriter bibliographicItemWriter) {
 		this.bibliographicItemReader = bibliographicItemReader;
 		this.bibliographicItemWriter = bibliographicItemWriter;
-		this.fieldComparators = fieldComparators;
+		this.duplicateMatcher = duplicateMatcher;
 	}
 
 	public void compareSet(List<BibliographicItem> bibliographicItems, Integer year, boolean descending,
@@ -76,20 +72,6 @@ public class DeduplicationService {
 		// compareSet runs entirely on one worker thread; cache it so the cancellation
 		// checks below are a single volatile read (allocation-free on the O(n²) hot path).
 		Thread current = Thread.currentThread();
-		/*
-		 * This Map holds temporary results of the comparison between 2 bibliographicItems.
-		 * At present there is only 1 key (isSameDois). If we need more keys, a POJO would be better?
-		 * 
-		 * isSameDois is three-valued: null (i.e uninitialized), false, true
-		 * Don't initialize here as "new HashMap<>(Map.of("isSameDois", null))" because null values are not allowed.
-		 * 
-		 * This three-valuedness was an attempt to lower the False Positives. ComparisonService.compareIssns and compareJournals
-		 * would short circuit when isSameDois == false (both bibliographicItems have DOIs but they are different).
-		 * FPs didn't go down, however there were more FNs (especially with errors in DOIs)
-		 */
-		Map<String, @Nullable Boolean> map = new HashMap<>();
-		// Map<String, Boolean> map = new HashMap<>(Map.of("isSameDois", null));
-
 		while (bibliographicItems.size() > 1) {
 			if (current.isInterrupted()) {
 				throw new CancelledException("ERROR: Deduplication was cancelled by the user.");
@@ -111,17 +93,12 @@ public class DeduplicationService {
 				if (current.isInterrupted()) {
 					throw new CancelledException("ERROR: Deduplication was cancelled by the user.");
 				}
-				map.put("isSameDois", null);
 				// log.atDebug().setMessage("Clear results previous comparison {}")
 				// .addArgument(() -> pivot.getLogLines().removeAll(bibliographicItem.getLogLines())).log();
 				if (log.isTraceEnabled()) {
 					log.trace("\nStarting comparison {} - {}", pivot.getId(), p.getId());
 				}
-				if (fieldComparators.pages().compare(p, pivot, map) && fieldComparators.authors().compare(p, pivot)
-						&& fieldComparators.titles().compare(p, pivot)
-						&& (DefaultPagesComparisonService.compareSameDois(p, pivot, map.get("isSameDois"))
-								|| DefaultJournalComparisonService.compareIssns(p, pivot, map.get("isSameDois"))
-								|| fieldComparators.journals().compare(p, pivot, map.get("isSameDois")))) {
+				if (duplicateMatcher.areDuplicates(p, pivot)) {
 
 					noOfDuplicates++;
 					// set the label

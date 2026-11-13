@@ -15,6 +15,7 @@ import edu.dedupendnote.services.comparison.DefaultAuthorsComparisonService;
 import edu.dedupendnote.services.comparison.DefaultJournalComparisonService;
 import edu.dedupendnote.services.comparison.DefaultPagesComparisonService;
 import edu.dedupendnote.services.comparison.DefaultTitleComparisonService;
+import edu.dedupendnote.services.comparison.DuplicateMatcher;
 import edu.dedupendnote.services.comparison.FieldComparators;
 
 import lombok.extern.slf4j.Slf4j;
@@ -46,6 +47,11 @@ public class DedupEndNoteApplication {
 				new DefaultTitleComparisonService(),
 				new DefaultJournalComparisonService(),
 				new DefaultPagesComparisonService());
+	}
+
+	@Bean
+	public DuplicateMatcher duplicateMatcher(FieldComparators fieldComparators) {
+		return new DuplicateMatcher(fieldComparators);
 	}
 
 	@Bean

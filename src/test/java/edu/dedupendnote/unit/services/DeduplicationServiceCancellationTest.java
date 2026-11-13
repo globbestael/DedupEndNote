@@ -14,7 +14,9 @@ import edu.dedupendnote.domain.BibliographicItem;
 import edu.dedupendnote.services.CancelledException;
 import edu.dedupendnote.services.DeduplicationService;
 import edu.dedupendnote.services.comparison.AuthorsComparisonService;
+import edu.dedupendnote.services.comparison.DuplicateMatcher;
 import edu.dedupendnote.services.comparison.FieldComparators;
+import edu.dedupendnote.services.comparison.JournalComparisonService;
 
 /**
  * Proves the comparison loop observes cancellation at per-pair granularity, not only
@@ -49,13 +51,23 @@ class DeduplicationServiceCancellationTest {
 		// pages() is the first comparator in the chain: it interrupts the thread on its
 		// first call and returns false (short-circuiting authors/titles/journals).
 		FieldComparators fieldComparators = new FieldComparators(authors, (r1, r2) -> false,
-				(r1, r2, isSameDois) -> false, (r1, r2, map) -> {
+				new JournalComparisonService() {
+					@Override
+					public boolean compare(BibliographicItem r1, BibliographicItem r2) {
+						return false;
+					}
+
+					@Override
+					public boolean compareIssns(BibliographicItem r1, BibliographicItem r2) {
+						return false;
+					}
+				}, (r1, r2) -> {
 					pagesCalls.incrementAndGet();
 					Thread.currentThread().interrupt();
 					return false;
 				});
 
-		DeduplicationService service = new DeduplicationService(fieldComparators, null, null);
+		DeduplicationService service = new DeduplicationService(new DuplicateMatcher(fieldComparators), null, null);
 
 		// 1 pivot + 3 inner items: the inner loop would run 3× without per-pair cancellation.
 		List<BibliographicItem> yearBucket = new ArrayList<>();

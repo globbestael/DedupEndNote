@@ -9,7 +9,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.apache.commons.text.similarity.JaroWinklerSimilarity;
-import org.jspecify.annotations.Nullable;
 
 import edu.dedupendnote.domain.BibliographicItem;
 import edu.dedupendnote.services.UtilitiesService;
@@ -47,7 +46,7 @@ public class DefaultJournalComparisonService implements JournalComparisonService
 	}
 
 	@Override
-	public boolean compare(BibliographicItem r1, BibliographicItem r2, @Nullable Boolean isSameDois) {
+	public boolean compare(BibliographicItem r1, BibliographicItem r2) {
 		if (!r1.getIsbns().isEmpty() && !r2.getIsbns().isEmpty()) {
 			return false;
 		}
@@ -193,7 +192,8 @@ public class DefaultJournalComparisonService implements JournalComparisonService
 		return false;
 	}
 
-	public static boolean compareIssns(BibliographicItem r1, BibliographicItem r2, @Nullable Boolean isSameDois) {
+	@Override
+	public boolean compareIssns(BibliographicItem r1, BibliographicItem r2) {
 		if (!r1.getIsbns().isEmpty() && !r2.getIsbns().isEmpty()) {
 			if (UtilitiesService.setsContainSameString(r1.getIsbns(), r2.getIsbns())) {
 				log.trace("- 4. ISBNs are the same");

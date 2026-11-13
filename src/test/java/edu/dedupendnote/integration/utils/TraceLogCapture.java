@@ -23,6 +23,7 @@ public final class TraceLogCapture implements AutoCloseable {
 	/** Loggers whose TRACE output makes up a deduplication comparison trace. */
 	public static final List<String> TRACE_LOGGER_NAMES = List.of(
 		"edu.dedupendnote.services.DeduplicationService",
+		"edu.dedupendnote.services.comparison.DuplicateMatcher",
 		"edu.dedupendnote.services.comparison.DefaultAuthorsComparisonService",
 		"edu.dedupendnote.services.comparison.DefaultJournalComparisonService",
 		"edu.dedupendnote.services.comparison.DefaultPagesComparisonService",

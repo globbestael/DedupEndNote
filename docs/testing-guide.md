@@ -18,7 +18,7 @@ The exact Maven profile path-filters live here (see [Test taxonomy](#test-taxono
 - **`unit/services/comparison/DefaultJournalComparisonServiceTest extends BaseTest`** — boolean `compare()` tests for journals (inline parameterized) and a file-based test against validated journal pairs
 - **`unit/services/comparison/JWSimilarityTitleTest extends BaseTest`** — title JWS-similarity tests only
 - **`unit/services/comparison/JWSimilarityAuthorTest extends AuthorsBaseTest`** — plain JUnit 5, no Spring; tests raw `jws.apply` score
-- Standalone comparison test classes (no Spring context): `DefaultJournalComparisonServiceIssnTest`, `DefaultTitleComparisonServiceTest`, `DefaultAuthorsComparisonServiceThresholdTest`, `JWSimilarityJournalTest`, `JWSimilarityAbstractTest`, `AuthorVariantsExperimentsTest`, `AuthorPermutationsExperimentsTest`
+- Standalone comparison test classes (no Spring context): `DuplicateMatcherTest` (rule order and shared-DOI shortcut, with stub field comparators), `DefaultJournalComparisonServiceIssnTest`, `DefaultTitleComparisonServiceTest`, `DefaultAuthorsComparisonServiceThresholdTest`, `JWSimilarityJournalTest`, `JWSimilarityAbstractTest`, `AuthorVariantsExperimentsTest`, `AuthorPermutationsExperimentsTest`
 
 - Normalization test classes in `unit/services/normalization/` (no Spring context): `AuthorsNormalizationServiceTest`, `JournalsNormalizationServiceTest`, `PagesNormalizationServiceTest`, `TitlesNormalizationServiceTest`, `NormalizationServiceTextTest`, `NormalizationServiceDoiTest`, `NormalizationServiceIssnTest`
 
@@ -55,7 +55,7 @@ The TraceLogCapture shows the outcome of the positive and negative steps in the 
 
 ## Test taxonomy
 
-Test files follow a three-category taxonomy per field: **Normalization** (`*NormalizationServiceTest` for concrete service classes; `NormalizationService*Test` for base-class topics like DOI, ISSN, text) / **Comparison** (`Default*ComparisonServiceTest`, boolean result from `compare()` or equivalent static helpers) / **JWSimilarity** (`JWSimilarity*Test`, raw JWS score vs threshold). Files are further split by Spring-context requirement and mirror the production subfolder structure (`services/comparison/`, `services/normalization/`).
+Test files follow a three-category taxonomy per field: **Normalization** (`*NormalizationServiceTest` for concrete service classes; `NormalizationService*Test` for base-class topics like DOI, ISSN, text) / **Comparison** (`Default*ComparisonServiceTest`, boolean result from `compare()`, `compareIssns()` or `DuplicateMatcher.areDuplicates()`) / **JWSimilarity** (`JWSimilarity*Test`, raw JWS score vs threshold). Files are further split by Spring-context requirement and mirror the production subfolder structure (`services/comparison/`, `services/normalization/`).
 
 The Maven profiles in `pom.xml` use path-based filters: `unit-tests` (excludes `**/integration/**` and `**/validation/**`), `integration-tests` (includes `**/integration/**/*Tests.java`, excludes `**/integration/browser/**`), `browser-tests` (includes only `**/integration/browser/**/*Tests.java`), `all-integration-tests` (includes all of `**/integration/**/*Tests.java`), `validation-tests` (includes only `**/validation/**/*Tests.java`). Selecting the folder in VS Code's Test Explorer automatically runs only that category.
 
