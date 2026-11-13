@@ -139,7 +139,7 @@ Tests live under four roots, each with a corresponding Maven profile:
 | `src/test/java/edu/dedupendnote/integration/browser/` | `browser-tests` / `all-integration-tests` | `@SpringBootTest(RANDOM_PORT)`, real WebSocket | On demand (Chromium required) |
 | `src/test/java/edu/dedupendnote/validation/` | `validation-tests` | `@SpringBootTest` | On demand |
 
-CI (`.github/workflows/check.yml`) runs only `./mvnw -B verify -DskipTests` (Error Prone, NullAway, SpotBugs + Find Security Bugs), not the tests: unit and integration tests read input files from `~/dedupendnote_input_files`, which is not in git (issue #85). Run the tests locally before opening a PR.
+CI (`.github/workflows/check.yml`) runs only `./mvnw -B verify -DskipTests` (Error Prone, NullAway, SpotBugs + Find Security Bugs), not the tests: unit and integration tests read input files from `~/dedupendnote_input_files`, which is not in git (issue #85). Run the tests locally before opening a PR. Dependabot (`.github/dependabot.yml`) opens monthly PRs to bump the GitHub Actions used in the workflows and the Maven dependencies/plugins in `pom.xml` (Spring packages grouped in one PR). It does not replace `./mvnw dependency-check:check`: that plugin has no execution bound to the lifecycle, so neither `verify` nor CI runs it; run it manually before releases.
 
 Note: `-Pintegration-tests` excludes `integration/browser/`; `-Pall-integration-tests` includes it. The exact glob path-filters for every profile are documented once, in [`docs/testing-guide.md`](docs/testing-guide.md) — don't restate them here.
 
