@@ -10,7 +10,7 @@ The exact Maven profile path-filters live here (see [Test taxonomy](#test-taxono
 
 ## Unit (`edu.dedupendnote.unit.*`)
 
-- **`unit/BaseTest`** — provides `Path baseDir` (`~/dedupendnote_input_files`) and `Path testDir` (both initialized directly as fields), `@BeforeEach initTestDir()`, plus utilities (`jws`, `getHighestSimilarityForAuthors`, `setLoggerToDebug`)
+- **`unit/BaseTest`** — provides `Path baseDir` (from `TestData.baseDir()`: system property `dedup.testdata.dir`, then env `DEDUP_TESTDATA_DIR`, then `~/dedupendnote_input_files`) and `Path testDir` (both initialized directly as fields), and registers `TestDataExtension`, `@BeforeEach initTestDir()`, plus utilities (`jws`, `getHighestSimilarityForAuthors`, `setLoggerToDebug`)
 - **`unit/services/BibliographicItemReaderTest extends BaseTest`** — tests the reader's title-derived patterns (`REPLY_PATTERN`, `ERRATUM_PATTERN`, `SOURCE_PATTERN`, `COMMENT_PATTERN`, `PHASE_PATTERN`, `RIS_LINE_PATTERN`); inline `@ValueSource` cases plus file-based tests against the curated `All__*` example sets.
 - Standalone unit test classes directly in `unit/services/`: `UtilitiesServiceTest`
 
@@ -36,7 +36,7 @@ Two base classes exist; the choice depends on whether the test needs real HTTP (
 
 ## Validation (`edu.dedupendnote.validation.*`)
 
-- **`validation/ValidationTests`** — measures sensitivity/specificity of the production deduplication engine across 14 validated real-world datasets; not a regression guard but a performance monitor. Requires truth files in `~/dedupendnote_input_files` (not in git). Run with `-Pvalidation-tests`.
+- **`validation/ValidationTests`** — measures sensitivity/specificity of the production deduplication engine across 14 validated real-world datasets; not a regression guard but a performance monitor. Requires truth files in `validation/` of the test data directory (gitignored, local only). Run with `-Pvalidation-tests`.
 - **`validation/experiments/AuthorExperimentsTests`** — runs `DefaultAuthorsComparisonService` with experimental thresholds (`AuthorThresholds(1.0, 1.0, 1.0)`) against a validated dataset and asserts on relative sensitivity/specificity. The `experiments` sub-package holds controlled A/B experiments against production-engine baselines.
 - **`validation/services/ValidationService`** — test-only Spring `@Service` that encapsulates the truth-file scoring logic (TP/FP/FN/TN computation, FN/FP analysis file writing). Shared by `ValidationTests` and future experiments tests.
 - **`validation/services/RecordDBService`** — test-only Spring `@Service` for reading/writing the tab-delimited DB export format.
@@ -63,8 +63,18 @@ Tests with expected errors are NOT disabled — they use an `int EXPECTED_NUMBER
 
 ## Test profile
 
-`@ActiveProfiles("test")` activates the `test` profile for all integration and validation tests, loading `src/main/resources/application-test.properties`. It is declared on `AbstractIntegrationTest` (inherited by subclasses), repeated on each `AbstractRandomPortIntegrationTest` subclass (which has no common Spring-context parent), and declared directly on `BrowserCancellationTests` (which extends no base class). Unit tests don't start Spring and get `baseDir` directly from `BaseTest` via `System.getProperty("user.home")`.
+`@ActiveProfiles("test")` activates the `test` profile for all integration and validation tests, loading `src/main/resources/application-test.properties`. It is declared on `AbstractIntegrationTest` (inherited by subclasses), repeated on each `AbstractRandomPortIntegrationTest` subclass (which has no common Spring-context parent), and declared directly on `BrowserCancellationTests` (which extends no base class). Unit tests don't start Spring and get `baseDir` directly from `BaseTest` via `TestData.baseDir()`.
 
 ## Continuous integration
 
-`.github/workflows/check.yml` runs on every pull request and every push to `main`. It runs `./mvnw -B verify -DskipTests` (compile with Error Prone and NullAway, plus SpotBugs + Find Security Bugs) and **no tests**: the unit and integration tests read input files from `~/dedupendnote_input_files`, which is not in git, so on a clean runner 15 unit tests error out and the integration tests have no input. Making the suite runnable in CI is tracked in issue #85. `bin/merge-pr.sh` waits for this workflow to pass before it merges.
+`.github/workflows/check.yml` runs on every pull request and every push to `main`, as two parallel jobs. `check` runs `./mvnw -B verify -DskipTests` (compile with Error Prone and NullAway, plus SpotBugs + Find Security Bugs). `test` runs `./mvnw -B test -Punit-tests` and `-Pintegration-tests` (validation and browser tests stay out), and uploads `target/surefire-reports/` when a step fails. `bin/merge-pr.sh` waits for this workflow to pass before it merges.
+
+### Test data
+
+The input files are in the public repository [`globbestael/dedupendnote-testdata`](https://github.com/globbestael/dedupendnote-testdata): `unit/` and `integration/` are tracked; `validation/` and `other/` (files that belong to no test) and the test outputs (`*_deduplicated.txt`, `*_mark.txt`) are gitignored. `testdata.ref` in this repository pins one commit of it. CI checks out that commit into `testdata/` and sets `DEDUP_TESTDATA_DIR`. Locally, the maintainer's working copy is `~/dedupendnote_input_files`.
+
+- `TestData` (in `src/test/java/edu/dedupendnote/`) resolves the directory: system property `dedup.testdata.dir`, then env var `DEDUP_TESTDATA_DIR`, then `~/dedupendnote_input_files`. The two scripts below honour only the env var.
+- Layout of the data repo: `unit/` for unit tests; `integration/regression/` (read by `DeduplicationServiceTests`) and `integration/missed_duplicates/` (read by `MissedDuplicatesTests`) for integration tests.
+- `TestDataExtension` (a JUnit `BeforeAllCallback`; registered on `BaseTest` and `AbstractIntegrationTest`) fails every test class with one message when the directory is missing, and when the local copy is *behind* the pin (pinned commit not an ancestor of `HEAD`): run `bin/sync-testdata.sh`. A copy *ahead* of the pin only logs a warning. With `CI=true` the pin is not checked.
+- `bin/unused-testdata.sh` lists fixtures whose file name no test mentions (report only).
+- Changing a fixture: commit and push to the data repo's `main` (never force-push: pinned commits must stay reachable), then update `testdata.ref` in the same PR as the test change.

@@ -22,7 +22,7 @@ class DeduplicationServiceTests extends AbstractIntegrationTest {
 
 	@BeforeEach
 	void initTestDir() {
-		testDir = baseDir.resolve("integration").resolve("other");
+		testDir = baseDir.resolve("integration").resolve("regression");
 	}
 
 	@Test
