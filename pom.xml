@@ -63,7 +63,7 @@
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-text</artifactId>
-			<version>1.14.0</version>
+			<version>1.15.0</version>
 		</dependency>
 		<!--
 			https://github.com/tdebatty/java-string-similarity has an implentation of Ratcliff-Obershelp.
@@ -102,13 +102,13 @@
 		<dependency>
 			<groupId>io.github.java-diff-utils</groupId>
 			<artifactId>java-diff-utils</artifactId>
-			<version>4.15</version>
+			<version>4.18</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>com.microsoft.playwright</groupId>
 			<artifactId>playwright</artifactId>
-			<version>1.47.0</version>
+			<version>1.64.0</version>
 			<scope>test</scope>
 		</dependency>
 		<!--  
@@ -165,7 +165,7 @@
 		<dependency>
 			<groupId>org.jspecify</groupId>
 			<artifactId>jspecify</artifactId>
-			<version>1.0.0</version>
+			<version>1.0.1</version>
 		</dependency>
 	</dependencies>
 	
@@ -230,7 +230,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.14.1</version>
+				<version>3.16.0</version>
 				<configuration>
 					<release>21</release>
 					<encoding>UTF-8</encoding>
@@ -260,17 +260,17 @@
 						<path>
 							<groupId>org.projectlombok</groupId>
 							<artifactId>lombok</artifactId>
-							<version>1.18.42</version>
+							<version>1.18.48</version>
 						</path>
 						<path>
 							<groupId>com.google.errorprone</groupId>
 							<artifactId>error_prone_core</artifactId>
-							<version>2.42.0</version>
+							<version>2.52.0</version>
 						</path>
 						<path>
 							<groupId>com.uber.nullaway</groupId>
 							<artifactId>nullaway</artifactId>
-							<version>0.12.12</version>
+							<version>0.14.3</version>
 						</path>
 					</annotationProcessorPaths>
 				</configuration>
@@ -293,7 +293,7 @@
 			<plugin>
 				<groupId>com.github.spotbugs</groupId>
 				<artifactId>spotbugs-maven-plugin</artifactId>
-				<version>4.10.2.0</version>
+				<version>4.10.5.0</version>
 				<configuration>
 					<effort>Max</effort>
 					<threshold>Low</threshold>
@@ -321,7 +321,7 @@
 			<plugin>
 				<groupId>org.jacoco</groupId>
 				<artifactId>jacoco-maven-plugin</artifactId>
-				<version>0.8.12</version>
+				<version>0.8.16</version>
 				<configuration>
 					<excludes>
 						<!-- Application entry point and Spring configuration — nothing to assert on -->
