@@ -38,7 +38,7 @@ IFS=$'\t' read -r state head branch author <<<"$pr_info"
 texts=$(gh pr view "$pr" --json body,comments --jq '.body, .comments[].body') ||
 	refuse "could not read the description and comments of PR #$pr."
 # The gate's marker depends on who wrote the PR (ADR-0011).
-if [[ "$author" == "app/dependabot" || "$author" == "dependabot[bot]" || "$author" == "dependabot" ]]; then
+if [[ "$author" == "app/dependabot" || "$author" == "dependabot[bot]" ]]; then
 	marker=Verified
 	how="Run the dependabot-pr skill on its head ($head) and post its report as a PR comment."
 else

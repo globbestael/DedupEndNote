@@ -14,7 +14,8 @@ never merge unless the user asks.
 
 1. **Read the PR.** `gh pr view <n> --json author,headRefOid,files,title,body`. If the author is not
    `app/dependabot`, stop: this skill does not apply.
-2. **Check out the head** (`gh pr checkout <n>`), so the checks run against the PR's content.
+2. **Check out the head**, so the checks run against the PR's content. Start from a clean working tree
+   (`git status`; if it is dirty, stop and ask the user), then `gh pr checkout <n>`.
 3. **List the version changes** (`gh pr diff <n>`): artifact, old → new version, and for each a link
    to its release notes (usually in the PR body). Read them for breaking changes, removed APIs and
    changed defaults.

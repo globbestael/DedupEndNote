@@ -1,6 +1,6 @@
 # ADR-0011 A separate, lighter track for Dependabot PRs
 
-**Status:** Decided — 2026-11-14  
+**Status:** Decided — 2026-11-14 (issue #106)  
 **Context:** Dependabot PRs have no issue, so "issue first, branch per issue, `Closes #n`" does not
 apply. Running them through the two-axis `code-review` (Standards, Spec) found nothing about the bump
 itself on #92. On #93 the dangerous finding (the new version made the OpenRewrite recipe delete all
@@ -44,4 +44,3 @@ track a PR took. The author is the only criterion.
 
 - With tests in CI (#85), step 2 of the skill shrinks to reading the CI result for library bumps;
   build plugins still need their own command.
-- Issue: #106.
