@@ -22,19 +22,17 @@ import com.microsoft.playwright.Page;
 import com.microsoft.playwright.Playwright;
 import com.microsoft.playwright.options.WaitForSelectorState;
 
+import edu.dedupendnote.TestData;
+
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 class BrowserCancellationTests {
 
 	// comparison-phase test: 805 records, comparison takes several seconds
-	private static final Path TEST_FILE = Path.of(
-		System.getProperty("user.home", ""),
-		"dedupendnote_input_files", "integration", "other", "test805.txt");
+	private static final Path TEST_FILE = TestData.baseDir().resolve("integration/regression/test805.txt");
 
 	// reading-phase test: large real dataset — reading alone takes > 1 s
-	private static final Path MCKEOWN_FILE = Path.of(
-		System.getProperty("user.home", ""),
-		"dedupendnote_input_files", "validation", "McKeown_S_2021", "McKeown_2021.txt");
+	private static final Path MCKEOWN_FILE = TestData.baseDir().resolve("validation/McKeown_S_2021/McKeown_2021.txt");
 
 	@LocalServerPort
 	private int port;
