@@ -20,3 +20,11 @@ updates:
       openrewrite:
         patterns:
           - "org.openrewrite*"
+      # Everything else: one PR for all minor and patch updates; majors stay separate PRs
+      # because each needs its own release-notes read (#106)
+      maven-minor-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"

@@ -67,7 +67,7 @@ Tests with expected errors are NOT disabled — they use an `int EXPECTED_NUMBER
 
 ## Continuous integration
 
-`.github/workflows/check.yml` runs on every pull request and every push to `main`, as two parallel jobs. `check` runs `./mvnw -B verify -DskipTests` (compile with Error Prone and NullAway, plus SpotBugs + Find Security Bugs). `test` runs `./mvnw -B test -Punit-tests` and `-Pintegration-tests` (validation and browser tests stay out), and uploads `target/surefire-reports/` when a step fails. `bin/merge-pr.sh` waits for this workflow to pass before it merges.
+`.github/workflows/check.yml` runs on every pull request and every push to `main`, as two parallel jobs. `check` runs `./mvnw -B verify -DskipTests` (compile with Error Prone and NullAway, plus SpotBugs + Find Security Bugs). `test` runs `./mvnw -B test -Punit-tests` and `-Pintegration-tests` (validation and browser tests stay out), and uploads `target/surefire-reports/` when a step fails. `bin/merge-pr.sh` waits for this workflow to pass before it merges. For Dependabot PRs the CI result is the test run of the `dependabot-pr` skill (ADR-0011); build plugins still need their own check there.
 
 ### Test data
 

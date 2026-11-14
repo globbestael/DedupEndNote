@@ -15,6 +15,7 @@ Update CLAUDE.md (same commit as the code change) when any of the following chan
 - Code quality plugin version bumped or new plugin added
 - Plan-file naming convention changed (plans section)
 - Release workflow or version-management mechanism changed (configuration section)
+- Dependabot track changed (Workflow step 8, `.claude/skills/dependabot-pr/`, `bin/merge-pr.sh` gate, `.github/dependabot.yml` grouping) → also update ADR-0011
 - Doc file added to `docs/` or existing one renamed/removed (documentation map section)
 
 ## Documentation map
@@ -27,7 +28,8 @@ Update CLAUDE.md (same commit as the code change) when any of the following chan
 | Test class listing, base class details, taxonomy, test profile, how to run tests | [docs/testing-guide.md](docs/testing-guide.md) |
 | Commands, build and tooling rules, test structure, config, release | This file (CLAUDE.md) |
 | Coding standards, read during review (judgement calls, e.g. modern Java) | [CODING_STANDARDS.md](CODING_STANDARDS.md) |
-| Architecture decisions (why X, rejected alternatives) | [docs/adr/](docs/adr/) |
+| Architecture decisions (why X, rejected alternatives), incl. the Dependabot track ([ADR-0011](docs/adr/0011-dependabot-verification-track.md)) | [docs/adr/](docs/adr/) |
+| Procedure for verifying a Dependabot PR | [.claude/skills/dependabot-pr/SKILL.md](.claude/skills/dependabot-pr/SKILL.md) |
 | Architecture review snapshot 2026-11-12 (deepening candidates, not yet decided) | [docs/architecture-review-2026-11-12.html](docs/architecture-review-2026-11-12.html) |
 
 ## Commands
@@ -144,7 +146,7 @@ Tests live under four roots, each with a corresponding Maven profile:
 | `src/test/java/edu/dedupendnote/integration/browser/` | `browser-tests` / `all-integration-tests` | `@SpringBootTest(RANDOM_PORT)`, real WebSocket | On demand (Chromium required) |
 | `src/test/java/edu/dedupendnote/validation/` | `validation-tests` | `@SpringBootTest` | On demand |
 
-CI (`.github/workflows/check.yml`) runs two parallel jobs: `check` (`./mvnw -B verify -DskipTests`: Error Prone, NullAway, SpotBugs + Find Security Bugs) and `test` (`-Punit-tests` and `-Pintegration-tests`; no validation or browser tests). Test input files live in the separate public repository `globbestael/dedupendnote-testdata`; `testdata.ref` pins the commit, CI checks out exactly that commit. Locally the data is the working copy `~/dedupendnote_input_files` (override: `-Ddedup.testdata.dir` or `DEDUP_TESTDATA_DIR`, see `TestData`); `bin/sync-testdata.sh` fast-forwards it to the pin, `bin/unused-testdata.sh` lists fixtures no test references. To change a fixture: commit and push it to the data repo's `main` (no force-push), then put the new SHA in `testdata.ref` in the same PR as the test change. Run the tests locally before opening a PR. Dependabot (`.github/dependabot.yml`) opens monthly PRs to bump the GitHub Actions used in the workflows and the Maven dependencies/plugins in `pom.xml` (Spring packages grouped in one PR). It does not replace `./mvnw dependency-check:check`: that plugin has no execution bound to the lifecycle, so neither `verify` nor CI runs it; run it manually before releases.
+CI (`.github/workflows/check.yml`) runs two parallel jobs: `check` (`./mvnw -B verify -DskipTests`: Error Prone, NullAway, SpotBugs + Find Security Bugs) and `test` (`-Punit-tests` and `-Pintegration-tests`; no validation or browser tests). Test input files live in the separate public repository `globbestael/dedupendnote-testdata`; `testdata.ref` pins the commit, CI checks out exactly that commit. Locally the data is the working copy `~/dedupendnote_input_files` (override: `-Ddedup.testdata.dir` or `DEDUP_TESTDATA_DIR`, see `TestData`); `bin/sync-testdata.sh` fast-forwards it to the pin, `bin/unused-testdata.sh` lists fixtures no test references. To change a fixture: commit and push it to the data repo's `main` (no force-push), then put the new SHA in `testdata.ref` in the same PR as the test change. Run the tests locally before opening a PR. Dependabot (`.github/dependabot.yml`) opens monthly PRs to bump the GitHub Actions used in the workflows and the Maven dependencies/plugins in `pom.xml` (grouping: see the file). It does not replace `./mvnw dependency-check:check`: that plugin has no execution bound to the lifecycle, so neither `verify` nor CI runs it; run it manually before releases.
 
 Note: `-Pintegration-tests` excludes `integration/browser/`; `-Pall-integration-tests` includes it. The exact glob path-filters for every profile are documented once, in [`docs/testing-guide.md`](docs/testing-guide.md) — don't restate them here.
 
@@ -172,7 +174,8 @@ Work is tracked as GitHub issues and delivered as pull requests. `main` only cha
 4. **Verify** before opening the PR: `./mvnw test -Punit-tests` and `./mvnw test -Pintegration-tests`; run `-Pvalidation-tests` for changes to the algorithm. Update the docs listed in "Keeping this file current".
 5. **Open a PR** to `main` using `.github/pull_request_template.md`. The agent writes the whole description: `Closes #<issue>`, a short Summary, and the checklists.
 6. **Review** the PR's head commit with `/mattpocock-skills:code-review <PR#>` (Standards + Spec, with the issue as the spec). Put each review's findings in the PR: the first in the description when opening it, a later one as a comment. Each starts with a line `Reviewed: <full 40-character SHA>` naming the head commit it reviewed, then what was fixed and what was left. Review again after every change to the diff since the last review, a fix from the review itself included.
-7. **Merge** only with `bin/merge-pr.sh <PR#>`, and only when the user asks. It merges only when the newest `Reviewed:` SHA is the PR's head and CI passed. It uses a **merge commit** (not squash or rebase), so per-step commits stay visible and plan-file timestamps (see "Plans") stay valid, deletes the branch on GitHub and locally, and returns to an up-to-date `main`. Never use `gh pr merge` directly: `.claude/settings.json` denies it.
+7. **Merge** only with `bin/merge-pr.sh <PR#>`, and only when the user asks. It merges only when the newest `Reviewed:` SHA (`Verified:` for a Dependabot PR, step 8) is the PR's head and CI passed. It uses a **merge commit** (not squash or rebase), so per-step commits stay visible and plan-file timestamps (see "Plans") stay valid, deletes the branch on GitHub and locally, and returns to an up-to-date `main`. Never use `gh pr merge` directly: `.claude/settings.json` denies it.
+8. **Dependabot PRs take a lighter track** (author `app/dependabot`). Steps 1-6 do not apply: follow the `dependabot-pr` skill and post its verification report as a PR comment. The gate and the reasons are in `bin/merge-pr.sh` and [ADR-0011](docs/adr/0011-dependabot-verification-track.md).
 
 `CITATION.cff` is regenerated on every build (the `date-released` field changes daily): don't commit it except as part of a release.
 
