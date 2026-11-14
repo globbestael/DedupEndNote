@@ -8,7 +8,8 @@
 #   - its description or a comment has a `Reviewed: <full SHA>` line, and the
 #     newest one (the description first, then the comments in order) names a
 #     real commit that is the PR's head;
-#   - for a Dependabot PR (author `app/dependabot`, ADR-0011) that line is
+#   - for a Dependabot PR (author `app/dependabot`, or `dependabot[bot]` as other
+#     tools spell it; ADR-0011) that line is
 #     `Verified: <full SHA>` instead, under the same rule. Each marker counts
 #     only for its own kind of author;
 #   - its CI checks have all passed; it waits for checks that are still running.
@@ -51,7 +52,7 @@ reviewed=$(grep -oE "^$marker: [0-9a-f]{40}\b" <<<"$texts" | tail -1 | cut -d' '
 [[ -n "$reviewed" ]] || refuse "PR #$pr has no \`$marker: <full SHA>\` line. $how"
 git fetch -q origin
 git cat-file -e "$reviewed^{commit}" 2>/dev/null || refuse "the newest $marker: SHA $reviewed is not a commit in this repo."
-[[ "$reviewed" == "$head" ]] || refuse "the newest $marker: line names $reviewed, but the PR's head is $head. Do it again first."
+[[ "$reviewed" == "$head" ]] || refuse "the newest $marker: line names $reviewed, but the PR's head is $head, so that $marker: line is stale. $how"
 
 if ! gh pr checks "$pr" --watch --fail-fast; then
 	refuse "PR #$pr's CI checks failed or none were reported. If the PR was just opened, wait a few seconds for the workflow to start and run this again."

@@ -42,5 +42,5 @@ track a PR took. The author is the only criterion.
 
 ## Consequences
 
-- With tests in CI (#85), step 2 of the skill shrinks to reading the CI result for library bumps;
+- Since tests run in CI (#85), step 2 of the skill shrinks to reading the CI result for library bumps;
   build plugins still need their own command.
