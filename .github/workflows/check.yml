@@ -1,6 +1,8 @@
-# Build and static analysis (Error Prone, NullAway, SpotBugs + Find Security Bugs) on every PR
-# and every push to main. The tests are not run here yet: unit and integration tests read input
-# files from ~/dedupendnote_input_files, which is not in git (issue #85).
+# On every PR and every push to main, two parallel jobs:
+# - check: build and static analysis (Error Prone, NullAway, SpotBugs + Find Security Bugs)
+# - test: unit and integration tests, with the input files from the separate
+#   globbestael/dedupendnote-testdata repository at the commit pinned in testdata.ref.
+#   Validation and browser tests are not run here (huge truth files, Chromium).
 name: Check
 
 on:
@@ -28,3 +30,44 @@ jobs:
 
       - name: Build and static analysis
         run: ./mvnw -B verify -DskipTests
+
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+
+      # The input files live in a separate repository; testdata.ref pins the commit to use.
+      - name: Read the pinned test data commit
+        id: pin
+        run: echo "ref=$(tr -d '[:space:]' < testdata.ref)" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@v7
+        with:
+          repository: globbestael/dedupendnote-testdata
+          ref: ${{ steps.pin.outputs.ref }}
+          path: testdata
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+
+      - name: Unit tests
+        run: ./mvnw -B test -Punit-tests
+        env:
+          DEDUP_TESTDATA_DIR: ${{ github.workspace }}/testdata
+
+      - name: Integration tests
+        run: ./mvnw -B test -Pintegration-tests
+        env:
+          DEDUP_TESTDATA_DIR: ${{ github.workspace }}/testdata
+
+      - name: Upload test reports
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-reports
+          path: target/surefire-reports/
+          retention-days: 7
