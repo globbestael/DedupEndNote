@@ -63,7 +63,7 @@ Tests with expected errors are NOT disabled — they use an `int EXPECTED_NUMBER
 
 ## Test profile
 
-`@ActiveProfiles("test")` activates the `test` profile for all integration and validation tests, loading `src/main/resources/application-test.properties`. It is declared on `AbstractIntegrationTest` (inherited by subclasses), repeated on each `AbstractRandomPortIntegrationTest` subclass (which has no common Spring-context parent), and declared directly on `BrowserCancellationTests` (which extends no base class). Unit tests don't start Spring and get `baseDir` directly from `BaseTest` via `System.getProperty("user.home")`.
+`@ActiveProfiles("test")` activates the `test` profile for all integration and validation tests, loading `src/main/resources/application-test.properties`. It is declared on `AbstractIntegrationTest` (inherited by subclasses), repeated on each `AbstractRandomPortIntegrationTest` subclass (which has no common Spring-context parent), and declared directly on `BrowserCancellationTests` (which extends no base class). Unit tests don't start Spring and get `baseDir` directly from `BaseTest` via `TestData.baseDir()`.
 
 ## Continuous integration
 
@@ -73,7 +73,8 @@ Tests with expected errors are NOT disabled — they use an `int EXPECTED_NUMBER
 
 The input files are in the public repository [`globbestael/dedupendnote-testdata`](https://github.com/globbestael/dedupendnote-testdata): `unit/` and `integration/` are tracked; `validation/` and `other/` (files that belong to no test) and the test outputs (`*_deduplicated.txt`, `*_mark.txt`) are gitignored. `testdata.ref` in this repository pins one commit of it. CI checks out that commit into `testdata/` and sets `DEDUP_TESTDATA_DIR`. Locally, the maintainer's working copy is `~/dedupendnote_input_files`.
 
-- `TestData.baseDir()` resolves the directory (property, env var, default).
-- `TestDataExtension` (registered on `BaseTest` and `AbstractIntegrationTest`) fails every test class with one message when the directory is missing, and when the local copy is *behind* the pin (pinned commit not an ancestor of `HEAD`): run `bin/sync-testdata.sh`. A copy *ahead* of the pin only logs a warning. With `CI=true` the pin is not checked.
+- `TestData` (in `src/test/java/edu/dedupendnote/`) resolves the directory: system property `dedup.testdata.dir`, then env var `DEDUP_TESTDATA_DIR`, then `~/dedupendnote_input_files`. The two scripts below honour only the env var.
+- Layout of the data repo: `unit/` for unit tests; `integration/regression/` (read by `DeduplicationServiceTests`) and `integration/missed_duplicates/` (read by `MissedDuplicatesTests`) for integration tests.
+- `TestDataExtension` (a JUnit `BeforeAllCallback`; registered on `BaseTest` and `AbstractIntegrationTest`) fails every test class with one message when the directory is missing, and when the local copy is *behind* the pin (pinned commit not an ancestor of `HEAD`): run `bin/sync-testdata.sh`. A copy *ahead* of the pin only logs a warning. With `CI=true` the pin is not checked.
 - `bin/unused-testdata.sh` lists fixtures whose file name no test mentions (report only).
 - Changing a fixture: commit and push to the data repo's `main` (never force-push: pinned commits must stay reachable), then update `testdata.ref` in the same PR as the test change.

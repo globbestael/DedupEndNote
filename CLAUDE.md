@@ -56,6 +56,10 @@ Update CLAUDE.md (same commit as the code change) when any of the following chan
 # Merge a reviewed PR (see Workflow): checks the Reviewed: SHA and CI, merge commit, cleans up branches
 bin/merge-pr.sh <PR number>
 
+# Test data (separate repo, pinned in testdata.ref; see Testing)
+bin/sync-testdata.sh          # fast-forward ~/dedupendnote_input_files (or $DEDUP_TESTDATA_DIR) to the pin
+bin/unused-testdata.sh        # list fixtures no test references (report only)
+
 # Coverage
 # JaCoCo report is written to target/site/jacoco/ after any test run except -Pvalidation-tests
 # VS Code: Coverage Gutters extension reads target/site/jacoco/jacoco.xml → Display Coverage

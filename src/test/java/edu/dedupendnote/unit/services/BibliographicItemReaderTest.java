@@ -25,7 +25,8 @@ import edu.dedupendnote.unit.BaseTest;
  * REPLY_PATTERN, ERRATUM_PATTERN, SOURCE_PATTERN, COMMENT_PATTERN (-> isReply) and PHASE_PATTERN (-> isPhase).
  *
  * These tests were moved out of JWSimilarityTitleTest (which is only concerned with Jaro-Winkler title
- * similarity). File-based tests read curated example sets from the unit/ folder of the test data repository (see TestData).
+ * similarity). File-based tests read curated example sets from the unit/ folder of the test data repository
+ * (see TestData).
  *
  * Note on case handling (mirrors how BibliographicItemReader applies the patterns):
  * - REPLY_PATTERN and PHASE_PATTERN are matched against the lower-cased title.
