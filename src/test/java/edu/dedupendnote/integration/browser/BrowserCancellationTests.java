@@ -2,6 +2,8 @@ package edu.dedupendnote.integration.browser;
 
 import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 import org.junit.jupiter.api.AfterAll;
@@ -10,6 +12,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.api.io.TempDir;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.ActiveProfiles;
@@ -31,8 +34,11 @@ class BrowserCancellationTests {
 	// comparison-phase test: 805 records, comparison takes several seconds
 	private static final Path TEST_FILE = TestData.baseDir().resolve("integration/regression/test805.txt");
 
-	// reading-phase test: large real dataset — reading alone takes > 1 s
-	private static final Path LARGER_TEST_FILE = TestData.baseDir().resolve("integration/regression/TwoFiles_2.txt");
+	// reading-phase test: generated file of this many records. Reading runs at roughly 20,000
+	// records/s on a developer machine (measured), so this keeps the reading phase busy for several
+	// seconds — far longer than the time Playwright needs to click Cancel. Must stay below the
+	// dedup.max-records limit (100,000), or the run is rejected before reading starts.
+	private static final int READING_TEST_RECORDS = 90_000;
 
 	@LocalServerPort
 	private int port;
@@ -98,20 +104,40 @@ class BrowserCancellationTests {
 
 	@Test
 	@Timeout(60)
-	void cancelDuringReading_showsErrorAndHidesCancelButton() {
-		// LARGER_TEST_FILE is large enough that reading takes > 1 s — long enough
-		// for Playwright to click Cancel before the reading phase finishes.
-		page.setInputFiles("#fileUpload1", LARGER_TEST_FILE);
+	void cancelDuringReading_showsErrorAndHidesCancelButton(@TempDir Path tempDir) throws IOException {
+		Path largeFile = tempDir.resolve("large_reading_test.txt");
+		Files.writeString(largeFile, generateRis(READING_TEST_RECORDS));
+
+		page.setInputFiles("#fileUpload1", largeFile);
 		assertThat(page.locator("#buttonStartDeduplication")).isEnabled();
 
 		page.click("#buttonStartDeduplication");
 
-		// Click Cancel immediately as soon as the button appears — before reading finishes.
-		page.locator("#buttonCancelDeduplication")
-				.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE));
+		// The reader reports "PROGRESS: n" while reading, and the page shows it in the progress bar.
+		// Wait for the first non-zero value so Cancel is clicked while the reading phase is running.
+		page.waitForFunction("() => { const b = document.querySelector('#progress .progress-bar');"
+				+ " return b && Number(b.getAttribute('aria-valuenow')) > 0; }");
+
 		page.click("#buttonCancelDeduplication");
 
 		assertThat(page.locator("#results")).containsText("ERROR");
 		assertThat(page.locator("#buttonCancelDeduplication")).isHidden();
+	}
+
+	// Minimal records: one per journal and title, so nothing is special-cased by the reader.
+	private static String generateRis(int count) {
+		StringBuilder sb = new StringBuilder();
+		for (int i = 1; i <= count; i++) {
+			sb.append("TY  - JOUR\n")
+					.append("ID  - ").append(i).append("\n")
+					.append("TI  - Effect of treatment on patient outcomes a multicentre randomised controlled trial ")
+					.append(i).append("\n")
+					.append("AU  - Smith, John\n")
+					.append("PY  - 2020\n")
+					.append("SP  - 100\n")
+					.append("JO  - Journal of Clinical Medicine ").append(i).append("\n")
+					.append("ER  - \n");
+		}
+		return sb.toString();
 	}
 }
