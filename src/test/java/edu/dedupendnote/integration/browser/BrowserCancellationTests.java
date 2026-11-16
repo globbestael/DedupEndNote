@@ -126,17 +126,21 @@ class BrowserCancellationTests {
 
 	// Minimal records: one per journal and title, so nothing is special-cased by the reader.
 	private static String generateRis(int count) {
+		// \s keeps the trailing space of "ER  - ": text blocks strip trailing whitespace, and the reader
+		// recognizes the end of a record by the prefix "ER  - ".
+		String record = """
+				TY  - JOUR
+				ID  - %1$d
+				TI  - Effect of treatment on patient outcomes a multicentre randomised controlled trial %1$d
+				AU  - Smith, John
+				PY  - 2020
+				SP  - 100
+				JO  - Journal of Clinical Medicine %1$d
+				ER  -\s
+				""";
 		StringBuilder sb = new StringBuilder();
 		for (int i = 1; i <= count; i++) {
-			sb.append("TY  - JOUR\n")
-					.append("ID  - ").append(i).append("\n")
-					.append("TI  - Effect of treatment on patient outcomes a multicentre randomised controlled trial ")
-					.append(i).append("\n")
-					.append("AU  - Smith, John\n")
-					.append("PY  - 2020\n")
-					.append("SP  - 100\n")
-					.append("JO  - Journal of Clinical Medicine ").append(i).append("\n")
-					.append("ER  - \n");
+			sb.append(record.formatted(i));
 		}
 		return sb.toString();
 	}
