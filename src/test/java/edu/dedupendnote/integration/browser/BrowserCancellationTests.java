@@ -32,7 +32,7 @@ class BrowserCancellationTests {
 	private static final Path TEST_FILE = TestData.baseDir().resolve("integration/regression/test805.txt");
 
 	// reading-phase test: large real dataset — reading alone takes > 1 s
-	private static final Path MCKEOWN_FILE = TestData.baseDir().resolve("validation/McKeown_S_2021/McKeown_2021.txt");
+	private static final Path LARGER_TEST_FILE = TestData.baseDir().resolve("integration/regression/TwoFiles_2.txt");
 
 	@LocalServerPort
 	private int port;
@@ -79,17 +79,16 @@ class BrowserCancellationTests {
 		page.click("#buttonStartDeduplication");
 
 		// Wait for the Cancel button to become visible (dedup task registered)
-		page.locator("#buttonCancelDeduplication").waitFor(
-			new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE));
+		page.locator("#buttonCancelDeduplication")
+				.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE));
 
 		// Wait for a live in-progress STOMP message (reading or comparison phase).
 		// assertThat().containsText() would also match the DONE message — by then the
 		// Cancel button is already hidden. waitForFunction with the !startsWith('DONE')
 		// guard catches the "Working on Y for N bibliographic items" messages instead,
 		// while the button is still visible and comparison is still running.
-		page.waitForFunction(
-			"() => { const t = document.getElementById('results').textContent;"
-			+ " return t.includes('bibliographic items') && !t.startsWith('DONE'); }");
+		page.waitForFunction("() => { const t = document.getElementById('results').textContent;"
+				+ " return t.includes('bibliographic items') && !t.startsWith('DONE'); }");
 
 		page.click("#buttonCancelDeduplication");
 
@@ -100,16 +99,16 @@ class BrowserCancellationTests {
 	@Test
 	@Timeout(60)
 	void cancelDuringReading_showsErrorAndHidesCancelButton() {
-		// McKeown_2021.txt is large enough that reading takes > 1 s — long enough
+		// LARGER_TEST_FILE is large enough that reading takes > 1 s — long enough
 		// for Playwright to click Cancel before the reading phase finishes.
-		page.setInputFiles("#fileUpload1", MCKEOWN_FILE);
+		page.setInputFiles("#fileUpload1", LARGER_TEST_FILE);
 		assertThat(page.locator("#buttonStartDeduplication")).isEnabled();
 
 		page.click("#buttonStartDeduplication");
 
 		// Click Cancel immediately as soon as the button appears — before reading finishes.
-		page.locator("#buttonCancelDeduplication").waitFor(
-			new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE));
+		page.locator("#buttonCancelDeduplication")
+				.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE));
 		page.click("#buttonCancelDeduplication");
 
 		assertThat(page.locator("#results")).containsText("ERROR");
