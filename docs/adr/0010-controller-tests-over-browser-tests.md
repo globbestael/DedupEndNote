@@ -76,6 +76,8 @@ Full end-to-end tests exercise the real browser, JavaScript, WebSocket, and the 
 - Browser tests are timing-sensitive and flaky on CI without additional tooling.
 - The project currently has no CI pipeline; adding browser test infrastructure before CI exists
   would create maintenance overhead with no automated safety net.
+  *Status note (2026-11-17): a CI workflow exists since #84 and has run the unit and integration
+  tests since #85, so this reason no longer holds. Browser tests still do not run in CI.*
 
 ### 2. Use `MockMvc` (Spring's mock HTTP layer) instead of `AbstractRandomPortIntegrationTest`
 
@@ -96,7 +98,8 @@ Simpler to write than real HTTP tests and slightly faster.
   shifts and they should be reconsidered.
 - **CI pipeline is added.** Browser tests become much more valuable — and maintainable — once
   a CI pipeline exists to run them on every commit. This is a natural trigger to revisit the
-  deferral.
+  deferral. *Status note (2026-11-17): CI exists (#84) and runs the unit and integration tests
+  (#85), so this trigger is met; revisiting the deferral is still open.*
 - **A new controller endpoint is added.** Add a corresponding test in an
   `AbstractRandomPortIntegrationTest` subclass for its HTTP contract (status code, error response
   format, auth/rate-limit behaviour). Do not rely on manual browser testing for controller error

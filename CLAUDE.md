@@ -14,7 +14,7 @@ Update CLAUDE.md (same commit as the code change) when any of the following chan
 - Architectural pattern added or removed (naming conventions, path helpers)
 - Code quality plugin version bumped or new plugin added
 - Plan-file naming convention changed (plans section)
-- Release workflow or version-management mechanism changed (configuration section)
+- Release workflow or version-management mechanism changed → update `docs/release.md`
 - Dependabot track changed (Workflow step 8, `.claude/skills/dependabot-pr/`, `bin/merge-pr.sh` gate, `.github/dependabot.yml` grouping) → also update ADR-0011
 - Doc file added to `docs/` or existing one renamed/removed (documentation map section)
 
@@ -30,6 +30,7 @@ Update CLAUDE.md (same commit as the code change) when any of the following chan
 | Coding standards, read during review (judgement calls, e.g. modern Java) | [CODING_STANDARDS.md](CODING_STANDARDS.md) |
 | Architecture decisions (why X, rejected alternatives), incl. the Dependabot track ([ADR-0011](docs/adr/0011-dependabot-verification-track.md)) | [docs/adr/](docs/adr/) |
 | Procedure for verifying a Dependabot PR | [.claude/skills/dependabot-pr/SKILL.md](.claude/skills/dependabot-pr/SKILL.md) |
+| Version derivation and release steps | [docs/release.md](docs/release.md) |
 | Architecture review snapshot 2026-11-12 (deepening candidates, not yet decided) | [docs/architecture-review-2026-11-12.html](docs/architecture-review-2026-11-12.html) |
 
 ## Commands
@@ -146,7 +147,7 @@ Tests live under four roots, each with a corresponding Maven profile:
 | `src/test/java/edu/dedupendnote/integration/browser/` | `browser-tests` / `all-integration-tests` | `@SpringBootTest(RANDOM_PORT)`, real WebSocket | On demand (Chromium required) |
 | `src/test/java/edu/dedupendnote/validation/` | `validation-tests` | `@SpringBootTest` | On demand |
 
-CI (`.github/workflows/check.yml`) runs three parallel jobs: `config` (`check-jsonschema`, pinned, validates the workflow files and `.github/dependabot.yml` against their schemas; no build), `check` (`./mvnw -B verify -DskipTests`: Error Prone, NullAway, SpotBugs + Find Security Bugs) and `test` (`-Punit-tests` and `-Pintegration-tests`; no validation or browser tests). Test input files live in the separate public repository `globbestael/dedupendnote-testdata`; `testdata.ref` pins the commit, CI checks out exactly that commit. Locally the data is the working copy `~/dedupendnote_input_files` (override: `-Ddedup.testdata.dir` or `DEDUP_TESTDATA_DIR`, see `TestData`); `bin/sync-testdata.sh` fast-forwards it to the pin, `bin/unused-testdata.sh` lists fixtures no test references. To change a fixture: commit and push it to the data repo's `main` (no force-push), then put the new SHA in `testdata.ref` in the same PR as the test change. Run the tests locally before opening a PR. Dependabot (`.github/dependabot.yml`) opens monthly PRs to bump the GitHub Actions used in the workflows and the Maven dependencies/plugins in `pom.xml` (grouping: see the file). It does not replace `./mvnw dependency-check:check`: that plugin has no execution bound to the lifecycle, so neither `verify` nor CI runs it; run it manually before releases.
+CI (`.github/workflows/check.yml`) runs three parallel jobs: `config` (`check-jsonschema`, pinned, validates the workflow files and `.github/dependabot.yml` against their schemas; no build), `check` (`./mvnw -B verify -DskipTests`: Error Prone, NullAway, SpotBugs + Find Security Bugs) and `test` (`-Punit-tests` and `-Pintegration-tests`; no validation or browser tests). Test input files live in the separate public repository `globbestael/dedupendnote-testdata`; `testdata.ref` pins the commit, CI checks out exactly that commit. Locally the data is the working copy `~/dedupendnote_input_files` (override: `-Ddedup.testdata.dir` or `DEDUP_TESTDATA_DIR`, see `TestData`); `bin/sync-testdata.sh` fast-forwards it to the pin, `bin/unused-testdata.sh` lists fixtures no test references. To change a fixture: commit and push it to the data repo's `main` (no force-push), then put the new SHA in `testdata.ref` in the same PR as the test change. Run the tests locally before opening a PR.
 
 Note: `-Pintegration-tests` excludes `integration/browser/`; `-Pall-integration-tests` includes it. The exact glob path-filters for every profile are documented once, in [`docs/testing-guide.md`](docs/testing-guide.md) — don't restate them here.
 
@@ -191,15 +192,13 @@ Work is tracked as GitHub issues and delivered as pull requests. `main` only cha
 
 Text files are LF in the repository and in working copies. `.gitattributes` (`* text=auto eol=lf`) and `.editorconfig` are the source of truth; `*.cmd` and `*.bat` stay CRLF. Don't change `core.autocrlf`: `.gitattributes` overrides it, so it is redundant. Notepad++ keeps a file's existing EOL, so editing there is safe; a new file created there gets CRLF and Git normalises it on commit. `.git-blame-ignore-revs` lists the line-ending commits; enable it locally with `git config blame.ignoreRevsFile .git-blame-ignore-revs` (GitHub uses it automatically).
 
-### Version number
+### CI and dependencies
 
-The version is defined once: `<version>x.y.z</version>` at the top of `pom.xml` (the standard Maven project version). Everything else derives from it at build time:
-- `application.properties` contains `spring.application.version=@project.version@` (Maven-filtered at build)
-- `ProjectVersionAdvice` reads `${spring.application.version}` and injects `projectVersion` into every Thymeleaf model — consumed by `fragments.html` (navbar, used by all pages) and `index.html` (citing accordion)
-- `src/main/cff/citation.cff` is the template; `maven-resources-plugin` filters it to the root `citation.cff` on every build. Both `version` and `date-released` are substituted: `version` from `${project.version}`, `date-released` from `${build.date}` (which captures `${maven.build.timestamp}` formatted as `yyyy-MM-dd`)
-- The fat JAR is named `DedupEndNote.jar` (version excluded via `<finalName>${project.artifactId}</finalName>` in `pom.xml`)
+Dependabot (`.github/dependabot.yml`) opens monthly PRs to bump the GitHub Actions used in the workflows and the Maven dependencies/plugins in `pom.xml` (grouping: see the file). It does not replace `./mvnw dependency-check:check`: that plugin has no execution bound to the lifecycle, so neither `verify` nor CI runs it; run it manually before releases.
 
-**Release workflow:** update `<version>` in `pom.xml` → run `./mvnw package` → commit `pom.xml` and the regenerated root `citation.cff` → add the new `<h2>` + `<ul>` entry to `changelog.html` manually.
+### Version number and release
+
+The version lives once in `pom.xml`; everything else derives from it at build time. Derivation chain and release steps: [docs/release.md](docs/release.md).
 
 ## Agent skills
 
