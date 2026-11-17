@@ -1,6 +1,10 @@
 # Normalise all text files to LF in the repository.
 * text=auto eol=lf
 
+# Windows batch files must stay CRLF.
+*.cmd text eol=crlf
+*.bat text eol=crlf
+
 # Explicitly mark binary files so Git never touches their line endings.
 *.jar binary
 *.png binary
