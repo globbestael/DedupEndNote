@@ -187,6 +187,10 @@ Work is tracked as GitHub issues and delivered as pull requests. `main` only cha
 - `dedup.upload-dir` — directory for uploaded/output files
 - `dedup.session-reaper.enabled` (default `false`) — opt-in `@Scheduled` cleanup of stale per-session upload dirs, an in-process alternative to the cron stop/restart cleanup. When `false` the `SessionReaperConfiguration` is skipped entirely (no bean, no scheduling). Tunables: `dedup.session-reaper.max-age-hours` (24), `dedup.session-reaper.interval-ms` (3600000). Evaluated at startup only.
 
+### Line endings
+
+Text files are LF in the repository and in working copies. `.gitattributes` (`* text=auto eol=lf`) and `.editorconfig` are the source of truth; `*.cmd` and `*.bat` stay CRLF. Don't change `core.autocrlf`: `.gitattributes` overrides it, so it is redundant. Notepad++ keeps a file's existing EOL, so editing there is safe; a new file created there gets CRLF and Git normalises it on commit.
+
 ### Version number
 
 The version is defined once: `<version>x.y.z</version>` at the top of `pom.xml` (the standard Maven project version). Everything else derives from it at build time:
