@@ -245,7 +245,7 @@ https://www.baeldung.com/spring-streaming-multipart-data
  
 ======================
 What the repo looks like today
-- There is no CI: .github/ has only ISSUE_TEMPLATE and no workflows/.
+- (Historical, before #84/#85: there was no CI. A workflow in .github/workflows/ now runs verify and the tests.)
 - There is no PR template.
 - main isn't protected, and "delete branch on merge" is off.
 - All three merge types are allowed: merge commit, squash and rebase.
