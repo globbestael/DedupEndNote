@@ -1,4 +1,5 @@
-# On every PR and every push to main, two parallel jobs:
+# On every PR and every push to main, three parallel jobs:
+# - config: schema validation of the workflow and Dependabot config files (check-jsonschema)
 # - check: build and static analysis (Error Prone, NullAway, SpotBugs + Find Security Bugs)
 # - test: unit and integration tests, with the input files from the separate
 #   globbestael/dedupendnote-testdata repository at the commit pinned in testdata.ref.
@@ -14,6 +15,19 @@ permissions:
   contents: read
 
 jobs:
+  # No build needed, so this fails fast. A schema mistake in these files otherwise only
+  # shows up when the workflow or Dependabot first runs it.
+  config:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Validate workflow and Dependabot config files
+        run: |
+          pipx run check-jsonschema==0.39.0 --builtin-schema vendor.github-workflows .github/workflows/*.yml
+          pipx run check-jsonschema==0.39.0 --builtin-schema vendor.dependabot .github/dependabot.yml
+
   check:
     runs-on: ubuntu-latest
     timeout-minutes: 15
