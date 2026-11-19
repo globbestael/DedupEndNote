@@ -91,19 +91,19 @@ public class RecordDBService {
 					fieldName = matcher.group(1);
 					fieldContent = matcher.group(3);
 					switch (fieldName) {
-					case "AU":
+					case "AU" -> {
 						publicationDB.getAuthorsList().add(fieldContent);
-						break;
-					case "C7":
+					}
+					case "C7" -> {
 						publicationDB.setArticleNumber(fieldContent);
-						break;
-					case "DO":
+					}
+					case "DO" -> {
 						publicationDB.getDoisList().add(fieldContent);
-						break;
-					case "DP":
+					}
+					case "DP" -> {
 						publicationDB.setDatabase(fieldContent);
-						break;
-					case "ER":
+					}
+					case "ER" -> {
 						phantomId++;
 						if (realId == null) {
 							publicationDB.setId(phantomId);
@@ -117,37 +117,37 @@ public class RecordDBService {
 						}
 						publicationDB = new BibliographicItemDB();
 						realId = null;
-						break;
-					case "ID": // EndNote BibliographicItem number
+					}
+					case "ID" -> { // EndNote BibliographicItem number
 						publicationDB.setId(Integer.valueOf(fieldContent));
 						realId = line.substring(6);
-						break;
-					case "IS":
+					}
+					case "IS" -> {
 						publicationDB.setIssue(fieldContent);
-						break;
-					case "PY":
+					}
+					case "PY" -> {
 						publicationDB.setPublYear(Integer.valueOf(fieldContent.trim()));
-						break;
-					case "SP":
+					}
+					case "SP" -> {
 						publicationDB.setPages(fieldContent);
-						break;
-					case "T2": // truncated at 254 characters
+					}
+					case "T2" -> { // truncated at 254 characters
 						publicationDB.setTitle2(fieldContent.substring(0, Math.min(fieldContent.length(), 254)));
-						break;
-					case "TI":
+					}
+					case "TI" -> {
 						publicationDB
 								.setTitleTruncated(fieldContent.substring(0, Math.min(fieldContent.length(), 254)));
 						publicationDB.setTitle(fieldContent);
-						break;
-					case "TY":
+					}
+					case "TY" -> {
 						publicationDB.setPublType(fieldContent);
-						break;
-					case "VL":
+					}
+					case "VL" -> {
 						publicationDB.setVolume(fieldContent);
-						break;
-					default:
+					}
+					default -> {
 						// previousFieldName = fieldName;
-						break;
+					}
 					}
 				} else { // continuation line
 					;

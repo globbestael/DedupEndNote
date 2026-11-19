@@ -209,7 +209,7 @@ public class BibliographicItemReader {
 					}
 					previousFieldName = "XYZ";
 					switch (fieldName) {
-					case "AU": // Authors
+					case "AU" -> { // Authors
 						if (fieldContent.contains("; ")) {
 							List<String> authors = Arrays.asList(fieldContent.split("; "));
 							for (String author : authors) {
@@ -218,26 +218,26 @@ public class BibliographicItemReader {
 						} else {
 							addNormalizedAuthor(fieldContent, bibliographicItem);
 						}
-						break;
-					case "C7": // article number (Scopus and WoS when imported as RIS format)
+					}
+					case "C7" -> { // article number (Scopus and WoS when imported as RIS format)
 						pagesInputMap.put(fieldName, fieldContent);
-						break;
-					case "DO": // DOI
+					}
+					case "DO" -> { // DOI
 						if (fieldContent.startsWith("ARTN ")) {
 							pagesInputMap.put("C7", fieldContent);
 						} else {
 							bibliographicItem.getDois().addAll(NormalizationService.normalizeInputDois(fieldContent));
 						}
 						previousFieldName = fieldName;
-						break;
+					}
 					/*
 					 * Zotero has split the pages between SP and EP (in that order in RIS file)
 					 */
-					case "EP":
+					case "EP" -> {
 						String sp = pagesInputMap.getOrDefault("SP", "");
 						pagesInputMap.put("SP", sp + "-" + fieldContent);
-						break;
-					case "ER":
+					}
+					case "ER" -> {
 						if (bibliographicItem.getId() == 0) {
 							bibliographicItem.setId(missingId++);
 						}
@@ -280,8 +280,8 @@ public class BibliographicItemReader {
 						log.debug("BibliographicItem read with id {} and title: {}", bibliographicItem.getId(),
 								(bibliographicItem.getTitles().isEmpty() ? "(none)"
 										: bibliographicItem.getTitles().getFirst()));
-						break;
-					case "ID": // EndNote BibliographicItem number
+					}
+					case "ID" -> { // EndNote BibliographicItem number
 						try {
 							bibliographicItem.setId(Integer.parseInt(fieldContent));
 						} catch (NumberFormatException e) {
@@ -289,11 +289,11 @@ public class BibliographicItemReader {
 									"The input file contains ID fields which are not numbers. "
 											+ "The input file is not an Export as RIS-file from an EndNote library!");
 						}
-						break;
-					case "J2": // Alternate journal
+					}
+					case "J2" -> { // Alternate journal
 						addNormalizedJournal(fieldContent, bibliographicItem, fieldName);
-						break;
-					case "LB": // Label (deduplication group ID written by mark mode)
+					}
+					case "LB" -> { // Label (deduplication group ID written by mark mode)
 						if (includeLabelField) {
 							// LB is a single short integer ID; continuation lines are not expected
 							try {
@@ -304,8 +304,8 @@ public class BibliographicItemReader {
 												+ "The input file is not an Export as RIS-file from an EndNote library!");
 							}
 						}
-						break;
-					case "OP":
+					}
+					case "OP" -> {
 						// in PubMed: original title, in Web of Science (at least for conference papers): conference
 						// title
 						if ("CONF".equals(bibliographicItem.getReferenceType())) {
@@ -313,24 +313,23 @@ public class BibliographicItemReader {
 						} else {
 							addNormalizedTitle(fieldContent, bibliographicItem);
 						}
-						break;
-					case "PY": // BibliographicItem year
+					}
+					case "PY" -> { // BibliographicItem year
 						bibliographicItem
 								.setPublicationYear(NormalizationService.normalizeInputPublicationYear(fieldContent));
-						break;
-					case "SN": // ISSN / ISBN
+					}
+					case "SN" -> { // ISSN / ISBN
 						IsbnIssnRecord normalized = NormalizationService.normalizeInputIssns(line);
 						bibliographicItem.getIsbns().addAll(normalized.isbns());
 						bibliographicItem.getIssns().addAll(normalized.issns());
 						previousFieldName = fieldName;
-						break;
+					}
 					// Ovid Medline in RIS export has author address in repeatable M2 field,
 					// EndNote 20 shows the content in field with label "Start Page",
 					// but export file of such a record has this content in SE field!
-					case "SE": // pages (Embase (which provider?), Ovid PsycINFO: examples in some SRA datasets)
-					case "SP": // pages
+					case "SE", "SP" -> { // pages
 						pagesInputMap.put(fieldName, fieldContent);
-						break;
+					}
 					/*
 					 * original non-English titles:
 					 * - PubMed: OP
@@ -339,17 +338,17 @@ public class BibliographicItemReader {
 					 *
 					 * See below in continuation line of TI for PubMed chapters
 					 */
-					case "ST": // Original Title in Scopus
+					case "ST" -> { // Original Title in Scopus
 						addNormalizedTitle(fieldContent, bibliographicItem);
-						break;
-					case "T2": // Journal title / Book title
+					}
+					case "T2" -> { // Journal title / Book title
 						journalCache = fieldContent;
 						if (fieldContent.startsWith("http") && fieldContent.contains("//clinicaltrials.gov")) {
 							fieldContent = fieldContent.replace("http:", "https:");
 							bibliographicItem.setClinicalTrialGov(true);
 						}
 						addNormalizedJournal(fieldContent, bibliographicItem, fieldName);
-						break;
+					}
 					// @formatter:off
 					/*
 					 * T3 (especially used in EMBASE (OVID)) has 3 types of content:
@@ -379,7 +378,7 @@ public class BibliographicItemReader {
 					 * - add it as Journal
 					 */
 					// @formatter:on
-					case "T3": // Book section
+					case "T3" -> { // Book section
 						if (!fieldContent.startsWith("Retract") && !CONFERENCE_PATTERN.matcher(fieldContent).matches()
 								&& fieldContent.length() > 3) {
 							addNormalizedJournal(fieldContent, bibliographicItem, fieldName);
@@ -409,53 +408,53 @@ public class BibliographicItemReader {
 							// }
 							// }
 						}
-						break;
+					}
 					// ??? in Embase the original title is on the continuation line of ST and TI:
 					// "Een 45-jarige patiente met chronische koliekachtige abdominale pijn". Not found in test set!
-					case "TI": // Title
+					case "TI" -> { // Title
 						addNormalizedTitle(fieldContent, bibliographicItem);
 						titleCache = fieldContent;
 						previousFieldName = fieldName;
-						break;
+					}
 					// TODO: When does TT occur? is translated (i.e. original?) title
-					case "TY": // Type
+					case "TY" -> { // Type
 						bibliographicItem = new BibliographicItem();
 						bibliographicItem.setReferenceType(fieldContent);
-						break;
+					}
 					// do not use UR to extract more DOI's: see https://github.com/globbestael/DedupEndNote/issues/14
-					case "UR":
+					case "UR" -> {
 						if (fieldContent.startsWith("http") && fieldContent.contains("//clinicaltrials.gov")) {
 							fieldContent = fieldContent.replace("http:", "https:");
 							bibliographicItem.setClinicalTrialGov(true);
 							addNormalizedJournal(fieldContent, bibliographicItem, fieldName);
 						}
 						previousFieldName = fieldName;
-						break;
-					case "VL":
+					}
+					case "VL" -> {
 						if (fieldContent.length() > 10 && journalCache != null) {
 							addNormalizedJournal(journalCache + ". " + fieldContent, bibliographicItem, fieldName);
 						}
 						previousFieldName = fieldName;
-						break;
-					default:
+					}
+					default -> {
 						previousFieldName = fieldName;
-						break;
+					}
 					}
 				} else { // continuation line
 					switch (previousFieldName) {
-					case "DO":
+					case "DO" -> {
 						bibliographicItem.getDois().addAll(NormalizationService.normalizeInputDois(line));
-						break;
-					case "SN":
+					}
+					case "SN" -> {
 						IsbnIssnRecord normalized = NormalizationService.normalizeInputIssns(line);
 						bibliographicItem.getIsbns().addAll(normalized.isbns());
 						bibliographicItem.getIssns().addAll(normalized.issns());
-						break;
+					}
 					/*
 					 * The ST field with continuation line has the same content as the TI field with its continuation line.
 					 * Only the TI case is handled (makes the PubMed/Chapter handling easier)
 					 */
-					case "TI":
+					case "TI" -> {
 						/*
 						 * PubMed book chapters (TY CHAP, PMID 21204472).
 						 * The series of the book is the first line of ST and TI field,
@@ -482,16 +481,16 @@ public class BibliographicItemReader {
 							*/
 							addNormalizedTitle(line, bibliographicItem);
 						}
-						break;
-					case "UR":
+					}
+					case "UR" -> {
 						if (line.startsWith("http") && line.contains("//clinicaltrials.gov")) {
 							line = line.replace("http:", "https:");
 							bibliographicItem.setClinicalTrialGov(true);
 							addNormalizedJournal(line, bibliographicItem, "UR");
 						}
-						break;
-					default:
-						break;
+					}
+					default -> {
+					}
 					}
 				}
 			}
