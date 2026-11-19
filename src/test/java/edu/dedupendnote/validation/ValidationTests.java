@@ -78,7 +78,11 @@ class ValidationTests extends AbstractIntegrationTest {
 	Map<String, Integer> titleCounter = new HashMap<>();
 
 	private static Logger rootLogger;
-	private boolean showDifferencesInDuration = false;
+	/**
+	 * A set fails only if its duration exceeds this percentage of the baseline duration. Deliberately large (a
+	 * timing failure should be very unlikely) until a better value has been determined. Faster is never a failure.
+	 */
+	private static final long MAX_DURATION_PERCENTAGE = 800;
 	private boolean withTracing = false;
 	private boolean withTitleSplitterOutput = false;
 
@@ -181,8 +185,7 @@ class ValidationTests extends AbstractIntegrationTest {
 				continue; // easy when some checkResults_...() are commented out
 			}
 			if (v.getFn() == c.getFn() && v.getFp() == c.getFp() && v.getTn() == c.getTn() && v.getTp() == c.getTp()
-					&& (c.getDuration() >= (long) (v.getDuration() * 0.9))
-					&& (!showDifferencesInDuration || c.getDuration() <= (long) (v.getDuration() * 1.1))
+					&& c.getDuration() * 100 <= v.getDuration() * MAX_DURATION_PERCENTAGE
 					&& c.getUniqueDuplicates() == v.getUniqueDuplicates()) {
 				printValidationResult(setName, c, null);
 			} else {
