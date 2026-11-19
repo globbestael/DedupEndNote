@@ -74,7 +74,7 @@ public class ValidationIOService {
 					fieldContent = matcher.group(3);
 					previousFieldName = "XYZ";
 					switch (fieldName) {
-					case "ER":
+					case "ER" -> {
 						if (id != null) {
 							log.error("Writing {}", id);
 							map.put(fieldName, fieldContent);
@@ -98,19 +98,19 @@ public class ValidationIOService {
 							numberWritten++;
 						}
 						map.clear();
-						break;
-					case "ID": // EndNote BibliographicItem number
+					}
+					case "ID" -> { // EndNote BibliographicItem number
 						map.put(fieldName, fieldContent);
 						id = Integer.valueOf(fieldContent);
-						break;
-					default:
+					}
+					default -> {
 						if (map.containsKey(fieldName)) {
 							map.put(fieldName, map.get(fieldName) + "\n" + line);
 						} else {
 							map.put(fieldName, fieldContent);
 						}
 						previousFieldName = fieldName;
-						break;
+					}
 					}
 				} else { // continuation line
 					map.put(previousFieldName, map.get(previousFieldName) + "\n" + line);
@@ -149,7 +149,7 @@ public class ValidationIOService {
 					fieldContent = matcher.group(3);
 					previousFieldName = "XYZ";
 					switch (fieldName) {
-					case "ER":
+					case "ER" -> {
 						if (id != null) {
 							log.error("Writing {}", id);
 							map.put(fieldName, fieldContent);
@@ -172,19 +172,19 @@ public class ValidationIOService {
 							numberWritten++;
 						}
 						map.clear();
-						break;
-					case "ID": // EndNote BibliographicItem number
+					}
+					case "ID" -> { // EndNote BibliographicItem number
 						map.put(fieldName, fieldContent);
 						id = Integer.valueOf(fieldContent);
-						break;
-					default:
+					}
+					default -> {
 						if (map.containsKey(fieldName)) {
 							map.put(fieldName, map.get(fieldName) + "\n" + line);
 						} else {
 							map.put(fieldName, fieldContent);
 						}
 						previousFieldName = fieldName;
-						break;
+					}
 					}
 				} else { // continuation line
 					map.put(previousFieldName, map.get(previousFieldName) + "\n" + line);
