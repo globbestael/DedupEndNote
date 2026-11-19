@@ -21,7 +21,6 @@ import org.jspecify.annotations.Nullable;
  */
 public class BoundedPatternCache {
 
-	@SuppressWarnings("serial") // never serialised
 	private static final class LruPatternMap extends LinkedHashMap<String, Pattern> {
 
 		private final int maxSize;
