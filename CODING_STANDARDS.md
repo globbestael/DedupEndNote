@@ -9,7 +9,6 @@ A finding against this file is a judgement call to raise, not a build failure. I
 Flag new and changed code that uses an older idiom where the compiler `<release>` in `pom.xml` allows a newer one. Use only final language features.
 
 - **Records** over hand-written data classes and over Lombok `@Value` for immutable data carriers.
-- **`var`** where the type is obvious from the right-hand side.
 - **Switch expressions** with arrow labels instead of `case X:` statements, and pattern matching in `switch` and `instanceof`, including record patterns.
 - **Text blocks** for multi-line strings.
 - **Sequenced collections** (`getFirst()`, `getLast()`, `reversed()`).

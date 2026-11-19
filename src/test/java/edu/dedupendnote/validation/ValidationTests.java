@@ -60,6 +60,12 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 class ValidationTests extends AbstractIntegrationTest {
+	/**
+	 * A set fails only if its duration exceeds this percentage of the baseline duration. Deliberately large (a
+	 * timing failure should be very unlikely) until a better value has been determined. Faster is never a failure.
+	 */
+	private static final long MAX_DURATION_PERCENTAGE = 800;
+
 	@Autowired
 	DeduplicationService deduplicationService;
 
@@ -78,11 +84,6 @@ class ValidationTests extends AbstractIntegrationTest {
 	Map<String, Integer> titleCounter = new HashMap<>();
 
 	private static Logger rootLogger;
-	/**
-	 * A set fails only if its duration exceeds this percentage of the baseline duration. Deliberately large (a
-	 * timing failure should be very unlikely) until a better value has been determined. Faster is never a failure.
-	 */
-	private static final long MAX_DURATION_PERCENTAGE = 800;
 	private boolean withTracing = false;
 	private boolean withTitleSplitterOutput = false;
 

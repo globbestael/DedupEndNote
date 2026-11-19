@@ -91,18 +91,10 @@ public class RecordDBService {
 					fieldName = matcher.group(1);
 					fieldContent = matcher.group(3);
 					switch (fieldName) {
-					case "AU" -> {
-						publicationDB.getAuthorsList().add(fieldContent);
-					}
-					case "C7" -> {
-						publicationDB.setArticleNumber(fieldContent);
-					}
-					case "DO" -> {
-						publicationDB.getDoisList().add(fieldContent);
-					}
-					case "DP" -> {
-						publicationDB.setDatabase(fieldContent);
-					}
+					case "AU" -> publicationDB.getAuthorsList().add(fieldContent);
+					case "C7" -> publicationDB.setArticleNumber(fieldContent);
+					case "DO" -> publicationDB.getDoisList().add(fieldContent);
+					case "DP" -> publicationDB.setDatabase(fieldContent);
 					case "ER" -> {
 						phantomId++;
 						if (realId == null) {
@@ -122,15 +114,9 @@ public class RecordDBService {
 						publicationDB.setId(Integer.valueOf(fieldContent));
 						realId = line.substring(6);
 					}
-					case "IS" -> {
-						publicationDB.setIssue(fieldContent);
-					}
-					case "PY" -> {
-						publicationDB.setPublYear(Integer.valueOf(fieldContent.trim()));
-					}
-					case "SP" -> {
-						publicationDB.setPages(fieldContent);
-					}
+					case "IS" -> publicationDB.setIssue(fieldContent);
+					case "PY" -> publicationDB.setPublYear(Integer.valueOf(fieldContent.trim()));
+					case "SP" -> publicationDB.setPages(fieldContent);
 					case "T2" -> { // truncated at 254 characters
 						publicationDB.setTitle2(fieldContent.substring(0, Math.min(fieldContent.length(), 254)));
 					}
@@ -139,12 +125,8 @@ public class RecordDBService {
 								.setTitleTruncated(fieldContent.substring(0, Math.min(fieldContent.length(), 254)));
 						publicationDB.setTitle(fieldContent);
 					}
-					case "TY" -> {
-						publicationDB.setPublType(fieldContent);
-					}
-					case "VL" -> {
-						publicationDB.setVolume(fieldContent);
-					}
+					case "TY" -> publicationDB.setPublType(fieldContent);
+					case "VL" -> publicationDB.setVolume(fieldContent);
 					default -> {
 						// previousFieldName = fieldName;
 					}

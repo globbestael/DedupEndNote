@@ -328,9 +328,7 @@ public class BibliographicItemReader {
 					// EndNote 20 shows the content in field with label "Start Page",
 					// but export file of such a record has this content in SE field!
 					// SP: pages. SE: pages (Embase (which provider?), Ovid PsycINFO: examples in some SRA datasets)
-					case "SE", "SP" -> {
-						pagesInputMap.put(fieldName, fieldContent);
-					}
+					case "SE", "SP" -> pagesInputMap.put(fieldName, fieldContent);
 					/*
 					 * original non-English titles:
 					 * - PubMed: OP
@@ -437,15 +435,11 @@ public class BibliographicItemReader {
 						}
 						previousFieldName = fieldName;
 					}
-					default -> {
-						previousFieldName = fieldName;
-					}
+					default -> previousFieldName = fieldName;
 					}
 				} else { // continuation line
 					switch (previousFieldName) {
-					case "DO" -> {
-						bibliographicItem.getDois().addAll(NormalizationService.normalizeInputDois(line));
-					}
+					case "DO" -> bibliographicItem.getDois().addAll(NormalizationService.normalizeInputDois(line));
 					case "SN" -> {
 						IsbnIssnRecord normalized = NormalizationService.normalizeInputIssns(line);
 						bibliographicItem.getIsbns().addAll(normalized.isbns());
@@ -490,8 +484,7 @@ public class BibliographicItemReader {
 							addNormalizedJournal(line, bibliographicItem, "UR");
 						}
 					}
-					default -> {
-					}
+					default -> {}
 					}
 				}
 			}
