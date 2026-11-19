@@ -327,7 +327,8 @@ public class BibliographicItemReader {
 					// Ovid Medline in RIS export has author address in repeatable M2 field,
 					// EndNote 20 shows the content in field with label "Start Page",
 					// but export file of such a record has this content in SE field!
-					case "SE", "SP" -> { // pages
+					// SP: pages. SE: pages (Embase (which provider?), Ovid PsycINFO: examples in some SRA datasets)
+					case "SE", "SP" -> {
 						pagesInputMap.put(fieldName, fieldContent);
 					}
 					/*
