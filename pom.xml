@@ -50,13 +50,6 @@
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
-		<!-- This dependency is needed for TestRestTemplate -->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-resttestclient</artifactId>
-			<version>4.1.2</version>
-			<scope>test</scope>
-		</dependency>
 		<!-- 
 			See https://issues.apache.org/jira/browse/TEXT-104 for bug in JaroWinklerDistance (returns the JaroWinklerSimilarity). JaroWinklerSimilarity in 1.8 is correct. 
 		-->
@@ -86,7 +79,6 @@
 		<dependency>
 			<groupId>commons-io</groupId>
 			<artifactId>commons-io</artifactId>
-
 			<version>2.22.0</version>
 		</dependency>
 		<dependency>
@@ -165,7 +157,6 @@
 		<dependency>
 			<groupId>org.jspecify</groupId>
 			<artifactId>jspecify</artifactId>
-			<version>1.0.1</version>
 		</dependency>
 	</dependencies>
 	
@@ -260,7 +251,7 @@
 						<path>
 							<groupId>org.projectlombok</groupId>
 							<artifactId>lombok</artifactId>
-							<version>1.18.48</version>
+							<version>${lombok.version}</version>
 						</path>
 						<path>
 							<groupId>com.google.errorprone</groupId>
