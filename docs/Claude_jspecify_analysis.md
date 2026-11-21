@@ -4,8 +4,8 @@
 
 The pom.xml is properly configured with:
 
-- **NullAway 0.14.3** with `JSpecifyMode=true`
-- **ErrorProne 2.52.0** integration
+- **NullAway 0.14.4** with `JSpecifyMode=true`
+- **ErrorProne 2.53.0** integration
 - **JSpecify 1.0.1** annotations (managed by the Spring Boot parent)
 
 ### Compiler Arguments
