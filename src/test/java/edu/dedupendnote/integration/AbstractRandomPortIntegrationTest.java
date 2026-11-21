@@ -2,11 +2,13 @@ package edu.dedupendnote.integration;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClient;
 
@@ -45,6 +47,20 @@ abstract class AbstractRandomPortIntegrationTest {
 				.body(params)
 				.retrieve()
 				.toEntity(String.class);
+	}
+
+	protected ResponseEntity<String> uploadFile(String filename, byte[] content, String wssessionId) {
+		return uploadFile(filename, content, wssessionId, new HttpHeaders());
+	}
+
+	protected ResponseEntity<String> uploadFile(String filename, byte[] content, String wssessionId,
+			HttpHeaders extraHeaders) {
+		MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+		HttpHeaders fileHeaders = new HttpHeaders();
+		fileHeaders.setContentDispositionFormData("file", filename);
+		body.add("file", new HttpEntity<>(content, fileHeaders));
+		body.add("wssessionId", wssessionId);
+		return postMultipart("/uploadFile", body, extraHeaders);
 	}
 
 	protected ResponseEntity<String> postMultipart(String path, MultiValueMap<String, Object> body) {

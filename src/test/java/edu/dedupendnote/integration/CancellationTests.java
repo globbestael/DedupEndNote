@@ -8,7 +8,6 @@ import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
@@ -48,15 +47,7 @@ class CancellationTests extends AbstractRandomPortIntegrationTest {
 	}
 
 	private void uploadRis(String filename, byte[] content, String wssessionId) {
-		MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-		body.add("file", new ByteArrayResource(content) {
-			@Override
-			public String getFilename() {
-				return filename;
-			}
-		});
-		body.add("wssessionId", wssessionId);
-		postMultipart("/uploadFile", body);
+		uploadFile(filename, content, wssessionId);
 	}
 
 	@Test

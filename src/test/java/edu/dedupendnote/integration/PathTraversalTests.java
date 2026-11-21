@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
@@ -29,17 +28,8 @@ class PathTraversalTests extends AbstractRandomPortIntegrationTest {
 
 	@Test
 	void uploadFile_traversalFilename_returns400() {
-		MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-		ByteArrayResource fileResource = new ByteArrayResource("TY  - JOUR\nER  -\n".getBytes()) {
-			@Override
-			public String getFilename() {
-				return "../../evil.ris";
-			}
-		};
-		body.add("file", fileResource);
-		body.add("wssessionId", "00000000-0000-4000-8000-000000000001");
-
-		ResponseEntity<String> response = postMultipart("/uploadFile", body);
+		ResponseEntity<String> response = uploadFile("../../evil.ris", "TY  - JOUR\nER  -\n".getBytes(),
+				"00000000-0000-4000-8000-000000000001");
 
 		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
 	}
@@ -49,15 +39,7 @@ class PathTraversalTests extends AbstractRandomPortIntegrationTest {
 		String wssessionId = "00000000-0000-4000-8000-000000000002";
 		String risContent = "TY  - JOUR\nID  - 1\nTI  - Test title\nER  - \n";
 
-		MultiValueMap<String, Object> uploadBody = new LinkedMultiValueMap<>();
-		uploadBody.add("file", new ByteArrayResource(risContent.getBytes()) {
-			@Override
-			public String getFilename() {
-				return "test.ris";
-			}
-		});
-		uploadBody.add("wssessionId", wssessionId);
-		postMultipart("/uploadFile", uploadBody);
+		uploadFile("test.ris", risContent.getBytes(), wssessionId);
 
 		MultiValueMap<String, String> startParams = new LinkedMultiValueMap<>();
 		startParams.add("fileName_1", "test.ris");

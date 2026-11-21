@@ -4,13 +4,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
 
 // Does NOT extend AbstractIntegrationTest: needs RANDOM_PORT and a property override.
 // Happy-path upload is covered by PathTraversalTests.startOneFile_withValidUpload_returns200WithDone.
@@ -32,15 +29,7 @@ class RateLimitTests extends AbstractRandomPortIntegrationTest {
 	private ResponseEntity<String> upload(String clientIp, String sessionId, byte[] content) {
 		HttpHeaders headers = new HttpHeaders();
 		headers.add("X-Forwarded-For", clientIp);
-		MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-		body.add("file", new ByteArrayResource(content) {
-			@Override
-			public String getFilename() {
-				return "test.ris";
-			}
-		});
-		body.add("wssessionId", sessionId);
-		return postMultipart("/uploadFile", body, headers);
+		return uploadFile("test.ris", content, sessionId, headers);
 	}
 
 	@Test
