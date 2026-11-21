@@ -127,8 +127,8 @@ Path.of(inputPath + "_mark.txt")
 ## Code quality
 
 Two compile-time plugins are active — violations are **build errors**:
-- **NullAway** (v0.14.3): enforces JSpecify null-safety annotations on all public APIs. Annotate new public methods with `@Nullable` where applicable; unannotated parameters are treated as `@NonNull`.
-- **Error Prone** (v2.52.0): runs with all default checks disabled (`-XepDisableAllChecks`); only NullAway plus the explicitly enabled modern-Java checks `StatementSwitchToExpressionSwitch`, `PatternMatchingInstanceof` and `UnnecessaryStringBuilder` run, all at ERROR. Enable further checks with `-Xep:<Name>:ERROR` in the `pom.xml` compiler args.
+- **NullAway** (v0.14.4): enforces JSpecify null-safety annotations on all public APIs. Annotate new public methods with `@Nullable` where applicable; unannotated parameters are treated as `@NonNull`.
+- **Error Prone** (v2.53.0): runs with all default checks disabled (`-XepDisableAllChecks`); only NullAway plus the explicitly enabled modern-Java checks `StatementSwitchToExpressionSwitch`, `PatternMatchingInstanceof` and `UnnecessaryStringBuilder` run, all at ERROR. Enable further checks with `-Xep:<Name>:ERROR` in the `pom.xml` compiler args.
 
 One test-phase plugin runs automatically on every `./mvnw test` (skipped for `-Pvalidation-tests`):
 - **JaCoCo** (v0.8.16): instruments bytecode and writes coverage data to `target/site/jacoco/`. Excluded from the report: `DedupEndNoteApplication`, `WebConfig`, `WebSocketConfig`, `ProjectVersionAdvice`, and `package-info` stubs. Lombok-generated methods are excluded automatically via `@lombok.Generated`. The `argLine` property in `pom.xml` uses `@{argLine}` late-binding so JaCoCo's agent string is injected at execution time.
