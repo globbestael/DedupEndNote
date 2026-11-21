@@ -5,10 +5,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ByteArrayResource;
-import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.util.LinkedMultiValueMap;
@@ -33,7 +31,6 @@ class RateLimitTests extends AbstractRandomPortIntegrationTest {
 
 	private ResponseEntity<String> upload(String clientIp, String sessionId, byte[] content) {
 		HttpHeaders headers = new HttpHeaders();
-		headers.setContentType(MediaType.MULTIPART_FORM_DATA);
 		headers.add("X-Forwarded-For", clientIp);
 		MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
 		body.add("file", new ByteArrayResource(content) {
@@ -43,7 +40,7 @@ class RateLimitTests extends AbstractRandomPortIntegrationTest {
 			}
 		});
 		body.add("wssessionId", sessionId);
-		return restTemplate.postForEntity(url("/uploadFile"), new HttpEntity<>(body, headers), String.class);
+		return postMultipart("/uploadFile", body, headers);
 	}
 
 	@Test

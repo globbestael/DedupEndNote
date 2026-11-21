@@ -24,7 +24,7 @@ The integration folder contains two base classes with distinct purposes:
 | Base class | Web environment | HTTP | When to use |
 |---|---|---|---|
 | `AbstractIntegrationTest` | `MOCK` (default) | None — calls service methods directly via `@Autowired` | Service-layer contract tests; the common case |
-| `AbstractRandomPortIntegrationTest` | `RANDOM_PORT` + real `RestTemplate` | Real HTTP to `http://localhost:{port}` | When the test needs real HTTP routing, controller error handling, or a property override that changes Spring Boot behaviour at startup |
+| `AbstractRandomPortIntegrationTest` | `RANDOM_PORT` + real `RestClient` | Real HTTP to `http://localhost:{port}` | When the test needs real HTTP routing, controller error handling, or a property override that changes Spring Boot behaviour at startup |
 
 `AbstractIntegrationTest` subclasses (`DeduplicationServiceTests`, `MissedDuplicatesTests`,
 `RecordCountCapTests`) bypass the controller entirely; they call `deduplicateOneFile` /

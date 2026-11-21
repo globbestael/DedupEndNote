@@ -22,7 +22,7 @@ class ConcurrentRunsTests extends AbstractRandomPortIntegrationTest {
 		params.add("fileName_1", "anyfile.txt");
 		params.add("wssessionId", "00000000-0000-4000-8000-000000000001");
 
-		ResponseEntity<String> response = restTemplate.postForEntity(url("/startOneFile"), params, String.class);
+		ResponseEntity<String> response = postForm("/startOneFile", params);
 
 		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.TOO_MANY_REQUESTS);
 	}
@@ -34,7 +34,7 @@ class ConcurrentRunsTests extends AbstractRandomPortIntegrationTest {
 		params.add("newFile", "new.txt");
 		params.add("wssessionId", "00000000-0000-4000-8000-000000000001");
 
-		ResponseEntity<String> response = restTemplate.postForEntity(url("/startTwoFiles"), params, String.class);
+		ResponseEntity<String> response = postForm("/startTwoFiles", params);
 
 		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.TOO_MANY_REQUESTS);
 	}
