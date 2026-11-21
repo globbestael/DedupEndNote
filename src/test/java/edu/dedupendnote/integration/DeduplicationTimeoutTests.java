@@ -4,11 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.util.LinkedMultiValueMap;
@@ -25,28 +21,14 @@ class DeduplicationTimeoutTests extends AbstractRandomPortIntegrationTest {
 	private static final String ONE_RECORD_RIS = "TY  - JOUR\nID  - 1\nTI  - Test title\nER  - \n";
 	private static final String WSSESSION_ID = "00000000-0000-4000-8000-000000000003";
 
-	private void uploadFile(String filename) {
-		HttpHeaders headers = new HttpHeaders();
-		headers.setContentType(MediaType.MULTIPART_FORM_DATA);
-		MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-		body.add("file", new ByteArrayResource(ONE_RECORD_RIS.getBytes()) {
-			@Override
-			public String getFilename() {
-				return filename;
-			}
-		});
-		body.add("wssessionId", WSSESSION_ID);
-		restTemplate.postForEntity(url("/uploadFile"), new HttpEntity<>(body, headers), String.class);
-	}
-
 	@Test
 	void startOneFile_whenTimeoutExpires_returns503() {
-		uploadFile("timeout_test.ris");
+		uploadFile("timeout_test.ris", ONE_RECORD_RIS.getBytes(), WSSESSION_ID);
 
 		MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
 		params.add("fileName_1", "timeout_test.ris");
 		params.add("wssessionId", WSSESSION_ID);
-		ResponseEntity<String> response = restTemplate.postForEntity(url("/startOneFile"), params, String.class);
+		ResponseEntity<String> response = postForm("/startOneFile", params);
 
 		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
 		assertThat(response.getBody()).contains("ERROR");

@@ -8,11 +8,7 @@ import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.util.LinkedMultiValueMap;
@@ -46,30 +42,12 @@ class CancellationTests extends AbstractRandomPortIntegrationTest {
 		return sb.toString();
 	}
 
-	private void uploadRis(String filename, String content, String wssessionId) {
-		uploadRis(filename, content.getBytes(), wssessionId);
-	}
-
-	private void uploadRis(String filename, byte[] content, String wssessionId) {
-		HttpHeaders headers = new HttpHeaders();
-		headers.setContentType(MediaType.MULTIPART_FORM_DATA);
-		MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-		body.add("file", new ByteArrayResource(content) {
-			@Override
-			public String getFilename() {
-				return filename;
-			}
-		});
-		body.add("wssessionId", wssessionId);
-		restTemplate.postForEntity(url("/uploadFile"), new HttpEntity<>(body, headers), String.class);
-	}
-
 	@Test
 	void cancelDedup_withNoRunningDeduplication_returns404() {
 		MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
 		params.add("wssessionId", NO_FUTURE_SESSION);
 
-		ResponseEntity<String> response = restTemplate.postForEntity(url("/cancelDedup"), params, String.class);
+		ResponseEntity<String> response = postForm("/cancelDedup", params);
 
 		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
 	}
@@ -77,26 +55,26 @@ class CancellationTests extends AbstractRandomPortIntegrationTest {
 	@Test
 	@Timeout(60)
 	void startOneFile_whenCancelledMidRun_returnsErrorWithCancelledMessage() throws Exception {
-		uploadRis("cancel_test.ris", generateRis(3000), CANCEL_SESSION);
+		uploadFile("cancel_test.ris", generateRis(3000).getBytes(), CANCEL_SESSION);
 
 		// /startOneFile blocks until the task finishes; run it on a background thread
 		CompletableFuture<ResponseEntity<String>> dedupFuture = CompletableFuture.supplyAsync(() -> {
 			MultiValueMap<String, String> startParams = new LinkedMultiValueMap<>();
 			startParams.add("fileName_1", "cancel_test.ris");
 			startParams.add("wssessionId", CANCEL_SESSION);
-			return restTemplate.postForEntity(url("/startOneFile"), startParams, String.class);
+			return postForm("/startOneFile", startParams);
 		});
 
 		// Poll /cancelDedup every 50 ms until the future is registered in runningFutures
 		MultiValueMap<String, String> cancelParams = new LinkedMultiValueMap<>();
 		cancelParams.add("wssessionId", CANCEL_SESSION);
-		ResponseEntity<String> cancelResponse = restTemplate.postForEntity(url("/cancelDedup"), cancelParams, String.class);
+		ResponseEntity<String> cancelResponse = postForm("/cancelDedup", cancelParams);
 		while (cancelResponse.getStatusCode() == HttpStatus.NOT_FOUND) {
 			if (dedupFuture.isDone()) {
 				fail("Deduplication completed before cancel could be sent — increase record count in generateRis()");
 			}
 			Thread.sleep(50);
-			cancelResponse = restTemplate.postForEntity(url("/cancelDedup"), cancelParams, String.class);
+			cancelResponse = postForm("/cancelDedup", cancelParams);
 		}
 
 		assertThat(cancelResponse.getStatusCode()).isEqualTo(HttpStatus.OK);

@@ -21,7 +21,7 @@ class SecurityHeadersTests extends AbstractRandomPortIntegrationTest {
 
 	@Test
 	void page_carriesSecurityHeaders() {
-		ResponseEntity<String> response = restTemplate.getForEntity(url("/"), String.class);
+		ResponseEntity<String> response = get("/");
 
 		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 		assertSecurityHeaders(response.getHeaders());
@@ -29,7 +29,7 @@ class SecurityHeadersTests extends AbstractRandomPortIntegrationTest {
 
 	@Test
 	void errorResponse_carriesSecurityHeaders() {
-		ResponseEntity<String> response = restTemplate.getForEntity(url("/no-such-resource"), String.class);
+		ResponseEntity<String> response = get("/no-such-resource");
 
 		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
 		assertSecurityHeaders(response.getHeaders());
