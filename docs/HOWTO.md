@@ -106,3 +106,7 @@ If the problem reappears: check .settings\org.eclipse.jdt.core.prefs for the pre
 ```
 org.eclipse.jdt.core.compiler.problem.nullUncheckedConversion=ignore
 ```
+
+## Line endings: editor and blame setup
+
+Notepad++ keeps a file's existing EOL, so editing there is safe; a new file created there gets CRLF and Git normalises it on commit. `.git-blame-ignore-revs` lists the line-ending commits; enable it locally with `git config blame.ignoreRevsFile .git-blame-ignore-revs` (GitHub uses it automatically).

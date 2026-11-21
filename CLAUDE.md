@@ -12,7 +12,7 @@ Update CLAUDE.md (same commit as the code change) when any of the following chan
 - Domain term or mode definition changed → also update `GLOSSARY.md`
 - Build command, Maven profile, or port changed (commands / configuration sections)
 - Architectural pattern added or removed (naming conventions, path helpers)
-- Code quality plugin version bumped or new plugin added
+- New code quality plugin added
 - Plan-file naming convention changed (plans section)
 - Release workflow or version-management mechanism changed → update `docs/release.md`
 - Dependabot track changed (Workflow step 8, `.claude/skills/dependabot-pr/`, `bin/merge-pr.sh` gate, `.github/dependabot.yml` grouping) → also update ADR-0011
@@ -31,6 +31,7 @@ Update CLAUDE.md (same commit as the code change) when any of the following chan
 | Architecture decisions (why X, rejected alternatives), incl. the Dependabot track ([ADR-0011](docs/adr/0011-dependabot-verification-track.md)) | [docs/adr/](docs/adr/) |
 | Procedure for verifying a Dependabot PR | [.claude/skills/dependabot-pr/SKILL.md](.claude/skills/dependabot-pr/SKILL.md) |
 | Version derivation and release steps | [docs/release.md](docs/release.md) |
+| JSpecify/VS Code null-warning tips, editor and blame setup | [docs/HOWTO.md](docs/HOWTO.md) |
 | Architecture review snapshot 2026-11-12 (deepening candidates, not yet decided) | [docs/architecture-review-2026-11-12.html](docs/architecture-review-2026-11-12.html) |
 
 ## Commands
@@ -127,14 +128,14 @@ Path.of(inputPath + "_mark.txt")
 ## Code quality
 
 Two compile-time plugins are active — violations are **build errors**:
-- **NullAway** (v0.14.4): enforces JSpecify null-safety annotations on all public APIs. Annotate new public methods with `@Nullable` where applicable; unannotated parameters are treated as `@NonNull`.
-- **Error Prone** (v2.53.0): runs with all default checks disabled (`-XepDisableAllChecks`); only NullAway plus the explicitly enabled modern-Java checks `StatementSwitchToExpressionSwitch`, `PatternMatchingInstanceof` and `UnnecessaryStringBuilder` run, all at ERROR. Enable further checks with `-Xep:<Name>:ERROR` in the `pom.xml` compiler args.
+- **NullAway**: enforces JSpecify null-safety annotations on all public APIs. Annotate new public methods with `@Nullable` where applicable; unannotated parameters are treated as `@NonNull`.
+- **Error Prone**: runs with all default checks disabled (`-XepDisableAllChecks`); only NullAway plus the explicitly enabled modern-Java checks `StatementSwitchToExpressionSwitch`, `PatternMatchingInstanceof`, `UnnecessaryStringBuilder` and `RemoveUnusedImports` run, all at ERROR. Enable further checks with `-Xep:<Name>:ERROR` in the `pom.xml` compiler args.
 
 One test-phase plugin runs automatically on every `./mvnw test` (skipped for `-Pvalidation-tests`):
-- **JaCoCo** (v0.8.16): instruments bytecode and writes coverage data to `target/site/jacoco/`. Excluded from the report: `DedupEndNoteApplication`, `WebConfig`, `WebSocketConfig`, `ProjectVersionAdvice`, and `package-info` stubs. Lombok-generated methods are excluded automatically via `@lombok.Generated`. The `argLine` property in `pom.xml` uses `@{argLine}` late-binding so JaCoCo's agent string is injected at execution time.
+- **JaCoCo**: writes coverage data to `target/site/jacoco/`; exclusions are configured in `pom.xml`.
 
 One verify-phase plugin runs during `./mvnw verify`:
-- **SpotBugs + Find Security Bugs** (v4.10.5.0 / findsecbugs v1.14.0): scans compiled bytecode for OWASP Top 10 security patterns. Only `SECURITY`-category bugs are reported (see `spotbugs-security-include.xml`). Known false positives and accepted-risk findings are documented in `spotbugs-security-exclude.xml`.
+- **SpotBugs + Find Security Bugs**: scans compiled bytecode for OWASP Top 10 security patterns. Only `SECURITY`-category bugs are reported (see `spotbugs-security-include.xml`). Known false positives and accepted-risk findings are documented in `spotbugs-security-exclude.xml`.
 
 ## Testing
 
@@ -171,10 +172,10 @@ Work is tracked as GitHub issues and delivered as pull requests. `main` only cha
 
 1. **Issue first.** Non-trivial work starts from a GitHub issue. After a grilling session that ends in a non-trivial design, ask whether to file an issue before implementing.
 2. **Branch per issue**, created from an up-to-date `main`, named `<issue-number>-<slug>` (e.g. `81-duplicate-matcher`). No long-lived feature branches.
-3. **Implement** on that branch. Agents make code changes only: never commit or push unless explicitly asked.
+3. **Implement** on that branch. Agents make code changes only: never commit or push unless explicitly asked, even when an executed plan's verification section mentions a commit.
 4. **Verify** before opening the PR: `./mvnw test -Punit-tests` and `./mvnw test -Pintegration-tests`; run `-Pvalidation-tests` for changes to the algorithm. Update the docs listed in "Keeping this file current".
 5. **Open a PR** to `main` using `.github/pull_request_template.md`. The agent writes the whole description: `Closes #<issue>`, a short Summary, and the checklists.
-6. **Review** the PR's head commit with `/mattpocock-skills:code-review <PR#>` (Standards + Spec, with the issue as the spec). For a diff that touches nothing under `src/` (config, docs, scripts) one combined Standards + Spec pass, by a single subagent or inline, is enough; a diff that touches `src/` keeps the two parallel agents. Put each review's findings in the PR: the first in the description when opening it, a later one as a comment. When a fix round supersedes the first review before anything was posted, the description holds both rounds under the newest `Reviewed:` SHA; a comment is for a review of a PR that has already been described and reviewed. Each starts with a line `Reviewed: <full 40-character SHA>` naming the head commit it reviewed, then what was fixed and what was left. Review again after every change to the diff since the last review, a fix from the review itself included.
+6. **Review** the PR's head commit with `/mattpocock-skills:code-review <PR#>` (Standards + Spec, with the issue as the spec; the Standards agent reads `CODING_STANDARDS.md` in full). For a diff that touches nothing under `src/` (config, docs, scripts) one combined Standards + Spec pass, by a single subagent or inline, is enough; a diff that touches `src/` keeps the two parallel agents. Put each review's findings in the PR: the first in the description when opening it, a later one as a comment. When a fix round supersedes the first review before anything was posted, the description holds both rounds under the newest `Reviewed:` SHA; a comment is for a review of a PR that has already been described and reviewed. Each starts with a line `Reviewed: <full 40-character SHA>` naming the head commit it reviewed, then what was fixed and what was left. Review again after every change to the diff since the last review, a fix from the review itself included.
 7. **Merge** only with `bin/merge-pr.sh <PR#>`, and only when the user asks. It merges only when the newest `Reviewed:` SHA (`Verified:` for a Dependabot PR, step 8) is the PR's head and CI passed. It uses a **merge commit** (not squash or rebase), so per-step commits stay visible and plan-file timestamps (see "Plans") stay valid, deletes the branch on GitHub and locally, and returns to an up-to-date `main`. Never use `gh pr merge` directly: `.claude/settings.json` denies it.
 8. **Dependabot PRs take a lighter track** (author `app/dependabot`). Steps 1-6 do not apply: follow the `dependabot-pr` skill and post its verification report as a PR comment. The gate and the reasons are in `bin/merge-pr.sh` and [ADR-0011](docs/adr/0011-dependabot-verification-track.md).
 
@@ -182,15 +183,12 @@ Work is tracked as GitHub issues and delivered as pull requests. `main` only cha
 
 ## Configuration
 
-`src/main/resources/application.properties` sets:
-- `server.port=9777`
-- `spring.servlet.multipart.max-file-size=150MB`
-- `dedup.upload-dir` — directory for uploaded/output files
+`src/main/resources/application.properties` holds the settings; the non-obvious one:
 - `dedup.session-reaper.enabled` (default `false`) — opt-in `@Scheduled` cleanup of stale per-session upload dirs, an in-process alternative to the cron stop/restart cleanup. When `false` the `SessionReaperConfiguration` is skipped entirely (no bean, no scheduling). Tunables: `dedup.session-reaper.max-age-hours` (24), `dedup.session-reaper.interval-ms` (3600000). Evaluated at startup only.
 
 ### Line endings
 
-Text files are LF in the repository and in working copies. `.gitattributes` (`* text=auto eol=lf`) and `.editorconfig` are the source of truth; `*.cmd` and `*.bat` stay CRLF. Don't change `core.autocrlf`: `.gitattributes` overrides it, so it is redundant. Notepad++ keeps a file's existing EOL, so editing there is safe; a new file created there gets CRLF and Git normalises it on commit. `.git-blame-ignore-revs` lists the line-ending commits; enable it locally with `git config blame.ignoreRevsFile .git-blame-ignore-revs` (GitHub uses it automatically).
+LF everywhere except `*.cmd`/`*.bat`. `.gitattributes` and `.editorconfig` decide; leave `core.autocrlf` alone. Editor and blame setup: [docs/HOWTO.md](docs/HOWTO.md).
 
 ### CI and dependencies
 

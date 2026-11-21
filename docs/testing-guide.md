@@ -61,6 +61,11 @@ The Maven profiles in `pom.xml` use path-based filters: `unit-tests` (excludes `
 
 Tests with expected errors are NOT disabled — they use an `int EXPECTED_NUMBER_OF_ERRORS` constant in the assertion.
 
+## Gotchas
+
+- `Unresolved compilation problem` or a wall of errors after a clean edit means stale IDE-compiled classes in `target/`. Run `./mvnw clean test-compile` first.
+- `AbstractRandomPortIntegrationTest.uploadFile` builds the multipart body by hand: `MultipartBodyBuilder` needs reactive-streams, which a servlet-only classpath lacks (`NoClassDefFoundError: org/reactivestreams/Publisher`).
+
 ## Test profile
 
 `@ActiveProfiles("test")` activates the `test` profile for all integration and validation tests, loading `src/main/resources/application-test.properties`. It is declared on `AbstractIntegrationTest` (inherited by subclasses), repeated on each `AbstractRandomPortIntegrationTest` subclass (which has no common Spring-context parent), and declared directly on `BrowserCancellationTests` (which extends no base class). Unit tests don't start Spring and get `baseDir` directly from `BaseTest` via `TestData.baseDir()`.

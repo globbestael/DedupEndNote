@@ -235,7 +235,7 @@
 							because the maven-toolchains-plugin is enabled, 
 							add the following under compilerArgs in the configuration above:
 						-->
-						<arg>-Xplugin:ErrorProne -XepDisableAllChecks -Xep:NullAway:ERROR -Xep:StatementSwitchToExpressionSwitch:ERROR -Xep:PatternMatchingInstanceof:ERROR -Xep:UnnecessaryStringBuilder:ERROR -XepOpt:NullAway:OnlyNullMarked -XepOpt:NullAway:JSpecifyMode=true</arg>
+						<arg>-Xplugin:ErrorProne -XepDisableAllChecks -Xep:NullAway:ERROR -Xep:StatementSwitchToExpressionSwitch:ERROR -Xep:PatternMatchingInstanceof:ERROR -Xep:UnnecessaryStringBuilder:ERROR -Xep:RemoveUnusedImports:ERROR -XepOpt:NullAway:OnlyNullMarked -XepOpt:NullAway:JSpecifyMode=true</arg>
 						<arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED</arg>
 						<arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED</arg>
 						<arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED</arg>
