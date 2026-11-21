@@ -63,10 +63,6 @@ abstract class AbstractRandomPortIntegrationTest {
 		return postMultipart("/uploadFile", body, extraHeaders);
 	}
 
-	protected ResponseEntity<String> postMultipart(String path, MultiValueMap<String, Object> body) {
-		return postMultipart(path, body, new HttpHeaders());
-	}
-
 	protected ResponseEntity<String> postMultipart(String path, MultiValueMap<String, Object> body,
 			HttpHeaders extraHeaders) {
 		return restClient.post()

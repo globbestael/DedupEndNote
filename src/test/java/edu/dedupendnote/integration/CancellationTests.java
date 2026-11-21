@@ -42,14 +42,6 @@ class CancellationTests extends AbstractRandomPortIntegrationTest {
 		return sb.toString();
 	}
 
-	private void uploadRis(String filename, String content, String wssessionId) {
-		uploadRis(filename, content.getBytes(), wssessionId);
-	}
-
-	private void uploadRis(String filename, byte[] content, String wssessionId) {
-		uploadFile(filename, content, wssessionId);
-	}
-
 	@Test
 	void cancelDedup_withNoRunningDeduplication_returns404() {
 		MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
@@ -63,7 +55,7 @@ class CancellationTests extends AbstractRandomPortIntegrationTest {
 	@Test
 	@Timeout(60)
 	void startOneFile_whenCancelledMidRun_returnsErrorWithCancelledMessage() throws Exception {
-		uploadRis("cancel_test.ris", generateRis(3000), CANCEL_SESSION);
+		uploadFile("cancel_test.ris", generateRis(3000).getBytes(), CANCEL_SESSION);
 
 		// /startOneFile blocks until the task finishes; run it on a background thread
 		CompletableFuture<ResponseEntity<String>> dedupFuture = CompletableFuture.supplyAsync(() -> {
