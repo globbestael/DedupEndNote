@@ -22,11 +22,11 @@ Decisions (see the grilling on #127):
 
 ## Steps (each has its undo in the wizard text)
 
-1. **Inventory (read-only)**: `ss -tlnp`, `ufw status`, `iptables -t nat -S`, `ip6tables`, `/etc/iptables/rules.v4`. Stop if something other than nginx/apache holds :80/:443, or a persisted REDIRECT rule exists.
+1. **Inventory (read-only)**: `ss -tlnp`, `ufw status`, `iptables -t nat -S`, `ip6tables`, `/etc/iptables/rules.v4`. Stop if some foreign program holds :80/:443, or a persisted REDIRECT rule exists (no `rules.v4` at all is fine). Nothing listening on :80/:443 before a Plesk domain exists is normal.
 2. **Backup**: Plesk's daily backup does not cover the app directory. `tar` it, plus `crontab -l`, `ufw`, `ss` output, into `$HOME`.
 3. **DNS**: `dig +short dedupendnote.nl` must equal the VPS IP.
-4. **Open ports 80/443**: `ufw allow 80/tcp`, `ufw allow 443/tcp` (only if `ufw` is active), and the Plesk Firewall extension if installed. STRATO's portal firewall already allows them. Verify from outside the server.
-5. **Plesk: add domain** `dedupendnote.nl` (Blank website, no www, no DNS zone) and untick *Activate mail service*.
+4. **Plesk: add domain** `dedupendnote.nl` (Blank website, no www, no DNS zone) and untick *Activate mail service*.
+5. **Open ports 80/443**: `ufw allow 80/tcp`, `ufw allow 443/tcp` (only if `ufw` is active), and the Plesk Firewall extension if installed. STRATO's portal firewall already allows them. Verify from outside the server. Plesk starts nginx on 80/443 only once a domain is hosted, so this comes after the domain exists (without a hosted domain, nothing listens there).
 6. **Plesk: Let's Encrypt** without www; tick the permanent HTTP→HTTPS redirect.
 7. **Plesk: nginx proxy** (Apache & nginx Settings → Additional nginx directives, *Proxy mode* off):
 

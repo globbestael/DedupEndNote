@@ -226,10 +226,11 @@ show bash -c 'ls -l /etc/iptables/rules.v4 /etc/iptables/rules.v6 2>&1; grep -s 
 show bash -c 'command -v plesk >/dev/null && plesk version || echo "plesk command not found"'
 echo
 step "Read the 'ss -tlnp' output above."
-say "Expected: nginx (Plesk) on :80 and :443, java on :9777, sshd on :22."
-warn "STOP and tell Claude if another program than nginx/apache uses :80 or :443,"
-warn "or if iptables/rules.v4 contains a REDIRECT or 9777 line."
-confirm "Does the output look as expected (nothing odd on :80/:443, no REDIRECT rule)?" \
+say "Expected: java on :9777, sshd on :22, Plesk panel on :8443."
+note "Nothing on :80/:443 is normal while Plesk hosts no domain: nginx starts them once one is added."
+warn "STOP and tell Claude if some other program uses :80 or :443,"
+warn "or if iptables/rules.v4 exists and contains a REDIRECT or 9777 line (a missing file is fine)."
+confirm "Does the output look as expected (no foreign program on :80/:443, no REDIRECT rule)?" \
   || { say "Stopped. Paste the output above to Claude. Nothing was changed."; exit 1; }
 
 # ── 2. Backup ─────────────────────────────────────────────────────────────
@@ -268,9 +269,21 @@ fi
 say "OK: $DOMAIN points at $SERVER_IP. (No www record: we skip www, as agreed.)"
 pause "Press Enter to continue"
 
-# ── 4. Make ports 80/443 reachable ────────────────────────────────────────
+# ── 4. Plesk: add the domain (this makes nginx listen on 80/443) ────────────────────────
+stage "Plesk: add the domain"
+open_url "https://$SERVER_IP:8443"
+step "Websites & Domains → Add Domain → 'Blank website'"
+step "Domain name: $DOMAIN   (hosting type: Website hosting; any system user/password)"
+step "Untick 'Include www' / 'Create DNS zone' if shown (DNS stays at STRATO)."
+step "Then: Mail → Mail Settings for the domain → UNTICK 'Activate mail service on domain'"
+say "  (Otherwise the server would try to deliver mail for $DOMAIN locally.)"
+note "Undo: Websites & Domains → $DOMAIN → Remove Website."
+pause "Press Enter when the domain exists and mail service is off"
+
+# ── 5. Make ports 80/443 reachable ────────────────────────────────────────
 stage "Ports 80 and 443 from the internet"
-say "Let's Encrypt needs port 80 reachable from outside. Your browser test said unreachable."
+say "Let's Encrypt needs port 80 reachable from outside. Plesk nginx should now listen on 80/443:"
+show sudo ss -tlnp "( sport = :80 or sport = :443 )"
 show sudo ufw status
 if sudo ufw status 2>/dev/null | grep -q "Status: active"; then
   warn "ufw is ACTIVE. If 80/443 are not listed as ALLOW, they are blocked at OS level."
@@ -295,17 +308,6 @@ open_url "http://$DOMAIN"
 say "  Any page (even a Plesk default page or a 404) = reachable. Timeout = still blocked."
 confirm "Is http://$DOMAIN reachable now (any page, not a timeout)?" \
   || { say "Still blocked. Paste the stage 1 and 4 output to Claude. Nothing else changed."; exit 1; }
-
-# ── 5. Plesk: add the domain, then the certificate ────────────────────────
-stage "Plesk: add the domain"
-open_url "https://$SERVER_IP:8443"
-step "Websites & Domains → Add Domain → 'Blank website'"
-step "Domain name: $DOMAIN   (hosting type: Website hosting; any system user/password)"
-step "Untick 'Include www' / 'Create DNS zone' if shown (DNS stays at STRATO)."
-step "Then: Mail → Mail Settings for the domain → UNTICK 'Activate mail service on domain'"
-say "  (Otherwise the server would try to deliver mail for $DOMAIN locally.)"
-note "Undo: Websites & Domains → $DOMAIN → Remove Website."
-pause "Press Enter when the domain exists and mail service is off"
 
 stage "Plesk: Let's Encrypt certificate"
 step "Websites & Domains → $DOMAIN → SSL/TLS Certificates → Install (Let's Encrypt)"
