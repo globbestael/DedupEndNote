@@ -31,6 +31,7 @@ Update CLAUDE.md (same commit as the code change) when any of the following chan
 | Architecture decisions (why X, rejected alternatives), incl. the Dependabot track ([ADR-0011](docs/adr/0011-dependabot-verification-track.md)) | [docs/adr/](docs/adr/) |
 | Procedure for verifying a Dependabot PR | [.claude/skills/dependabot-pr/SKILL.md](.claude/skills/dependabot-pr/SKILL.md) |
 | Version derivation and release steps | [docs/release.md](docs/release.md) |
+| HTTPS on the STRATO/Plesk server (runbook; wizard is `bin/https-wizard.sh`) | [docs/https-setup.md](docs/https-setup.md) |
 | JSpecify/VS Code null-warning tips, editor and blame setup | [docs/HOWTO.md](docs/HOWTO.md) |
 | Architecture review snapshot 2026-11-12 (deepening candidates, not yet decided) | [docs/architecture-review-2026-11-12.html](docs/architecture-review-2026-11-12.html) |
 
