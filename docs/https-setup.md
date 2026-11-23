@@ -31,7 +31,7 @@ Decisions (see the grilling on #127):
 7. **Plesk: nginx proxy** (Apache & nginx Settings → Additional nginx directives, *Proxy mode* off):
 
    ```nginx
-   location / {
+   location ~ ^/ {
        proxy_pass http://127.0.0.1:9777;
        proxy_http_version 1.1;
        proxy_set_header Host $host;
@@ -40,6 +40,7 @@ Decisions (see the grilling on #127):
        proxy_set_header X-Forwarded-Proto $scheme;
        proxy_set_header Upgrade $http_upgrade;
        proxy_set_header Connection "upgrade";
+       proxy_set_header Origin "http://$host";
        client_max_body_size 150m;
        proxy_request_buffering off;
        proxy_read_timeout 1500s;
@@ -47,6 +48,8 @@ Decisions (see the grilling on #127):
    }
    ```
 
+   - `location ~ ^/` (regex) is needed: Plesk's generated HTTPS server block already contains `location /` (proxy to Apache) and includes `vhost_nginx.conf` after it, so a plain `location /` (and also `location ^~ /`) failed Plesk's test with `duplicate location "/"` and the old config was kept. A regex location cannot be a duplicate of a prefix one and takes precedence over it; Plesk's `^~ /.well-known/acme-challenge/` prefix block still wins, so certificate renewal keeps working.
+   - `proxy_set_header Origin "http://$host"`: only needed while the deployed jar predates 2026-06-03 (commit `74e9fcd` added `setAllowedOriginPatterns("*")`). Without it the old same-origin check sees plain `http` behind the proxy and rejects the browser's `https` Origin with `403 Invalid CORS request` on every SockJS/WebSocket request (no progress bar, step 3 never activates). Harmless afterwards; can be removed once a current jar is deployed.
    - `client_max_body_size 150m` matches `spring.servlet.multipart.max-file-size`; nginx's default of 1 MB would reject RIS uploads.
    - `1500s` exceeds `dedup.timeout-minutes` (20 min), so nginx never cuts a run off before the app does.
    - `Upgrade`/`Connection` carry the SockJS/STOMP WebSocket for progress messages.

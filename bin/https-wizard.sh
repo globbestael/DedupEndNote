@@ -226,7 +226,7 @@ show bash -c 'ls -l /etc/iptables/rules.v4 /etc/iptables/rules.v6 2>&1; grep -s 
 show bash -c 'command -v plesk >/dev/null && plesk version || echo "plesk command not found"'
 echo
 step "Read the 'ss -tlnp' output above."
-say "Expected: java on :9777, sshd on :22, Plesk panel on :8443."
+say "Expected: java on :9777, sshd on your SSH port (not always 22), sw-cp-serverd (the Plesk panel) on :8443."
 note "Nothing on :80/:443 is normal while Plesk hosts no domain: nginx starts them once one is added."
 warn "STOP and tell Claude if some other program uses :80 or :443,"
 warn "or if iptables/rules.v4 exists and contains a REDIRECT or 9777 line (a missing file is fine)."
@@ -328,7 +328,7 @@ step "UNTICK 'Proxy mode' (and 'Smart static files processing') if they are tick
 step "In 'Additional nginx directives' paste EXACTLY this block, then click Apply:"
 cat <<'NGINX'
 
-    location / {
+    location ~ ^/ {
         proxy_pass http://127.0.0.1:9777;
         proxy_http_version 1.1;
         proxy_set_header Host $host;
@@ -337,6 +337,7 @@ cat <<'NGINX'
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
+        proxy_set_header Origin "http://$host";
         client_max_body_size 150m;
         proxy_request_buffering off;
         proxy_read_timeout 1500s;
@@ -344,10 +345,14 @@ cat <<'NGINX'
     }
 
 NGINX
+note "Origin line: builds before 2026-06-03 only accept same-origin WebSocket/SockJS requests; the app sees"
+note "plain http behind the proxy, so the browser's https Origin is rejected (\"Invalid CORS request\")."
 note "Why: 150m = the app's upload limit (nginx's default 1m would reject RIS files);"
 note "1500s > the app's 20-minute run timeout; Upgrade/Connection = WebSocket progress."
-warn "If Plesk reports an error such as 'duplicate location \"/\"', it refused the change"
-warn "and kept the old config: nothing broke. Paste the error to Claude and stop."
+note "Why a regex location: Plesk's HTTPS server block already has location /, so any prefix"
+note "location / or ^~ / was refused as a duplicate. A regex location cannot clash and wins."
+warn "If Plesk still reports an nginx error, it refused the change and kept the old config:"
+warn "nothing broke. Paste the error to Claude and stop."
 note "Undo: empty the 'Additional nginx directives' box → Apply."
 pause "Press Enter when Plesk says the settings were applied"
 
