@@ -219,6 +219,7 @@ say "We only look. Nothing is changed."
 show lsb_release -ds
 show sudo ss -tlnp
 show sudo ufw status
+show sudo iptables -S
 show sudo iptables -t nat -S
 show sudo ip6tables -t nat -S
 show bash -c 'ls -l /etc/iptables/rules.v4 /etc/iptables/rules.v6 2>&1; grep -s -n "9777\|REDIRECT" /etc/iptables/rules.v4 /etc/iptables/rules.v6'
