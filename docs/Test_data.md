@@ -6,7 +6,7 @@ This file is a work in progress. The original setup of the test files used is ch
 ## 1. General
 The project has a nice set of tests. Esp. the integration tests and validation tests use data from EndNote (and Zotero) exports.
 
-1. Some of the test files / Endnote databases are copied from other deduplication programs. See http://dedupendnote.nl:9777/details under Performance.
+1. Some of the test files / Endnote databases are copied from other deduplication programs. See https://dedupendnote.nl/details under Performance.
 2. The Database BIG_SET was uilt speciafically for this project. A subset of the duplicates have been validated
 3. A couple of databases have been added later. Usually they are user input related to a question / problem with the deduplication.
 

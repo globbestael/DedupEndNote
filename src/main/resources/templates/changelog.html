@@ -25,7 +25,35 @@
             <div class="col-8" data-bs-spy="scroll" data-bs-target="#navmenu">
                 <h1>DedupEndNote: Changelog</h1>
 
+                <h2 class="bg-success-subtle">1.1.8 (2026-11-27)</h2>
+                <ul>
+                    <li>Secure connection: dedupendnote.nl can now be reached over HTTPS. The program is available at
+                        https://dedupendnote.nl.
+                        The old URL http://dedupendnote.nl:9777 will be removed in the near future</li>
+                    <li>Deduplication behaviour: no changes in the algorithm or its thresholds (the duplicate rules were
+                        restructured internally; validation results are unchanged)</li>
+                    <li>Updated to the newest Spring Boot (4.2.0) and refreshed all libraries (security and bug fixes)
+                    </li>
+                    <li>Details page: updated the link to the issue tracker, which has moved to GitHub Issues and the
+                        glossary file, which is now called GLOSSARY.md</li>
+                    <li>Internal (for users who are curious):
+                        <ul>
+                            <li>A new automated build checks every change before it is accepted, including a run of the
+                                unit and integration tests against a fixed version of the test data</li>
+                            <li>Source code is checked more strictly for modern Java style and null-safety</li>
+                            <li>Test data for the unit and integration tests are now available in the separate public
+                                repository
+                                <a href="https://github.com/globbestael/dedupendnote-testdata.git"
+                                    target="_new">https://github.com/globbestael/dedupendnote-testdata.git</a><br />
+                                Test data for the validation tests are not available yet
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+
+
                 <h2 class="bg-success-subtle">1.1.7 (2026-07-11)</h2>
+                <p>This release has never been published at http://dedupendnote.nl:9777</p>
                 <ul>
                     <li>Bug fix: the Details page showed a hardcoded earliest publication year instead of
                         the actual value used by the application</li>
