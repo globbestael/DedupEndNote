@@ -13,17 +13,20 @@ import org.springframework.util.MultiValueMap;
 // Does NOT extend AbstractIntegrationTest: needs RANDOM_PORT and a property override.
 // Happy path (normal completion within timeout) is covered by
 // PathTraversalTests.startOneFile_withValidUpload_returns200WithDone.
+// The timeout mechanics (cancel, permit release) are covered deterministically in
+// BoundedDedupRunnerTest; this test only checks the wiring: property -> 503 response.
+// A timeout of 0 makes future.get(0) throw at once unless the worker is already done, so the
+// input must be large enough that no run can finish that fast (a one-record file raced it).
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
 		properties = "dedup.timeout-minutes=0")
 @ActiveProfiles("test")
 class DeduplicationTimeoutTests extends AbstractRandomPortIntegrationTest {
 
-	private static final String ONE_RECORD_RIS = "TY  - JOUR\nID  - 1\nTI  - Test title\nER  - \n";
 	private static final String WSSESSION_ID = "00000000-0000-4000-8000-000000000003";
 
 	@Test
 	void startOneFile_whenTimeoutExpires_returns503() {
-		uploadFile("timeout_test.ris", ONE_RECORD_RIS.getBytes(), WSSESSION_ID);
+		uploadFile("timeout_test.ris", generateSlowRis(3000).getBytes(), WSSESSION_ID);
 
 		MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
 		params.add("fileName_1", "timeout_test.ris");
