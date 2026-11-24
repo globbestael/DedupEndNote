@@ -289,3 +289,44 @@ because it matches your history today and doesn't change the plan-file naming ru
 
 Do you want me to draft the CLAUDE.md Workflow section and the PR template? I'd show them to you before writing, and I wouldn't commit them. And which merge type do you
 prefer?
+===================
+https
+
+Q1: ok
+Q2: VPS with root, Ubuntu 22.04.5 LTS
+Q3: leave the setup alone
+Q4: yes, but I don't know whether we can make a backup
+Q5: yes (both)
+Q6: yes. Question: will this mean that for the https connection users will NOT have to provide a port number
+
+BTW: There is a daily backup via Plesk at 12.00AM
+Q7: There is an A-record. The firewall page of STRATO says that ports 443 and 80 exits. But when i try to reach dedupendnote.nl with these port numbers in a browser, i et the message that they are unreachable.
+Q8: ok
+Q9: ok
+Q10: ok
+
+Before answering q11 and latr questions:
+I think i have used previously iptables with the command
+sudo iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 9777
+but the command: 
+ sudo iptables -t nat -L
+shows a screen with looks as if it only contains (column) headers, no lines with 9777 a.o.
+Will these changes to iptables have to be reverted?
+
+Q11: ok
+Q12: (a) no, (b) nothing exists yet, (c) the plesk panel works
+Q13: ok
+
+Q14: if you mean by "checking the DNS record" the admin screens of STRATo (not a Plesk panel): there is NO www.dedupendnote.nl. The Plesk panel had no websites or domains. Ok for skip www
+Q15: Ok
+---------------
+Release 1.1.8
+- pom.xml: version number
+- changelog.html:
+  - at 1.1.7: add that this version has not been released at http://dedupendnote.nl:9777
+  - 1.1.8:
+    - https://dedupendnote.nl at last, the older http://dedupendnote.n;:9777 is still available but will be removed in the near future
+	
+- details.html
+  - section For developers: there are more relevant files
+  
