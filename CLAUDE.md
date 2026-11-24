@@ -72,7 +72,7 @@ bin/unused-testdata.sh        # list fixtures no test references (report only)
 
 ## Architecture
 
-DedupEndNote is a Spring Boot 4.1 / Java 21 web app that deduplicates bibliographic records in RIS format (exported from EndNote, Zotero, PubMed, EMBASE, etc.). Runs on port 9777, deployed as a fat JAR. Java 21 is the release target (`<release>21</release>`); building needs JDK 22 or newer (CI uses 25) because NullAway's JSpecify mode does not run on JDK 21.
+DedupEndNote is a Spring Boot 4.2 / Java 21 web app that deduplicates bibliographic records in RIS format (exported from EndNote, Zotero, PubMed, EMBASE, etc.). Listens on `server.port` (9777 by default), deployed as a fat JAR; the production site behind a TLS reverse proxy is reached over https without a port number ([docs/https-setup.md](docs/https-setup.md)). Java 21 is the release target (`<release>21</release>`); building needs JDK 22 or newer (CI uses 25) because NullAway's JSpecify mode does not run on JDK 21.
 
 See [`docs/architecture.html`](docs/architecture.html) for the pipeline diagram, full service map, and runtime sequence diagram.
 

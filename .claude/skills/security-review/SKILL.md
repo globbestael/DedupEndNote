@@ -7,7 +7,8 @@ description: Runs a full security review of DedupEndNote covering OWASP Top 10 p
 
 ## Application context (read before reviewing)
 
-- Spring Boot 4.0 / Java 21, port 9777, fat JAR, no authentication — intentional public tool
+- Spring Boot 4.2 / Java 21, `server.port` 9777 (the app itself speaks plain HTTP), fat JAR, no authentication — intentional public tool
+- Production (https://dedupendnote.nl): a Plesk nginx reverse proxy terminates TLS and forwards to `127.0.0.1:9777`; see `docs/https-setup.md`. Port 9777 is still reachable directly for now (closing it is an open decision)
 - 150 MB upload limit; virtual threads for concurrent dedup runs; WebSocket progress reporting
 - All uploads land in a single shared directory — no per-user or per-session isolation
 - O(n²) pair comparison bucketed by year; large files are CPU- and memory-intensive
@@ -56,8 +57,8 @@ Severity scale: **Critical** / **High** / **Medium** / **Low** / **Info**.
 
 ### OWASP A02 — Cryptographic Failures
 
-- [ ] Uploads and results travel over HTTP — is TLS terminated at a reverse proxy?
-- [ ] Document the TLS expectation explicitly (or flag as accepted risk)
+- [ ] The app speaks plain HTTP; TLS is terminated at the Plesk nginx proxy (`docs/https-setup.md`). Is the direct `http://…:9777` path still open, so uploads and results can bypass TLS? Flag as accepted risk or recommend binding to localhost
+- [ ] Is the TLS expectation for other deployments (no proxy) documented?
 
 ### OWASP A03 — Injection
 
