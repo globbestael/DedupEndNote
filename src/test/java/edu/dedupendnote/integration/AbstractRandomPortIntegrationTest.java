@@ -36,27 +36,6 @@ abstract class AbstractRandomPortIntegrationTest {
 				.build();
 	}
 
-	/*
-	 * RIS with `count` records that all pass comparison steps 1-3 (same year, starting page and
-	 * author) and fail at step 5 (unique journal per record). This keeps the O(n^2) comparison
-	 * loop busy for long enough that a run cannot finish within a very short timeout or before
-	 * a cancel request arrives.
-	 */
-	protected static String generateSlowRis(int count) {
-		StringBuilder sb = new StringBuilder();
-		for (int i = 1; i <= count; i++) {
-			sb.append("TY  - JOUR\n")
-			  .append("ID  - ").append(i).append("\n")
-			  .append("TI  - Effect of treatment on patient outcomes a multicentre randomised controlled trial ").append(i).append("\n")
-			  .append("AU  - Smith, John\n")
-			  .append("PY  - 2020\n")
-			  .append("SP  - 100\n")
-			  .append("JO  - Journal of Clinical Medicine ").append(i).append("\n")
-			  .append("ER  - \n");
-		}
-		return sb.toString();
-	}
-
 	protected ResponseEntity<String> get(String path) {
 		return restClient.get().uri(path).retrieve().toEntity(String.class);
 	}
