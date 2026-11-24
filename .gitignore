@@ -46,3 +46,5 @@ src/test/resources/scratchbook.html
 .scratch/Journal_Patterns.xlsx
 .scratch/Journal*.txt
 .claude/settings.local.json
+.scratch/changelog-1.1.8-draft.html
+.scratch/JournalPatterns.txt
